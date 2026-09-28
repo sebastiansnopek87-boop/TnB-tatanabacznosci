@@ -4,6 +4,7 @@ import { Hero } from "@/components/tnb/Hero";
 import { QuickNav } from "@/components/tnb/QuickNav";
 import { PillarCards } from "@/components/tnb/PillarCards";
 import { QuoteNewsletter } from "@/components/tnb/QuoteNewsletter";
+import { SiteFooter } from "@/components/tnb/SiteFooter";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -33,6 +34,7 @@ function Index() {
       <QuickNav />
       <PillarCards />
       <QuoteNewsletter />
+      <SiteFooter />
     </main>
   );
 }
