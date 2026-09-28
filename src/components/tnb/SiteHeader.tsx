@@ -9,7 +9,7 @@ const NAV = [
   { label: "Moja historia", href: "#moja-historia" },
   { label: "Biblioteka", href: "#biblioteka" },
   { label: "Podcast", href: "#podcast" },
-  { label: "Społeczność", href: "#spolecznosc" },
+  { label: "Społeczność", href: "/spolecznosc" },
   { label: "Spotkania", href: "#spotkania" },
   { label: "Sklep", href: "#sklep" },
 ];

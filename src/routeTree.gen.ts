@@ -22,10 +22,13 @@ import { Route as AuthenticatedMojeTnbRouteImport } from './routes/_authenticate
 import { Route as NewsletterWypiszRouteImport } from './routes/newsletter.wypisz'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminPowiadomieniaRouteImport } from './routes/_authenticated/admin.powiadomienia'
+import { Route as AuthenticatedAdminSpolecznoscRouteImport } from './routes/_authenticated/admin.spolecznosc'
 import { Route as AuthenticatedAdminSubskrybenciRouteImport } from './routes/_authenticated/admin.subskrybenci'
 import { Route as AuthenticatedAdminTresciRouteImport } from './routes/_authenticated/admin.tresci'
 import { Route as AuthenticatedAdminUstawieniaEmailRouteImport } from './routes/_authenticated/admin.ustawienia-email'
 import { Route as AuthenticatedAdminWiadomosciRouteImport } from './routes/_authenticated/admin.wiadomosci'
+import { Route as AuthenticatedSpolecznoscIndexRouteImport } from './routes/_authenticated/spolecznosc.index'
+import { Route as AuthenticatedSpolecznoscPostIdRouteImport } from './routes/_authenticated/spolecznosc.$postId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -92,6 +95,12 @@ const AuthenticatedAdminPowiadomieniaRoute =
     path: '/powiadomienia',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminSpolecznoscRoute =
+  AuthenticatedAdminSpolecznoscRouteImport.update({
+    id: '/spolecznosc',
+    path: '/spolecznosc',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminSubskrybenciRoute =
   AuthenticatedAdminSubskrybenciRouteImport.update({
     id: '/subskrybenci',
@@ -116,6 +125,18 @@ const AuthenticatedAdminWiadomosciRoute =
     path: '/wiadomosci',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedSpolecznoscIndexRoute =
+  AuthenticatedSpolecznoscIndexRouteImport.update({
+    id: '/spolecznosc/',
+    path: '/spolecznosc/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSpolecznoscPostIdRoute =
+  AuthenticatedSpolecznoscPostIdRouteImport.update({
+    id: '/spolecznosc/$postId',
+    path: '/spolecznosc/$postId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -129,11 +150,14 @@ export interface FileRoutesByFullPath {
   '/moje-tnb': typeof AuthenticatedMojeTnbRoute
   '/newsletter/wypisz': typeof NewsletterWypiszRoute
   '/admin/powiadomienia': typeof AuthenticatedAdminPowiadomieniaRoute
+  '/admin/spolecznosc': typeof AuthenticatedAdminSpolecznoscRoute
   '/admin/subskrybenci': typeof AuthenticatedAdminSubskrybenciRoute
   '/admin/tresci': typeof AuthenticatedAdminTresciRoute
   '/admin/ustawienia-email': typeof AuthenticatedAdminUstawieniaEmailRoute
   '/admin/wiadomosci': typeof AuthenticatedAdminWiadomosciRoute
+  '/spolecznosc/$postId': typeof AuthenticatedSpolecznoscPostIdRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/spolecznosc/': typeof AuthenticatedSpolecznoscIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -146,11 +170,14 @@ export interface FileRoutesByTo {
   '/moje-tnb': typeof AuthenticatedMojeTnbRoute
   '/newsletter/wypisz': typeof NewsletterWypiszRoute
   '/admin/powiadomienia': typeof AuthenticatedAdminPowiadomieniaRoute
+  '/admin/spolecznosc': typeof AuthenticatedAdminSpolecznoscRoute
   '/admin/subskrybenci': typeof AuthenticatedAdminSubskrybenciRoute
   '/admin/tresci': typeof AuthenticatedAdminTresciRoute
   '/admin/ustawienia-email': typeof AuthenticatedAdminUstawieniaEmailRoute
   '/admin/wiadomosci': typeof AuthenticatedAdminWiadomosciRoute
+  '/spolecznosc/$postId': typeof AuthenticatedSpolecznoscPostIdRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/spolecznosc': typeof AuthenticatedSpolecznoscIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -166,11 +193,14 @@ export interface FileRoutesById {
   '/_authenticated/moje-tnb': typeof AuthenticatedMojeTnbRoute
   '/newsletter/wypisz': typeof NewsletterWypiszRoute
   '/_authenticated/admin/powiadomienia': typeof AuthenticatedAdminPowiadomieniaRoute
+  '/_authenticated/admin/spolecznosc': typeof AuthenticatedAdminSpolecznoscRoute
   '/_authenticated/admin/subskrybenci': typeof AuthenticatedAdminSubskrybenciRoute
   '/_authenticated/admin/tresci': typeof AuthenticatedAdminTresciRoute
   '/_authenticated/admin/ustawienia-email': typeof AuthenticatedAdminUstawieniaEmailRoute
   '/_authenticated/admin/wiadomosci': typeof AuthenticatedAdminWiadomosciRoute
+  '/_authenticated/spolecznosc/$postId': typeof AuthenticatedSpolecznoscPostIdRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/spolecznosc/': typeof AuthenticatedSpolecznoscIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -186,11 +216,14 @@ export interface FileRouteTypes {
     | '/moje-tnb'
     | '/newsletter/wypisz'
     | '/admin/powiadomienia'
+    | '/admin/spolecznosc'
     | '/admin/subskrybenci'
     | '/admin/tresci'
     | '/admin/ustawienia-email'
     | '/admin/wiadomosci'
+    | '/spolecznosc/$postId'
     | '/admin/'
+    | '/spolecznosc/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -203,11 +236,14 @@ export interface FileRouteTypes {
     | '/moje-tnb'
     | '/newsletter/wypisz'
     | '/admin/powiadomienia'
+    | '/admin/spolecznosc'
     | '/admin/subskrybenci'
     | '/admin/tresci'
     | '/admin/ustawienia-email'
     | '/admin/wiadomosci'
+    | '/spolecznosc/$postId'
     | '/admin'
+    | '/spolecznosc'
   id:
     | '__root__'
     | '/'
@@ -222,11 +258,14 @@ export interface FileRouteTypes {
     | '/_authenticated/moje-tnb'
     | '/newsletter/wypisz'
     | '/_authenticated/admin/powiadomienia'
+    | '/_authenticated/admin/spolecznosc'
     | '/_authenticated/admin/subskrybenci'
     | '/_authenticated/admin/tresci'
     | '/_authenticated/admin/ustawienia-email'
     | '/_authenticated/admin/wiadomosci'
+    | '/_authenticated/spolecznosc/$postId'
     | '/_authenticated/admin/'
+    | '/_authenticated/spolecznosc/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -334,6 +373,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminPowiadomieniaRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/spolecznosc': {
+      id: '/_authenticated/admin/spolecznosc'
+      path: '/spolecznosc'
+      fullPath: '/admin/spolecznosc'
+      preLoaderRoute: typeof AuthenticatedAdminSpolecznoscRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/subskrybenci': {
       id: '/_authenticated/admin/subskrybenci'
       path: '/subskrybenci'
@@ -362,11 +408,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminWiadomosciRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/spolecznosc/': {
+      id: '/_authenticated/spolecznosc/'
+      path: '/spolecznosc'
+      fullPath: '/spolecznosc/'
+      preLoaderRoute: typeof AuthenticatedSpolecznoscIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/spolecznosc/$postId': {
+      id: '/_authenticated/spolecznosc/$postId'
+      path: '/spolecznosc/$postId'
+      fullPath: '/spolecznosc/$postId'
+      preLoaderRoute: typeof AuthenticatedSpolecznoscPostIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminPowiadomieniaRoute: typeof AuthenticatedAdminPowiadomieniaRoute
+  AuthenticatedAdminSpolecznoscRoute: typeof AuthenticatedAdminSpolecznoscRoute
   AuthenticatedAdminSubskrybenciRoute: typeof AuthenticatedAdminSubskrybenciRoute
   AuthenticatedAdminTresciRoute: typeof AuthenticatedAdminTresciRoute
   AuthenticatedAdminUstawieniaEmailRoute: typeof AuthenticatedAdminUstawieniaEmailRoute
@@ -376,6 +437,7 @@ interface AuthenticatedAdminRouteChildren {
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminPowiadomieniaRoute: AuthenticatedAdminPowiadomieniaRoute,
+  AuthenticatedAdminSpolecznoscRoute: AuthenticatedAdminSpolecznoscRoute,
   AuthenticatedAdminSubskrybenciRoute: AuthenticatedAdminSubskrybenciRoute,
   AuthenticatedAdminTresciRoute: AuthenticatedAdminTresciRoute,
   AuthenticatedAdminUstawieniaEmailRoute:
@@ -390,11 +452,15 @@ const AuthenticatedAdminRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedMojeTnbRoute: typeof AuthenticatedMojeTnbRoute
+  AuthenticatedSpolecznoscPostIdRoute: typeof AuthenticatedSpolecznoscPostIdRoute
+  AuthenticatedSpolecznoscIndexRoute: typeof AuthenticatedSpolecznoscIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedMojeTnbRoute: AuthenticatedMojeTnbRoute,
+  AuthenticatedSpolecznoscPostIdRoute: AuthenticatedSpolecznoscPostIdRoute,
+  AuthenticatedSpolecznoscIndexRoute: AuthenticatedSpolecznoscIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
