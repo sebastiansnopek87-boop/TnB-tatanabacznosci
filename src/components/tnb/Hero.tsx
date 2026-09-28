@@ -34,7 +34,7 @@ export function Hero() {
         }}
       />
 
-      <div className="relative flex min-h-[460px] flex-col justify-center px-5 py-12 lg:min-h-[500px] lg:px-10 lg:py-14">
+      <div className="relative flex min-h-[480px] flex-col justify-center px-5 py-14 lg:min-h-[560px] lg:px-14 lg:py-20">
         <div className="max-w-[560px]">
           <p className="eyebrow text-foreground/85">
             Doświadczenia · Ludzie · Rozmowy · Rozwój
@@ -77,7 +77,7 @@ export function Hero() {
           </div>
         </div>
 
-        <div className="mt-12 lg:absolute lg:right-10 lg:top-1/2 lg:mt-0 lg:-translate-y-1/2">
+        <div className="mt-12 lg:absolute lg:right-14 lg:top-1/2 lg:mt-0 lg:-translate-y-1/2">
           <ul className="relative flex flex-col gap-4 border-l border-dotted border-gold/50 pl-6">
             {PILLARS.map((p) => (
               <li key={p} className="relative flex items-center">
