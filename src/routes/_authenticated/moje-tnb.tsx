@@ -1,5 +1,7 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { getAdminStatus } from "@/lib/admin.functions";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import type { User } from "@supabase/supabase-js";
 import { z } from "zod";
@@ -46,6 +48,8 @@ function MojeTnb() {
   const [loadError, setLoadError] = useState(false);
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const adminFn = useServerFn(getAdminStatus);
+  const { data: admin } = useQuery({ queryKey: ["admin-status"], queryFn: () => adminFn() });
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data, error }) => (error || !data.user ? setLoadError(true) : setUser(data.user)));
@@ -54,8 +58,9 @@ function MojeTnb() {
   async function signOut() {
     await qc.cancelQueries();
     qc.clear();
+    // Leave the protected area first, otherwise the auth gate redirects to /auth on SIGNED_OUT.
+    await navigate({ to: "/", replace: true });
     await supabase.auth.signOut();
-    navigate({ to: "/auth", replace: true });
   }
 
   return (
@@ -74,6 +79,11 @@ function MojeTnb() {
                   Nie masz jeszcze żadnych materiałów. Gdy biblioteka zostanie uruchomiona, Twoje materiały pojawią się tutaj.
                 </p>
               </Card>
+              {admin?.isAdmin && (
+                <Card title="Administracja">
+                  <Button asChild variant="outline" className="h-11 w-full uppercase tracking-[0.15em]"><Link to="/admin">Przejdź do panelu administratora</Link></Button>
+                </Card>
+              )}
               <Card title="Sesja">
                 <Button variant="outline" onClick={signOut} className="h-11 w-full uppercase tracking-[0.15em]">
                   <LogOut className="mr-2 h-4 w-4" /> Wyloguj się

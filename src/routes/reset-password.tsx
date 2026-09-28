@@ -78,7 +78,7 @@ function ResetPage() {
     return (
       <AuthShell step="Gotowe" title="Hasło zmienione" lead="Nowe hasło zostało zapisane. Jesteś zalogowany.">
         <AuthNotice tone="ok">Od teraz loguj się adresem e-mail i nowym hasłem.</AuthNotice>
-        <Button className="mt-6 h-11 w-full uppercase tracking-[0.15em]" onClick={() => navigate({ to: "/admin", replace: true })}>Przejdź do panelu</Button>
+        <Button className="mt-6 h-11 w-full uppercase tracking-[0.15em]" onClick={() => navigate({ to: "/moje-tnb", replace: true })}>Przejdź do Moje TNB</Button>
       </AuthShell>
     );
   }
