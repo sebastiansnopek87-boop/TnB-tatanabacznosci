@@ -61,8 +61,8 @@ function AdminLayout() {
         <nav className="mt-6 flex flex-wrap gap-2 lg:flex-col lg:gap-1">
           {NAV.map((n) => (
             <Link key={n.to} to={n.to} activeOptions={{ exact: "exact" in n }}
-              className="rounded px-3 py-2 text-sm text-foreground/80 hover:bg-accent"
-              activeProps={{ className: "rounded px-3 py-2 text-sm bg-accent text-gold" }}>
+              className="rounded px-3 py-2 text-sm text-foreground/80 hover:bg-foreground/5"
+              activeProps={{ className: "rounded px-3 py-2 text-sm bg-foreground/10 text-gold" }}>
               {n.label}
             </Link>
           ))}

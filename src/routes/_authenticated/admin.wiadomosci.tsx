@@ -61,7 +61,7 @@ function Inbox() {
           {data?.length === 0 && <li className="p-4 text-sm text-muted-foreground">Brak wiadomości.</li>}
           {data?.map((r) => (
             <li key={r.id}>
-              <button onClick={() => openMsg(r.id, r.status)} className={`w-full p-4 text-left hover:bg-accent ${openId === r.id ? "bg-accent" : ""}`}>
+              <button onClick={() => openMsg(r.id, r.status)} className={`w-full p-4 text-left hover:bg-foreground/5 ${openId === r.id ? "bg-foreground/10" : ""}`}>
                 <div className="flex items-center justify-between gap-3">
                   <span className={`truncate ${r.status === "new" ? "font-semibold" : ""}`}>{r.subject}</span>
                   <Badge variant={r.status === "new" ? "default" : "outline"}>{MSG_STATUS[r.status] ?? r.status}</Badge>
