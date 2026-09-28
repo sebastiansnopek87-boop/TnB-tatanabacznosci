@@ -19,14 +19,14 @@ export function SiteHeader() {
   return (
     <header className="relative z-30 bg-surface-deep">
       <div className="flex h-[86px] items-center gap-6 px-5 lg:px-10">
-        <a href="#start" className="flex shrink-0 items-center gap-4">
+        <a href="#start" className="flex min-w-0 items-center gap-3 lg:gap-4">
           <img
             src={logo.url}
             alt="Tata Na Baczności"
             className="h-[74px] w-[74px] rounded-full object-cover lg:h-[92px] lg:w-[92px] lg:-mb-6"
           />
           <span className="block">
-            <span className="block font-display text-[1.05rem] sm:text-[1.45rem] font-semibold uppercase tracking-[0.12em] text-foreground">
+            <span className="block truncate font-display text-[1.05rem] font-semibold uppercase tracking-[0.1em] text-foreground sm:text-[1.45rem] sm:tracking-[0.12em]">
               Tata Na Baczności
             </span>
             <span className="eyebrow mt-1 block text-gold/80">Ojcostwo to służba</span>
