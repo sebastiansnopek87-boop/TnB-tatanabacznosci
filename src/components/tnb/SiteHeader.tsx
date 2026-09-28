@@ -25,8 +25,8 @@ export function SiteHeader() {
             alt="Tata Na Baczności"
             className="h-[74px] w-[74px] rounded-full object-cover lg:h-[92px] lg:w-[92px] lg:-mb-6"
           />
-          <span className="hidden sm:block">
-            <span className="block font-display text-[1.45rem] font-semibold uppercase tracking-[0.12em] text-foreground">
+          <span className="block">
+            <span className="block font-display text-[1.05rem] sm:text-[1.45rem] font-semibold uppercase tracking-[0.12em] text-foreground">
               Tata Na Baczności
             </span>
             <span className="eyebrow mt-1 block text-gold/80">Ojcostwo to służba</span>

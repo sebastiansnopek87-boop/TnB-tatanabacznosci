@@ -43,10 +43,10 @@ export function Hero() {
             <span className="block text-[3.6rem] font-semibold tracking-[0.02em] text-foreground sm:text-[4.6rem]">
               Czuwaj
             </span>
-            <span className="mt-1 block text-[1.9rem] font-medium tracking-[0.01em] text-gold sm:text-[2.45rem]">
+            <span className="mt-1 block text-[1.55rem] font-medium tracking-[0.01em] text-gold sm:text-[2.45rem]">
               nad tym,
             </span>
-            <span className="block text-[1.9rem] font-medium tracking-[0.01em] text-gold sm:text-[2.45rem]">
+            <span className="block text-[1.55rem] font-medium tracking-[0.01em] text-gold sm:text-[2.45rem]">
               co naprawdę ważne.
             </span>
           </h1>
