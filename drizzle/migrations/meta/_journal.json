@@ -15,6 +15,13 @@
       "when": 1790613557265,
       "tag": "0001_newsletter_and_email_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790616544119,
+      "tag": "0002_admin_roles_and_policies",
+      "breakpoints": true
     }
   ]
 }
