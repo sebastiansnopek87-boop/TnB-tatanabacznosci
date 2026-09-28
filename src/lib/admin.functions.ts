@@ -38,6 +38,7 @@ export const getDashboard = createServerFn({ method: "GET" })
 const msgFilter = z.object({
   status: z.enum(["all", "new", "read", "archived", "inbox"]).default("inbox"),
   q: z.string().trim().max(200).default(""),
+  sort: z.enum(["desc", "asc"]).default("desc"),
 });
 
 export const listMessages = createServerFn({ method: "POST" })
@@ -45,7 +46,7 @@ export const listMessages = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => msgFilter.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    let q = context.supabase.from("contact_messages").select("*").order("created_at", { ascending: false }).limit(500);
+    let q = context.supabase.from("contact_messages").select("*").order("created_at", { ascending: data.sort === "asc" }).limit(500);
     if (data.status === "inbox") q = q.neq("status", "archived");
     else if (data.status !== "all") q = q.eq("status", data.status);
     if (data.q) {

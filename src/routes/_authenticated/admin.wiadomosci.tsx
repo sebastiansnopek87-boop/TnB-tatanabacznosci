@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 export const Route = createFileRoute("/_authenticated/admin/wiadomosci")({ component: Inbox });
 
 type Status = "inbox" | "new" | "read" | "archived" | "all";
+type Row = Awaited<ReturnType<typeof listMessages>>[number];
 
 function Inbox() {
   const list = useServerFn(listMessages);
@@ -21,18 +22,22 @@ function Inbox() {
   const [status, setFilter] = useState<Status>("inbox");
   const [q, setQ] = useState("");
   const [search, setSearch] = useState("");
+  const [sort, setSort] = useState<"desc" | "asc">("desc");
   const [openId, setOpenId] = useState<string | null>(null);
-  const { data, isLoading, error } = useQuery({ queryKey: ["admin-messages", status, search], queryFn: () => list({ data: { status, q: search } }) });
+  const [snap, setSnap] = useState<Row | null>(null);
+  const { data, isLoading, isFetching, error } = useQuery({ queryKey: ["admin-messages", status, search, sort], queryFn: () => list({ data: { status, q: search, sort } }) });
   const m = useMutation({
     mutationFn: (v: { id: string; status: "new" | "read" | "archived" }) => setStatus({ data: v }),
+    onMutate: (v) => setSnap((p) => (p && p.id === v.id ? { ...p, status: v.status } : p)),
     onSuccess: (_r, v) => { toast.success(`Oznaczono: ${MSG_STATUS[v.status]}`); qc.invalidateQueries({ queryKey: ["admin-messages"] }); qc.invalidateQueries({ queryKey: ["admin-dashboard"] }); },
     onError: (e) => toast.error(errMsg(e)),
   });
-  const open = data?.find((r) => r.id === openId) ?? null;
+  // Keep the opened message visible even when a status change moves it out of the current filter.
+  const open = data?.find((r) => r.id === openId) ?? (snap?.id === openId ? snap : null);
 
-  function openMsg(id: string, st: string) {
-    setOpenId(id);
-    if (st === "new") m.mutate({ id, status: "read" });
+  function openMsg(r: Row) {
+    setOpenId(r.id); setSnap(r);
+    if (r.status === "new") m.mutate({ id: r.id, status: "read" });
   }
 
   return (
@@ -49,19 +54,27 @@ function Inbox() {
             <SelectItem value="all">Wszystkie</SelectItem>
           </SelectContent>
         </Select>
+        <Select value={sort} onValueChange={(v) => setSort(v as "desc" | "asc")}>
+          <SelectTrigger className="w-44" aria-label="Sortowanie"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="desc">Najnowsze najpierw</SelectItem>
+            <SelectItem value="asc">Najstarsze najpierw</SelectItem>
+          </SelectContent>
+        </Select>
         <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); setSearch(q); }}>
-          <Input placeholder="Szukaj: imię, e-mail, temat" value={q} onChange={(e) => setQ(e.target.value)} className="w-64" />
+          <Input placeholder="Szukaj: imię, e-mail, temat" value={q} onChange={(e) => setQ(e.target.value)} className="w-full sm:w-64" />
           <Button type="submit" variant="outline">Szukaj</Button>
         </form>
       </div>
       {error && <p className="mt-4 text-sm text-destructive">{errMsg(error)}</p>}
       <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <ul className="divide-y divide-border/60 border border-border/60">
+          {!isLoading && isFetching && <li className="p-2 text-xs text-muted-foreground">Odświeżanie…</li>}
           {isLoading && <li className="p-4 text-sm text-muted-foreground">Ładowanie…</li>}
           {data?.length === 0 && <li className="p-4 text-sm text-muted-foreground">Brak wiadomości.</li>}
           {data?.map((r) => (
             <li key={r.id}>
-              <button onClick={() => openMsg(r.id, r.status)} className={`w-full p-4 text-left hover:bg-foreground/5 ${openId === r.id ? "bg-foreground/10" : ""}`}>
+              <button onClick={() => openMsg(r)} className={`w-full p-4 text-left hover:bg-foreground/5 ${openId === r.id ? "bg-foreground/10" : ""}`}>
                 <div className="flex items-center justify-between gap-3">
                   <span className={`truncate ${r.status === "new" ? "font-semibold" : ""}`}>{r.subject}</span>
                   <Badge variant={r.status === "new" ? "default" : "outline"}>{MSG_STATUS[r.status] ?? r.status}</Badge>

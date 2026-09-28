@@ -4,6 +4,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { getAdminStatus } from "@/lib/admin.functions";
 import { Button } from "@/components/ui/button";
+import { useEffect } from "react";
+import { errMsg, isSessionError } from "@/components/admin/format";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -40,13 +42,16 @@ function AdminLayout() {
     navigate({ to: "/auth", replace: true });
   }
 
-  if (isLoading) return <div className="p-10 text-muted-foreground">Sprawdzanie uprawnień…</div>;
+  const expired = !!error && isSessionError(error);
+  useEffect(() => { if (expired) { qc.clear(); navigate({ to: "/auth", replace: true }); } }, [expired, navigate, qc]);
+
+  if (isLoading || expired) return <div className="p-10 text-muted-foreground">Sprawdzanie uprawnień…</div>;
   if (error || !data?.isAdmin) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-5">
         <div className="max-w-md space-y-4 text-center">
           <h1 className="font-display text-3xl font-semibold uppercase text-foreground">Brak dostępu</h1>
-          <p className="text-sm text-muted-foreground">To konto nie ma uprawnień administratora.</p>
+          <p className="text-sm text-muted-foreground">{error ? errMsg(error) : "To konto nie ma uprawnień administratora."}</p>
           <Button onClick={signOut}>Wyloguj</Button>
         </div>
       </div>
