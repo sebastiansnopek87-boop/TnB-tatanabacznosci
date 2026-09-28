@@ -29,7 +29,7 @@ export function QuoteNewsletter() {
           }}
         />
         <div className="border-l-2 border-gold pl-7">
-          <p className="font-display text-[1.35rem] leading-[1.6] text-foreground sm:text-[1.6rem]">
+          <p className="font-display text-[1.2rem] leading-[1.7] text-foreground sm:text-[1.45rem]">
             Nie musisz być żołnierzem, żeby być człowiekiem z zasadami.
             <br />
             Nie musisz mieć za sobą wyjątkowej historii, żeby mieć coś wartościowego do
