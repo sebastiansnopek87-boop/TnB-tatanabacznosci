@@ -58,7 +58,7 @@ export function SiteHeader() {
           </button>
           <a
             href="#logowanie"
-            className="hidden border border-gold/70 px-6 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-foreground transition-colors hover:bg-gold/10 lg:block"
+            className="hidden whitespace-nowrap border border-gold/70 px-6 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-foreground transition-colors hover:bg-gold/10 lg:block"
           >
             Zaloguj się
           </a>
