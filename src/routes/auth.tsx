@@ -19,7 +19,7 @@ export const Route = createFileRoute("/auth")({
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
-  validateSearch: (s: Record<string, unknown>): { tryb?: "rejestracja" } => (s.tryb === "rejestracja" ? { tryb: "rejestracja" } : {}),
+  validateSearch: (s: Record<string, unknown>): { tryb?: "rejestracja" } => (s["tryb"] === "rejestracja" ? { tryb: "rejestracja" } : {}),
   component: AuthPage,
 });
 
