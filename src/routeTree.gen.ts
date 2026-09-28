@@ -19,6 +19,12 @@ import { Route as RegulaminRouteImport } from './routes/regulamin'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as NewsletterWypiszRouteImport } from './routes/newsletter.wypisz'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedAdminPowiadomieniaRouteImport } from './routes/_authenticated/admin.powiadomienia'
+import { Route as AuthenticatedAdminSubskrybenciRouteImport } from './routes/_authenticated/admin.subskrybenci'
+import { Route as AuthenticatedAdminTresciRouteImport } from './routes/_authenticated/admin.tresci'
+import { Route as AuthenticatedAdminUstawieniaEmailRouteImport } from './routes/_authenticated/admin.ustawienia-email'
+import { Route as AuthenticatedAdminWiadomosciRouteImport } from './routes/_authenticated/admin.wiadomosci'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -69,6 +75,41 @@ const NewsletterWypiszRoute = NewsletterWypiszRouteImport.update({
   path: '/newsletter/wypisz',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
+const AuthenticatedAdminPowiadomieniaRoute =
+  AuthenticatedAdminPowiadomieniaRouteImport.update({
+    id: '/powiadomienia',
+    path: '/powiadomienia',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminSubskrybenciRoute =
+  AuthenticatedAdminSubskrybenciRouteImport.update({
+    id: '/subskrybenci',
+    path: '/subskrybenci',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminTresciRoute =
+  AuthenticatedAdminTresciRouteImport.update({
+    id: '/tresci',
+    path: '/tresci',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminUstawieniaEmailRoute =
+  AuthenticatedAdminUstawieniaEmailRouteImport.update({
+    id: '/ustawienia-email',
+    path: '/ustawienia-email',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminWiadomosciRoute =
+  AuthenticatedAdminWiadomosciRouteImport.update({
+    id: '/wiadomosci',
+    path: '/wiadomosci',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -78,8 +119,14 @@ export interface FileRoutesByFullPath {
   '/polityka-prywatnosci': typeof PolitykaPrywatnosciRoute
   '/regulamin': typeof RegulaminRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/admin': typeof AuthenticatedAdminRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/newsletter/wypisz': typeof NewsletterWypiszRoute
+  '/admin/powiadomienia': typeof AuthenticatedAdminPowiadomieniaRoute
+  '/admin/subskrybenci': typeof AuthenticatedAdminSubskrybenciRoute
+  '/admin/tresci': typeof AuthenticatedAdminTresciRoute
+  '/admin/ustawienia-email': typeof AuthenticatedAdminUstawieniaEmailRoute
+  '/admin/wiadomosci': typeof AuthenticatedAdminWiadomosciRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -89,8 +136,13 @@ export interface FileRoutesByTo {
   '/polityka-prywatnosci': typeof PolitykaPrywatnosciRoute
   '/regulamin': typeof RegulaminRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/admin': typeof AuthenticatedAdminRoute
   '/newsletter/wypisz': typeof NewsletterWypiszRoute
+  '/admin/powiadomienia': typeof AuthenticatedAdminPowiadomieniaRoute
+  '/admin/subskrybenci': typeof AuthenticatedAdminSubskrybenciRoute
+  '/admin/tresci': typeof AuthenticatedAdminTresciRoute
+  '/admin/ustawienia-email': typeof AuthenticatedAdminUstawieniaEmailRoute
+  '/admin/wiadomosci': typeof AuthenticatedAdminWiadomosciRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -102,8 +154,14 @@ export interface FileRoutesById {
   '/polityka-prywatnosci': typeof PolitykaPrywatnosciRoute
   '/regulamin': typeof RegulaminRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/newsletter/wypisz': typeof NewsletterWypiszRoute
+  '/_authenticated/admin/powiadomienia': typeof AuthenticatedAdminPowiadomieniaRoute
+  '/_authenticated/admin/subskrybenci': typeof AuthenticatedAdminSubskrybenciRoute
+  '/_authenticated/admin/tresci': typeof AuthenticatedAdminTresciRoute
+  '/_authenticated/admin/ustawienia-email': typeof AuthenticatedAdminUstawieniaEmailRoute
+  '/_authenticated/admin/wiadomosci': typeof AuthenticatedAdminWiadomosciRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -117,6 +175,12 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/admin'
     | '/newsletter/wypisz'
+    | '/admin/powiadomienia'
+    | '/admin/subskrybenci'
+    | '/admin/tresci'
+    | '/admin/ustawienia-email'
+    | '/admin/wiadomosci'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -126,8 +190,13 @@ export interface FileRouteTypes {
     | '/polityka-prywatnosci'
     | '/regulamin'
     | '/reset-password'
-    | '/admin'
     | '/newsletter/wypisz'
+    | '/admin/powiadomienia'
+    | '/admin/subskrybenci'
+    | '/admin/tresci'
+    | '/admin/ustawienia-email'
+    | '/admin/wiadomosci'
+    | '/admin'
   id:
     | '__root__'
     | '/'
@@ -140,6 +209,12 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/admin'
     | '/newsletter/wypisz'
+    | '/_authenticated/admin/powiadomienia'
+    | '/_authenticated/admin/subskrybenci'
+    | '/_authenticated/admin/tresci'
+    | '/_authenticated/admin/ustawienia-email'
+    | '/_authenticated/admin/wiadomosci'
+    | '/_authenticated/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -226,15 +301,79 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NewsletterWypiszRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/powiadomienia': {
+      id: '/_authenticated/admin/powiadomienia'
+      path: '/powiadomienia'
+      fullPath: '/admin/powiadomienia'
+      preLoaderRoute: typeof AuthenticatedAdminPowiadomieniaRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/subskrybenci': {
+      id: '/_authenticated/admin/subskrybenci'
+      path: '/subskrybenci'
+      fullPath: '/admin/subskrybenci'
+      preLoaderRoute: typeof AuthenticatedAdminSubskrybenciRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/tresci': {
+      id: '/_authenticated/admin/tresci'
+      path: '/tresci'
+      fullPath: '/admin/tresci'
+      preLoaderRoute: typeof AuthenticatedAdminTresciRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/ustawienia-email': {
+      id: '/_authenticated/admin/ustawienia-email'
+      path: '/ustawienia-email'
+      fullPath: '/admin/ustawienia-email'
+      preLoaderRoute: typeof AuthenticatedAdminUstawieniaEmailRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/wiadomosci': {
+      id: '/_authenticated/admin/wiadomosci'
+      path: '/wiadomosci'
+      fullPath: '/admin/wiadomosci'
+      preLoaderRoute: typeof AuthenticatedAdminWiadomosciRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
   }
 }
 
+interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminPowiadomieniaRoute: typeof AuthenticatedAdminPowiadomieniaRoute
+  AuthenticatedAdminSubskrybenciRoute: typeof AuthenticatedAdminSubskrybenciRoute
+  AuthenticatedAdminTresciRoute: typeof AuthenticatedAdminTresciRoute
+  AuthenticatedAdminUstawieniaEmailRoute: typeof AuthenticatedAdminUstawieniaEmailRoute
+  AuthenticatedAdminWiadomosciRoute: typeof AuthenticatedAdminWiadomosciRoute
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+}
+
+const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminPowiadomieniaRoute: AuthenticatedAdminPowiadomieniaRoute,
+  AuthenticatedAdminSubskrybenciRoute: AuthenticatedAdminSubskrybenciRoute,
+  AuthenticatedAdminTresciRoute: AuthenticatedAdminTresciRoute,
+  AuthenticatedAdminUstawieniaEmailRoute:
+    AuthenticatedAdminUstawieniaEmailRoute,
+  AuthenticatedAdminWiadomosciRoute: AuthenticatedAdminWiadomosciRoute,
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+}
+
+const AuthenticatedAdminRouteWithChildren =
+  AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
 }
 
 const AuthenticatedRouteRouteWithChildren =
