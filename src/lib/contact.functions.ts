@@ -22,16 +22,18 @@ export const submitContact = createServerFn({ method: "POST" })
       throw new Error("Wiadomość odrzucona przez filtr antyspamowy.");
     }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.from("contact_messages").insert({
+    const { data: row, error } = await supabaseAdmin.from("contact_messages").insert({
       name: data.name,
       email: data.email,
       subject: data.subject,
       message: data.message,
       privacy_accepted: true,
-    });
-    if (error) {
-      console.error("contact insert failed", error.message);
+    }).select("id,created_at").single();
+    if (error || !row) {
+      console.error("contact insert failed", error?.message);
       throw new Error("Nie udało się zapisać wiadomości.");
     }
+    const { notifyAdmin } = await import("./notifications.server");
+    await notifyAdmin({ kind: "contact_message", id: row.id, name: data.name, email: data.email, subject: data.subject, receivedAt: row.created_at });
     return { ok: true as const };
   });
