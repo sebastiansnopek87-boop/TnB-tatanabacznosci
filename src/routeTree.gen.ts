@@ -18,6 +18,7 @@ import { Route as PolitykaPrywatnosciRouteImport } from './routes/polityka-prywa
 import { Route as RegulaminRouteImport } from './routes/regulamin'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedMojeTnbRouteImport } from './routes/_authenticated/moje-tnb'
 import { Route as NewsletterWypiszRouteImport } from './routes/newsletter.wypisz'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminPowiadomieniaRouteImport } from './routes/_authenticated/admin.powiadomienia'
@@ -70,6 +71,11 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMojeTnbRoute = AuthenticatedMojeTnbRouteImport.update({
+  id: '/moje-tnb',
+  path: '/moje-tnb',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const NewsletterWypiszRoute = NewsletterWypiszRouteImport.update({
   id: '/newsletter/wypisz',
   path: '/newsletter/wypisz',
@@ -120,6 +126,7 @@ export interface FileRoutesByFullPath {
   '/regulamin': typeof RegulaminRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/moje-tnb': typeof AuthenticatedMojeTnbRoute
   '/newsletter/wypisz': typeof NewsletterWypiszRoute
   '/admin/powiadomienia': typeof AuthenticatedAdminPowiadomieniaRoute
   '/admin/subskrybenci': typeof AuthenticatedAdminSubskrybenciRoute
@@ -136,6 +143,7 @@ export interface FileRoutesByTo {
   '/polityka-prywatnosci': typeof PolitykaPrywatnosciRoute
   '/regulamin': typeof RegulaminRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/moje-tnb': typeof AuthenticatedMojeTnbRoute
   '/newsletter/wypisz': typeof NewsletterWypiszRoute
   '/admin/powiadomienia': typeof AuthenticatedAdminPowiadomieniaRoute
   '/admin/subskrybenci': typeof AuthenticatedAdminSubskrybenciRoute
@@ -155,6 +163,7 @@ export interface FileRoutesById {
   '/regulamin': typeof RegulaminRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/_authenticated/moje-tnb': typeof AuthenticatedMojeTnbRoute
   '/newsletter/wypisz': typeof NewsletterWypiszRoute
   '/_authenticated/admin/powiadomienia': typeof AuthenticatedAdminPowiadomieniaRoute
   '/_authenticated/admin/subskrybenci': typeof AuthenticatedAdminSubskrybenciRoute
@@ -174,6 +183,7 @@ export interface FileRouteTypes {
     | '/regulamin'
     | '/reset-password'
     | '/admin'
+    | '/moje-tnb'
     | '/newsletter/wypisz'
     | '/admin/powiadomienia'
     | '/admin/subskrybenci'
@@ -190,6 +200,7 @@ export interface FileRouteTypes {
     | '/polityka-prywatnosci'
     | '/regulamin'
     | '/reset-password'
+    | '/moje-tnb'
     | '/newsletter/wypisz'
     | '/admin/powiadomienia'
     | '/admin/subskrybenci'
@@ -208,6 +219,7 @@ export interface FileRouteTypes {
     | '/regulamin'
     | '/reset-password'
     | '/_authenticated/admin'
+    | '/_authenticated/moje-tnb'
     | '/newsletter/wypisz'
     | '/_authenticated/admin/powiadomienia'
     | '/_authenticated/admin/subskrybenci'
@@ -294,6 +306,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/moje-tnb': {
+      id: '/_authenticated/moje-tnb'
+      path: '/moje-tnb'
+      fullPath: '/moje-tnb'
+      preLoaderRoute: typeof AuthenticatedMojeTnbRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/newsletter/wypisz': {
       id: '/newsletter/wypisz'
       path: '/newsletter/wypisz'
@@ -370,10 +389,12 @@ const AuthenticatedAdminRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
+  AuthenticatedMojeTnbRoute: typeof AuthenticatedMojeTnbRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
+  AuthenticatedMojeTnbRoute: AuthenticatedMojeTnbRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
