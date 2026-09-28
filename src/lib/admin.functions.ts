@@ -63,10 +63,10 @@ export const setMessageStatus = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const now = new Date().toISOString();
-    const patch: Record<string, unknown> = { status: data.status };
-    if (data.status === "new") { patch.read_at = null; patch.archived_at = null; }
-    if (data.status === "read") { patch.read_at = now; patch.archived_at = null; }
-    if (data.status === "archived") patch.archived_at = now;
+    const patch: { status: string; read_at?: string | null; archived_at?: string | null } =
+      data.status === "new" ? { status: "new", read_at: null, archived_at: null }
+      : data.status === "read" ? { status: "read", read_at: now, archived_at: null }
+      : { status: "archived", archived_at: now };
     const { error, count } = await context.supabase.from("contact_messages").update(patch, { count: "exact" }).eq("id", data.id);
     if (error || !count) throw new Error("Nie udało się zmienić statusu wiadomości.");
     return { ok: true as const };
