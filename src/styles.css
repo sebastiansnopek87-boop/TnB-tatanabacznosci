@@ -132,6 +132,15 @@
   --sidebar-ring: oklch(0.551 0.027 264.364);
 }
 
+@theme {
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-sans: "Jost", "Helvetica Neue", sans-serif;
+  --color-gold: oklch(0.815 0.105 80);
+  --color-gold-bright: oklch(0.88 0.09 84);
+  --color-surface: oklch(0.205 0.014 58);
+  --color-surface-deep: oklch(0.132 0.01 58);
+}
+
 @layer base {
   * {
     border-color: var(--color-border);
@@ -140,5 +149,24 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    font-family: var(--font-sans);
+  }
+}
+
+@utility eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.28em;
+  font-size: 0.7rem;
+  font-weight: 400;
+}
+
+@utility nav-link {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.78rem;
+  color: var(--color-foreground);
+  transition: color 0.2s ease;
+  &:hover {
+    color: var(--color-gold);
   }
 }
