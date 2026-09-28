@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { getEmailSettings, updateEmailSettings } from "@/lib/admin.functions";
-import { fmtDate } from "@/components/admin/format";
+import { fmtDate , errMsg } from "@/components/admin/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,16 +48,22 @@ function EmailSettings() {
     } finally { setBusy(false); }
   }
 
-  if (error) return <p className="text-sm text-destructive">{(error as Error).message}</p>;
+  if (error) return <p className="text-sm text-destructive">{errMsg(error)}</p>;
   if (!f) return <p className="text-sm text-muted-foreground">Ładowanie…</p>;
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setF({ ...f, [k]: v });
 
   return (
     <form onSubmit={onSubmit} className="max-w-2xl space-y-6">
       <h1 className="font-display text-3xl font-semibold uppercase">Ustawienia e-mail</h1>
-      <p className="border border-gold/50 p-4 text-sm text-foreground/80">
-        Wysyłka e-mail nie jest jeszcze uruchomiona. Zapisane ustawienia zaczną działać po skonfigurowaniu domeny i dostawcy poczty — do tego czasu każde powiadomienie trafia do historii jako „pominięte”.
-      </p>
+      <section className="border border-gold/50 p-4 text-sm" aria-label="Stan wysyłki">
+        <p className="font-semibold text-foreground">Stan wysyłki: <span className="text-destructive">nieaktywna</span></p>
+        <ul className="mt-2 space-y-1 text-foreground/80">
+          <li>{data?.notification_recipient ? "✔" : "✖"} Adres odbiorcy powiadomień {data?.notification_recipient ? "ustawiony" : "— nieustawiony"}</li>
+          <li>{data?.sender_domain ? "✔" : "✖"} Domena nadawcy {data?.sender_domain ? "wpisana" : "— niewpisana"}</li>
+          <li>✖ Dostawca poczty — niepodłączony (wymaga zweryfikowanej domeny)</li>
+        </ul>
+        <p className="mt-2 text-xs text-muted-foreground">Dopóki wysyłka nie działa, żaden e-mail nie jest wysyłany — każda próba trafia do Historii powiadomień jako „pominięta” z przyczyną.</p>
+      </section>
       <div className="space-y-2"><Label htmlFor="rcpt">Adres odbiorcy powiadomień</Label>
         <Input id="rcpt" type="email" value={f.notification_recipient} onChange={(e) => set("notification_recipient", e.target.value)} placeholder="np. kontakt@twojadomena.pl" /></div>
       <div className="grid gap-4 sm:grid-cols-2">

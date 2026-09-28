@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { listNotificationLog } from "@/lib/admin.functions";
-import { fmtDate, LOG_KIND, LOG_REASON, LOG_STATUS } from "@/components/admin/format";
+import { fmtDate, LOG_KIND, LOG_REASON, LOG_STATUS , errMsg } from "@/components/admin/format";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -40,7 +40,7 @@ function Log() {
           </SelectContent>
         </Select>
       </div>
-      {error && <p className="mt-4 text-sm text-destructive">{(error as Error).message}</p>}
+      {error && <p className="mt-4 text-sm text-destructive">{errMsg(error)}</p>}
       <div className="mt-6 overflow-x-auto border border-border/60">
         <table className="w-full text-sm">
           <thead className="text-left text-muted-foreground"><tr className="border-b border-border/60">

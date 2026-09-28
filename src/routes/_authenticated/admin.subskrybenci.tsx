@@ -2,8 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { listSubscribers } from "@/lib/admin.functions";
-import { fmtDate, SUB_STATUS } from "@/components/admin/format";
+import { getDashboard, listSubscribers } from "@/lib/admin.functions";
+import { fmtDate, SUB_STATUS , errMsg } from "@/components/admin/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,6 +28,8 @@ function Subscribers() {
   const [f, setF] = useState<Filters>(draft);
   const [openId, setOpenId] = useState<string | null>(null);
   const { data, isLoading, error } = useQuery({ queryKey: ["admin-subs", f], queryFn: () => list({ data: f }) });
+  const dash = useServerFn(getDashboard);
+  const counts = useQuery({ queryKey: ["admin-dashboard"], queryFn: () => dash() });
   const open = data?.find((r) => r.id === openId);
 
   function exportCsv() {
@@ -45,6 +47,11 @@ function Subscribers() {
   return (
     <div>
       <h1 className="font-display text-3xl font-semibold uppercase">Subskrybenci newslettera</h1>
+      {counts.data && (
+        <p className="mt-3 text-sm text-muted-foreground">
+          Łącznie w bazie: {counts.data.active + counts.data.pending + counts.data.unsub} · Aktywni: <span className="text-gold">{counts.data.active}</span> · Oczekujący: {counts.data.pending} · Wypisani: {counts.data.unsub}
+        </p>
+      )}
       <form className="mt-6 flex flex-wrap items-end gap-3" onSubmit={(e) => { e.preventDefault(); setF(draft); }}>
         <div className="space-y-1"><Label>Status</Label>
           <Select value={draft.status} onValueChange={(v) => setDraft({ ...draft, status: v as St })}>
@@ -63,7 +70,7 @@ function Subscribers() {
         <Button type="submit" variant="outline">Filtruj</Button>
         <Button type="button" onClick={exportCsv} disabled={!data?.length}>Eksportuj CSV ({data?.length ?? 0})</Button>
       </form>
-      {error && <p className="mt-4 text-sm text-destructive">{(error as Error).message}</p>}
+      {error && <p className="mt-4 text-sm text-destructive">{errMsg(error)}</p>}
       <div className="mt-6 overflow-x-auto border border-border/60">
         <table className="w-full text-sm">
           <thead className="text-left text-muted-foreground"><tr className="border-b border-border/60">
@@ -98,6 +105,7 @@ function Subscribers() {
               <dt className="text-muted-foreground">Potwierdzono</dt><dd>{fmtDate(open.confirmed_at)}</dd>
               <dt className="text-muted-foreground">Wypisano</dt><dd>{fmtDate(open.unsubscribed_at)}</dd>
               <dt className="text-muted-foreground">Liczba zapisów</dt><dd>{open.subscribe_count}</dd>
+              <dt className="text-muted-foreground">Ostatnia zmiana</dt><dd>{fmtDate(open.updated_at)}</dd>
               <dt className="text-muted-foreground">Treść zgody</dt><dd className="italic">{open.consent_text}</dd>
             </dl>
           )}
