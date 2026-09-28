@@ -99,6 +99,7 @@ function AuthPage() {
     if (error) {
       const text = /weak|pwned|leaked/i.test(error.message) || error.code === "weak_password"
         ? "To hasło jest zbyt słabe lub wyciekło w sieci. Wybierz inne."
+        : /not allowed|invalid/i.test(error.message) ? "Ten adres e-mail nie może zostać użyty. Podaj inny adres."
         : error.status === 429 ? "Zbyt wiele prób. Odczekaj chwilę i spróbuj ponownie."
         : "Nie udało się założyć konta. Spróbuj ponownie.";
       return setMsg({ tone: "error", text });
