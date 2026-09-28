@@ -29,6 +29,13 @@
       "when": 1790625968235,
       "tag": "0003_community",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790626365374,
+      "tag": "0004_community_trigger_fix",
+      "breakpoints": true
     }
   ]
 }
