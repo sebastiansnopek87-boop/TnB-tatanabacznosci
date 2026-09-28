@@ -1,24 +1,38 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { SiteHeader } from "@/components/tnb/SiteHeader";
+import { Hero } from "@/components/tnb/Hero";
+import { QuickNav } from "@/components/tnb/QuickNav";
+import { PillarCards } from "@/components/tnb/PillarCards";
+import { QuoteNewsletter } from "@/components/tnb/QuoteNewsletter";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "Tata Na Baczności — Ojcostwo to służba" },
+      {
+        name: "description",
+        content:
+          "Przestrzeń prawdziwych historii, rozmów, doświadczeń i wartości. Biblioteka, podcast, społeczność i spotkania 1:1.",
+      },
+      { property: "og:title", content: "Tata Na Baczności — Ojcostwo to służba" },
+      {
+        property: "og:description",
+        content:
+          "Czuwaj nad tym, co naprawdę ważne. Historie, rozmowy i materiały dla ojców i ludzi z zasadami.",
+      },
+    ],
+  }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
+    <main className="min-h-screen bg-background">
+      <SiteHeader />
+      <Hero />
+      <QuickNav />
+      <PillarCards />
+      <QuoteNewsletter />
+    </main>
   );
 }
