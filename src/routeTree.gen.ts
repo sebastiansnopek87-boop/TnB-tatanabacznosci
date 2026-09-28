@@ -22,6 +22,7 @@ import { Route as AuthenticatedMojeTnbRouteImport } from './routes/_authenticate
 import { Route as NewsletterWypiszRouteImport } from './routes/newsletter.wypisz'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminPowiadomieniaRouteImport } from './routes/_authenticated/admin.powiadomienia'
+import { Route as AuthenticatedAdminSpolecznoscRouteImport } from './routes/_authenticated/admin.spolecznosc'
 import { Route as AuthenticatedAdminSubskrybenciRouteImport } from './routes/_authenticated/admin.subskrybenci'
 import { Route as AuthenticatedAdminTresciRouteImport } from './routes/_authenticated/admin.tresci'
 import { Route as AuthenticatedAdminUstawieniaEmailRouteImport } from './routes/_authenticated/admin.ustawienia-email'
@@ -94,6 +95,12 @@ const AuthenticatedAdminPowiadomieniaRoute =
     path: '/powiadomienia',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminSpolecznoscRoute =
+  AuthenticatedAdminSpolecznoscRouteImport.update({
+    id: '/spolecznosc',
+    path: '/spolecznosc',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminSubskrybenciRoute =
   AuthenticatedAdminSubskrybenciRouteImport.update({
     id: '/subskrybenci',
@@ -143,6 +150,7 @@ export interface FileRoutesByFullPath {
   '/moje-tnb': typeof AuthenticatedMojeTnbRoute
   '/newsletter/wypisz': typeof NewsletterWypiszRoute
   '/admin/powiadomienia': typeof AuthenticatedAdminPowiadomieniaRoute
+  '/admin/spolecznosc': typeof AuthenticatedAdminSpolecznoscRoute
   '/admin/subskrybenci': typeof AuthenticatedAdminSubskrybenciRoute
   '/admin/tresci': typeof AuthenticatedAdminTresciRoute
   '/admin/ustawienia-email': typeof AuthenticatedAdminUstawieniaEmailRoute
@@ -162,6 +170,7 @@ export interface FileRoutesByTo {
   '/moje-tnb': typeof AuthenticatedMojeTnbRoute
   '/newsletter/wypisz': typeof NewsletterWypiszRoute
   '/admin/powiadomienia': typeof AuthenticatedAdminPowiadomieniaRoute
+  '/admin/spolecznosc': typeof AuthenticatedAdminSpolecznoscRoute
   '/admin/subskrybenci': typeof AuthenticatedAdminSubskrybenciRoute
   '/admin/tresci': typeof AuthenticatedAdminTresciRoute
   '/admin/ustawienia-email': typeof AuthenticatedAdminUstawieniaEmailRoute
@@ -184,6 +193,7 @@ export interface FileRoutesById {
   '/_authenticated/moje-tnb': typeof AuthenticatedMojeTnbRoute
   '/newsletter/wypisz': typeof NewsletterWypiszRoute
   '/_authenticated/admin/powiadomienia': typeof AuthenticatedAdminPowiadomieniaRoute
+  '/_authenticated/admin/spolecznosc': typeof AuthenticatedAdminSpolecznoscRoute
   '/_authenticated/admin/subskrybenci': typeof AuthenticatedAdminSubskrybenciRoute
   '/_authenticated/admin/tresci': typeof AuthenticatedAdminTresciRoute
   '/_authenticated/admin/ustawienia-email': typeof AuthenticatedAdminUstawieniaEmailRoute
@@ -206,6 +216,7 @@ export interface FileRouteTypes {
     | '/moje-tnb'
     | '/newsletter/wypisz'
     | '/admin/powiadomienia'
+    | '/admin/spolecznosc'
     | '/admin/subskrybenci'
     | '/admin/tresci'
     | '/admin/ustawienia-email'
@@ -225,6 +236,7 @@ export interface FileRouteTypes {
     | '/moje-tnb'
     | '/newsletter/wypisz'
     | '/admin/powiadomienia'
+    | '/admin/spolecznosc'
     | '/admin/subskrybenci'
     | '/admin/tresci'
     | '/admin/ustawienia-email'
@@ -246,6 +258,7 @@ export interface FileRouteTypes {
     | '/_authenticated/moje-tnb'
     | '/newsletter/wypisz'
     | '/_authenticated/admin/powiadomienia'
+    | '/_authenticated/admin/spolecznosc'
     | '/_authenticated/admin/subskrybenci'
     | '/_authenticated/admin/tresci'
     | '/_authenticated/admin/ustawienia-email'
@@ -360,6 +373,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminPowiadomieniaRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/spolecznosc': {
+      id: '/_authenticated/admin/spolecznosc'
+      path: '/spolecznosc'
+      fullPath: '/admin/spolecznosc'
+      preLoaderRoute: typeof AuthenticatedAdminSpolecznoscRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/subskrybenci': {
       id: '/_authenticated/admin/subskrybenci'
       path: '/subskrybenci'
@@ -407,6 +427,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminPowiadomieniaRoute: typeof AuthenticatedAdminPowiadomieniaRoute
+  AuthenticatedAdminSpolecznoscRoute: typeof AuthenticatedAdminSpolecznoscRoute
   AuthenticatedAdminSubskrybenciRoute: typeof AuthenticatedAdminSubskrybenciRoute
   AuthenticatedAdminTresciRoute: typeof AuthenticatedAdminTresciRoute
   AuthenticatedAdminUstawieniaEmailRoute: typeof AuthenticatedAdminUstawieniaEmailRoute
@@ -416,6 +437,7 @@ interface AuthenticatedAdminRouteChildren {
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminPowiadomieniaRoute: AuthenticatedAdminPowiadomieniaRoute,
+  AuthenticatedAdminSpolecznoscRoute: AuthenticatedAdminSpolecznoscRoute,
   AuthenticatedAdminSubskrybenciRoute: AuthenticatedAdminSubskrybenciRoute,
   AuthenticatedAdminTresciRoute: AuthenticatedAdminTresciRoute,
   AuthenticatedAdminUstawieniaEmailRoute:
