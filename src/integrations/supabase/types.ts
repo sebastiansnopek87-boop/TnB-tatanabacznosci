@@ -47,6 +47,135 @@ export type Database = {
         }
         Relationships: []
       }
+      email_notification_log: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          reason: string | null
+          recipient: string | null
+          related_id: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          reason?: string | null
+          recipient?: string | null
+          related_id?: string | null
+          status: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          reason?: string | null
+          recipient?: string | null
+          related_id?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      email_settings: {
+        Row: {
+          admin_inbox_url: string | null
+          contact_notifications_enabled: boolean
+          id: number
+          newsletter_double_opt_in: boolean
+          newsletter_notifications_enabled: boolean
+          notification_recipient: string | null
+          sender_domain: string | null
+          sender_local_part: string
+          sender_name: string
+          updated_at: string
+        }
+        Insert: {
+          admin_inbox_url?: string | null
+          contact_notifications_enabled?: boolean
+          id?: number
+          newsletter_double_opt_in?: boolean
+          newsletter_notifications_enabled?: boolean
+          notification_recipient?: string | null
+          sender_domain?: string | null
+          sender_local_part?: string
+          sender_name?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_inbox_url?: string | null
+          contact_notifications_enabled?: boolean
+          id?: number
+          newsletter_double_opt_in?: boolean
+          newsletter_notifications_enabled?: boolean
+          notification_recipient?: string | null
+          sender_domain?: string | null
+          sender_local_part?: string
+          sender_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      newsletter_subscribers: {
+        Row: {
+          confirm_token: string | null
+          confirmed_at: string | null
+          consent_given_at: string
+          consent_text: string
+          consent_version: string
+          created_at: string
+          email: string
+          id: string
+          ip_hash: string | null
+          opt_in_method: string
+          source: string
+          status: string
+          subscribe_count: number
+          unsubscribe_token: string
+          unsubscribed_at: string | null
+          updated_at: string
+          user_agent: string | null
+        }
+        Insert: {
+          confirm_token?: string | null
+          confirmed_at?: string | null
+          consent_given_at?: string
+          consent_text: string
+          consent_version: string
+          created_at?: string
+          email: string
+          id?: string
+          ip_hash?: string | null
+          opt_in_method?: string
+          source?: string
+          status?: string
+          subscribe_count?: number
+          unsubscribe_token?: string
+          unsubscribed_at?: string | null
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Update: {
+          confirm_token?: string | null
+          confirmed_at?: string | null
+          consent_given_at?: string
+          consent_text?: string
+          consent_version?: string
+          created_at?: string
+          email?: string
+          id?: string
+          ip_hash?: string | null
+          opt_in_method?: string
+          source?: string
+          status?: string
+          subscribe_count?: number
+          unsubscribe_token?: string
+          unsubscribed_at?: string | null
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

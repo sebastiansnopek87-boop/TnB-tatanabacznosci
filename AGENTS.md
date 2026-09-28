@@ -8,3 +8,6 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Admin e-mail notifications go through src/lib/notifications.server.ts, configured by the single-row email_settings table and logged to email_notification_log — one place for a future admin email panel.
+- Newsletter subscribers store consent text/version/time and opt-in method; status is active only when the configured opt-in mechanism is satisfied.

@@ -14,6 +14,7 @@ import { Route as KontaktRouteImport } from './routes/kontakt'
 import { Route as PolitykaCookiesRouteImport } from './routes/polityka-cookies'
 import { Route as PolitykaPrywatnosciRouteImport } from './routes/polityka-prywatnosci'
 import { Route as RegulaminRouteImport } from './routes/regulamin'
+import { Route as NewsletterWypiszRouteImport } from './routes/newsletter.wypisz'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -40,6 +41,11 @@ const RegulaminRoute = RegulaminRouteImport.update({
   path: '/regulamin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NewsletterWypiszRoute = NewsletterWypiszRouteImport.update({
+  id: '/newsletter/wypisz',
+  path: '/newsletter/wypisz',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/polityka-cookies': typeof PolitykaCookiesRoute
   '/polityka-prywatnosci': typeof PolitykaPrywatnosciRoute
   '/regulamin': typeof RegulaminRoute
+  '/newsletter/wypisz': typeof NewsletterWypiszRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/polityka-cookies': typeof PolitykaCookiesRoute
   '/polityka-prywatnosci': typeof PolitykaPrywatnosciRoute
   '/regulamin': typeof RegulaminRoute
+  '/newsletter/wypisz': typeof NewsletterWypiszRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,6 +70,7 @@ export interface FileRoutesById {
   '/polityka-cookies': typeof PolitykaCookiesRoute
   '/polityka-prywatnosci': typeof PolitykaPrywatnosciRoute
   '/regulamin': typeof RegulaminRoute
+  '/newsletter/wypisz': typeof NewsletterWypiszRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -71,6 +80,7 @@ export interface FileRouteTypes {
     | '/polityka-cookies'
     | '/polityka-prywatnosci'
     | '/regulamin'
+    | '/newsletter/wypisz'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -78,6 +88,7 @@ export interface FileRouteTypes {
     | '/polityka-cookies'
     | '/polityka-prywatnosci'
     | '/regulamin'
+    | '/newsletter/wypisz'
   id:
     | '__root__'
     | '/'
@@ -85,6 +96,7 @@ export interface FileRouteTypes {
     | '/polityka-cookies'
     | '/polityka-prywatnosci'
     | '/regulamin'
+    | '/newsletter/wypisz'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -93,6 +105,7 @@ export interface RootRouteChildren {
   PolitykaCookiesRoute: typeof PolitykaCookiesRoute
   PolitykaPrywatnosciRoute: typeof PolitykaPrywatnosciRoute
   RegulaminRoute: typeof RegulaminRoute
+  NewsletterWypiszRoute: typeof NewsletterWypiszRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -132,6 +145,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RegulaminRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/newsletter/wypisz': {
+      id: '/newsletter/wypisz'
+      path: '/newsletter/wypisz'
+      fullPath: '/newsletter/wypisz'
+      preLoaderRoute: typeof NewsletterWypiszRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -141,6 +161,7 @@ const rootRouteChildren: RootRouteChildren = {
   PolitykaCookiesRoute: PolitykaCookiesRoute,
   PolitykaPrywatnosciRoute: PolitykaPrywatnosciRoute,
   RegulaminRoute: RegulaminRoute,
+  NewsletterWypiszRoute: NewsletterWypiszRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

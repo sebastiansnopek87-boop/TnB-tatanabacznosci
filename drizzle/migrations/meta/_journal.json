@@ -8,6 +8,13 @@
       "when": 1790611925315,
       "tag": "0000_contact_messages",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790613557265,
+      "tag": "0001_newsletter_and_email_settings",
+      "breakpoints": true
     }
   ]
 }
