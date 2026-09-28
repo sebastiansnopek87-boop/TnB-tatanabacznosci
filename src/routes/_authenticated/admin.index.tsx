@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { errMsg } from "@/components/admin/format";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getDashboard } from "@/lib/admin.functions";
@@ -19,7 +20,7 @@ function Dashboard() {
   return (
     <div>
       <h1 className="font-display text-3xl font-semibold uppercase">Pulpit</h1>
-      {error && <p className="mt-4 text-sm text-destructive">{(error as Error).message}</p>}
+      {error && <p className="mt-4 text-sm text-destructive">{errMsg(error)}</p>}
       {!data && !error && <p className="mt-4 text-sm text-muted-foreground">Ładowanie…</p>}
       <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {cards.map((c) => (

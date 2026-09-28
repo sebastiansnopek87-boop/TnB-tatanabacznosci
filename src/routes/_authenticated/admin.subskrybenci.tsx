@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { listSubscribers } from "@/lib/admin.functions";
-import { fmtDate, SUB_STATUS } from "@/components/admin/format";
+import { fmtDate, SUB_STATUS , errMsg } from "@/components/admin/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -63,7 +63,7 @@ function Subscribers() {
         <Button type="submit" variant="outline">Filtruj</Button>
         <Button type="button" onClick={exportCsv} disabled={!data?.length}>Eksportuj CSV ({data?.length ?? 0})</Button>
       </form>
-      {error && <p className="mt-4 text-sm text-destructive">{(error as Error).message}</p>}
+      {error && <p className="mt-4 text-sm text-destructive">{errMsg(error)}</p>}
       <div className="mt-6 overflow-x-auto border border-border/60">
         <table className="w-full text-sm">
           <thead className="text-left text-muted-foreground"><tr className="border-b border-border/60">

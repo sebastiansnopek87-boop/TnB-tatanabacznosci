@@ -13,3 +13,12 @@ export const LOG_REASON: Record<string, string> = {
   internal_error: "Błąd wewnętrzny serwera",
 };
 
+
+// Maps server errors to Polish messages; expired/missing session gets a clear hint.
+export function errMsg(e: unknown): string {
+  const m = e instanceof Error ? e.message : String(e ?? "");
+  if (/unauthori[sz]ed|401|jwt|token/i.test(m)) return "Sesja wygasła. Zaloguj się ponownie.";
+  if (/failed to fetch|network/i.test(m)) return "Brak połączenia z serwerem. Spróbuj ponownie.";
+  return m || "Wystąpił nieoczekiwany błąd.";
+}
+export const isSessionError = (e: unknown) => errMsg(e).startsWith("Sesja wygasła");

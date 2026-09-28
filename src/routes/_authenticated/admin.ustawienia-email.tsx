@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { getEmailSettings, updateEmailSettings } from "@/lib/admin.functions";
-import { fmtDate } from "@/components/admin/format";
+import { fmtDate , errMsg } from "@/components/admin/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,7 +48,7 @@ function EmailSettings() {
     } finally { setBusy(false); }
   }
 
-  if (error) return <p className="text-sm text-destructive">{(error as Error).message}</p>;
+  if (error) return <p className="text-sm text-destructive">{errMsg(error)}</p>;
   if (!f) return <p className="text-sm text-muted-foreground">Ładowanie…</p>;
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setF({ ...f, [k]: v });
 

@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
 import { listMessages, setMessageStatus } from "@/lib/admin.functions";
-import { fmtDate, MSG_STATUS } from "@/components/admin/format";
+import { fmtDate, MSG_STATUS , errMsg } from "@/components/admin/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -26,7 +26,7 @@ function Inbox() {
   const m = useMutation({
     mutationFn: (v: { id: string; status: "new" | "read" | "archived" }) => setStatus({ data: v }),
     onSuccess: (_r, v) => { toast.success(`Oznaczono: ${MSG_STATUS[v.status]}`); qc.invalidateQueries({ queryKey: ["admin-messages"] }); qc.invalidateQueries({ queryKey: ["admin-dashboard"] }); },
-    onError: (e) => toast.error((e as Error).message),
+    onError: (e) => toast.error(errMsg(e)),
   });
   const open = data?.find((r) => r.id === openId) ?? null;
 
@@ -54,7 +54,7 @@ function Inbox() {
           <Button type="submit" variant="outline">Szukaj</Button>
         </form>
       </div>
-      {error && <p className="mt-4 text-sm text-destructive">{(error as Error).message}</p>}
+      {error && <p className="mt-4 text-sm text-destructive">{errMsg(error)}</p>}
       <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <ul className="divide-y divide-border/60 border border-border/60">
           {isLoading && <li className="p-4 text-sm text-muted-foreground">Ładowanie…</li>}
