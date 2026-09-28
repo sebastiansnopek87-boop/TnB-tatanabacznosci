@@ -33,7 +33,7 @@ export function SiteHeader() {
           </span>
         </a>
 
-        <nav className="ml-6 hidden flex-1 items-center gap-7 xl:flex">
+        <nav className="ml-6 hidden flex-1 flex-nowrap items-center gap-6 whitespace-nowrap xl:flex">
           {NAV.map((item, i) => (
             <a
               key={item.label}

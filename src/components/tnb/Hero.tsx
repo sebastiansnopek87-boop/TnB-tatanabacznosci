@@ -34,19 +34,19 @@ export function Hero() {
         }}
       />
 
-      <div className="relative flex min-h-[480px] flex-col justify-center px-5 py-14 lg:min-h-[620px] lg:px-10 lg:py-16">
+      <div className="relative flex min-h-[460px] flex-col justify-center px-5 py-12 lg:min-h-[500px] lg:px-10 lg:py-14">
         <div className="max-w-[560px]">
           <p className="eyebrow text-foreground/85">
             Doświadczenia · Ludzie · Rozmowy · Rozwój
           </p>
-          <h1 className="mt-4 font-display leading-[0.95]">
-            <span className="block text-[4.2rem] font-semibold tracking-[0.02em] text-foreground sm:text-[5.5rem]">
+          <h1 className="mt-4 font-display uppercase leading-[0.95]">
+            <span className="block text-[3.6rem] font-semibold tracking-[0.02em] text-foreground sm:text-[4.6rem]">
               Czuwaj
             </span>
-            <span className="mt-1 block text-[2.1rem] font-medium tracking-[0.01em] text-gold sm:text-[2.9rem]">
+            <span className="mt-1 block text-[1.9rem] font-medium tracking-[0.01em] text-gold sm:text-[2.45rem]">
               nad tym,
             </span>
-            <span className="block text-[2.1rem] font-medium tracking-[0.01em] text-gold sm:text-[2.9rem]">
+            <span className="block text-[1.9rem] font-medium tracking-[0.01em] text-gold sm:text-[2.45rem]">
               co naprawdę ważne.
             </span>
           </h1>
