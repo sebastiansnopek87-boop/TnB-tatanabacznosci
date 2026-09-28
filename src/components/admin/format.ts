@@ -13,6 +13,3 @@ export const LOG_REASON: Record<string, string> = {
   internal_error: "Błąd wewnętrzny serwera",
 };
 
-export function AdminTitle({ title, intro }: { title: string; intro?: string }) {
-  return null as unknown as never; // placeholder never used
-}
