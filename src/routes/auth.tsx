@@ -30,7 +30,7 @@ const emailSchema = z.string().trim().email();
 
 function loginError(code?: string): string {
   switch (code) {
-    case "email_not_confirmed": return "Konto nie jest jeszcze aktywne — adres e-mail nie został potwierdzony.";
+    case "email_not_confirmed": return "Konto nie jest jeszcze aktywne — adres e-mail nie został potwierdzony. Kliknij link z wiadomości albo wyślij nowy.";
     case "user_banned": return "To konto jest nieaktywne. Skontaktuj się z administratorem.";
     case "over_request_rate_limit": return "Zbyt wiele prób logowania. Odczekaj chwilę i spróbuj ponownie.";
     default: return "Nieprawidłowy e-mail lub hasło.";
@@ -38,8 +38,8 @@ function loginError(code?: string): string {
 }
 
 function linkError(code: string): string {
-  if (code === "otp_expired") return "Link wygasł lub został już użyty. Poproś o nowy link poniżej.";
-  return "Link jest nieprawidłowy. Poproś o nowy link poniżej.";
+  if (code === "otp_expired") return "Link wygasł lub został już użyty. Jeśli konto jest już aktywne, zaloguj się. W przeciwnym razie wyślij nowy link aktywacyjny.";
+  return "Link jest nieprawidłowy. Zaloguj się lub wyślij nowy link aktywacyjny.";
 }
 
 function AuthPage() {
@@ -62,12 +62,24 @@ function AuthPage() {
   // Handle landing from e-mail links (confirmation, expired links).
   useEffect(() => {
     const { type, errorCode } = readAuthUrlParams();
-    if (errorCode) { setMode("reset"); setMsg({ tone: "error", text: linkError(errorCode) }); }
+    if (errorCode) { setMode("login"); setMsg({ tone: "error", text: linkError(errorCode) }); }
     else if (type === "signup" || type === "email_change") setMsg({ tone: "ok", text: "Adres e-mail został potwierdzony. Możesz się zalogować." });
     if (errorCode || type) window.history.replaceState(null, "", window.location.pathname);
   }, []);
 
-  function go(m: Mode) { setMode(m); setMsg(null); setFieldErr({}); }
+  const [resent, setResent] = useState(false);
+  async function resendActivation() {
+    if (!emailSchema.safeParse(email).success) return setFieldErr({ email: "Podaj poprawny adres e-mail, aby wysłać nowy link." });
+    setBusy(true);
+    const { error } = await supabase.auth.resend({ type: "signup", email: email.trim(), options: { emailRedirectTo: `${window.location.origin}/auth` } });
+    setBusy(false);
+    if (error && (error.status === 429 || error.code === "over_email_send_rate_limit")) return setMsg({ tone: "error", text: "Wysłano zbyt wiele wiadomości. Odczekaj kilka minut i spróbuj ponownie." });
+    // Neutral message either way — does not reveal whether the address has an account.
+    setResent(true);
+    setMsg({ tone: "ok", text: "Jeśli konto dla tego adresu czeka na aktywację, wysłaliśmy nowy link. Sprawdź też folder Spam." });
+  }
+
+  function go(m: Mode) { setResent(false); setMode(m); setMsg(null); setFieldErr({}); }
 
   function validate(needPassword: boolean) {
     const e: typeof fieldErr = {};
@@ -91,6 +103,7 @@ function AuthPage() {
   async function onRegister(e: FormEvent) {
     e.preventDefault();
     if (!validate(true)) return;
+    if (password.length > 72) return setFieldErr({ password: "Hasło może mieć najwyżej 72 znaki." });
     if (password.length < 8) return setFieldErr({ password: "Hasło musi mieć co najmniej 8 znaków." });
     if (password !== password2) return setFieldErr({ password: "Hasła nie są identyczne." });
     setBusy(true); setMsg(null);
@@ -109,8 +122,10 @@ function AuthPage() {
   }
 
   async function oauth(provider: "google" | "apple") {
-    setMsg(null);
-    const res = await lovable.auth.signInWithOAuth(provider, { redirect_uri: `${window.location.origin}/auth` });
+    if (busy) return;
+    setMsg(null); setBusy(true);
+    const res = await lovable.auth.signInWithOAuth(provider, { redirect_uri: `${window.location.origin}/auth` }).catch((e) => ({ error: e, redirected: false }));
+    setBusy(false);
     if (res.error) {
       const cancelled = /cancel|closed|denied/i.test(String((res.error as Error).message ?? res.error));
       return setMsg({ tone: cancelled ? "info" : "error", text: cancelled ? "Logowanie zostało anulowane." : "Nie udało się zalogować. Spróbuj ponownie." });
@@ -121,11 +136,11 @@ function AuthPage() {
 
   const social = (
     <div className="space-y-3">
-      <button type="button" onClick={() => oauth("google")} className="flex h-11 w-full items-center justify-center gap-3 rounded-md border border-border bg-foreground text-sm font-medium text-background transition-opacity hover:opacity-90">
+      <button type="button" disabled={busy} onClick={() => oauth("google")} className="flex h-11 w-full items-center justify-center gap-3 rounded-md border border-border bg-foreground text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50">
         <svg aria-hidden viewBox="0 0 48 48" className="h-5 w-5"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
         Kontynuuj z Google
       </button>
-      <button type="button" onClick={() => oauth("apple")} className="flex h-11 w-full items-center justify-center gap-3 rounded-md border border-foreground/20 bg-background text-sm font-medium text-foreground transition-colors hover:bg-foreground/5">
+      <button type="button" disabled={busy} onClick={() => oauth("apple")} className="flex h-11 w-full items-center justify-center gap-3 rounded-md border border-foreground/20 bg-background text-sm font-medium text-foreground transition-colors hover:bg-foreground/5 disabled:opacity-50">
         <svg aria-hidden viewBox="0 0 384 512" className="h-5 w-5 fill-current"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
         Kontynuuj z Apple
       </button>
@@ -164,9 +179,12 @@ function AuthPage() {
   if (mode === "register-sent") {
     return (
       <AuthShell step="Rejestracja · krok 2 z 2" title="Potwierdź adres"
-        lead={<>Wysłaliśmy link aktywacyjny na adres <span className="text-foreground">{email.trim()}</span>. Kliknij go, aby aktywować konto.</>}>
-        <AuthNotice tone="ok">Sprawdź też folder Spam.</AuthNotice>
-        <div className="mt-6">{helper("Wróć do logowania", "login")}</div>
+        lead={<>Jeśli adres <span className="text-foreground">{email.trim()}</span> nie ma jeszcze konta, wysłaliśmy na niego link aktywacyjny. Kliknij go, aby aktywować konto.</>}>
+        <AuthNotice tone={msg?.tone ?? "ok"}>{msg?.text ?? "Sprawdź też folder Spam. Jeśli masz już konto, po prostu się zaloguj."}</AuthNotice>
+        <div className="mt-6 flex flex-wrap gap-x-6 gap-y-3">
+          {!resent && <button type="button" disabled={busy} onClick={resendActivation} className="text-sm text-gold underline-offset-4 hover:underline disabled:opacity-50">{busy ? "Wysyłanie…" : "Wyślij link ponownie"}</button>}
+          {helper("Wróć do logowania", "login")}
+        </div>
       </AuthShell>
     );
   }
@@ -240,6 +258,9 @@ function AuthPage() {
           {fieldErr.password && <p className="text-xs text-destructive">{fieldErr.password}</p>}
         </div>
         {msg && <AuthNotice tone={msg.tone}>{msg.text}</AuthNotice>}
+        {msg?.tone === "error" && /aktywn|potwierdz/i.test(msg.text) && !resent && (
+          <button type="button" disabled={busy} onClick={resendActivation} className="text-sm text-gold underline-offset-4 hover:underline disabled:opacity-50">Wyślij nowy link aktywacyjny</button>
+        )}
         <Button type="submit" className="h-11 w-full uppercase tracking-[0.15em]" disabled={busy}>
           {busy ? "Logowanie…" : "Zaloguj"}
         </Button>

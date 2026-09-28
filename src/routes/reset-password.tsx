@@ -45,8 +45,9 @@ function ResetPage() {
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (pw.length < 10) return setErr("Hasło musi mieć co najmniej 10 znaków.");
+    if (pw.length < 8) return setErr("Hasło musi mieć co najmniej 8 znaków.");
     if (pw !== pw2) return setErr("Hasła nie są identyczne.");
+    if (busy) return;
     setBusy(true); setErr(null);
     const { error } = await supabase.auth.updateUser({ password: pw });
     setBusy(false);
@@ -84,7 +85,7 @@ function ResetPage() {
   }
 
   return (
-    <AuthShell step="Odzyskiwanie hasła · krok 3 z 3" title="Ustaw nowe hasło" lead="Wybierz hasło o długości co najmniej 10 znaków.">
+    <AuthShell step="Odzyskiwanie hasła · krok 3 z 3" title="Ustaw nowe hasło" lead="Wybierz hasło o długości co najmniej 8 znaków.">
       <form onSubmit={onSubmit} noValidate className="space-y-5">
         <div className="space-y-2">
           <Label htmlFor="pw">Nowe hasło</Label>
