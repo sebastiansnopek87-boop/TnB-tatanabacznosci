@@ -22,6 +22,13 @@
       "when": 1790616544119,
       "tag": "0002_admin_roles_and_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790625968235,
+      "tag": "0003_community",
+      "breakpoints": true
     }
   ]
 }
