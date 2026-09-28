@@ -25,6 +25,7 @@ const NAV = [
   { to: "/admin/wiadomosci", label: "Wiadomości" },
   { to: "/admin/subskrybenci", label: "Subskrybenci" },
   { to: "/admin/ustawienia-email", label: "Ustawienia e-mail" },
+  { to: "/admin/spolecznosc", label: "Społeczność" },
   { to: "/admin/powiadomienia", label: "Historia powiadomień" },
   { to: "/admin/tresci", label: "Treści strony" },
 ] as const;

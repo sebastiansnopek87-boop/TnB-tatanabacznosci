@@ -26,6 +26,8 @@ import { Route as AuthenticatedAdminSubskrybenciRouteImport } from './routes/_au
 import { Route as AuthenticatedAdminTresciRouteImport } from './routes/_authenticated/admin.tresci'
 import { Route as AuthenticatedAdminUstawieniaEmailRouteImport } from './routes/_authenticated/admin.ustawienia-email'
 import { Route as AuthenticatedAdminWiadomosciRouteImport } from './routes/_authenticated/admin.wiadomosci'
+import { Route as AuthenticatedSpolecznoscIndexRouteImport } from './routes/_authenticated/spolecznosc.index'
+import { Route as AuthenticatedSpolecznoscPostIdRouteImport } from './routes/_authenticated/spolecznosc.$postId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -116,6 +118,18 @@ const AuthenticatedAdminWiadomosciRoute =
     path: '/wiadomosci',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedSpolecznoscIndexRoute =
+  AuthenticatedSpolecznoscIndexRouteImport.update({
+    id: '/spolecznosc/',
+    path: '/spolecznosc/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSpolecznoscPostIdRoute =
+  AuthenticatedSpolecznoscPostIdRouteImport.update({
+    id: '/spolecznosc/$postId',
+    path: '/spolecznosc/$postId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -133,7 +147,9 @@ export interface FileRoutesByFullPath {
   '/admin/tresci': typeof AuthenticatedAdminTresciRoute
   '/admin/ustawienia-email': typeof AuthenticatedAdminUstawieniaEmailRoute
   '/admin/wiadomosci': typeof AuthenticatedAdminWiadomosciRoute
+  '/spolecznosc/$postId': typeof AuthenticatedSpolecznoscPostIdRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/spolecznosc/': typeof AuthenticatedSpolecznoscIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -150,7 +166,9 @@ export interface FileRoutesByTo {
   '/admin/tresci': typeof AuthenticatedAdminTresciRoute
   '/admin/ustawienia-email': typeof AuthenticatedAdminUstawieniaEmailRoute
   '/admin/wiadomosci': typeof AuthenticatedAdminWiadomosciRoute
+  '/spolecznosc/$postId': typeof AuthenticatedSpolecznoscPostIdRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/spolecznosc': typeof AuthenticatedSpolecznoscIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -170,7 +188,9 @@ export interface FileRoutesById {
   '/_authenticated/admin/tresci': typeof AuthenticatedAdminTresciRoute
   '/_authenticated/admin/ustawienia-email': typeof AuthenticatedAdminUstawieniaEmailRoute
   '/_authenticated/admin/wiadomosci': typeof AuthenticatedAdminWiadomosciRoute
+  '/_authenticated/spolecznosc/$postId': typeof AuthenticatedSpolecznoscPostIdRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/spolecznosc/': typeof AuthenticatedSpolecznoscIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -190,7 +210,9 @@ export interface FileRouteTypes {
     | '/admin/tresci'
     | '/admin/ustawienia-email'
     | '/admin/wiadomosci'
+    | '/spolecznosc/$postId'
     | '/admin/'
+    | '/spolecznosc/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -207,7 +229,9 @@ export interface FileRouteTypes {
     | '/admin/tresci'
     | '/admin/ustawienia-email'
     | '/admin/wiadomosci'
+    | '/spolecznosc/$postId'
     | '/admin'
+    | '/spolecznosc'
   id:
     | '__root__'
     | '/'
@@ -226,7 +250,9 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/tresci'
     | '/_authenticated/admin/ustawienia-email'
     | '/_authenticated/admin/wiadomosci'
+    | '/_authenticated/spolecznosc/$postId'
     | '/_authenticated/admin/'
+    | '/_authenticated/spolecznosc/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -362,6 +388,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminWiadomosciRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/spolecznosc/': {
+      id: '/_authenticated/spolecznosc/'
+      path: '/spolecznosc'
+      fullPath: '/spolecznosc/'
+      preLoaderRoute: typeof AuthenticatedSpolecznoscIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/spolecznosc/$postId': {
+      id: '/_authenticated/spolecznosc/$postId'
+      path: '/spolecznosc/$postId'
+      fullPath: '/spolecznosc/$postId'
+      preLoaderRoute: typeof AuthenticatedSpolecznoscPostIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -390,11 +430,15 @@ const AuthenticatedAdminRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedMojeTnbRoute: typeof AuthenticatedMojeTnbRoute
+  AuthenticatedSpolecznoscPostIdRoute: typeof AuthenticatedSpolecznoscPostIdRoute
+  AuthenticatedSpolecznoscIndexRoute: typeof AuthenticatedSpolecznoscIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedMojeTnbRoute: AuthenticatedMojeTnbRoute,
+  AuthenticatedSpolecznoscPostIdRoute: AuthenticatedSpolecznoscPostIdRoute,
+  AuthenticatedSpolecznoscIndexRoute: AuthenticatedSpolecznoscIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
