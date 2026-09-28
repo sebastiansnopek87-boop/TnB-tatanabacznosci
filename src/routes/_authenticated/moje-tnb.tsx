@@ -112,7 +112,7 @@ function ProfileCard({ user, onSaved }: { user: User; onSaved: (u: User) => void
     e.preventDefault();
     setMsg(null);
     const parsed = profileSchema.safeParse(p);
-    if (!parsed.success) return setMsg({ tone: "error", text: parsed.error.issues[0].message });
+    if (!parsed.success) return setMsg({ tone: "error", text: parsed.error.issues[0]?.message ?? "Nieprawidłowe dane." });
     setBusy(true);
     const { data, error } = await supabase.auth.updateUser({ data: parsed.data });
     setBusy(false);
