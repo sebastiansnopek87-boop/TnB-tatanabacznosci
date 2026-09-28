@@ -62,13 +62,13 @@ const TILES = [
 
 export function PillarCards() {
   return (
-    <section className="space-y-3 bg-background px-3 py-3">
-      <div className="grid gap-3 lg:grid-cols-3">
+    <section className="bg-background px-3 pt-10 pb-16 sm:px-5 lg:px-10 lg:pt-20 lg:pb-28"><div className="mx-auto max-w-[1440px] space-y-4 lg:space-y-6">
+      <div className="grid gap-4 lg:grid-cols-3 lg:gap-6">
         {CARDS.map((card) => (
           <article
             key={card.num}
             id={card.id}
-            className="group relative isolate min-h-[240px] overflow-hidden border border-border/50 bg-surface"
+            className="group relative isolate min-h-[280px] lg:min-h-[340px] overflow-hidden border border-border/50 bg-surface"
           >
             <img
               src={card.image}
@@ -82,7 +82,7 @@ export function PillarCards() {
                   "linear-gradient(90deg, oklch(0.132 0.01 58 / 0.97) 0%, oklch(0.132 0.01 58 / 0.9) 42%, oklch(0.132 0.01 58 / 0.3) 78%, transparent 100%)",
               }}
             />
-            <div className="flex h-full flex-col p-7">
+            <div className="flex h-full min-h-[inherit] flex-col p-7 lg:p-9">
               <span className="text-[0.72rem] tracking-[0.2em] text-gold">{card.num}</span>
               <h3 className="mt-3 font-display text-[1.75rem] font-medium uppercase tracking-[0.04em] text-foreground">
                 {card.title}
@@ -102,7 +102,7 @@ export function PillarCards() {
         ))}
       </div>
 
-      <div className="grid gap-3 lg:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-3 lg:gap-6">
         {TILES.map((tile) => (
           <a
             key={tile.id}
@@ -113,7 +113,7 @@ export function PillarCards() {
             <img
               src={tile.image}
               alt={tile.alt}
-              className="h-[104px] w-[38%] shrink-0 object-cover sm:w-[32%]"
+              className="h-[120px] lg:h-[136px] w-[38%] shrink-0 object-cover sm:w-[32%]"
             />
             <div className="flex flex-1 items-center gap-4 px-5 py-4">
               <div className="flex-1">
@@ -132,6 +132,6 @@ export function PillarCards() {
           </a>
         ))}
       </div>
-    </section>
+    </div></section>
   );
 }

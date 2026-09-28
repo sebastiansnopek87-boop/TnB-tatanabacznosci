@@ -14,8 +14,8 @@ export function QuoteNewsletter() {
   }
 
   return (
-    <section className="grid bg-surface-deep lg:grid-cols-[1.55fr_1fr]">
-      <div className="relative isolate flex items-center overflow-hidden px-5 py-12 lg:px-10">
+    <section className="grid gap-px bg-border/40 lg:grid-cols-[1.55fr_1fr]">
+      <div className="relative isolate flex items-center overflow-hidden px-5 py-16 sm:py-20 lg:px-14 lg:py-28">
         <img
           src={banner.url}
           alt="Panorama gór o zachodzie słońca"
@@ -39,7 +39,7 @@ export function QuoteNewsletter() {
         </div>
       </div>
 
-      <div className="flex items-center gap-6 px-5 py-10 lg:px-10">
+      <div className="flex items-center gap-6 bg-surface-deep px-5 py-14 lg:px-14 lg:py-28">
         <Mail className="hidden h-10 w-10 shrink-0 text-foreground/80 sm:block" strokeWidth={1} />
         <div className="w-full">
           <h2 className="text-[0.82rem] uppercase tracking-[0.16em] text-gold">
