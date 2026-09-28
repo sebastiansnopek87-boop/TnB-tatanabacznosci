@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Menu, Search, UserRound, X } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import logo from "@/assets/logo.png.asset.json";
 
 const NAV = [
@@ -56,19 +57,20 @@ export function SiteHeader() {
           >
             <Search className="h-5 w-5" strokeWidth={1.5} />
           </button>
-          <a
-            href="#logowanie"
+          <Link
+            to="/auth"
             className="hidden whitespace-nowrap border border-gold/70 px-6 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-foreground transition-colors hover:bg-gold/10 lg:block"
           >
             Zaloguj się
-          </a>
-          <a
-            href="#dolacz"
+          </Link>
+          <Link
+            to="/auth"
+            search={{ tryb: "rejestracja" }}
             className="hidden items-center gap-2 bg-gold px-6 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-primary-foreground transition-colors hover:bg-gold-bright lg:flex"
           >
             <UserRound className="h-4 w-4" strokeWidth={1.75} />
             Dołącz
-          </a>
+          </Link>
           <button
             aria-label="Menu"
             onClick={() => setOpen((v) => !v)}
@@ -94,18 +96,19 @@ export function SiteHeader() {
             ))}
           </nav>
           <div className="mt-5 flex gap-3">
-            <a
-              href="#logowanie"
+            <Link
+              to="/auth"
               className="flex-1 border border-gold/70 py-3 text-center text-[0.72rem] uppercase tracking-[0.14em]"
             >
               Zaloguj się
-            </a>
-            <a
-              href="#dolacz"
+            </Link>
+            <Link
+              to="/auth"
+              search={{ tryb: "rejestracja" }}
               className="flex-1 bg-gold py-3 text-center text-[0.72rem] uppercase tracking-[0.14em] text-primary-foreground"
             >
               Dołącz
-            </a>
+            </Link>
           </div>
         </div>
       )}
