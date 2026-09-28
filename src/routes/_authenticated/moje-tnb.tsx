@@ -58,8 +58,9 @@ function MojeTnb() {
   async function signOut() {
     await qc.cancelQueries();
     qc.clear();
+    // Leave the protected area first, otherwise the auth gate redirects to /auth on SIGNED_OUT.
+    await navigate({ to: "/", replace: true });
     await supabase.auth.signOut();
-    navigate({ to: "/", replace: true });
   }
 
   return (
