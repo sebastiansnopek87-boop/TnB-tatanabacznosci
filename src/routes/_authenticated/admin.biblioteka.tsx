@@ -108,7 +108,7 @@ function Editor({ id, cats, onClose, onSaved }: { id: string | null; cats: { slu
   useEffect(() => {
     if (!cur.data) return;
     const { item: i, content: c } = cur.data;
-    setF({ id: i.id, title: i.title, slug: i.slug, summary: i.summary, category: i.category, kind: i.kind, access: i.access, status: i.status, author_name: i.author_name, body: c.body ?? "", external_url: c.external_url ?? "" });
+    setF({ id: i.id, title: i.title, slug: i.slug, summary: i.summary, category: i.category, kind: i.kind as Kind, access: i.access as Access, status: i.status as Status, author_name: i.author_name, body: c.body ?? "", external_url: c.external_url ?? "" });
     setSlugTouched(true);
   }, [cur.data]);
 
@@ -163,7 +163,7 @@ function Editor({ id, cats, onClose, onSaved }: { id: string | null; cats: { slu
         <div><Label htmlFor="lsum">Krótki opis (widoczny dla wszystkich)</Label><Textarea id="lsum" rows={3} value={f.summary} onChange={(e) => set("summary", e.target.value)} maxLength={600} /></div>
         <div className="grid gap-4 sm:grid-cols-3">
           <div><Label>Kategoria</Label>
-            <Select value={f.category || undefined} onValueChange={(v) => set("category", v)}><SelectTrigger><SelectValue placeholder="Wybierz" /></SelectTrigger>
+            <Select value={f.category} onValueChange={(v) => set("category", v)}><SelectTrigger><SelectValue placeholder="Wybierz" /></SelectTrigger>
               <SelectContent>{cats.map((c) => <SelectItem key={c.slug} value={c.slug}>{c.name}</SelectItem>)}</SelectContent></Select></div>
           <div><Label>Typ</Label>
             <Select value={f.kind} onValueChange={(v) => set("kind", v as Kind)}><SelectTrigger><SelectValue /></SelectTrigger>
