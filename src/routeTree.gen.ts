@@ -29,6 +29,7 @@ import { Route as NewsletterWypiszRouteImport } from './routes/newsletter.wypisz
 import { Route as SpolecznoscIndexRouteImport } from './routes/spolecznosc.index'
 import { Route as SpolecznoscPostIdRouteImport } from './routes/spolecznosc.$postId'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedAdminBibliotekaRouteImport } from './routes/_authenticated/admin.biblioteka'
 import { Route as AuthenticatedAdminPowiadomieniaRouteImport } from './routes/_authenticated/admin.powiadomienia'
 import { Route as AuthenticatedAdminSpolecznoscRouteImport } from './routes/_authenticated/admin.spolecznosc'
 import { Route as AuthenticatedAdminSubskrybenciRouteImport } from './routes/_authenticated/admin.subskrybenci'
@@ -136,6 +137,12 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminBibliotekaRoute =
+  AuthenticatedAdminBibliotekaRouteImport.update({
+    id: '/biblioteka',
+    path: '/biblioteka',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminPowiadomieniaRoute =
   AuthenticatedAdminPowiadomieniaRouteImport.update({
     id: '/powiadomienia',
@@ -197,6 +204,7 @@ export interface FileRoutesByFullPath {
   '/spolecznosc/$postId': typeof SpolecznoscPostIdRoute
   '/biblioteka/': typeof BibliotekaIndexRoute
   '/spolecznosc/': typeof SpolecznoscIndexRoute
+  '/admin/biblioteka': typeof AuthenticatedAdminBibliotekaRoute
   '/admin/powiadomienia': typeof AuthenticatedAdminPowiadomieniaRoute
   '/admin/spolecznosc': typeof AuthenticatedAdminSpolecznoscRoute
   '/admin/subskrybenci': typeof AuthenticatedAdminSubskrybenciRoute
@@ -224,6 +232,7 @@ export interface FileRoutesByTo {
   '/spolecznosc/$postId': typeof SpolecznoscPostIdRoute
   '/biblioteka': typeof BibliotekaIndexRoute
   '/spolecznosc': typeof SpolecznoscIndexRoute
+  '/admin/biblioteka': typeof AuthenticatedAdminBibliotekaRoute
   '/admin/powiadomienia': typeof AuthenticatedAdminPowiadomieniaRoute
   '/admin/spolecznosc': typeof AuthenticatedAdminSpolecznoscRoute
   '/admin/subskrybenci': typeof AuthenticatedAdminSubskrybenciRoute
@@ -254,6 +263,7 @@ export interface FileRoutesById {
   '/spolecznosc/$postId': typeof SpolecznoscPostIdRoute
   '/biblioteka/': typeof BibliotekaIndexRoute
   '/spolecznosc/': typeof SpolecznoscIndexRoute
+  '/_authenticated/admin/biblioteka': typeof AuthenticatedAdminBibliotekaRoute
   '/_authenticated/admin/powiadomienia': typeof AuthenticatedAdminPowiadomieniaRoute
   '/_authenticated/admin/spolecznosc': typeof AuthenticatedAdminSpolecznoscRoute
   '/_authenticated/admin/subskrybenci': typeof AuthenticatedAdminSubskrybenciRoute
@@ -284,6 +294,7 @@ export interface FileRouteTypes {
     | '/spolecznosc/$postId'
     | '/biblioteka/'
     | '/spolecznosc/'
+    | '/admin/biblioteka'
     | '/admin/powiadomienia'
     | '/admin/spolecznosc'
     | '/admin/subskrybenci'
@@ -311,6 +322,7 @@ export interface FileRouteTypes {
     | '/spolecznosc/$postId'
     | '/biblioteka'
     | '/spolecznosc'
+    | '/admin/biblioteka'
     | '/admin/powiadomienia'
     | '/admin/spolecznosc'
     | '/admin/subskrybenci'
@@ -340,6 +352,7 @@ export interface FileRouteTypes {
     | '/spolecznosc/$postId'
     | '/biblioteka/'
     | '/spolecznosc/'
+    | '/_authenticated/admin/biblioteka'
     | '/_authenticated/admin/powiadomienia'
     | '/_authenticated/admin/spolecznosc'
     | '/_authenticated/admin/subskrybenci'
@@ -513,6 +526,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/biblioteka': {
+      id: '/_authenticated/admin/biblioteka'
+      path: '/biblioteka'
+      fullPath: '/admin/biblioteka'
+      preLoaderRoute: typeof AuthenticatedAdminBibliotekaRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/powiadomienia': {
       id: '/_authenticated/admin/powiadomienia'
       path: '/powiadomienia'
@@ -566,6 +586,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminBibliotekaRoute: typeof AuthenticatedAdminBibliotekaRoute
   AuthenticatedAdminPowiadomieniaRoute: typeof AuthenticatedAdminPowiadomieniaRoute
   AuthenticatedAdminSpolecznoscRoute: typeof AuthenticatedAdminSpolecznoscRoute
   AuthenticatedAdminSubskrybenciRoute: typeof AuthenticatedAdminSubskrybenciRoute
@@ -576,6 +597,7 @@ interface AuthenticatedAdminRouteChildren {
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminBibliotekaRoute: AuthenticatedAdminBibliotekaRoute,
   AuthenticatedAdminPowiadomieniaRoute: AuthenticatedAdminPowiadomieniaRoute,
   AuthenticatedAdminSpolecznoscRoute: AuthenticatedAdminSpolecznoscRoute,
   AuthenticatedAdminSubskrybenciRoute: AuthenticatedAdminSubskrybenciRoute,

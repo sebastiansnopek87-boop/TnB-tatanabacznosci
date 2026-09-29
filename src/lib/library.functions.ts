@@ -140,7 +140,7 @@ export const getLibraryFileUrl = createServerFn({ method: "POST" })
     const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
     const headers: Record<string, string> = token.split(".").length === 3 ? { Authorization: `Bearer ${token}` } : {};
     const client = createClient(url, key, {
-      global: { headers, fetch: (i, init) => { const h = new Headers(init?.headers); h.set("apikey", key); if (!headers.Authorization) h.delete("Authorization"); return fetch(i, { ...init, headers: h }); } },
+      global: { headers, fetch: (i, init) => { const h = new Headers(init?.headers); h.set("apikey", key); if (!headers["Authorization"]) h.delete("Authorization"); return fetch(i, { ...init, headers: h }); } },
       auth: { persistSession: false, autoRefreshToken: false },
     });
     const { data: item } = await client.from("library_items").select("id").eq("slug", data.slug).eq("status", "published").maybeSingle();
