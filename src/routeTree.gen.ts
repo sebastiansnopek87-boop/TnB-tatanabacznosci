@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
-import { Route as BibliotekaRouteImport } from './routes/biblioteka'
 import { Route as KontaktRouteImport } from './routes/kontakt'
 import { Route as MaterialyPremiumRouteImport } from './routes/materialy-premium'
 import { Route as MojaHistoriaRouteImport } from './routes/moja-historia'
@@ -48,11 +47,6 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BibliotekaRoute = BibliotekaRouteImport.update({
-  id: '/biblioteka',
-  path: '/biblioteka',
   getParentRoute: () => rootRouteImport,
 } as any)
 const KontaktRoute = KontaktRouteImport.update({
@@ -175,7 +169,6 @@ const ApiPublicLibraryCoverIdRoute = ApiPublicLibraryCoverIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/biblioteka': typeof BibliotekaRoute
   '/kontakt': typeof KontaktRoute
   '/materialy-premium': typeof MaterialyPremiumRoute
   '/moja-historia': typeof MojaHistoriaRoute
@@ -202,7 +195,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/biblioteka': typeof BibliotekaRoute
   '/kontakt': typeof KontaktRoute
   '/materialy-premium': typeof MaterialyPremiumRoute
   '/moja-historia': typeof MojaHistoriaRoute
@@ -230,7 +222,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
-  '/biblioteka': typeof BibliotekaRoute
   '/kontakt': typeof KontaktRoute
   '/materialy-premium': typeof MaterialyPremiumRoute
   '/moja-historia': typeof MojaHistoriaRoute
@@ -259,7 +250,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
-    | '/biblioteka'
     | '/kontakt'
     | '/materialy-premium'
     | '/moja-historia'
@@ -286,7 +276,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
-    | '/biblioteka'
     | '/kontakt'
     | '/materialy-premium'
     | '/moja-historia'
@@ -313,7 +302,6 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
-    | '/biblioteka'
     | '/kontakt'
     | '/materialy-premium'
     | '/moja-historia'
@@ -342,7 +330,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
-  BibliotekaRoute: typeof BibliotekaRoute
   KontaktRoute: typeof KontaktRoute
   MaterialyPremiumRoute: typeof MaterialyPremiumRoute
   MojaHistoriaRoute: typeof MojaHistoriaRoute
@@ -379,13 +366,6 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/biblioteka': {
-      id: '/biblioteka'
-      path: '/biblioteka'
-      fullPath: '/biblioteka'
-      preLoaderRoute: typeof BibliotekaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/kontakt': {
@@ -586,7 +566,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
-  BibliotekaRoute: BibliotekaRoute,
   KontaktRoute: KontaktRoute,
   MaterialyPremiumRoute: MaterialyPremiumRoute,
   MojaHistoriaRoute: MojaHistoriaRoute,
