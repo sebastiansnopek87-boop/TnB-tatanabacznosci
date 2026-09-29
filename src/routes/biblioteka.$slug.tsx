@@ -6,6 +6,8 @@ import { PageShell } from "@/components/tnb/PageShell";
 import { useUid } from "@/lib/community";
 import { KINDS, accessLabel, fmtPrice, coverSrc, fmtDay, getLibraryItem, listCategories } from "@/lib/library";
 import { getLibraryFileUrl } from "@/lib/library.functions";
+import { BuyPanel } from "@/components/library/BuyPanel";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
 export const Route = createFileRoute("/biblioteka/$slug")({
   head: () => ({
@@ -38,6 +40,7 @@ function ItemPage() {
 
   return (
     <PageShell>
+      {q.data?.item.access === "premium" && !q.data.content && <PaymentTestModeBanner />}
       <div className="mx-auto max-w-3xl px-5 py-12 lg:py-16">
         <Link to="/biblioteka" className="text-[0.72rem] uppercase tracking-[0.14em] text-gold hover:text-gold-bright">← Wróć do biblioteki</Link>
         {!ready || q.isLoading ? (
@@ -70,8 +73,12 @@ function ItemPage() {
                     <p className="eyebrow text-gold">Materiał premium</p>
                     <p className="mt-3 font-display text-3xl font-semibold text-foreground">{fmtPrice(it.price_amount) ?? "Cena wkrótce"}</p>
                     <p className="mt-3 text-[0.95rem] leading-[1.75] text-foreground/85">Pełna zawartość jest dostępna po zakupie. Konto nie jest wymagane — materiał otrzymasz na podany adres e-mail.</p>
-                    <button type="button" disabled className="mt-6 cursor-not-allowed bg-gold/40 px-6 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-primary-foreground">Kup materiał</button>
-                    <p className="mt-2 text-xs text-muted-foreground">Zakupy uruchomimy wkrótce.</p>
+                    {it.purchasable && it.price_amount && it.price_amount >= 100 ? (
+                      <BuyPanel slug={it.slug} title={it.title} price={it.price_amount} />
+                    ) : (<>
+                      <button type="button" disabled className="mt-6 cursor-not-allowed bg-gold/40 px-6 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-primary-foreground">Kup materiał</button>
+                      <p className="mt-2 text-xs text-muted-foreground">Sprzedaż tego materiału jeszcze nie ruszyła.</p>
+                    </>)}
                   </>) : (<>
                     <p className="eyebrow text-gold">Dla członków TNB</p>
                     <p className="mt-3 text-[0.95rem] leading-[1.75] text-foreground/85">Ten materiał jest dostępny dla członków społeczności TNB. Zaloguj się lub dołącz do nas, aby uzyskać dostęp.</p>
