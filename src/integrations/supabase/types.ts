@@ -371,6 +371,30 @@ export type Database = {
           visibility: string
         }[]
       }
+      community_feed_filtered: {
+        Args: {
+          _author: string
+          _limit: number
+          _offset: number
+          _only_mine: boolean
+          _sector: string
+          _sort: string
+        }
+        Returns: {
+          author_id: string
+          author_name: string
+          body: string
+          comments: number
+          created_at: string
+          id: string
+          reacted: boolean
+          reactions: number
+          sector: string
+          status: string
+          updated_at: string
+          visibility: string
+        }[]
+      }
       community_post_stats: {
         Args: { _post: string }
         Returns: {
@@ -379,6 +403,23 @@ export type Database = {
         }[]
       }
       community_post_visible: { Args: { _post: string }; Returns: boolean }
+      community_search: {
+        Args: { _q: string }
+        Returns: {
+          id: string
+          kind: string
+          label: string
+          sector: string
+          snippet: string
+        }[]
+      }
+      community_sector_counts: {
+        Args: never
+        Returns: {
+          posts: number
+          sector: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
