@@ -59,6 +59,7 @@ export type Database = {
           body: string
           created_at: string
           id: string
+          sector: string
           status: string
           updated_at: string
           visibility: string
@@ -69,6 +70,7 @@ export type Database = {
           body: string
           created_at?: string
           id?: string
+          sector?: string
           status?: string
           updated_at?: string
           visibility?: string
@@ -79,6 +81,7 @@ export type Database = {
           body?: string
           created_at?: string
           id?: string
+          sector?: string
           status?: string
           updated_at?: string
           visibility?: string
@@ -110,6 +113,41 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "community_reactions_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_reports: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          reason: string
+          reporter_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          reason: string
+          reporter_id?: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          reason?: string
+          reporter_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_reports_post_id_fkey"
             columns: ["post_id"]
             isOneToOne: false
             referencedRelation: "community_posts"
@@ -311,6 +349,35 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      community_feed: {
+        Args: {
+          _limit: number
+          _offset: number
+          _only_mine: boolean
+          _sort: string
+        }
+        Returns: {
+          author_id: string
+          author_name: string
+          body: string
+          comments: number
+          created_at: string
+          id: string
+          reacted: boolean
+          reactions: number
+          sector: string
+          status: string
+          updated_at: string
+          visibility: string
+        }[]
+      }
+      community_post_stats: {
+        Args: { _post: string }
+        Returns: {
+          comments: number
+          reactions: number
+        }[]
+      }
       community_post_visible: { Args: { _post: string }; Returns: boolean }
       has_role: {
         Args: {
