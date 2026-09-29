@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { PAGE, POST_MAX, createPost, listPosts } from "@/lib/community";
 
-export const Route = createFileRoute("/_authenticated/spolecznosc/")({
+export const Route = createFileRoute("/spolecznosc/")({
   head: () => ({
     meta: [
       { title: "Społeczność — Tata Na Baczności" },

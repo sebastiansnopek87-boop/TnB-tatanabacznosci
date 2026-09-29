@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { COMMENT_MAX, createComment, deleteComment, fmtWhen, getPost, listComments, updateComment, type Comment } from "@/lib/community";
 import { useUid } from "./spolecznosc.index";
 
-export const Route = createFileRoute("/_authenticated/spolecznosc/$postId")({
+export const Route = createFileRoute("/spolecznosc/$postId")({
   head: () => ({
     meta: [
       { title: "Dyskusja — Społeczność Tata Na Baczności" },
