@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
+import { JoinDialog } from "./JoinDialog";
 import { Flag, Heart, MessageSquare } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -89,6 +90,7 @@ export function PostCard({ post, uid, full, onChanged, onDeleted }: {
   const [vis, setVis] = useState<Visibility>(post.visibility);
   const [sector, setSector] = useState<Sector>(post.sector ?? "ogolne");
   const [busy, setBusy] = useState(false);
+  const [join, setJoin] = useState(false);
   const [reacted, setReacted] = useState(post.reacted);
   const [count, setCount] = useState(post.reactions);
   const own = uid === post.author_id;
@@ -102,7 +104,7 @@ export function PostCard({ post, uid, full, onChanged, onDeleted }: {
   }
 
   async function react() {
-    if (post.guest) { toast.info("Zaloguj się lub dołącz do TNB, aby reagować na wpisy."); return; }
+    if (post.guest) { setJoin(true); return; }
     const next = !reacted;
     setReacted(next); setCount((c) => c + (next ? 1 : -1));
     try { await toggleReaction(post.id, next); onChanged(); }
@@ -162,6 +164,7 @@ export function PostCard({ post, uid, full, onChanged, onDeleted }: {
           </span>
         )}
       </footer>
+      {post.guest && <JoinDialog open={join} onOpenChange={setJoin} />}
     </article>
   );
 }
