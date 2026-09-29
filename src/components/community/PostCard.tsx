@@ -92,7 +92,7 @@ export function PostCard({ post, uid, full, onChanged, onDeleted }: {
   const [reacted, setReacted] = useState(post.reacted);
   const [count, setCount] = useState(post.reactions);
   const own = uid === post.author_id;
-  const long = !full && post.body.length > 600;
+  const long = false;
 
   async function run(fn: () => Promise<void>, ok: string, after?: () => void) {
     setBusy(true);
@@ -110,7 +110,7 @@ export function PostCard({ post, uid, full, onChanged, onDeleted }: {
   }
 
   return (
-    <article className="rounded-sm border border-border/50 bg-card/70 p-5 shadow-[0_1px_0_0_color-mix(in_oklab,var(--gold)_12%,transparent)_inset] transition-colors hover:border-gold/30 sm:p-7">
+    <article className="rounded-sm border border-border/50 bg-card/70 p-5 shadow-[0_1px_0_0_color-mix(in_oklab,var(--color-gold)_12%,transparent)_inset] transition-colors hover:border-gold/30 sm:p-7">
       <header className="flex items-center gap-3">
         <Initial name={post.author_name} />
         <div className="min-w-0 flex-1">
