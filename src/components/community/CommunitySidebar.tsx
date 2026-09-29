@@ -105,7 +105,7 @@ export function CommunitySidebar({ signedIn, sector, onSector, onAuthor, onNewTh
         <ol className="mt-3 space-y-2.5 text-[0.8rem] leading-[1.6] text-foreground/80">
           {CODE.map(([t, d], i) => (
             <li key={t} className="flex gap-2">
-              <span className="font-display text-gold tabular-nums">{i + 1}.</span>
+              <span className="w-5 shrink-0 font-display text-gold tabular-nums">{i + 1}.</span>
               <span><strong className="font-semibold text-foreground">{t}</strong> — {d}</span>
             </li>
           ))}
