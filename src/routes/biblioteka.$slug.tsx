@@ -75,7 +75,7 @@ function ItemPage() {
                     {!uid && (
                       <div className="mt-6 flex flex-wrap gap-3">
                         <Link to="/auth" className="bg-gold px-6 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-primary-foreground hover:bg-gold-bright">Zaloguj się</Link>
-                        <Link to="/auth" search={{ tryb: "rejestracja" } as never} className="border border-gold/60 px-6 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-gold hover:bg-gold/10">Dołącz do TNB</Link>
+                        <Link to="/auth" search={{ tryb: "rejestracja" }} className="border border-gold/60 px-6 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-gold hover:bg-gold/10">Dołącz do TNB</Link>
                       </div>
                     )}
                   </>)}
