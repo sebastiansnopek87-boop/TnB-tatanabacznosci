@@ -3,6 +3,7 @@ import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { PageHeading, PageShell } from "@/components/tnb/PageShell";
+import { GuestField, JoinDialog } from "@/components/community/JoinDialog";
 import { PostCard, SectorSelect, VisibilitySelect } from "@/components/community/PostCard";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -38,6 +39,7 @@ function Community() {
   const [body, setBody] = useState("");
   const [vis, setVis] = useState<Visibility>("community");
   const [sector, setSector] = useState<Sector>("ogolne");
+  const [join, setJoin] = useState(false);
   const [sort, setSort] = useState<Sort>("newest");
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -85,12 +87,17 @@ function Community() {
             <p className="mx-auto mt-3 max-w-md text-[0.95rem] leading-[1.75] text-foreground/80">
               {signedIn ? "Podziel się doświadczeniem, zadaj pytanie albo wesprzyj innego ojca dobrym słowem." : "Zaloguj się, aby publikować, komentować i reagować."}
             </p>
-            {!signedIn ? (
+            {!signedIn ? (<>
+              <div className="mt-7 text-left">
+                <label htmlFor="guest-post" className="eyebrow text-gold">Nowy post</label>
+                <div className="mt-3"><GuestField id="guest-post" rows={3} placeholder="Co chcesz powiedzieć innym ojcom?" onOpen={() => setJoin(true)} /></div>
+              </div>
               <div className="mt-7 flex flex-wrap justify-center gap-3">
                 <Button asChild variant="outline" className="min-w-40 uppercase tracking-[0.15em]"><Link to="/auth">Zaloguj się</Link></Button>
                 <Button asChild className="min-w-40 uppercase tracking-[0.15em]"><Link to="/auth" search={{ tryb: "rejestracja" }}>Dołącz do nas</Link></Button>
               </div>
-            ) : (
+              <JoinDialog open={join} onOpenChange={setJoin} />
+            </>) : (
               <form onSubmit={submit} className="mt-7 text-left">
                 <label htmlFor="new-post" className="eyebrow text-gold">Nowy post</label>
                 <Textarea id="new-post" value={body} onChange={(e) => setBody(e.target.value)} rows={4} maxLength={POST_MAX}

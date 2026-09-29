@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { PageShell } from "@/components/tnb/PageShell";
+import { GuestField, JoinDialog } from "@/components/community/JoinDialog";
 import { ConfirmDelete, Initial, PostCard } from "@/components/community/PostCard";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -33,6 +34,7 @@ function Thread() {
   const [body, setBody] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [join, setJoin] = useState(false);
   const refresh = () => { qc.invalidateQueries({ queryKey: ["community-post", postId] }); qc.invalidateQueries({ queryKey: ["community-comments", postId] }); qc.invalidateQueries({ queryKey: ["community"] }); };
 
   async function submit(e: FormEvent) {
@@ -67,12 +69,10 @@ function Thread() {
               {comments.data?.map((c) => <CommentItem key={`${c.id}-${c.updated_at}`} c={c} uid={uid} onChanged={refresh} />)}
             </div>
             {!signedIn ? (
-              <div className="mt-6 border border-gold/30 bg-card/60 p-5">
-                <p className="text-sm leading-[1.75] text-foreground/85">Chcesz dołączyć do rozmowy? Zaloguj się albo załóż bezpłatne konto TNB, aby komentować i reagować.</p>
-                <div className="mt-4 flex flex-wrap gap-3">
-                  <Button asChild variant="outline"><Link to="/auth">Zaloguj się</Link></Button>
-                  <Button asChild><Link to="/auth" search={{ tryb: "rejestracja" }}>Dołącz do nas</Link></Button>
-                </div>
+              <div className="mt-6 space-y-3">
+                <label htmlFor="guest-comment" className="eyebrow text-gold">Twój komentarz</label>
+                <GuestField id="guest-comment" placeholder="Zaloguj się, aby dodać komentarz…" onOpen={() => setJoin(true)} />
+                <JoinDialog open={join} onOpenChange={setJoin} />
               </div>
             ) : p.status === "published" ? (
               <form onSubmit={submit} className="mt-6 space-y-3">
