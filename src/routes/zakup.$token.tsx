@@ -3,7 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { PageShell } from "@/components/tnb/PageShell";
 import { getPurchasedMaterial } from "@/lib/orders.functions";
-import { fmtDay } from "@/lib/library";
+import { fmtDay, fmtPrice } from "@/lib/library";
+import { BANK_TRANSFER, bankConfigured } from "@/config/payments";
 
 export const Route = createFileRoute("/zakup/$token")({
   head: () => ({ meta: [
@@ -33,7 +34,7 @@ function Purchased() {
         <Link to="/biblioteka" className="text-[0.72rem] uppercase tracking-[0.14em] text-gold">← Biblioteka</Link>
         {!ok || (d && "error" in d) ? (
           <div className="mt-8 border border-border/60 p-8"><h1 className="font-display text-3xl font-semibold">Brak dostępu</h1><p className="mt-3 text-sm text-foreground/75">{d && "error" in d ? d.error : "Link jest nieprawidłowy."}</p></div>
-        ) : !d || !("item" in d) ? <p className="mt-8 text-sm text-muted-foreground">Ładowanie materiału…</p> : (
+        ) : d && "order" in d ? <OrderStatus o={d.order} /> : !d || !("item" in d) ? <p className="mt-8 text-sm text-muted-foreground">Ładowanie materiału…</p> : (
           <article className="mt-8">
             <p className="eyebrow text-gold">Twój zakupiony materiał</p>
             <h1 className="mt-3 break-words font-display text-[2.4rem] font-semibold leading-tight">{d.item?.title}</h1>
@@ -47,5 +48,34 @@ function Purchased() {
         )}
       </div>
     </PageShell>
+  );
+}
+
+const ST: Record<string, [string, string]> = {
+  pending: ["Zamówienie przyjęte — oczekuje na płatność", "Wykonaj przelew według danych poniżej. Materiał wyślemy na Twój e-mail po zaksięgowaniu wpłaty. Zachowaj ten link — tu też otworzysz materiał po opłaceniu."],
+  cancelled: ["Zamówienie anulowane", "To zamówienie zostało anulowane. Dostęp do materiału nie został przyznany."],
+  refunded: ["Zwrot", "Środki za to zamówienie zostały zwrócone. Dostęp do materiału wygasł."],
+  failed: ["Płatność nieudana", "Płatność nie została zrealizowana."],
+};
+
+function OrderStatus({ o }: { o: { status: string; number: string; amount: number; email: string; title: string; slug: string } }) {
+  const [t, x] = ST[o.status] ?? ST["pending"]!;
+  const v = (s: string) => s || <span className="italic text-muted-foreground">do uzupełnienia</span>;
+  const row = (k: string, val: React.ReactNode) => <div className="flex flex-wrap justify-between gap-2 border-b border-border/40 py-2 text-sm"><span className="text-muted-foreground">{k}</span><span className="break-all text-right">{val}</span></div>;
+  return (
+    <div className="mt-8 border border-gold/50 bg-surface-deep p-6 sm:p-8">
+      <p className="eyebrow text-gold">Zamówienie {o.number}</p>
+      <h1 className="mt-3 font-display text-3xl font-semibold">{t}</h1>
+      <p className="mt-3 text-[0.95rem] leading-[1.75] text-foreground/85">{x}</p>
+      <div className="mt-6">{row("Materiał", o.title)}{row("Kwota", fmtPrice(o.amount))}{row("E-mail", o.email)}</div>
+      {o.status === "pending" && (
+        <div className="mt-6">
+          <p className="eyebrow text-gold">Dane do przelewu</p>
+          {!bankConfigured() && <p className="mt-2 text-sm text-destructive">Dane rachunku nie zostały jeszcze uzupełnione. Nie wykonuj przelewu — skontaktuj się z nami przez formularz kontaktowy.</p>}
+          <div className="mt-2">{row("Odbiorca", v(BANK_TRANSFER.recipient))}{row("Adres", v(BANK_TRANSFER.address))}{row("Numer rachunku", v(BANK_TRANSFER.accountNumber))}{row("Bank", v(BANK_TRANSFER.bankName))}{row("Kwota", fmtPrice(o.amount))}{row("Tytuł przelewu", o.number)}</div>
+        </div>
+      )}
+      {o.slug && <Link to="/biblioteka/$slug" params={{ slug: o.slug }} className="mt-6 inline-block text-sm text-gold underline">Wróć do materiału</Link>}
+    </div>
   );
 }

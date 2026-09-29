@@ -7,7 +7,6 @@ import { useUid } from "@/lib/community";
 import { KINDS, accessLabel, fmtPrice, coverSrc, fmtDay, getLibraryItem, listCategories } from "@/lib/library";
 import { getLibraryFileUrl } from "@/lib/library.functions";
 import { BuyPanel } from "@/components/library/BuyPanel";
-import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
 export const Route = createFileRoute("/biblioteka/$slug")({
   head: () => ({
@@ -40,7 +39,6 @@ function ItemPage() {
 
   return (
     <PageShell>
-      {q.data?.item.access === "premium" && !q.data.content && <PaymentTestModeBanner />}
       <div className="mx-auto max-w-3xl px-5 py-12 lg:py-16">
         <Link to="/biblioteka" className="text-[0.72rem] uppercase tracking-[0.14em] text-gold hover:text-gold-bright">← Wróć do biblioteki</Link>
         {!ready || q.isLoading ? (

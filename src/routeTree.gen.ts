@@ -29,7 +29,6 @@ import { Route as NewsletterWypiszRouteImport } from './routes/newsletter.wypisz
 import { Route as SpolecznoscIndexRouteImport } from './routes/spolecznosc.index'
 import { Route as SpolecznoscPostIdRouteImport } from './routes/spolecznosc.$postId'
 import { Route as ZakupTokenRouteImport } from './routes/zakup.$token'
-import { Route as ZakupWynikRouteImport } from './routes/zakup.wynik'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminBibliotekaRouteImport } from './routes/_authenticated/admin.biblioteka'
 import { Route as AuthenticatedAdminPowiadomieniaRouteImport } from './routes/_authenticated/admin.powiadomienia'
@@ -40,7 +39,6 @@ import { Route as AuthenticatedAdminUstawieniaEmailRouteImport } from './routes/
 import { Route as AuthenticatedAdminWiadomosciRouteImport } from './routes/_authenticated/admin.wiadomosci'
 import { Route as AuthenticatedAdminZamowieniaRouteImport } from './routes/_authenticated/admin.zamowienia'
 import { Route as ApiPublicLibraryCoverIdRouteImport } from './routes/api/public/library-cover.$id'
-import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -141,11 +139,6 @@ const ZakupTokenRoute = ZakupTokenRouteImport.update({
   path: '/zakup/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ZakupWynikRoute = ZakupWynikRouteImport.update({
-  id: '/zakup/wynik',
-  path: '/zakup/wynik',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -204,12 +197,6 @@ const ApiPublicLibraryCoverIdRoute = ApiPublicLibraryCoverIdRouteImport.update({
   path: '/api/public/library-cover/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicPaymentsWebhookRoute =
-  ApiPublicPaymentsWebhookRouteImport.update({
-    id: '/api/public/payments/webhook',
-    path: '/api/public/payments/webhook',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -229,7 +216,6 @@ export interface FileRoutesByFullPath {
   '/newsletter/wypisz': typeof NewsletterWypiszRoute
   '/spolecznosc/$postId': typeof SpolecznoscPostIdRoute
   '/zakup/$token': typeof ZakupTokenRoute
-  '/zakup/wynik': typeof ZakupWynikRoute
   '/biblioteka/': typeof BibliotekaIndexRoute
   '/spolecznosc/': typeof SpolecznoscIndexRoute
   '/admin/biblioteka': typeof AuthenticatedAdminBibliotekaRoute
@@ -242,7 +228,6 @@ export interface FileRoutesByFullPath {
   '/admin/zamowienia': typeof AuthenticatedAdminZamowieniaRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/library-cover/$id': typeof ApiPublicLibraryCoverIdRoute
-  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -261,7 +246,6 @@ export interface FileRoutesByTo {
   '/newsletter/wypisz': typeof NewsletterWypiszRoute
   '/spolecznosc/$postId': typeof SpolecznoscPostIdRoute
   '/zakup/$token': typeof ZakupTokenRoute
-  '/zakup/wynik': typeof ZakupWynikRoute
   '/biblioteka': typeof BibliotekaIndexRoute
   '/spolecznosc': typeof SpolecznoscIndexRoute
   '/admin/biblioteka': typeof AuthenticatedAdminBibliotekaRoute
@@ -274,7 +258,6 @@ export interface FileRoutesByTo {
   '/admin/zamowienia': typeof AuthenticatedAdminZamowieniaRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/api/public/library-cover/$id': typeof ApiPublicLibraryCoverIdRoute
-  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -296,7 +279,6 @@ export interface FileRoutesById {
   '/newsletter/wypisz': typeof NewsletterWypiszRoute
   '/spolecznosc/$postId': typeof SpolecznoscPostIdRoute
   '/zakup/$token': typeof ZakupTokenRoute
-  '/zakup/wynik': typeof ZakupWynikRoute
   '/biblioteka/': typeof BibliotekaIndexRoute
   '/spolecznosc/': typeof SpolecznoscIndexRoute
   '/_authenticated/admin/biblioteka': typeof AuthenticatedAdminBibliotekaRoute
@@ -309,7 +291,6 @@ export interface FileRoutesById {
   '/_authenticated/admin/zamowienia': typeof AuthenticatedAdminZamowieniaRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/library-cover/$id': typeof ApiPublicLibraryCoverIdRoute
-  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -331,7 +312,6 @@ export interface FileRouteTypes {
     | '/newsletter/wypisz'
     | '/spolecznosc/$postId'
     | '/zakup/$token'
-    | '/zakup/wynik'
     | '/biblioteka/'
     | '/spolecznosc/'
     | '/admin/biblioteka'
@@ -344,7 +324,6 @@ export interface FileRouteTypes {
     | '/admin/zamowienia'
     | '/admin/'
     | '/api/public/library-cover/$id'
-    | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -363,7 +342,6 @@ export interface FileRouteTypes {
     | '/newsletter/wypisz'
     | '/spolecznosc/$postId'
     | '/zakup/$token'
-    | '/zakup/wynik'
     | '/biblioteka'
     | '/spolecznosc'
     | '/admin/biblioteka'
@@ -376,7 +354,6 @@ export interface FileRouteTypes {
     | '/admin/zamowienia'
     | '/admin'
     | '/api/public/library-cover/$id'
-    | '/api/public/payments/webhook'
   id:
     | '__root__'
     | '/'
@@ -397,7 +374,6 @@ export interface FileRouteTypes {
     | '/newsletter/wypisz'
     | '/spolecznosc/$postId'
     | '/zakup/$token'
-    | '/zakup/wynik'
     | '/biblioteka/'
     | '/spolecznosc/'
     | '/_authenticated/admin/biblioteka'
@@ -410,7 +386,6 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/zamowienia'
     | '/_authenticated/admin/'
     | '/api/public/library-cover/$id'
-    | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -430,11 +405,9 @@ export interface RootRouteChildren {
   NewsletterWypiszRoute: typeof NewsletterWypiszRoute
   SpolecznoscPostIdRoute: typeof SpolecznoscPostIdRoute
   ZakupTokenRoute: typeof ZakupTokenRoute
-  ZakupWynikRoute: typeof ZakupWynikRoute
   BibliotekaIndexRoute: typeof BibliotekaIndexRoute
   SpolecznoscIndexRoute: typeof SpolecznoscIndexRoute
   ApiPublicLibraryCoverIdRoute: typeof ApiPublicLibraryCoverIdRoute
-  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -579,13 +552,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ZakupTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/zakup/wynik': {
-      id: '/zakup/wynik'
-      path: '/zakup/wynik'
-      fullPath: '/zakup/wynik'
-      preLoaderRoute: typeof ZakupWynikRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_authenticated/admin/': {
       id: '/_authenticated/admin/'
       path: '/'
@@ -656,13 +622,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicLibraryCoverIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/payments/webhook': {
-      id: '/api/public/payments/webhook'
-      path: '/api/public/payments/webhook'
-      fullPath: '/api/public/payments/webhook'
-      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -724,11 +683,9 @@ const rootRouteChildren: RootRouteChildren = {
   NewsletterWypiszRoute: NewsletterWypiszRoute,
   SpolecznoscPostIdRoute: SpolecznoscPostIdRoute,
   ZakupTokenRoute: ZakupTokenRoute,
-  ZakupWynikRoute: ZakupWynikRoute,
   BibliotekaIndexRoute: BibliotekaIndexRoute,
   SpolecznoscIndexRoute: SpolecznoscIndexRoute,
   ApiPublicLibraryCoverIdRoute: ApiPublicLibraryCoverIdRoute,
-  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

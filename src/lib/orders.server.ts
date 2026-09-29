@@ -16,22 +16,33 @@ export function siteOrigin(): string {
   return process.env["PUBLIC_SITE_URL"] || "https://project--182d8df3-9e8b-4c28-9f51-3ca8313666e7.lovable.app";
 }
 
-export async function markOrderPaid(orderId: string, paymentRef: string | null, eventType: string) {
+// Manual confirmation by an admin after verifying the bank transfer.
+export async function markOrderPaid(orderId: string, actor: string) {
   const s = await db();
   const now = new Date();
   const { data } = await s.from("library_orders")
-    .update({ status: "paid", paid_at: now.toISOString(), provider_ref: paymentRef, access_expires_at: new Date(now.getTime() + ACCESS_DAYS * 864e5).toISOString() })
-    .eq("id", orderId).in("status", ["pending", "failed", "cancelled"]).select("id");
-  if (!data?.length) { await logOrderEvent(orderId, "duplicate_ignored", eventType); return; }
-  await logOrderEvent(orderId, "paid", `Płatność potwierdzona przez operatora (${eventType}).`);
-  await deliverOrder(orderId, "auto");
+    .update({ status: "paid", paid_at: now.toISOString(), paid_marked_by: actor, status_changed_by: actor, status_changed_at: now.toISOString(), access_expires_at: new Date(now.getTime() + ACCESS_DAYS * 864e5).toISOString() })
+    .eq("id", orderId).eq("status", "pending").select("id");
+  if (!data?.length) return false;
+  await logOrderEvent(orderId, "paid", "Wpłata potwierdzona ręcznie przez administratora.");
+  return true;
 }
 
-export async function markOrderStatus(orderId: string, status: "failed" | "cancelled" | "refunded", detail: string) {
+export async function markOrderDelivered(orderId: string, actor: string) {
+  const s = await db();
+  const now = new Date().toISOString();
+  const { data } = await s.from("library_orders").update({ delivery_status: "sent", delivery_error: null, delivered_at: now, delivered_marked_by: actor, status_changed_by: actor, status_changed_at: now })
+    .eq("id", orderId).eq("status", "paid").select("id");
+  if (!data?.length) return false;
+  await logOrderEvent(orderId, "delivered_manual", "Administrator oznaczył materiał jako wysłany.");
+  return true;
+}
+
+export async function markOrderStatus(orderId: string, status: "failed" | "cancelled" | "refunded", detail: string, actor?: string) {
   const s = await db();
   const from = status === "refunded" ? ["paid"] : ["pending"];
   const col = status === "failed" ? "failed_at" : status === "cancelled" ? "cancelled_at" : "refunded_at";
-  const { data } = await s.from("library_orders").update({ status, [col]: new Date().toISOString() } as never).eq("id", orderId).in("status", from).select("id, buyer_email, buyer_name, item_id");
+  const { data } = await s.from("library_orders").update({ status, [col]: new Date().toISOString(), status_changed_by: actor ?? null, status_changed_at: new Date().toISOString() } as never).eq("id", orderId).in("status", status === "cancelled" ? ["pending", "paid"] : from).select("id, buyer_email, buyer_name, item_id");
   if (!data?.length) return false;
   await logOrderEvent(orderId, status, detail);
   if (status === "failed") await sendOrderMail(orderId, "payment_failed");
@@ -48,7 +59,7 @@ export function renderOrderMail(kind: MailKind, o: { id: string; buyer_name: str
   const hi = o.buyer_name ? `Cześć ${esc(o.buyer_name)},` : "Cześć,";
   const nr = o.id.slice(0, 8).toUpperCase();
   const map: Record<MailKind, { subject: string; body: string }> = {
-    order_received: { subject: `Przyjęliśmy zamówienie ${nr}`, body: `<p>${hi}</p><p>Przyjęliśmy Twoje zamówienie na materiał <b>${esc(o.title)}</b> (${zl(o.amount)}). Materiał wyślemy, gdy operator płatności potwierdzi wpłatę.</p>` },
+    order_received: { subject: `Przyjęliśmy zamówienie ${nr}`, body: `<p>${hi}</p><p>Przyjęliśmy Twoje zamówienie na materiał <b>${esc(o.title)}</b> (${zl(o.amount)}). Materiał wyślemy po zaksięgowaniu przelewu.</p>` },
     delivery: { subject: `Twój materiał: ${o.title}`, body: `<p>${hi}</p><p>Dziękujemy za zakup! Płatność za zamówienie <b>${nr}</b> (${zl(o.amount)}) została potwierdzona.</p><p>Materiał <b>${esc(o.title)}</b> otworzysz tutaj (link ważny ${ACCESS_DAYS} dni):</p><p><a href="${o.link}" style="display:inline-block;background:#c9a24a;color:#111;padding:12px 22px;text-decoration:none;text-transform:uppercase;letter-spacing:.12em;font-size:13px">Otwórz materiał</a></p>` },
     payment_failed: { subject: `Płatność nie powiodła się — zamówienie ${nr}`, body: `<p>${hi}</p><p>Płatność za materiał <b>${esc(o.title)}</b> nie została zrealizowana. Nie pobraliśmy żadnych środków. Możesz spróbować ponownie na stronie materiału.</p>` },
     delivery_problem: { subject: `Problem z dostarczeniem zamówienia ${nr}`, body: `<p>${hi}</p><p>Twoja płatność za <b>${esc(o.title)}</b> została potwierdzona, ale mieliśmy problem z dostarczeniem materiału. Odezwiemy się najszybciej, jak to możliwe.</p>` },
@@ -84,13 +95,13 @@ export async function sendOrderMail(orderId: string, kind: MailKind) {
   return r;
 }
 
-export async function deliverOrder(orderId: string, trigger: "auto" | "admin") {
+export async function deliverOrder(orderId: string, trigger: "auto" | "admin", actor?: string) {
   const s = await db();
   const o = await loadOrder(orderId);
   if (!o || o.status !== "paid") return { ok: false, reason: "not_paid" };
   const r = await sendOrderMail(orderId, "delivery");
   if (r.ok) {
-    await s.from("library_orders").update({ delivery_status: "sent", delivery_error: null, delivered_at: new Date().toISOString() }).eq("id", orderId);
+    await s.from("library_orders").update({ delivery_status: "sent", delivery_error: null, delivered_at: new Date().toISOString(), delivered_marked_by: actor ?? null }).eq("id", orderId);
     await logOrderEvent(orderId, "delivered", trigger === "admin" ? "Ponowna wysyłka przez administratora." : "Wiadomość z materiałem wysłana.");
   } else {
     await s.from("library_orders").update({ delivery_status: "failed", delivery_error: r.reason }).eq("id", orderId);
