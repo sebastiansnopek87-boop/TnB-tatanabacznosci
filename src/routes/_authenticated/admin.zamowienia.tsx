@@ -54,7 +54,7 @@ function Orders() {
               <tr key={r.id} onClick={() => setOpenId(r.id)} className={`cursor-pointer border-b border-border/40 hover:bg-card ${openId === r.id ? "bg-card" : ""}`}>
                 <td className="p-3 font-mono text-xs">{r.id.slice(0, 8).toUpperCase()}{r.environment === "sandbox" && <Badge variant="outline" className="ml-2">test</Badge>}</td>
                 <td className="p-3">{fmtDate(r.created_at)}</td><td className="p-3">{r.library_items?.title}</td><td className="p-3">{r.buyer_email}</td>
-                <td className="p-3">{fmtPrice(r.amount)}</td><td className="p-3">{r.delivered_at ? STATUS.delivered : STATUS[r.status]}</td><td className="p-3">{DELIVERY[r.delivery_status] ?? r.delivery_status}</td>
+                <td className="p-3">{fmtPrice(r.amount)}</td><td className="p-3">{r.delivered_at ? STATUS["delivered"] : STATUS[r.status]}</td><td className="p-3">{DELIVERY[r.delivery_status] ?? r.delivery_status}</td>
               </tr>))}</tbody>
           </table>
         </div>

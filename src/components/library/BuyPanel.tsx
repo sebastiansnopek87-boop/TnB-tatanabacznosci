@@ -23,7 +23,7 @@ export function BuyPanel({ slug, title, price }: { slug: string; title: string; 
       const u = data.user; if (!u) return;
       const m = (u.user_metadata ?? {}) as Record<string, string>;
       setEmail((e) => e || u.email || "");
-      setName((n) => n || [m.first_name, m.last_name].filter(Boolean).join(" ") || m.full_name || m.name || "");
+      setName((n) => n || [m["first_name"], m["last_name"]].filter(Boolean).join(" ") || m["full_name"] || m["name"] || "");
     });
   }, [open]);
 

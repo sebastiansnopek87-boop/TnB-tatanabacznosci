@@ -38,7 +38,7 @@ function Purchased() {
             <p className="eyebrow text-gold">Twój zakupiony materiał</p>
             <h1 className="mt-3 break-words font-display text-[2.4rem] font-semibold leading-tight">{d.item?.title}</h1>
             {d.expiresAt && <p className="mt-2 text-xs text-muted-foreground">Link ważny do {fmtDay(d.expiresAt)}.</p>}
-            {d.body.trim() && <div className="mt-8 space-y-5 break-words leading-[1.85] text-foreground/90">{d.body.split(/\n{2,}/).map((p, i) => <p key={i} className="whitespace-pre-line">{p}</p>)}</div>}
+            {(d.body ?? "").trim() && <div className="mt-8 space-y-5 break-words leading-[1.85] text-foreground/90">{(d.body ?? "").split(/\n{2,}/).map((p, i) => <p key={i} className="whitespace-pre-line">{p}</p>)}</div>}
             {d.hasFile && <div className="mt-8 border border-border/60 bg-card p-5"><p className="text-sm">{d.fileName ?? "Plik materiału"}</p>
               <button onClick={openFile} disabled={busy} className="mt-3 bg-gold px-5 py-2.5 text-[0.7rem] uppercase tracking-[0.14em] text-primary-foreground disabled:opacity-60">{busy ? "Przygotowywanie…" : "Pobierz plik"}</button>
               {fileErr && <p className="mt-2 text-sm text-destructive">{fileErr}</p>}</div>}

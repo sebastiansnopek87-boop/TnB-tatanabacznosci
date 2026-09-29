@@ -7,8 +7,8 @@ import { fmtPrice } from "@/lib/library";
 
 export const Route = createFileRoute("/zakup/wynik")({
   validateSearch: (s: Record<string, unknown>) => ({
-    order: typeof s.order === "string" ? s.order : "",
-    session_id: typeof s.session_id === "string" ? s.session_id : "",
+    order: typeof s["order"] === "string" ? s["order"] : "",
+    session_id: typeof s["session_id"] === "string" ? s["session_id"] : "",
   }),
   head: () => ({ meta: [
     { title: "Status zamówienia — Tata Na Baczności" }, { name: "description", content: "Status Twojego zamówienia materiału premium." },

@@ -50,7 +50,7 @@ export const startLibraryCheckout = createServerFn({ method: "POST" })
         const found = await stripe.customers.search({ query: `metadata['userId']:'${user.id}'`, limit: 1 });
         customer = found.data[0]?.id ?? (await stripe.customers.create({ email: data.email, name: data.name, metadata: { userId: user.id } })).id;
       }
-      const session = await stripe.checkout.sessions.create({
+      const session = await stripe.checkout.sessions.create(({
         mode: "payment", ui_mode: "embedded_page",
         line_items: [{ quantity: 1, price_data: { currency: (item.currency || "PLN").toLowerCase(), unit_amount: item.price_amount, product_data: { name: item.title, tax_code: "txcd_10000000" } } }],
         return_url: `${origin}/zakup/wynik?order=${order.id}&session_id={CHECKOUT_SESSION_ID}`,
@@ -59,7 +59,7 @@ export const startLibraryCheckout = createServerFn({ method: "POST" })
         payment_intent_data: { description: item.title, metadata: { order_id: order.id } },
         metadata: { order_id: order.id, item_id: item.id, managed_payments: "true", ...(user ? { userId: user.id } : {}) },
         managed_payments: { enabled: true },
-      } as Stripe.Checkout.SessionCreateParams);
+      }) as unknown as Stripe.Checkout.SessionCreateParams);
       await s.from("library_orders").update({ checkout_session_id: session.id }).eq("id", order.id);
       await logOrderEvent(order.id, "checkout_started", "Rozpoczęto płatność.");
       await sendOrderMail(order.id, "order_received");

@@ -31,7 +31,7 @@ export async function markOrderStatus(orderId: string, status: "failed" | "cance
   const s = await db();
   const from = status === "refunded" ? ["paid"] : ["pending"];
   const col = status === "failed" ? "failed_at" : status === "cancelled" ? "cancelled_at" : "refunded_at";
-  const { data } = await s.from("library_orders").update({ status, [col]: new Date().toISOString() }).eq("id", orderId).in("status", from).select("id, buyer_email, buyer_name, item_id");
+  const { data } = await s.from("library_orders").update({ status, [col]: new Date().toISOString() } as never).eq("id", orderId).in("status", from).select("id, buyer_email, buyer_name, item_id");
   if (!data?.length) return false;
   await logOrderEvent(orderId, status, detail);
   if (status === "failed") await sendOrderMail(orderId, "payment_failed");
