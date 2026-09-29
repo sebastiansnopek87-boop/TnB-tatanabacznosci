@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { PAGE, POST_MAX, SECTORS, SORT_LABEL, createPost, listPosts, useUid, type Sector, type Sort, type Visibility } from "@/lib/community";
 import { CommunitySidebar } from "@/components/community/CommunitySidebar";
+import { CommunityAside } from "@/components/community/CommunityAside";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const Route = createFileRoute("/spolecznosc/")({
@@ -80,7 +81,7 @@ function Community() {
         </div>
       </section>
 
-      <div className="mx-auto grid max-w-[1200px] gap-10 px-5 py-10 lg:grid-cols-[280px_minmax(0,1fr)] lg:py-14">
+      <div className="mx-auto grid max-w-[1360px] gap-10 px-5 py-10 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[260px_minmax(0,1fr)_280px] lg:py-14">
         <div className="lg:sticky lg:top-6 lg:self-start">
           <CommunitySidebar signedIn={signedIn} sector={filter}
             onSector={(k) => { setFilter(k); setAuthor(null); document.getElementById("feed")?.scrollIntoView({ behavior: "smooth", block: "start" }); }}
@@ -173,6 +174,7 @@ function Community() {
           )}
         </div>
       </div>
+        <div className="lg:col-start-2 xl:col-start-3 xl:sticky xl:top-6 xl:self-start"><CommunityAside /></div>
       </div>
     </PageShell>
   );
