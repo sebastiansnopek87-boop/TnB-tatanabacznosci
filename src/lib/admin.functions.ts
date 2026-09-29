@@ -155,18 +155,19 @@ export const listCommunity = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     let q = context.supabase.from("community_posts")
-      .select("id, author_name, body, status, created_at, community_comments(id, author_name, body, created_at)")
+      .select("id, author_name, body, status, visibility, created_at, community_comments(id, author_name, body, created_at)")
       .order("created_at", { ascending: false }).limit(200);
     if (data.status !== "all") q = q.eq("status", data.status);
     const { data: rows, error } = await q;
     if (error) throw new Error("Nie udało się pobrać treści społeczności.");
-    return rows as Array<{ id: string; author_name: string; body: string; status: string; created_at: string; community_comments: Array<{ id: string; author_name: string; body: string; created_at: string }> }>;
+    return rows as Array<{ id: string; author_name: string; body: string; status: string; visibility: string; created_at: string; community_comments: Array<{ id: string; author_name: string; body: string; created_at: string }> }>;
   });
 
 export const moderateCommunity = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.discriminatedUnion("action", [
     z.object({ action: z.enum(["hide", "restore", "delete_post"]), id: z.string().uuid() }),
+    z.object({ action: z.literal("set_visibility"), id: z.string().uuid(), visibility: z.enum(["public", "community"]) }),
     z.object({ action: z.literal("delete_comment"), id: z.string().uuid() }),
   ]).parse(d))
   .handler(async ({ data, context }) => {
@@ -176,6 +177,8 @@ export const moderateCommunity = createServerFn({ method: "POST" })
       ? await db.from("community_comments").delete().eq("id", data.id).select("id")
       : data.action === "delete_post"
         ? await db.from("community_posts").delete().eq("id", data.id).select("id")
+        : data.action === "set_visibility"
+        ? await db.from("community_posts").update({ visibility: data.visibility }).eq("id", data.id).select("id")
         : await db.from("community_posts").update({ status: data.action === "hide" ? "hidden" : "published" }).eq("id", data.id).select("id");
     if (res.error || !res.data?.length) throw new Error("Nie udało się wykonać operacji.");
     return { ok: true };

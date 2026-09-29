@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 export const Route = createFileRoute("/_authenticated/admin/spolecznosc")({ component: Moderation });
 
 type F = "all" | "published" | "hidden";
-type Action = "hide" | "restore" | "delete_post" | "delete_comment";
+type Action = "hide" | "restore" | "delete_post" | "delete_comment" | "set_visibility";
 
 function Moderation() {
   const list = useServerFn(listCommunity);
@@ -22,9 +22,9 @@ function Moderation() {
   const [status, setStatus] = useState<F>("all");
   const { data, isLoading, error } = useQuery({ queryKey: ["admin-community", status], queryFn: () => list({ data: { status } }) });
   const m = useMutation({
-    mutationFn: (v: { action: Action; id: string }) => mod({ data: v }),
+    mutationFn: (v: { action: Action; id: string; visibility?: "public" | "community" }) => mod({ data: v as any }),
     onSuccess: (_r, v) => {
-      toast.success({ hide: "Post ukryty.", restore: "Post przywrócony.", delete_post: "Post usunięty.", delete_comment: "Komentarz usunięty." }[v.action]);
+      toast.success({ hide: "Post ukryty.", restore: "Post przywrócony.", delete_post: "Post usunięty.", delete_comment: "Komentarz usunięty.", set_visibility: "Widoczność zmieniona." }[v.action]);
       qc.invalidateQueries({ queryKey: ["admin-community"] }); qc.invalidateQueries({ queryKey: ["community"] });
     },
     onError: (e) => toast.error(errMsg(e)),
@@ -53,12 +53,17 @@ function Moderation() {
               <span className="font-medium">{p.author_name}</span>
               <span className="text-muted-foreground">{fmtDate(p.created_at)}</span>
               <Badge variant={p.status === "hidden" ? "destructive" : "secondary"}>{p.status === "hidden" ? "Ukryty" : "Opublikowany"}</Badge>
+              <Badge variant="outline">{p.visibility === "public" ? "Publiczny" : "Tylko dla społeczności"}</Badge>
             </div>
             <p className="mt-2 whitespace-pre-wrap break-words text-sm">{p.body}</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {p.status === "published"
                 ? <Button size="sm" variant="outline" disabled={m.isPending} onClick={() => m.mutate({ action: "hide", id: p.id })}>Ukryj</Button>
                 : <Button size="sm" variant="outline" disabled={m.isPending} onClick={() => m.mutate({ action: "restore", id: p.id })}>Przywróć</Button>}
+              <Button size="sm" variant="outline" disabled={m.isPending}
+                onClick={() => m.mutate({ action: "set_visibility", id: p.id, visibility: p.visibility === "public" ? "community" : "public" })}>
+                {p.visibility === "public" ? "Ustaw: tylko dla społeczności" : "Ustaw: publiczny"}
+              </Button>
               <ConfirmDelete label="post wraz z komentarzami" onConfirm={() => m.mutate({ action: "delete_post", id: p.id })} />
             </div>
             {p.community_comments.length > 0 && (

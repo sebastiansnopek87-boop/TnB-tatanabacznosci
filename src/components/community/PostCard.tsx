@@ -8,7 +8,20 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { POST_MAX, deletePost, fmtWhen, toggleReaction, updatePost, type Post } from "@/lib/community";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { POST_MAX, VIS_LABEL, deletePost, fmtWhen, toggleReaction, updatePost, type Post, type Visibility } from "@/lib/community";
+
+export function VisibilitySelect({ value, onChange, id }: { value: Visibility; onChange: (v: Visibility) => void; id?: string }) {
+  return (
+    <Select value={value} onValueChange={(v) => onChange(v as Visibility)}>
+      <SelectTrigger id={id} className="w-full sm:w-60" aria-label="Widoczność posta"><SelectValue /></SelectTrigger>
+      <SelectContent>
+        <SelectItem value="community">{VIS_LABEL.community}</SelectItem>
+        <SelectItem value="public">{VIS_LABEL.public} — widoczny dla wszystkich</SelectItem>
+      </SelectContent>
+    </Select>
+  );
+}
 
 export function Initial({ name }: { name: string }) {
   return (
@@ -41,6 +54,7 @@ export function PostCard({ post, uid, full, onChanged, onDeleted }: {
 }) {
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(post.body);
+  const [vis, setVis] = useState<Visibility>(post.visibility);
   const [busy, setBusy] = useState(false);
   const [reacted, setReacted] = useState(post.reacted);
   const [count, setCount] = useState(post.reactions);
@@ -55,6 +69,7 @@ export function PostCard({ post, uid, full, onChanged, onDeleted }: {
   }
 
   async function react() {
+    if (post.guest) { toast.info("Zaloguj się lub dołącz do TNB, aby reagować na wpisy."); return; }
     const next = !reacted;
     setReacted(next); setCount((c) => c + (next ? 1 : -1));
     try { await toggleReaction(post.id, next); onChanged(); }
@@ -69,6 +84,7 @@ export function PostCard({ post, uid, full, onChanged, onDeleted }: {
           <p className="truncate font-medium text-foreground">{post.author_name}</p>
           <p className="text-xs text-muted-foreground">
             {fmtWhen(post.created_at)}{post.updated_at !== post.created_at && " · edytowano"}
+            {!post.guest && <span className="ml-2">· {VIS_LABEL[post.visibility]}</span>}
             {post.status === "hidden" && <span className="ml-2 text-destructive">· ukryty przez moderatora</span>}
           </p>
         </div>
@@ -77,9 +93,10 @@ export function PostCard({ post, uid, full, onChanged, onDeleted }: {
       {editing ? (
         <div className="mt-4 space-y-3">
           <Textarea value={text} onChange={(e) => setText(e.target.value)} rows={5} maxLength={POST_MAX} aria-label="Treść posta" />
+          <VisibilitySelect value={vis} onChange={setVis} />
           <div className="flex gap-2">
-            <Button size="sm" disabled={busy} onClick={() => run(() => updatePost(post.id, text), "Zapisano zmiany.", () => setEditing(false))}>{busy ? "Zapisywanie…" : "Zapisz"}</Button>
-            <Button size="sm" variant="ghost" onClick={() => { setEditing(false); setText(post.body); }}>Anuluj</Button>
+            <Button size="sm" disabled={busy} onClick={() => run(() => updatePost(post.id, text, vis), "Zapisano zmiany.", () => setEditing(false))}>{busy ? "Zapisywanie…" : "Zapisz"}</Button>
+            <Button size="sm" variant="ghost" onClick={() => { setEditing(false); setText(post.body); setVis(post.visibility); }}>Anuluj</Button>
           </div>
         </div>
       ) : (
@@ -91,9 +108,13 @@ export function PostCard({ post, uid, full, onChanged, onDeleted }: {
       <footer className="mt-5 flex flex-wrap items-center gap-2 border-t border-border/40 pt-4">
         <Button variant="ghost" size="sm" onClick={react} disabled={post.status !== "published"} aria-pressed={reacted}
           className={reacted ? "text-gold" : "text-muted-foreground"}>
-          <Heart className={`mr-1.5 h-4 w-4 ${reacted ? "fill-current" : ""}`} /> Szacunek · {count}
+          <Heart className={`mr-1.5 h-4 w-4 ${reacted ? "fill-current" : ""}`} /> Szacunek{post.guest ? "" : ` · ${count}`}
         </Button>
-        {full ? (
+        {post.guest ? (full ? null : (
+          <Button variant="ghost" size="sm" asChild className="text-muted-foreground">
+            <Link to="/spolecznosc/$postId" params={{ postId: post.id }}><MessageSquare className="mr-1.5 h-4 w-4" /> Komentarze</Link>
+          </Button>
+        )) : full ? (
           <span className="flex items-center px-3 text-sm text-muted-foreground"><MessageSquare className="mr-1.5 h-4 w-4" /> {post.comments}</span>
         ) : (
           <Button variant="ghost" size="sm" asChild className="text-muted-foreground">
