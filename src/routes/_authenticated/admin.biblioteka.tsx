@@ -15,8 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 export const Route = createFileRoute("/_authenticated/admin/biblioteka")({ component: AdminLibrary });
 
-type Form = { id: string | null; title: string; slug: string; summary: string; category: string; kind: Kind; access: Access; status: Status; author_name: string; body: string; external_url: string };
-const EMPTY: Form = { id: null, title: "", slug: "", summary: "", category: "", kind: "article", access: "members", status: "draft", author_name: "Redakcja TNB", body: "", external_url: "" };
+type Form = { id: string | null; title: string; slug: string; summary: string; category: string; kind: Kind; access: Access; status: Status; author_name: string; body: string; external_url: string; price: string; purchasable: boolean; payment_product_id: string; delivery_method: Delivery };
+const EMPTY: Form = { id: null, title: "", slug: "", summary: "", category: "", kind: "article", access: "members", status: "draft", author_name: "Redakcja TNB", body: "", external_url: "", price: "", purchasable: false, payment_product_id: "", delivery_method: "email_link" };
 
 function AdminLibrary() {
   const listFn = useServerFn(adminListLibrary);
@@ -108,7 +108,7 @@ function Editor({ id, cats, onClose, onSaved }: { id: string | null; cats: { slu
   useEffect(() => {
     if (!cur.data) return;
     const { item: i, content: c } = cur.data;
-    setF({ id: i.id, title: i.title, slug: i.slug, summary: i.summary, category: i.category, kind: i.kind as Kind, access: i.access as Access, status: i.status as Status, author_name: i.author_name, body: c.body ?? "", external_url: c.external_url ?? "" });
+    setF({ id: i.id, title: i.title, slug: i.slug, summary: i.summary, category: i.category, kind: i.kind as Kind, access: i.access as Access, status: i.status as Status, author_name: i.author_name, body: c.body ?? "", external_url: c.external_url ?? "", price: i.price_amount != null ? String(i.price_amount / 100).replace(".", ",") : "", purchasable: !!i.purchasable, payment_product_id: i.payment_product_id ?? "", delivery_method: (i.delivery_method ?? "email_link") as Delivery });
     setSlugTouched(true);
   }, [cur.data]);
 
@@ -172,6 +172,16 @@ function Editor({ id, cats, onClose, onSaved }: { id: string | null; cats: { slu
             <Select value={f.access} onValueChange={(v) => set("access", v as Access)}><SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>{(Object.keys(ACCESS) as Access[]).map((a) => <SelectItem key={a} value={a}>{ACCESS[a]}</SelectItem>)}</SelectContent></Select></div>
         </div>
+        {f.access === "premium" && (
+          <div className="grid gap-4 border border-gold/40 p-4 sm:grid-cols-2">
+            <div><Label htmlFor="lp">Cena (zł)</Label><Input id="lp" inputMode="decimal" value={f.price} onChange={(e) => set("price", e.target.value)} maxLength={12} placeholder="np. 49,99" /></div>
+            <div><Label>Sposób dostarczenia</Label>
+              <Select value={f.delivery_method} onValueChange={(v) => set("delivery_method", v as Delivery)}><SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{(Object.keys(DELIVERY) as Delivery[]).map((d) => <SelectItem key={d} value={d}>{DELIVERY[d]}</SelectItem>)}</SelectContent></Select></div>
+            <div><Label htmlFor="lpid">Identyfikator produktu u operatora płatności (opcjonalnie)</Label><Input id="lpid" value={f.payment_product_id} onChange={(e) => set("payment_product_id", e.target.value)} maxLength={120} /></div>
+            <label className="flex items-center gap-2 self-end text-sm"><input type="checkbox" checked={f.purchasable} onChange={(e) => set("purchasable", e.target.checked)} /> Dostępny do zakupu</label>
+          </div>
+        )}
         <div><Label htmlFor="la">Autor lub redaktor</Label><Input id="la" value={f.author_name} onChange={(e) => set("author_name", e.target.value)} maxLength={80} /></div>
         <div><Label htmlFor="lb">Treść {f.kind === "article" || f.kind === "guide" ? "" : "(opcjonalna)"}</Label>
           <Textarea id="lb" rows={14} value={f.body} onChange={(e) => set("body", e.target.value)} maxLength={100000} />
