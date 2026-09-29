@@ -38,6 +38,7 @@ import { Route as AuthenticatedAdminSubskrybenciRouteImport } from './routes/_au
 import { Route as AuthenticatedAdminTresciRouteImport } from './routes/_authenticated/admin.tresci'
 import { Route as AuthenticatedAdminUstawieniaEmailRouteImport } from './routes/_authenticated/admin.ustawienia-email'
 import { Route as AuthenticatedAdminWiadomosciRouteImport } from './routes/_authenticated/admin.wiadomosci'
+import { Route as AuthenticatedAdminZamowieniaRouteImport } from './routes/_authenticated/admin.zamowienia'
 import { Route as ApiPublicLibraryCoverIdRouteImport } from './routes/api/public/library-cover.$id'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
@@ -192,6 +193,12 @@ const AuthenticatedAdminWiadomosciRoute =
     path: '/wiadomosci',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminZamowieniaRoute =
+  AuthenticatedAdminZamowieniaRouteImport.update({
+    id: '/zamowienia',
+    path: '/zamowienia',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const ApiPublicLibraryCoverIdRoute = ApiPublicLibraryCoverIdRouteImport.update({
   id: '/api/public/library-cover/$id',
   path: '/api/public/library-cover/$id',
@@ -232,6 +239,7 @@ export interface FileRoutesByFullPath {
   '/admin/tresci': typeof AuthenticatedAdminTresciRoute
   '/admin/ustawienia-email': typeof AuthenticatedAdminUstawieniaEmailRoute
   '/admin/wiadomosci': typeof AuthenticatedAdminWiadomosciRoute
+  '/admin/zamowienia': typeof AuthenticatedAdminZamowieniaRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/library-cover/$id': typeof ApiPublicLibraryCoverIdRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -263,6 +271,7 @@ export interface FileRoutesByTo {
   '/admin/tresci': typeof AuthenticatedAdminTresciRoute
   '/admin/ustawienia-email': typeof AuthenticatedAdminUstawieniaEmailRoute
   '/admin/wiadomosci': typeof AuthenticatedAdminWiadomosciRoute
+  '/admin/zamowienia': typeof AuthenticatedAdminZamowieniaRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/api/public/library-cover/$id': typeof ApiPublicLibraryCoverIdRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -297,6 +306,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/tresci': typeof AuthenticatedAdminTresciRoute
   '/_authenticated/admin/ustawienia-email': typeof AuthenticatedAdminUstawieniaEmailRoute
   '/_authenticated/admin/wiadomosci': typeof AuthenticatedAdminWiadomosciRoute
+  '/_authenticated/admin/zamowienia': typeof AuthenticatedAdminZamowieniaRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/library-cover/$id': typeof ApiPublicLibraryCoverIdRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -331,6 +341,7 @@ export interface FileRouteTypes {
     | '/admin/tresci'
     | '/admin/ustawienia-email'
     | '/admin/wiadomosci'
+    | '/admin/zamowienia'
     | '/admin/'
     | '/api/public/library-cover/$id'
     | '/api/public/payments/webhook'
@@ -362,6 +373,7 @@ export interface FileRouteTypes {
     | '/admin/tresci'
     | '/admin/ustawienia-email'
     | '/admin/wiadomosci'
+    | '/admin/zamowienia'
     | '/admin'
     | '/api/public/library-cover/$id'
     | '/api/public/payments/webhook'
@@ -395,6 +407,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/tresci'
     | '/_authenticated/admin/ustawienia-email'
     | '/_authenticated/admin/wiadomosci'
+    | '/_authenticated/admin/zamowienia'
     | '/_authenticated/admin/'
     | '/api/public/library-cover/$id'
     | '/api/public/payments/webhook'
@@ -629,6 +642,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminWiadomosciRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/zamowienia': {
+      id: '/_authenticated/admin/zamowienia'
+      path: '/zamowienia'
+      fullPath: '/admin/zamowienia'
+      preLoaderRoute: typeof AuthenticatedAdminZamowieniaRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/api/public/library-cover/$id': {
       id: '/api/public/library-cover/$id'
       path: '/api/public/library-cover/$id'
@@ -654,6 +674,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminTresciRoute: typeof AuthenticatedAdminTresciRoute
   AuthenticatedAdminUstawieniaEmailRoute: typeof AuthenticatedAdminUstawieniaEmailRoute
   AuthenticatedAdminWiadomosciRoute: typeof AuthenticatedAdminWiadomosciRoute
+  AuthenticatedAdminZamowieniaRoute: typeof AuthenticatedAdminZamowieniaRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
@@ -666,6 +687,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminUstawieniaEmailRoute:
     AuthenticatedAdminUstawieniaEmailRoute,
   AuthenticatedAdminWiadomosciRoute: AuthenticatedAdminWiadomosciRoute,
+  AuthenticatedAdminZamowieniaRoute: AuthenticatedAdminZamowieniaRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
