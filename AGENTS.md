@@ -13,3 +13,4 @@
 - Newsletter subscribers store consent text/version/time and opt-in method; status is active only when the configured opt-in mechanism is satisfied.
 - Admin panel lives under /admin (src/routes/_authenticated/admin*); every admin server fn in src/lib/admin.functions.ts calls assertAdmin (has_role RPC) and RLS admin policies back it up — defense in depth.
 - Public signup is open (email+confirmation, Google, Apple) and lands on /moje-tnb; admin role is only granted manually in user_roles.
+- Community (/spolecznosc) is a public route: guests read only visibility='public' AND status='published' posts via anon RLS + column grants (no author_id, no comments/reactions); all writes stay authenticated-only — keeps private data out of anon reach.
