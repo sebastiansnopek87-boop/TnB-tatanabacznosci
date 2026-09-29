@@ -30,7 +30,7 @@ export const adminListLibrary = createServerFn({ method: "POST" })
     if (s.length >= 2) q = q.or(`title.ilike.%${s}%,summary.ilike.%${s}%,slug.ilike.%${s}%`);
     const { data: rows, error } = await q;
     if (error) throw new Error("Nie udało się pobrać materiałów.");
-    return rows as Array<{ id: string; slug: string; title: string; summary: string; category: string; kind: string; status: string; access: string; cover_url: string | null; author_name: string; published_at: string | null; created_at: string; updated_at: string }>;
+    return rows as Array<{ price_amount: number | null; id: string; slug: string; title: string; summary: string; category: string; kind: string; status: string; access: string; cover_url: string | null; author_name: string; published_at: string | null; created_at: string; updated_at: string }>;
   });
 
 export const adminGetLibraryItem = createServerFn({ method: "POST" })
@@ -55,6 +55,10 @@ const itemSchema = z.object({
   status: z.enum(["draft", "published", "archived"]),
   author_name: z.string().trim().min(1, "Podaj autora lub redaktora.").max(80),
   body: z.string().max(100000, "Treść jest zbyt długa."),
+  price: z.string().trim().max(12).refine((v) => v === "" || /^\d{1,6}([.,]\d{1,2})?$/.test(v), "Cena musi być liczbą, np. 49 lub 49,99."),
+  purchasable: z.boolean(),
+  payment_product_id: z.string().trim().max(120),
+  delivery_method: z.enum(["email_link", "email_attachment", "account_access"]),
   external_url: z.string().trim().max(2000).refine((v) => v === "" || /^https:\/\/\S+$/.test(v), "Adres zewnętrzny musi zaczynać się od https://"),
 });
 
@@ -64,7 +68,12 @@ export const adminSaveLibraryItem = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const db = context.supabase;
-    const meta = { title: data.title, slug: data.slug, summary: data.summary, category: data.category, kind: data.kind, access: data.access, status: data.status, author_name: data.author_name };
+    const price = data.price ? Math.round(Number(data.price.replace(",", ".")) * 100) : null;
+    if (data.access === "premium" && data.purchasable && !price) throw new Error("Podaj cenę, aby materiał premium był dostępny do zakupu.");
+    if (price !== null && price < 100) throw new Error("Cena musi wynosić co najmniej 1 zł.");
+    const meta = { title: data.title, slug: data.slug, summary: data.summary, category: data.category, kind: data.kind, access: data.access, status: data.status, author_name: data.author_name,
+      price_amount: data.access === "premium" ? price : null, purchasable: data.access === "premium" && data.purchasable,
+      payment_product_id: data.payment_product_id || null, delivery_method: data.delivery_method };
     const res = data.id
       ? await db.from("library_items").update(meta).eq("id", data.id).select("id").single()
       : await db.from("library_items").insert(meta).select("id").single();

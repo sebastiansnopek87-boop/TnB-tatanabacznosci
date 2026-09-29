@@ -3,8 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Search, Lock, Crown } from "lucide-react";
 import { PageShell } from "@/components/tnb/PageShell";
-import { useUid } from "@/lib/community";
-import { ACCESS, KINDS, coverSrc, fmtDay, listCategories, listLibrary, type Access, type LibraryItem } from "@/lib/library";
+import { ACCESS, KINDS, accessLabel, coverSrc, fmtDay, listCategories, listLibrary, type Access, type LibraryItem } from "@/lib/library";
 
 const TITLE = "Biblioteka TNB — Tata Na Baczności";
 const DESC = "Miejsce, w którym gromadzimy wiedzę, doświadczenia i materiały, do których warto wracać.";
@@ -25,7 +24,6 @@ const chipOn = "border-gold bg-gold/10 text-gold";
 const chipOff = "border-border/60 text-foreground/70 hover:border-gold/60 hover:text-foreground";
 
 function Library() {
-  const { uid } = useUid();
   const [input, setInput] = useState("");
   const [q, setQ] = useState("");
   const [category, setCategory] = useState<string | null>(null);
@@ -89,7 +87,7 @@ function Library() {
             </div>
           ) : (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {list.data.map((it) => <ItemCard key={it.id} it={it} cat={catName(it.category)} signedIn={!!uid} />)}
+              {list.data.map((it) => <ItemCard key={it.id} it={it} cat={catName(it.category)} />)}
             </div>
           )}
         </div>
@@ -98,9 +96,8 @@ function Library() {
   );
 }
 
-function ItemCard({ it, cat, signedIn }: { it: LibraryItem; cat: string; signedIn: boolean }) {
+function ItemCard({ it, cat }: { it: LibraryItem; cat: string }) {
   const img = coverSrc(it);
-  const locked = it.access === "members" && !signedIn;
   return (
     <article className="flex min-w-0 flex-col border border-border/60 bg-card transition-colors hover:border-gold/50">
       {img && <img src={img} alt="" loading="lazy" className="aspect-[16/9] w-full object-cover" />}
@@ -116,18 +113,12 @@ function ItemCard({ it, cat, signedIn }: { it: LibraryItem; cat: string; signedI
             <span>{fmtDay(it.published_at)}</span>
             <span className="inline-flex items-center gap-1">
               {it.access === "premium" ? <Crown className="h-3.5 w-3.5 text-gold" /> : it.access === "members" ? <Lock className="h-3.5 w-3.5" /> : null}
-              {ACCESS[it.access]}
+              <span className={it.access === "premium" ? "text-gold" : ""}>{accessLabel(it)}</span>
             </span>
           </div>
-          {locked ? (
-            <Link to="/auth" className="mt-4 block border border-gold/60 px-4 py-2.5 text-center text-[0.7rem] uppercase tracking-[0.14em] text-gold hover:bg-gold/10">
-              Zaloguj się, aby uzyskać dostęp
-            </Link>
-          ) : (
-            <Link to="/biblioteka/$slug" params={{ slug: it.slug }} className="mt-4 block bg-gold px-4 py-2.5 text-center text-[0.7rem] uppercase tracking-[0.14em] text-primary-foreground hover:bg-gold-bright">
-              Otwórz materiał
-            </Link>
-          )}
+          <Link to="/biblioteka/$slug" params={{ slug: it.slug }} className="mt-4 block bg-gold px-4 py-2.5 text-center text-[0.7rem] uppercase tracking-[0.14em] text-primary-foreground hover:bg-gold-bright">
+            Zobacz szczegóły
+          </Link>
         </div>
       </div>
     </article>

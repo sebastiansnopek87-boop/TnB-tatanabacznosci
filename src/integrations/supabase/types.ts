@@ -327,9 +327,14 @@ export type Database = {
           cover_url: string | null
           created_at: string
           created_by: string | null
+          currency: string
+          delivery_method: string
           id: string
           kind: string
+          payment_product_id: string | null
+          price_amount: number | null
           published_at: string | null
+          purchasable: boolean
           slug: string
           status: string
           summary: string
@@ -343,9 +348,14 @@ export type Database = {
           cover_url?: string | null
           created_at?: string
           created_by?: string | null
+          currency?: string
+          delivery_method?: string
           id?: string
           kind?: string
+          payment_product_id?: string | null
+          price_amount?: number | null
           published_at?: string | null
+          purchasable?: boolean
           slug: string
           status?: string
           summary?: string
@@ -359,9 +369,14 @@ export type Database = {
           cover_url?: string | null
           created_at?: string
           created_by?: string | null
+          currency?: string
+          delivery_method?: string
           id?: string
           kind?: string
+          payment_product_id?: string | null
+          price_amount?: number | null
           published_at?: string | null
+          purchasable?: boolean
           slug?: string
           status?: string
           summary?: string
@@ -375,6 +390,65 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "library_categories"
             referencedColumns: ["slug"]
+          },
+        ]
+      }
+      library_orders: {
+        Row: {
+          access_token: string
+          amount: number
+          buyer_email: string
+          created_at: string
+          currency: string
+          delivered_at: string | null
+          id: string
+          item_id: string
+          paid_at: string | null
+          provider: string | null
+          provider_ref: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          access_token?: string
+          amount: number
+          buyer_email: string
+          created_at?: string
+          currency?: string
+          delivered_at?: string | null
+          id?: string
+          item_id: string
+          paid_at?: string | null
+          provider?: string | null
+          provider_ref?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          access_token?: string
+          amount?: number
+          buyer_email?: string
+          created_at?: string
+          currency?: string
+          delivered_at?: string | null
+          id?: string
+          item_id?: string
+          paid_at?: string | null
+          provider?: string | null
+          provider_ref?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "library_orders_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "library_items"
+            referencedColumns: ["id"]
           },
         ]
       }

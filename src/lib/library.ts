@@ -2,7 +2,9 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const KINDS = { article: "Artykuł", guide: "Poradnik", pdf: "PDF do pobrania", video: "Materiał wideo", audio: "Nagranie audio", link: "Link zewnętrzny" } as const;
 export type Kind = keyof typeof KINDS;
-export const ACCESS = { public: "Publiczny", members: "Dla zalogowanych", premium: "Premium" } as const;
+export const ACCESS = { public: "Darmowy", members: "Dostępny po zalogowaniu", premium: "Premium" } as const;
+export const DELIVERY = { email_link: "E-mail z bezpiecznym linkiem", email_attachment: "E-mail z załącznikiem", account_access: "Dostęp na koncie" } as const;
+export type Delivery = keyof typeof DELIVERY;
 export type Access = keyof typeof ACCESS;
 export const STATUS = { draft: "Szkic", published: "Opublikowany", archived: "Archiwalny" } as const;
 export type Status = keyof typeof STATUS;
@@ -10,13 +12,20 @@ export type Status = keyof typeof STATUS;
 export type LibraryItem = {
   id: string; slug: string; title: string; summary: string; category: string; kind: Kind;
   cover_url: string | null; access: Access; author_name: string; published_at: string | null; updated_at: string;
+  price_amount: number | null; currency: string; delivery_method: Delivery; purchasable: boolean;
 };
 export type LibraryContent = { body: string; file_path: string | null; file_name: string | null; external_url: string | null };
 
-const COLS = "id, slug, title, summary, category, kind, cover_url, access, author_name, published_at, updated_at";
+const COLS = "id, slug, title, summary, category, kind, cover_url, access, author_name, published_at, updated_at, price_amount, currency, delivery_method, purchasable";
 
 export const coverSrc = (it: { id: string; cover_url: string | null; updated_at: string }) =>
   it.cover_url ? `/api/public/library-cover/${it.id}?v=${encodeURIComponent(it.updated_at)}` : null;
+
+export const fmtPrice = (amount: number | null) =>
+  amount == null ? null : `${(amount / 100).toLocaleString("pl-PL", { minimumFractionDigits: amount % 100 ? 2 : 0, maximumFractionDigits: 2 })} zł`;
+
+export const accessLabel = (it: Pick<LibraryItem, "access" | "price_amount">) =>
+  it.access === "premium" ? (fmtPrice(it.price_amount) ? `Premium — ${fmtPrice(it.price_amount)}` : "Premium — cena wkrótce") : ACCESS[it.access];
 
 export const fmtDay = (s: string | null) =>
   s ? new Date(s).toLocaleDateString("pl-PL", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Warsaw" }) : "—";

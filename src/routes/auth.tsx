@@ -19,9 +19,16 @@ export const Route = createFileRoute("/auth")({
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
-  validateSearch: (s: Record<string, unknown>): { tryb?: "rejestracja" } => (s["tryb"] === "rejestracja" ? { tryb: "rejestracja" } : {}),
+  validateSearch: (s: Record<string, unknown>): { tryb?: "rejestracja"; powrot?: string } => ({
+    ...(s["tryb"] === "rejestracja" ? { tryb: "rejestracja" as const } : {}),
+    ...(typeof s["powrot"] === "string" && safeReturn(s["powrot"]) ? { powrot: s["powrot"] } : {}),
+  }),
   component: AuthPage,
 });
+
+// Only same-origin library paths are accepted as a return target (no open redirects).
+function safeReturn(p: string) { return /^\/biblioteka\/[a-z0-9-]{1,120}$/.test(p); }
+const RETURN_KEY = "tnb-return";
 
 type Mode = "login" | "register" | "register-sent" | "reset" | "reset-sent";
 type Msg = { tone: "ok" | "error" | "info"; text: string } | null;
@@ -52,10 +59,17 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<Msg>(null);
   const [fieldErr, setFieldErr] = useState<{ email?: string; password?: string }>({});
+  if (typeof window !== "undefined" && search.powrot) sessionStorage.setItem(RETURN_KEY, search.powrot);
+  const goAfter = () => {
+    const r = typeof window !== "undefined" ? sessionStorage.getItem(RETURN_KEY) : null;
+    if (r) sessionStorage.removeItem(RETURN_KEY);
+    if (r && safeReturn(r)) return navigate({ href: r, replace: true });
+    return navigate({ to: "/moje-tnb", replace: true });
+  };
 
   // Already signed in (also the return point after Google/Apple) → profile.
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => { if (data.user) navigate({ to: "/moje-tnb", replace: true }); });
+    supabase.auth.getUser().then(({ data }) => { if (data.user) goAfter(); });
   }, [navigate]);
   useEffect(() => { setMode(search.tryb === "rejestracja" ? "register" : "login"); setMsg(null); }, [search.tryb]);
 
@@ -97,7 +111,7 @@ function AuthPage() {
     setBusy(false);
     if (error) return setMsg({ tone: "error", text: loginError(error.code) });
     toast.success("Zalogowano pomyślnie.");
-    navigate({ to: "/moje-tnb", replace: true });
+    goAfter();
   }
 
   async function onRegister(e: FormEvent) {
@@ -117,7 +131,7 @@ function AuthPage() {
         : "Nie udało się założyć konta. Spróbuj ponownie.";
       return setMsg({ tone: "error", text });
     }
-    if (data.session) return navigate({ to: "/moje-tnb", replace: true });
+    if (data.session) return goAfter();
     setMode("register-sent");
   }
 
@@ -131,7 +145,7 @@ function AuthPage() {
       return setMsg({ tone: cancelled ? "info" : "error", text: cancelled ? "Logowanie zostało anulowane." : "Nie udało się zalogować. Spróbuj ponownie." });
     }
     if (res.redirected) return;
-    navigate({ to: "/moje-tnb", replace: true });
+    goAfter();
   }
 
   const social = (
