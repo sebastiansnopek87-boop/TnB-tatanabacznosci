@@ -132,23 +132,23 @@ function Editor({ id, onClose, onSaved }: { id: string | null; onClose: () => vo
         <Button variant="outline" onClick={onClose}>← Wróć do listy</Button>
       </div>
       {cur.data && <p className="text-xs text-muted-foreground">Status: {MEETING_STATUS[cur.data.status as MeetingStatus]} · publikację zmienisz na liście spotkań.</p>}
-      <div><Label>Tytuł *</Label><Input value={f.title} maxLength={200} onChange={(e) => { set("title", e.target.value); if (!slugTouched) set("slug", slugify(e.target.value)); }} /></div>
-      <div><Label>Adres (/spotkania/…) *</Label><Input value={f.slug} maxLength={120} onChange={(e) => { setSlugTouched(true); set("slug", e.target.value); }} /></div>
+      <Label className="grid gap-1.5"><span>Tytuł *</span><Input value={f.title} maxLength={200} onChange={(e) => { set("title", e.target.value); if (!slugTouched) set("slug", slugify(e.target.value)); }} /></Label>
+      <Label className="grid gap-1.5"><span>Adres (/spotkania/…) *</span><Input value={f.slug} maxLength={120} onChange={(e) => { setSlugTouched(true); set("slug", e.target.value); }} /></Label>
       <div className="grid gap-4 sm:grid-cols-3">
         <div><Label>Rodzaj</Label>
           <Select value={f.kind} onValueChange={(v) => set("kind", v as MeetingKind)}><SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>{(Object.keys(MEETING_KINDS) as MeetingKind[]).map((k) => <SelectItem key={k} value={k}>{MEETING_KINDS[k]}</SelectItem>)}</SelectContent></Select></div>
-        <div><Label>Rozpoczęcie *</Label><Input type="datetime-local" value={f.starts} onChange={(e) => set("starts", e.target.value)} /></div>
-        <div><Label>Zakończenie</Label><Input type="datetime-local" value={f.ends} onChange={(e) => set("ends", e.target.value)} /></div>
+        <Label className="grid gap-1.5"><span>Rozpoczęcie *</span><Input type="datetime-local" value={f.starts} onChange={(e) => set("starts", e.target.value)} /></Label>
+        <Label className="grid gap-1.5"><span>Zakończenie</span><Input type="datetime-local" value={f.ends} onChange={(e) => set("ends", e.target.value)} /></Label>
       </div>
-      <div><Label>Krótki opis</Label><Textarea value={f.summary} maxLength={600} onChange={(e) => set("summary", e.target.value)} /></div>
-      <div><Label>Pełny opis (akapity oddziel pustą linią)</Label><Textarea className="min-h-40" value={f.description} maxLength={20000} onChange={(e) => set("description", e.target.value)} /></div>
-      <div><Label>Zasady uczestnictwa</Label><Textarea value={f.rules} maxLength={5000} onChange={(e) => set("rules", e.target.value)} /></div>
+      <Label className="grid gap-1.5"><span>Krótki opis</span><Textarea value={f.summary} maxLength={600} onChange={(e) => set("summary", e.target.value)} /></Label>
+      <Label className="grid gap-1.5"><span>Pełny opis (akapity oddziel pustą linią)</span><Textarea className="min-h-40" value={f.description} maxLength={20000} onChange={(e) => set("description", e.target.value)} /></Label>
+      <Label className="grid gap-1.5"><span>Zasady uczestnictwa</span><Textarea value={f.rules} maxLength={5000} onChange={(e) => set("rules", e.target.value)} /></Label>
       <div className="grid gap-4 sm:grid-cols-2">
-        <div><Label>Lokalizacja</Label><Input value={f.location} maxLength={300} onChange={(e) => set("location", e.target.value)} /></div>
-        <div><Label>Limit uczestników (puste = bez limitu)</Label><Input type="number" min={1} value={f.capacity} onChange={(e) => set("capacity", e.target.value)} /></div>
+        <Label className="grid gap-1.5"><span>Lokalizacja</span><Input value={f.location} maxLength={300} onChange={(e) => set("location", e.target.value)} /></Label>
+        <Label className="grid gap-1.5"><span>Limit uczestników (puste = bez limitu)</span><Input type="number" min={1} value={f.capacity} onChange={(e) => set("capacity", e.target.value)} /></Label>
       </div>
-      <div><Label>Link do spotkania online (widoczny tylko dla zatwierdzonych uczestników)</Label><Input value={f.online_link} maxLength={500} placeholder="https://" onChange={(e) => set("online_link", e.target.value)} /></div>
+      <Label className="grid gap-1.5"><span>Link do spotkania online (widoczny tylko dla zatwierdzonych uczestników)</span><Input value={f.online_link} maxLength={500} placeholder="https://" onChange={(e) => set("online_link", e.target.value)} /></Label>
       <div className="grid gap-2 sm:grid-cols-2">
         {sw("location_public", "Pokaż lokalizację publicznie")}
         {sw("registration_open", "Zapisy włączone")}
