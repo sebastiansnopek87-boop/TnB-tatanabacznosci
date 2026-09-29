@@ -71,6 +71,13 @@
       "when": 1790696193697,
       "tag": "0009_community_post_stats",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790697936841,
+      "tag": "0010_community_sectors_search",
+      "breakpoints": true
     }
   ]
 }

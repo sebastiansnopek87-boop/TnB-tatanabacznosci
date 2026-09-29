@@ -14,7 +14,9 @@ export type Post = {
 };
 export type Sort = "newest" | "oldest" | "active";
 export const SORT_LABEL: Record<Sort, string> = { newest: "Najnowsze", oldest: "Najstarsze", active: "Najaktywniejsze" };
-export const SECTORS = { ogolne: "Ogólne", ojcostwo: "Ojcostwo", relacje: "Relacje", wychowanie: "Wychowanie", rozwoj: "Rozwój", zdrowie: "Zdrowie" } as const;
+export const SECTORS = { ogolne: "Ogólne", malzenstwo: "Małżeństwo", mundur: "Mundur", meskie_rozmowy: "Męskie rozmowy", ojcostwo: "Ojcostwo", rozwoj: "Rozwój", sport_zdrowie: "Sport i zdrowie", wiara: "Wiara" } as const;
+/** Sectors shown in the left navigation ("Ogólne" posts appear only under "Wszystkie wpisy"). */
+export const NAV_SECTORS = ["malzenstwo", "mundur", "meskie_rozmowy", "ojcostwo", "rozwoj", "sport_zdrowie", "wiara"] as const satisfies readonly Sector[];
 export type Sector = keyof typeof SECTORS;
 export type Visibility = "public" | "community";
 export const VIS_LABEL: Record<Visibility, string> = { public: "Publiczny", community: "Tylko dla społeczności" };
@@ -52,8 +54,8 @@ async function decorate(rows: any[]): Promise<Post[]> {
   }));
 }
 
-export async function listPosts(page: number, onlyMine: boolean, signedIn = true, sort: Sort = "newest"): Promise<Post[]> {
-  const { data, error } = await supabase.rpc("community_feed", { _sort: sort, _only_mine: signedIn && onlyMine, _offset: page * PAGE, _limit: PAGE });
+export async function listPosts(page: number, onlyMine: boolean, signedIn = true, sort: Sort = "newest", sector: Sector | null = null, author: string | null = null): Promise<Post[]> {
+  const { data, error } = await supabase.rpc("community_feed_filtered", { _sort: sort, _only_mine: signedIn && onlyMine, _offset: page * PAGE, _limit: PAGE, _sector: sector as string, _author: author as string });
   if (error) throw new Error("Nie udało się pobrać postów.");
   return (data ?? []).map((r: any) => ({ ...r, author_id: r.author_id ?? "", comments: Number(r.comments), reactions: Number(r.reactions), guest: !signedIn }));
 }
@@ -127,3 +129,16 @@ export async function toggleReaction(postId: string, on: boolean) {
 
 export const fmtWhen = (s: string) =>
   new Date(s).toLocaleString("pl-PL", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Warsaw" });
+
+export async function sectorCounts(): Promise<Record<string, number>> {
+  const { data, error } = await supabase.rpc("community_sector_counts");
+  if (error) throw new Error("Nie udało się pobrać liczników.");
+  return Object.fromEntries((data ?? []).map((r: any) => [r.sector, Number(r.posts)]));
+}
+
+export type SearchHit = { kind: "post" | "user"; id: string | null; label: string; snippet: string; sector: string | null };
+export async function searchCommunity(q: string): Promise<SearchHit[]> {
+  const { data, error } = await supabase.rpc("community_search", { _q: q });
+  if (error) throw new Error("Wyszukiwanie nie powiodło się. Spróbuj ponownie.");
+  return (data ?? []) as SearchHit[];
+}

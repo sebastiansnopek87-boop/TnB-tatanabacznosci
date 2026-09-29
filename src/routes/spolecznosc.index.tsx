@@ -7,7 +7,8 @@ import { GuestField, JoinDialog } from "@/components/community/JoinDialog";
 import { PostCard, SectorSelect, VisibilitySelect } from "@/components/community/PostCard";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { PAGE, POST_MAX, SORT_LABEL, createPost, listPosts, useUid, type Sector, type Sort, type Visibility } from "@/lib/community";
+import { PAGE, POST_MAX, SECTORS, SORT_LABEL, createPost, listPosts, useUid, type Sector, type Sort, type Visibility } from "@/lib/community";
+import { CommunitySidebar } from "@/components/community/CommunitySidebar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const Route = createFileRoute("/spolecznosc/")({
@@ -41,11 +42,13 @@ function Community() {
   const [sector, setSector] = useState<Sector>("ogolne");
   const [join, setJoin] = useState(false);
   const [sort, setSort] = useState<Sort>("newest");
+  const [filter, setFilter] = useState<Sector | null>(null);
+  const [author, setAuthor] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const feed = useInfiniteQuery({
-    queryKey: ["community", signedIn ? tab : "public", uid, sort],
-    queryFn: ({ pageParam }) => listPosts(pageParam, signedIn && tab === "mine", signedIn, sort),
+    queryKey: ["community", signedIn ? tab : "public", uid, sort, filter, author],
+    queryFn: ({ pageParam }) => listPosts(pageParam, signedIn && tab === "mine", signedIn, sort, filter, author),
     initialPageParam: 0,
     enabled: ready,
     getNextPageParam: (last, all) => (last.length === PAGE ? all.length : undefined),
@@ -77,7 +80,14 @@ function Community() {
         </div>
       </section>
 
-      <div className="mx-auto max-w-3xl px-5 py-10 lg:py-14">
+      <div className="mx-auto grid max-w-[1200px] gap-10 px-5 py-10 lg:grid-cols-[280px_minmax(0,1fr)] lg:py-14">
+        <div className="lg:sticky lg:top-6 lg:self-start">
+          <CommunitySidebar signedIn={signedIn} sector={filter}
+            onSector={(k) => { setFilter(k); setAuthor(null); document.getElementById("feed")?.scrollIntoView({ behavior: "smooth", block: "start" }); }}
+            onAuthor={(a) => { setAuthor(a); setFilter(null); setTab("all"); document.getElementById("feed")?.scrollIntoView({ behavior: "smooth", block: "start" }); }}
+            onNewThread={() => { const el = document.getElementById("new-post"); el?.scrollIntoView({ behavior: "smooth", block: "center" }); (el as HTMLTextAreaElement | null)?.focus({ preventScroll: true }); }} />
+        </div>
+      <div className="min-w-0 max-w-3xl">
         {ready && (
           <section aria-labelledby="welcome" className="relative border border-gold/30 bg-card/60 px-6 py-10 text-center sm:px-10 sm:py-12">
             <span aria-hidden className="absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-gold/70 to-transparent" />
@@ -116,7 +126,7 @@ function Community() {
           </section>
         )}
 
-        <div className="mt-12 flex flex-wrap items-end justify-between gap-3 border-b border-border/60 pb-3">
+        <div id="feed" className="mt-12 flex scroll-mt-6 flex-wrap items-end justify-between gap-3 border-b border-border/60 pb-3">
           <div>
             <h2 className="eyebrow text-gold">Feed rozmów</h2>
             {signedIn && (
@@ -136,6 +146,12 @@ function Community() {
           </Select>
         </div>
 
+        {(filter || author) && (
+          <p className="mt-4 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+            {filter ? <>Sektor: <span className="text-gold">{SECTORS[filter]}</span></> : <>Wpisy autora: <span className="text-gold">{author}</span></>}
+            <button type="button" className="text-gold underline" onClick={() => { setFilter(null); setAuthor(null); }}>Pokaż wszystkie</button>
+          </p>
+        )}
         <div className="mt-6 space-y-5">
           {(!ready || feed.isLoading) && <p className="text-sm text-muted-foreground">Wczytywanie postów…</p>}
           {feed.error && (
@@ -156,6 +172,7 @@ function Community() {
             </Button>
           )}
         </div>
+      </div>
       </div>
     </PageShell>
   );
