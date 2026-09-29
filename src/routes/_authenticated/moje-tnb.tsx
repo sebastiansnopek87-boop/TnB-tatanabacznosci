@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { getAdminStatus } from "@/lib/admin.functions";
+import { listMyPurchases } from "@/lib/orders.functions";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import type { User } from "@supabase/supabase-js";
@@ -74,11 +75,7 @@ function MojeTnb() {
             <ProfileCard user={user} onSaved={setUser} />
             <div className="space-y-6">
               <PasswordCard email={user.email ?? ""} />
-              <Card title="Moje materiały">
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  Nie masz jeszcze żadnych materiałów. Gdy biblioteka zostanie uruchomiona, Twoje materiały pojawią się tutaj.
-                </p>
-              </Card>
+              <Card title="Moje materiały"><MyPurchases /></Card>
               {admin?.isAdmin && (
                 <Card title="Administracja">
                   <Button asChild variant="outline" className="h-11 w-full uppercase tracking-[0.15em]"><Link to="/admin">Przejdź do panelu administratora</Link></Button>
@@ -94,6 +91,24 @@ function MojeTnb() {
         )}
       </div>
     </PageShell>
+  );
+}
+
+function MyPurchases() {
+  const fn = useServerFn(listMyPurchases);
+  const q = useQuery({ queryKey: ["my-purchases"], queryFn: () => fn() });
+  if (q.isLoading) return <p className="text-sm text-muted-foreground">Ładowanie…</p>;
+  if (q.error) return <p className="text-sm text-destructive">Nie udało się wczytać materiałów.</p>;
+  if (!q.data?.length) return <p className="text-sm leading-relaxed text-muted-foreground">Nie masz jeszcze zakupionych materiałów. Znajdziesz je w <Link to="/biblioteka" className="text-gold underline">Bibliotece</Link>.</p>;
+  return (
+    <ul className="space-y-3">
+      {q.data.map((p) => (
+        <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 border-b border-border/50 pb-3 last:border-0">
+          <span className="min-w-0 break-words text-sm text-foreground">{p.title}</span>
+          <Link to="/biblioteka/$slug" params={{ slug: p.slug }} className="text-[0.7rem] uppercase tracking-[0.14em] text-gold">Otwórz</Link>
+        </li>
+      ))}
+    </ul>
   );
 }
 
