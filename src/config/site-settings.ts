@@ -62,7 +62,7 @@ const SETTINGS: SiteSettings = {
           { id: "podcast", label: "Podcast", href: "/#o-tnb", order: 3, visible: true },
           { id: "spolecznosc", label: "Społeczność", href: "/#o-tnb", order: 4, visible: true },
           { id: "rozwoj", label: "Rozwój", href: "/#o-tnb", order: 5, visible: true },
-          { id: "premium", label: "Materiały premium", href: "/#o-tnb", order: 6, visible: true },
+          { id: "premium", label: "Materiały premium", href: "/materialy-premium", order: 6, visible: true },
         ],
       },
       {

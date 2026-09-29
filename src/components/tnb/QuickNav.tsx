@@ -15,7 +15,7 @@ const ITEMS: { icon: LucideIcon; title: string; desc: string; href: string }[] =
   { icon: Users, title: "Społeczność", desc: "Ludzie, doświadczenia, wsparcie", href: "#spolecznosc" },
   { icon: Calendar, title: "Spotkania 1:1", desc: "Rozmowa, mentoring, czas dla Ciebie", href: "#spotkania" },
   { icon: Compass, title: "Rozwój", desc: "Praktyczne materiały, narzędzia, wyzwania", href: "#rozwoj" },
-  { icon: ShoppingBag, title: "Materiały premium", desc: "Wybrane treści, które zostaną z Tobą na dłużej", href: "#sklep" },
+  { icon: ShoppingBag, title: "Materiały premium", desc: "Wybrane treści, które zostaną z Tobą na dłużej", href: "/materialy-premium" },
   { icon: UserRound, title: "Moje TNB", desc: "Twój profil, postępy, zapisane treści", href: "#moje-tnb" },
 ];
 
