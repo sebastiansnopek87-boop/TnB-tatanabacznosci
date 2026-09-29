@@ -108,9 +108,13 @@ export function PostCard({ post, uid, full, onChanged, onDeleted }: {
       <footer className="mt-5 flex flex-wrap items-center gap-2 border-t border-border/40 pt-4">
         <Button variant="ghost" size="sm" onClick={react} disabled={post.status !== "published"} aria-pressed={reacted}
           className={reacted ? "text-gold" : "text-muted-foreground"}>
-          <Heart className={`mr-1.5 h-4 w-4 ${reacted ? "fill-current" : ""}`} /> Szacunek · {count}
+          <Heart className={`mr-1.5 h-4 w-4 ${reacted ? "fill-current" : ""}`} /> Szacunek{post.guest ? "" : ` · ${count}`}
         </Button>
-        {post.guest ? null : full ? (
+        {post.guest ? (full ? null : (
+          <Button variant="ghost" size="sm" asChild className="text-muted-foreground">
+            <Link to="/spolecznosc/$postId" params={{ postId: post.id }}><MessageSquare className="mr-1.5 h-4 w-4" /> Komentarze</Link>
+          </Button>
+        )) : full ? (
           <span className="flex items-center px-3 text-sm text-muted-foreground"><MessageSquare className="mr-1.5 h-4 w-4" /> {post.comments}</span>
         ) : (
           <Button variant="ghost" size="sm" asChild className="text-muted-foreground">
