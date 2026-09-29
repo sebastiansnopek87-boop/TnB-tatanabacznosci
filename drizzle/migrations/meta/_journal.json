@@ -57,6 +57,13 @@
       "when": 1790693389574,
       "tag": "0007_community_anon_column_lockdown",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790696114878,
+      "tag": "0008_community_feed_sectors_reports",
+      "breakpoints": true
     }
   ]
 }
