@@ -50,6 +50,13 @@
       "when": 1790693242756,
       "tag": "0006_community_post_visibility",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790693389574,
+      "tag": "0007_community_anon_column_lockdown",
+      "breakpoints": true
     }
   ]
 }
