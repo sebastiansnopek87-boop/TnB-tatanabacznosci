@@ -62,7 +62,9 @@ export async function getPost(id: string, signedIn = true): Promise<Post | null>
   if (!signedIn) {
     const { data, error } = await supabase.from("community_posts").select(PUBLIC_SELECT).eq("id", id).maybeSingle();
     if (error) throw new Error("Nie udało się pobrać posta.");
-    return data ? guestRow(data) : null;
+    if (!data) return null;
+    const st = (await supabase.rpc("community_post_stats", { _post: id })).data?.[0];
+    return { ...guestRow(data), comments: Number(st?.comments ?? 0), reactions: Number(st?.reactions ?? 0) };
   }
   const { data, error } = await supabase.from("community_posts").select(SELECT).eq("id", id).maybeSingle();
   if (error) throw new Error("Nie udało się pobrać posta.");
