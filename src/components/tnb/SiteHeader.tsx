@@ -1,26 +1,29 @@
 import { useState } from "react";
 import { Menu, Search, UserRound, X } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import logo from "@/assets/logo.png.asset.json";
 
 const NAV = [
-  { label: "Start", href: "#start" },
-  { label: "O TNB", href: "#o-tnb" },
-  { label: "Moja historia", href: "#moja-historia" },
-  { label: "Biblioteka", href: "#biblioteka" },
-  { label: "Podcast", href: "#podcast" },
-  { label: "Społeczność", href: "/spolecznosc" },
-  { label: "Spotkania", href: "#spotkania" },
-  { label: "Sklep", href: "#sklep" },
-];
+  { label: "O TNB", to: "/", hash: "o-tnb" },
+  { label: "Moja historia", to: "/moja-historia" },
+  { label: "Biblioteka", to: "/biblioteka" },
+  { label: "Podcast", to: "/podcast" },
+  { label: "Społeczność", to: "/spolecznosc" },
+  { label: "Spotkania", to: "/spotkania" },
+  { label: "Materiały premium", to: "/materialy-premium" },
+] as const;
+
+const ACTIVE = "nav-link relative pb-1 text-gold after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:bg-gold";
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
+  const path = useRouterState({ select: (st) => st.location.pathname });
+  const isActive = (to: string) => to !== "/" && (path === to || path.startsWith(to + "/"));
 
   return (
     <header className="relative z-30 bg-surface-deep">
       <div className="flex h-[86px] items-center gap-6 px-5 lg:px-10">
-        <a href="#start" className="flex min-w-0 items-center gap-3 lg:gap-4">
+        <Link to="/" aria-label="Tata Na Baczności — strona główna" className="flex min-w-0 items-center gap-3 lg:gap-4">
           <img
             src={logo.url}
             alt="Tata Na Baczności"
@@ -32,21 +35,18 @@ export function SiteHeader() {
             </span>
             <span className="eyebrow mt-1 block text-gold/80">Ojcostwo to służba</span>
           </span>
-        </a>
+        </Link>
 
         <nav className="ml-6 hidden flex-1 flex-nowrap items-center gap-6 whitespace-nowrap xl:flex">
-          {NAV.map((item, i) => (
-            <a
+          {NAV.map((item) => (
+            <Link
               key={item.label}
-              href={item.href}
-              className={
-                i === 0
-                  ? "nav-link relative pb-1 text-gold after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:bg-gold"
-                  : "nav-link"
-              }
+              to={item.to}
+              {...("hash" in item ? { hash: item.hash } : {})}
+              className={isActive(item.to) ? ACTIVE : "nav-link"}
             >
               {item.label}
-            </a>
+            </Link>
           ))}
         </nav>
 
@@ -85,14 +85,15 @@ export function SiteHeader() {
         <div className="border-t border-border bg-surface-deep px-5 pb-6 xl:hidden">
           <nav className="flex flex-col">
             {NAV.map((item) => (
-              <a
+              <Link
                 key={item.label}
-                href={item.href}
+                to={item.to}
+                {...("hash" in item ? { hash: item.hash } : {})}
                 onClick={() => setOpen(false)}
-                className="nav-link border-b border-border/60 py-4"
+                className={`nav-link border-b border-border/60 py-4 ${isActive(item.to) ? "text-gold" : ""}`}
               >
                 {item.label}
-              </a>
+              </Link>
             ))}
           </nav>
           <div className="mt-5 flex gap-3">

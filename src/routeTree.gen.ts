@@ -12,11 +12,16 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as BibliotekaRouteImport } from './routes/biblioteka'
 import { Route as KontaktRouteImport } from './routes/kontakt'
+import { Route as MaterialyPremiumRouteImport } from './routes/materialy-premium'
+import { Route as MojaHistoriaRouteImport } from './routes/moja-historia'
+import { Route as PodcastRouteImport } from './routes/podcast'
 import { Route as PolitykaCookiesRouteImport } from './routes/polityka-cookies'
 import { Route as PolitykaPrywatnosciRouteImport } from './routes/polityka-prywatnosci'
 import { Route as RegulaminRouteImport } from './routes/regulamin'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SpotkaniaRouteImport } from './routes/spotkania'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedMojeTnbRouteImport } from './routes/_authenticated/moje-tnb'
 import { Route as NewsletterWypiszRouteImport } from './routes/newsletter.wypisz'
@@ -44,9 +49,29 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BibliotekaRoute = BibliotekaRouteImport.update({
+  id: '/biblioteka',
+  path: '/biblioteka',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const KontaktRoute = KontaktRouteImport.update({
   id: '/kontakt',
   path: '/kontakt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MaterialyPremiumRoute = MaterialyPremiumRouteImport.update({
+  id: '/materialy-premium',
+  path: '/materialy-premium',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MojaHistoriaRoute = MojaHistoriaRouteImport.update({
+  id: '/moja-historia',
+  path: '/moja-historia',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PodcastRoute = PodcastRouteImport.update({
+  id: '/podcast',
+  path: '/podcast',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PolitykaCookiesRoute = PolitykaCookiesRouteImport.update({
@@ -67,6 +92,11 @@ const RegulaminRoute = RegulaminRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SpotkaniaRoute = SpotkaniaRouteImport.update({
+  id: '/spotkania',
+  path: '/spotkania',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
@@ -139,11 +169,16 @@ const AuthenticatedAdminWiadomosciRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/biblioteka': typeof BibliotekaRoute
   '/kontakt': typeof KontaktRoute
+  '/materialy-premium': typeof MaterialyPremiumRoute
+  '/moja-historia': typeof MojaHistoriaRoute
+  '/podcast': typeof PodcastRoute
   '/polityka-cookies': typeof PolitykaCookiesRoute
   '/polityka-prywatnosci': typeof PolitykaPrywatnosciRoute
   '/regulamin': typeof RegulaminRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/spotkania': typeof SpotkaniaRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/moje-tnb': typeof AuthenticatedMojeTnbRoute
   '/newsletter/wypisz': typeof NewsletterWypiszRoute
@@ -160,11 +195,16 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/biblioteka': typeof BibliotekaRoute
   '/kontakt': typeof KontaktRoute
+  '/materialy-premium': typeof MaterialyPremiumRoute
+  '/moja-historia': typeof MojaHistoriaRoute
+  '/podcast': typeof PodcastRoute
   '/polityka-cookies': typeof PolitykaCookiesRoute
   '/polityka-prywatnosci': typeof PolitykaPrywatnosciRoute
   '/regulamin': typeof RegulaminRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/spotkania': typeof SpotkaniaRoute
   '/moje-tnb': typeof AuthenticatedMojeTnbRoute
   '/newsletter/wypisz': typeof NewsletterWypiszRoute
   '/spolecznosc/$postId': typeof SpolecznoscPostIdRoute
@@ -182,11 +222,16 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/biblioteka': typeof BibliotekaRoute
   '/kontakt': typeof KontaktRoute
+  '/materialy-premium': typeof MaterialyPremiumRoute
+  '/moja-historia': typeof MojaHistoriaRoute
+  '/podcast': typeof PodcastRoute
   '/polityka-cookies': typeof PolitykaCookiesRoute
   '/polityka-prywatnosci': typeof PolitykaPrywatnosciRoute
   '/regulamin': typeof RegulaminRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/spotkania': typeof SpotkaniaRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/moje-tnb': typeof AuthenticatedMojeTnbRoute
   '/newsletter/wypisz': typeof NewsletterWypiszRoute
@@ -205,11 +250,16 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/biblioteka'
     | '/kontakt'
+    | '/materialy-premium'
+    | '/moja-historia'
+    | '/podcast'
     | '/polityka-cookies'
     | '/polityka-prywatnosci'
     | '/regulamin'
     | '/reset-password'
+    | '/spotkania'
     | '/admin'
     | '/moje-tnb'
     | '/newsletter/wypisz'
@@ -226,11 +276,16 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/biblioteka'
     | '/kontakt'
+    | '/materialy-premium'
+    | '/moja-historia'
+    | '/podcast'
     | '/polityka-cookies'
     | '/polityka-prywatnosci'
     | '/regulamin'
     | '/reset-password'
+    | '/spotkania'
     | '/moje-tnb'
     | '/newsletter/wypisz'
     | '/spolecznosc/$postId'
@@ -247,11 +302,16 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/biblioteka'
     | '/kontakt'
+    | '/materialy-premium'
+    | '/moja-historia'
+    | '/podcast'
     | '/polityka-cookies'
     | '/polityka-prywatnosci'
     | '/regulamin'
     | '/reset-password'
+    | '/spotkania'
     | '/_authenticated/admin'
     | '/_authenticated/moje-tnb'
     | '/newsletter/wypisz'
@@ -270,11 +330,16 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  BibliotekaRoute: typeof BibliotekaRoute
   KontaktRoute: typeof KontaktRoute
+  MaterialyPremiumRoute: typeof MaterialyPremiumRoute
+  MojaHistoriaRoute: typeof MojaHistoriaRoute
+  PodcastRoute: typeof PodcastRoute
   PolitykaCookiesRoute: typeof PolitykaCookiesRoute
   PolitykaPrywatnosciRoute: typeof PolitykaPrywatnosciRoute
   RegulaminRoute: typeof RegulaminRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SpotkaniaRoute: typeof SpotkaniaRoute
   NewsletterWypiszRoute: typeof NewsletterWypiszRoute
   SpolecznoscPostIdRoute: typeof SpolecznoscPostIdRoute
   SpolecznoscIndexRoute: typeof SpolecznoscIndexRoute
@@ -303,11 +368,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/biblioteka': {
+      id: '/biblioteka'
+      path: '/biblioteka'
+      fullPath: '/biblioteka'
+      preLoaderRoute: typeof BibliotekaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/kontakt': {
       id: '/kontakt'
       path: '/kontakt'
       fullPath: '/kontakt'
       preLoaderRoute: typeof KontaktRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/materialy-premium': {
+      id: '/materialy-premium'
+      path: '/materialy-premium'
+      fullPath: '/materialy-premium'
+      preLoaderRoute: typeof MaterialyPremiumRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/moja-historia': {
+      id: '/moja-historia'
+      path: '/moja-historia'
+      fullPath: '/moja-historia'
+      preLoaderRoute: typeof MojaHistoriaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/podcast': {
+      id: '/podcast'
+      path: '/podcast'
+      fullPath: '/podcast'
+      preLoaderRoute: typeof PodcastRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/polityka-cookies': {
@@ -336,6 +429,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/spotkania': {
+      id: '/spotkania'
+      path: '/spotkania'
+      fullPath: '/spotkania'
+      preLoaderRoute: typeof SpotkaniaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin': {
@@ -466,11 +566,16 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  BibliotekaRoute: BibliotekaRoute,
   KontaktRoute: KontaktRoute,
+  MaterialyPremiumRoute: MaterialyPremiumRoute,
+  MojaHistoriaRoute: MojaHistoriaRoute,
+  PodcastRoute: PodcastRoute,
   PolitykaCookiesRoute: PolitykaCookiesRoute,
   PolitykaPrywatnosciRoute: PolitykaPrywatnosciRoute,
   RegulaminRoute: RegulaminRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SpotkaniaRoute: SpotkaniaRoute,
   NewsletterWypiszRoute: NewsletterWypiszRoute,
   SpolecznoscPostIdRoute: SpolecznoscPostIdRoute,
   SpolecznoscIndexRoute: SpolecznoscIndexRoute,
