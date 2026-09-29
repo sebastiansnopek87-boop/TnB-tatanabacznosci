@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { PageShell } from "@/components/tnb/PageShell";
 import { useUid } from "@/lib/community";
-import { ACCESS, KINDS, coverSrc, fmtDay, getLibraryItem, listCategories } from "@/lib/library";
+import { KINDS, accessLabel, fmtPrice, coverSrc, fmtDay, getLibraryItem, listCategories } from "@/lib/library";
 import { getLibraryFileUrl } from "@/lib/library.functions";
 
 export const Route = createFileRoute("/biblioteka/$slug")({
@@ -57,10 +57,10 @@ function ItemPage() {
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-[0.7rem] uppercase tracking-[0.12em]">
                 <span className="text-gold">{cats.data?.find((c) => c.slug === it.category)?.name ?? it.category}</span>
                 <span className="text-muted-foreground">{KINDS[it.kind]}</span>
-                <span className="text-muted-foreground">{ACCESS[it.access]}</span>
+                <span className={it.access === "premium" ? "text-gold" : "text-muted-foreground"}>{accessLabel(it)}</span>
               </div>
               <h1 className="mt-4 break-words font-display text-[2.2rem] font-semibold leading-tight text-foreground sm:text-[2.8rem]">{it.title}</h1>
-              <p className="mt-3 text-sm text-muted-foreground">{it.author_name} · {fmtDay(it.published_at)}</p>
+              <p className="mt-3 text-sm text-muted-foreground">{it.author_name} · {fmtDay(it.published_at)} · Format: {KINDS[it.kind]}</p>
               {img && <img src={img} alt="" className="mt-8 aspect-[16/9] w-full border border-border/60 object-cover" />}
               {it.summary && <p className="mt-8 break-words text-[1.05rem] leading-[1.8] text-foreground/85">{it.summary}</p>}
 
@@ -68,14 +68,17 @@ function ItemPage() {
                 <div className="mt-10 border border-gold/50 bg-surface-deep p-6 sm:p-8">
                   {it.access === "premium" ? (<>
                     <p className="eyebrow text-gold">Materiał premium</p>
-                    <p className="mt-3 text-[0.95rem] leading-[1.75] text-foreground/85">Ta treść jest przeznaczona dla członków z dostępem premium.</p>
+                    <p className="mt-3 font-display text-3xl font-semibold text-foreground">{fmtPrice(it.price_amount) ?? "Cena wkrótce"}</p>
+                    <p className="mt-3 text-[0.95rem] leading-[1.75] text-foreground/85">Pełna zawartość jest dostępna po zakupie. Konto nie jest wymagane — materiał otrzymasz na podany adres e-mail.</p>
+                    <button type="button" disabled className="mt-6 cursor-not-allowed bg-gold/40 px-6 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-primary-foreground">Kup materiał</button>
+                    <p className="mt-2 text-xs text-muted-foreground">Zakupy uruchomimy wkrótce.</p>
                   </>) : (<>
                     <p className="eyebrow text-gold">Dla członków TNB</p>
-                    <p className="mt-3 text-[0.95rem] leading-[1.75] text-foreground/85">Zaloguj się lub dołącz do TNB, aby przeczytać ten materiał.</p>
+                    <p className="mt-3 text-[0.95rem] leading-[1.75] text-foreground/85">Ten materiał jest dostępny dla członków społeczności TNB. Zaloguj się lub dołącz do nas, aby uzyskać dostęp.</p>
                     {!uid && (
                       <div className="mt-6 flex flex-wrap gap-3">
-                        <Link to="/auth" className="bg-gold px-6 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-primary-foreground hover:bg-gold-bright">Zaloguj się</Link>
-                        <Link to="/auth" search={{ tryb: "rejestracja" }} className="border border-gold/60 px-6 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-gold hover:bg-gold/10">Dołącz do TNB</Link>
+                        <Link to="/auth" search={{ powrot: `/biblioteka/${it.slug}` }} className="bg-gold px-6 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-primary-foreground hover:bg-gold-bright">Zaloguj się</Link>
+                        <Link to="/auth" search={{ tryb: "rejestracja", powrot: `/biblioteka/${it.slug}` }} className="border border-gold/60 px-6 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-gold hover:bg-gold/10">Dołącz do TNB</Link>
                       </div>
                     )}
                   </>)}
