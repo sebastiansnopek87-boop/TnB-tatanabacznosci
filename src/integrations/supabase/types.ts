@@ -432,23 +432,30 @@ export type Database = {
           amount: number
           buyer_email: string
           buyer_name: string | null
+          buyer_phone: string | null
           cancelled_at: string | null
           checkout_session_id: string | null
           consent_text: string | null
           created_at: string
           currency: string
           delivered_at: string | null
+          delivered_marked_by: string | null
           delivery_error: string | null
           delivery_status: string
           environment: string
           failed_at: string | null
           id: string
           item_id: string
+          order_number: string
           paid_at: string | null
+          paid_marked_by: string | null
+          payment_method: string
           provider: string | null
           provider_ref: string | null
           refunded_at: string | null
           status: string
+          status_changed_at: string | null
+          status_changed_by: string | null
           updated_at: string
           user_id: string | null
         }
@@ -458,23 +465,30 @@ export type Database = {
           amount: number
           buyer_email: string
           buyer_name?: string | null
+          buyer_phone?: string | null
           cancelled_at?: string | null
           checkout_session_id?: string | null
           consent_text?: string | null
           created_at?: string
           currency?: string
           delivered_at?: string | null
+          delivered_marked_by?: string | null
           delivery_error?: string | null
           delivery_status?: string
           environment?: string
           failed_at?: string | null
           id?: string
           item_id: string
+          order_number?: string
           paid_at?: string | null
+          paid_marked_by?: string | null
+          payment_method?: string
           provider?: string | null
           provider_ref?: string | null
           refunded_at?: string | null
           status?: string
+          status_changed_at?: string | null
+          status_changed_by?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -484,23 +498,30 @@ export type Database = {
           amount?: number
           buyer_email?: string
           buyer_name?: string | null
+          buyer_phone?: string | null
           cancelled_at?: string | null
           checkout_session_id?: string | null
           consent_text?: string | null
           created_at?: string
           currency?: string
           delivered_at?: string | null
+          delivered_marked_by?: string | null
           delivery_error?: string | null
           delivery_status?: string
           environment?: string
           failed_at?: string | null
           id?: string
           item_id?: string
+          order_number?: string
           paid_at?: string | null
+          paid_marked_by?: string | null
+          payment_method?: string
           provider?: string | null
           provider_ref?: string | null
           refunded_at?: string | null
           status?: string
+          status_changed_at?: string | null
+          status_changed_by?: string | null
           updated_at?: string
           user_id?: string | null
         }
