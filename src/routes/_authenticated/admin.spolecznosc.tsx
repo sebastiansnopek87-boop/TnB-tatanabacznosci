@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { listCommunity, moderateCommunity } from "@/lib/admin.functions";
+import { listCommunity, listReports, moderateCommunity, resolveReport } from "@/lib/admin.functions";
 import { fmtDate, errMsg } from "@/components/admin/format";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,9 +30,37 @@ function Moderation() {
     onError: (e) => toast.error(errMsg(e)),
   });
 
+  const reportsFn = useServerFn(listReports);
+  const resolveFn = useServerFn(resolveReport);
+  const reports = useQuery({ queryKey: ["admin-reports"], queryFn: () => reportsFn() });
+  const resolve = useMutation({
+    mutationFn: (id: string) => resolveFn({ data: { id } }),
+    onSuccess: () => { toast.success("Zgłoszenie zamknięte."); qc.invalidateQueries({ queryKey: ["admin-reports"] }); },
+    onError: (e) => toast.error(errMsg(e)),
+  });
+
   return (
     <div>
       <h1 className="font-display text-3xl font-semibold uppercase">Moderacja społeczności</h1>
+      <section className="mt-6 border border-gold/30 p-4">
+        <h2 className="font-display text-xl font-semibold uppercase">Zgłoszenia ({reports.data?.length ?? 0})</h2>
+        {reports.isLoading && <p className="mt-2 text-sm text-muted-foreground">Wczytywanie…</p>}
+        {reports.error && <p className="mt-2 text-sm text-destructive">{errMsg(reports.error)}</p>}
+        {reports.data?.length === 0 && <p className="mt-2 text-sm text-muted-foreground">Brak otwartych zgłoszeń.</p>}
+        <div className="mt-3 space-y-3">
+          {reports.data?.map((r) => (
+            <div key={r.id} className="border-l-2 border-gold/50 pl-3 text-sm">
+              <p className="text-xs text-muted-foreground">{fmtDate(r.created_at)} · wpis: {r.community_posts?.author_name ?? "usunięty"}{r.community_posts?.status === "hidden" && " (ukryty)"}</p>
+              <p className="mt-1"><span className="text-muted-foreground">Powód:</span> {r.reason}</p>
+              {r.community_posts && <p className="mt-1 line-clamp-3 whitespace-pre-wrap break-words text-foreground/70">{r.community_posts.body}</p>}
+              <div className="mt-2 flex flex-wrap gap-2">
+                {r.community_posts?.status === "published" && <Button size="sm" variant="outline" disabled={m.isPending} onClick={() => m.mutate({ action: "hide", id: r.post_id })}>Ukryj wpis</Button>}
+                <Button size="sm" variant="ghost" disabled={resolve.isPending} onClick={() => resolve.mutate(r.id)}>Zamknij zgłoszenie</Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
       <div className="mt-6">
         <Select value={status} onValueChange={(v) => setStatus(v as F)}>
           <SelectTrigger className="w-52" aria-label="Filtr statusu"><SelectValue /></SelectTrigger>

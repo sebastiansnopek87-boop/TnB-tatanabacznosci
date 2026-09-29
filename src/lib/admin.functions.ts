@@ -183,3 +183,24 @@ export const moderateCommunity = createServerFn({ method: "POST" })
     if (res.error || !res.data?.length) throw new Error("Nie udało się wykonać operacji.");
     return { ok: true };
   });
+
+export const listReports = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { data, error } = await context.supabase.from("community_reports")
+      .select("id, reason, status, created_at, post_id, community_posts(author_name, body, status)")
+      .eq("status", "open").order("created_at", { ascending: false }).limit(200);
+    if (error) throw new Error("Nie udało się pobrać zgłoszeń.");
+    return data as unknown as Array<{ id: string; reason: string; status: string; created_at: string; post_id: string; community_posts: { author_name: string; body: string; status: string } | null }>;
+  });
+
+export const resolveReport = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const res = await context.supabase.from("community_reports").update({ status: "resolved" }).eq("id", data.id).select("id");
+    if (res.error || !res.data?.length) throw new Error("Nie udało się zamknąć zgłoszenia.");
+    return { ok: true };
+  });
