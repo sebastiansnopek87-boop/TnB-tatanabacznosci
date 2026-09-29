@@ -1,42 +1,48 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { PageHeading, PageShell } from "@/components/tnb/PageShell";
-import { PostCard } from "@/components/community/PostCard";
+import { PostCard, VisibilitySelect } from "@/components/community/PostCard";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { PAGE, POST_MAX, createPost, listPosts } from "@/lib/community";
+import { PAGE, POST_MAX, createPost, listPosts, useUid, type Visibility } from "@/lib/community";
 
 export const Route = createFileRoute("/spolecznosc/")({
   head: () => ({
     meta: [
       { title: "Społeczność — Tata Na Baczności" },
-      { name: "description", content: "Miejsce spotkań ojców: posty, rozmowy i wzajemne wsparcie." },
+      { name: "description", content: "Społeczność Tata Na Baczności: wymiana doświadczeń, rozmowa i wzajemne wsparcie ojców. Przeczytaj publiczne wpisy i dołącz." },
       { property: "og:title", content: "Społeczność — Tata Na Baczności" },
-      { property: "og:description", content: "Miejsce spotkań ojców Tata Na Baczności." },
-      { name: "robots", content: "noindex, nofollow" },
+      { property: "og:description", content: "Miejsce wymiany doświadczeń, rozmowy i wzajemnego wsparcia ojców." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Community,
 });
 
-export function useUid() {
-  return useQuery({ queryKey: ["uid"], queryFn: async () => (await supabase.auth.getUser()).data.user?.id ?? null }).data ?? null;
-}
+const VALUES = [
+  { t: "Czym jest", d: "Miejscem wymiany doświadczeń, rozmowy i wzajemnego wsparcia. Nie zamkniętym klubem, nie korporacyjnym portalem i nie miejscem, w którym jedna osoba poucza pozostałych." },
+  { t: "Co nas łączy", d: "Szacunek, szczerość i odpowiedzialność. Mówimy o ojcostwie takim, jakie jest — z sukcesami, wątpliwościami i codziennością." },
+  { t: "Dla kogo", d: "Dla ojców i tych, którzy się nimi stają — niezależnie od wieku dzieci i etapu życia. Każdy głos jest tu równie ważny." },
+  { t: "Jak uczestniczyć", d: "Czytaj wpisy, komentuj, publikuj własne przemyślenia i reaguj na słowa innych. Wystarczy bezpłatne konto TNB." },
+];
 
 function Community() {
   const qc = useQueryClient();
-  const uid = useUid();
+  const { uid, ready } = useUid();
+  const signedIn = !!uid;
   const [tab, setTab] = useState<"all" | "mine">("all");
   const [body, setBody] = useState("");
+  const [vis, setVis] = useState<Visibility>("community");
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const feed = useInfiniteQuery({
-    queryKey: ["community", tab],
-    queryFn: ({ pageParam }) => listPosts(pageParam, tab === "mine"),
+    queryKey: ["community", signedIn ? tab : "public", uid],
+    queryFn: ({ pageParam }) => listPosts(pageParam, signedIn && tab === "mine", signedIn),
     initialPageParam: 0,
+    enabled: ready,
     getNextPageParam: (last, all) => (last.length === PAGE ? all.length : undefined),
   });
   const refresh = () => qc.invalidateQueries({ queryKey: ["community"] });
@@ -46,48 +52,83 @@ function Community() {
     e.preventDefault();
     if (busy) return;
     setBusy(true); setErr(null);
-    try { await createPost(body); setBody(""); toast.success("Post został opublikowany."); refresh(); }
+    try { await createPost(body, vis); setBody(""); setVis("community"); toast.success("Post został opublikowany."); refresh(); }
     catch (x) { setErr(x instanceof Error ? x.message : "Wystąpił błąd."); }
     finally { setBusy(false); }
   }
 
   return (
     <PageShell>
-      <PageHeading eyebrow="Społeczność" title="Przy wspólnym ognisku" intro="Podziel się doświadczeniem, zadaj pytanie, wesprzyj innego ojca. Rozmawiamy z szacunkiem." />
-      <div className="mx-auto max-w-3xl px-5 py-10 lg:py-14">
-        <form onSubmit={submit} className="border border-gold/30 bg-card/60 p-5 sm:p-7">
-          <label htmlFor="new-post" className="eyebrow text-gold">Nowy post</label>
-          <Textarea id="new-post" value={body} onChange={(e) => setBody(e.target.value)} rows={4} maxLength={POST_MAX}
-            placeholder="Co chcesz powiedzieć innym ojcom?" className="mt-3 bg-background/60" />
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-            <span className="text-xs text-muted-foreground">{body.trim().length} / {POST_MAX}</span>
-            <Button type="submit" disabled={busy} className="uppercase tracking-[0.15em]">{busy ? "Publikowanie…" : "Opublikuj"}</Button>
-          </div>
-          {err && <p role="alert" className="mt-3 text-sm text-destructive">{err}</p>}
-        </form>
+      <PageHeading eyebrow="Społeczność" title="Przy wspólnym ognisku" intro="Tata Na Baczności to miejsce wymiany doświadczeń, rozmowy i wzajemnego wsparcia ojców. Rozmawiamy z szacunkiem." />
 
-        <div className="mt-10 flex gap-2 border-b border-border/60" role="tablist">
-          {(["all", "mine"] as const).map((t) => (
-            <button key={t} role="tab" aria-selected={tab === t} onClick={() => setTab(t)}
-              className={`-mb-px border-b-2 px-4 py-2 text-sm ${tab === t ? "border-gold text-gold" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
-              {t === "all" ? "Wszystkie posty" : "Moje posty"}
-            </button>
+      <section className="border-b border-border/60 px-5 py-12 lg:px-14 lg:py-16">
+        <div className="mx-auto grid max-w-[1200px] gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {VALUES.map((v) => (
+            <div key={v.t} className="border-t border-gold/40 pt-5">
+              <h2 className="font-display text-xl font-semibold uppercase tracking-[0.04em] text-gold">{v.t}</h2>
+              <p className="mt-3 text-sm leading-[1.75] text-foreground/80">{v.d}</p>
+            </div>
           ))}
         </div>
+      </section>
+
+      <div className="mx-auto max-w-3xl px-5 py-10 lg:py-14">
+        {ready && !signedIn && (
+          <section aria-labelledby="join" className="border border-gold/30 bg-card/60 p-6 sm:p-8">
+            <h2 id="join" className="font-display text-2xl font-semibold uppercase text-foreground">Dołącz do rozmowy</h2>
+            <p className="mt-3 text-[0.95rem] leading-[1.75] text-foreground/85">
+              Tutaj możesz czytać, komentować, publikować własne wpisy i zabierać głos w rozmowach. Aby w pełni uczestniczyć w życiu społeczności, potrzebujesz bezpłatnego konta TNB.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Button asChild variant="outline" className="uppercase tracking-[0.15em]"><Link to="/auth">Zaloguj się</Link></Button>
+              <Button asChild className="uppercase tracking-[0.15em]"><Link to="/auth" search={{ tryb: "rejestracja" }}>Dołącz do TNB</Link></Button>
+            </div>
+          </section>
+        )}
+
+        {signedIn && (
+          <form onSubmit={submit} className="border border-gold/30 bg-card/60 p-5 sm:p-7">
+            <label htmlFor="new-post" className="eyebrow text-gold">Nowy post</label>
+            <Textarea id="new-post" value={body} onChange={(e) => setBody(e.target.value)} rows={4} maxLength={POST_MAX}
+              placeholder="Co chcesz powiedzieć innym ojcom?" className="mt-3 bg-background/60" />
+            <div className="mt-3">
+              <label htmlFor="new-post-vis" className="mb-1.5 block text-xs text-muted-foreground">Widoczność</label>
+              <VisibilitySelect id="new-post-vis" value={vis} onChange={setVis} />
+            </div>
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+              <span className="text-xs text-muted-foreground">{body.trim().length} / {POST_MAX}</span>
+              <Button type="submit" disabled={busy} className="uppercase tracking-[0.15em]">{busy ? "Publikowanie…" : "Opublikuj"}</Button>
+            </div>
+            {err && <p role="alert" className="mt-3 text-sm text-destructive">{err}</p>}
+          </form>
+        )}
+
+        {signedIn ? (
+          <div className="mt-10 flex gap-2 border-b border-border/60" role="tablist">
+            {(["all", "mine"] as const).map((t) => (
+              <button key={t} role="tab" aria-selected={tab === t} onClick={() => setTab(t)}
+                className={`-mb-px border-b-2 px-4 py-2 text-sm ${tab === t ? "border-gold text-gold" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+                {t === "all" ? "Wszystkie posty" : "Moje posty"}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <h2 className="mt-10 border-b border-border/60 pb-3 font-display text-2xl font-semibold uppercase text-foreground">Publiczne wpisy</h2>
+        )}
 
         <div className="mt-6 space-y-5">
-          {feed.isLoading && <p className="text-sm text-muted-foreground">Wczytywanie postów…</p>}
+          {(!ready || feed.isLoading) && <p className="text-sm text-muted-foreground">Wczytywanie postów…</p>}
           {feed.error && (
             <div role="alert" className="border-l-2 border-destructive bg-destructive/10 px-4 py-3 text-sm">
               {(feed.error as Error).message} <button className="ml-2 text-gold underline" onClick={() => feed.refetch()}>Spróbuj ponownie</button>
             </div>
           )}
-          {!feed.isLoading && !feed.error && posts.length === 0 && (
+          {ready && !feed.isLoading && !feed.error && posts.length === 0 && (
             <p className="border border-dashed border-border/60 px-5 py-10 text-center text-sm text-muted-foreground">
-              {tab === "all" ? "Nie ma jeszcze żadnych postów. Napisz pierwszy." : "Nie opublikowałeś jeszcze żadnego posta."}
+              {!signedIn ? "Nie ma jeszcze publicznych wpisów. Dołącz, aby czytać rozmowy społeczności." : tab === "all" ? "Nie ma jeszcze żadnych postów. Napisz pierwszy." : "Nie opublikowałeś jeszcze żadnego posta."}
             </p>
           )}
-          {posts.map((p) => <PostCard key={`${p.id}-${p.updated_at}-${p.reactions}-${p.reacted}`} post={p} uid={uid} onChanged={refresh} />)}
+          {posts.map((p) => <PostCard key={`${p.id}-${p.updated_at}-${p.visibility}-${p.reactions}-${p.reacted}`} post={p} uid={uid} onChanged={refresh} />)}
           {feed.hasNextPage && (
             <Button variant="outline" className="w-full" disabled={feed.isFetchingNextPage} onClick={() => feed.fetchNextPage()}>
               {feed.isFetchingNextPage ? "Wczytywanie…" : "Pokaż starsze posty"}

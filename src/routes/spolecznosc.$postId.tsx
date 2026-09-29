@@ -6,8 +6,7 @@ import { PageShell } from "@/components/tnb/PageShell";
 import { ConfirmDelete, Initial, PostCard } from "@/components/community/PostCard";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { COMMENT_MAX, createComment, deleteComment, fmtWhen, getPost, listComments, updateComment, type Comment } from "@/lib/community";
-import { useUid } from "./spolecznosc.index";
+import { COMMENT_MAX, createComment, deleteComment, fmtWhen, getPost, listComments, updateComment, useUid, type Comment } from "@/lib/community";
 
 export const Route = createFileRoute("/spolecznosc/$postId")({
   head: () => ({
@@ -16,7 +15,8 @@ export const Route = createFileRoute("/spolecznosc/$postId")({
       { name: "description", content: "Post i dyskusja w społeczności Tata Na Baczności." },
       { property: "og:title", content: "Dyskusja — Tata Na Baczności" },
       { property: "og:description", content: "Post i dyskusja w społeczności." },
-      { name: "robots", content: "noindex, nofollow" },
+      { property: "og:type", content: "article" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Thread,
@@ -26,9 +26,10 @@ function Thread() {
   const { postId } = Route.useParams();
   const qc = useQueryClient();
   const navigate = useNavigate();
-  const uid = useUid();
-  const post = useQuery({ queryKey: ["community-post", postId], queryFn: () => getPost(postId) });
-  const comments = useQuery({ queryKey: ["community-comments", postId], queryFn: () => listComments(postId) });
+  const { uid, ready } = useUid();
+  const signedIn = !!uid;
+  const post = useQuery({ queryKey: ["community-post", postId, uid], queryFn: () => getPost(postId, signedIn), enabled: ready });
+  const comments = useQuery({ queryKey: ["community-comments", postId, uid], queryFn: () => listComments(postId), enabled: ready && signedIn });
   const [body, setBody] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -49,14 +50,24 @@ function Thread() {
       <div className="mx-auto max-w-3xl px-5 py-10 lg:py-14">
         <Link to="/spolecznosc" className="text-sm text-gold hover:underline">← Wróć do społeczności</Link>
         <div className="mt-6">
-          {post.isLoading && <p className="text-sm text-muted-foreground">Wczytywanie…</p>}
+          {(!ready || post.isLoading) && <p className="text-sm text-muted-foreground">Wczytywanie…</p>}
           {post.error && <p role="alert" className="text-sm text-destructive">{(post.error as Error).message}</p>}
-          {!post.isLoading && !post.error && !p && <p className="text-sm text-muted-foreground">Ten post nie istnieje lub został usunięty.</p>}
-          {p && <PostCard key={`${p.updated_at}-${p.reactions}-${p.reacted}-${p.comments}`} post={p} uid={uid} full onChanged={refresh}
+          {ready && !post.isLoading && !post.error && !p && <p className="text-sm text-muted-foreground">{signedIn ? "Ten post nie istnieje lub został usunięty." : "Ten wpis nie istnieje albo jest dostępny tylko dla zalogowanych członków społeczności."}</p>}
+          {p && <PostCard key={`${p.updated_at}-${p.visibility}-${p.reactions}-${p.reacted}-${p.comments}`} post={p} uid={uid} full onChanged={refresh}
             onDeleted={() => navigate({ to: "/spolecznosc", replace: true })} />}
         </div>
 
-        {p && (
+        {ready && !signedIn && (
+          <section className="mt-10 border border-gold/30 bg-card/60 p-6">
+            <h2 className="font-display text-2xl font-semibold uppercase text-foreground">Komentarze</h2>
+            <p className="mt-3 text-sm leading-[1.75] text-foreground/85">Komentarze, reakcje i pełne rozmowy są dostępne dla członków społeczności. Załóż bezpłatne konto TNB albo zaloguj się, aby zabrać głos.</p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Button asChild variant="outline"><Link to="/auth">Zaloguj się</Link></Button>
+              <Button asChild><Link to="/auth" search={{ tryb: "rejestracja" }}>Dołącz do TNB</Link></Button>
+            </div>
+          </section>
+        )}
+        {p && signedIn && (
           <section className="mt-10">
             <h2 className="font-display text-2xl font-semibold uppercase text-foreground">Komentarze</h2>
             <div className="mt-5 space-y-4">
