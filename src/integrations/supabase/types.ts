@@ -371,6 +371,13 @@ export type Database = {
           visibility: string
         }[]
       }
+      community_post_stats: {
+        Args: { _post: string }
+        Returns: {
+          comments: number
+          reactions: number
+        }[]
+      }
       community_post_visible: { Args: { _post: string }; Returns: boolean }
       has_role: {
         Args: {

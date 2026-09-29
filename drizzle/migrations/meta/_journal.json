@@ -64,6 +64,13 @@
       "when": 1790696114878,
       "tag": "0008_community_feed_sectors_reports",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790696193697,
+      "tag": "0009_community_post_stats",
+      "breakpoints": true
     }
   ]
 }
