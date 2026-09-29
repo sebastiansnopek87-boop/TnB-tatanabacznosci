@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { adminGetLibraryItem, adminListLibrary, adminRemoveLibraryFile, adminSaveLibraryItem, adminSetLibraryStatus, adminUploadLibraryFile } from "@/lib/library.functions";
-import { ACCESS, KINDS, STATUS, listCategories, slugify, type Access, type Kind, type Status } from "@/lib/library";
+import { ACCESS, DELIVERY, KINDS, STATUS, accessLabel, listCategories, slugify, type Access, type Delivery, type Kind, type Status } from "@/lib/library";
 import { errMsg, fmtDate } from "@/components/admin/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,7 +73,7 @@ function AdminLibrary() {
                 <p className="mt-1 text-xs text-muted-foreground">/{r.slug} · {catName(r.category)} · {KINDS[r.kind as Kind]} · zmieniono {fmtDate(r.updated_at)}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   <Badge variant={r.status === "published" ? "default" : "outline"}>{STATUS[r.status as Status]}</Badge>
-                  <Badge variant="outline">{ACCESS[r.access as Access]}</Badge>
+                  <Badge variant="outline">{accessLabel({ access: r.access as Access, price_amount: r.price_amount })}</Badge>
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
