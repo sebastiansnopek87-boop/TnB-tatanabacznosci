@@ -20,7 +20,6 @@ import { Route as PolitykaCookiesRouteImport } from './routes/polityka-cookies'
 import { Route as PolitykaPrywatnosciRouteImport } from './routes/polityka-prywatnosci'
 import { Route as RegulaminRouteImport } from './routes/regulamin'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as SpotkaniaRouteImport } from './routes/spotkania'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedMojeTnbRouteImport } from './routes/_authenticated/moje-tnb'
 import { Route as BibliotekaIndexRouteImport } from './routes/biblioteka.index'
@@ -28,17 +27,22 @@ import { Route as BibliotekaSlugRouteImport } from './routes/biblioteka.$slug'
 import { Route as NewsletterWypiszRouteImport } from './routes/newsletter.wypisz'
 import { Route as SpolecznoscIndexRouteImport } from './routes/spolecznosc.index'
 import { Route as SpolecznoscPostIdRouteImport } from './routes/spolecznosc.$postId'
+import { Route as SpotkaniaIndexRouteImport } from './routes/spotkania.index'
+import { Route as SpotkaniaSlugRouteImport } from './routes/spotkania.$slug'
 import { Route as ZakupTokenRouteImport } from './routes/zakup.$token'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminBibliotekaRouteImport } from './routes/_authenticated/admin.biblioteka'
 import { Route as AuthenticatedAdminPowiadomieniaRouteImport } from './routes/_authenticated/admin.powiadomienia'
 import { Route as AuthenticatedAdminSpolecznoscRouteImport } from './routes/_authenticated/admin.spolecznosc'
+import { Route as AuthenticatedAdminSpotkaniaRouteImport } from './routes/_authenticated/admin.spotkania'
 import { Route as AuthenticatedAdminSubskrybenciRouteImport } from './routes/_authenticated/admin.subskrybenci'
 import { Route as AuthenticatedAdminTresciRouteImport } from './routes/_authenticated/admin.tresci'
 import { Route as AuthenticatedAdminUstawieniaEmailRouteImport } from './routes/_authenticated/admin.ustawienia-email'
 import { Route as AuthenticatedAdminWiadomosciRouteImport } from './routes/_authenticated/admin.wiadomosci'
 import { Route as AuthenticatedAdminZamowieniaRouteImport } from './routes/_authenticated/admin.zamowienia'
+import { Route as SpotkaniaZgloszenieTokenRouteImport } from './routes/spotkania.zgloszenie.$token'
 import { Route as ApiPublicLibraryCoverIdRouteImport } from './routes/api/public/library-cover.$id'
+import { Route as ApiPublicMeetingImageIdRouteImport } from './routes/api/public/meeting-image.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -94,11 +98,6 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SpotkaniaRoute = SpotkaniaRouteImport.update({
-  id: '/spotkania',
-  path: '/spotkania',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -134,6 +133,16 @@ const SpolecznoscPostIdRoute = SpolecznoscPostIdRouteImport.update({
   path: '/spolecznosc/$postId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SpotkaniaIndexRoute = SpotkaniaIndexRouteImport.update({
+  id: '/spotkania/',
+  path: '/spotkania/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SpotkaniaSlugRoute = SpotkaniaSlugRouteImport.update({
+  id: '/spotkania/$slug',
+  path: '/spotkania/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ZakupTokenRoute = ZakupTokenRouteImport.update({
   id: '/zakup/$token',
   path: '/zakup/$token',
@@ -160,6 +169,12 @@ const AuthenticatedAdminSpolecznoscRoute =
   AuthenticatedAdminSpolecznoscRouteImport.update({
     id: '/spolecznosc',
     path: '/spolecznosc',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminSpotkaniaRoute =
+  AuthenticatedAdminSpotkaniaRouteImport.update({
+    id: '/spotkania',
+    path: '/spotkania',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminSubskrybenciRoute =
@@ -192,9 +207,20 @@ const AuthenticatedAdminZamowieniaRoute =
     path: '/zamowienia',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const SpotkaniaZgloszenieTokenRoute =
+  SpotkaniaZgloszenieTokenRouteImport.update({
+    id: '/spotkania/zgloszenie/$token',
+    path: '/spotkania/zgloszenie/$token',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicLibraryCoverIdRoute = ApiPublicLibraryCoverIdRouteImport.update({
   id: '/api/public/library-cover/$id',
   path: '/api/public/library-cover/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicMeetingImageIdRoute = ApiPublicMeetingImageIdRouteImport.update({
+  id: '/api/public/meeting-image/$id',
+  path: '/api/public/meeting-image/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -209,25 +235,29 @@ export interface FileRoutesByFullPath {
   '/polityka-prywatnosci': typeof PolitykaPrywatnosciRoute
   '/regulamin': typeof RegulaminRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/spotkania': typeof SpotkaniaRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/moje-tnb': typeof AuthenticatedMojeTnbRoute
   '/biblioteka/$slug': typeof BibliotekaSlugRoute
   '/newsletter/wypisz': typeof NewsletterWypiszRoute
   '/spolecznosc/$postId': typeof SpolecznoscPostIdRoute
+  '/spotkania/$slug': typeof SpotkaniaSlugRoute
   '/zakup/$token': typeof ZakupTokenRoute
   '/biblioteka/': typeof BibliotekaIndexRoute
   '/spolecznosc/': typeof SpolecznoscIndexRoute
+  '/spotkania/': typeof SpotkaniaIndexRoute
   '/admin/biblioteka': typeof AuthenticatedAdminBibliotekaRoute
   '/admin/powiadomienia': typeof AuthenticatedAdminPowiadomieniaRoute
   '/admin/spolecznosc': typeof AuthenticatedAdminSpolecznoscRoute
+  '/admin/spotkania': typeof AuthenticatedAdminSpotkaniaRoute
   '/admin/subskrybenci': typeof AuthenticatedAdminSubskrybenciRoute
   '/admin/tresci': typeof AuthenticatedAdminTresciRoute
   '/admin/ustawienia-email': typeof AuthenticatedAdminUstawieniaEmailRoute
   '/admin/wiadomosci': typeof AuthenticatedAdminWiadomosciRoute
   '/admin/zamowienia': typeof AuthenticatedAdminZamowieniaRoute
+  '/spotkania/zgloszenie/$token': typeof SpotkaniaZgloszenieTokenRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/library-cover/$id': typeof ApiPublicLibraryCoverIdRoute
+  '/api/public/meeting-image/$id': typeof ApiPublicMeetingImageIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -240,24 +270,28 @@ export interface FileRoutesByTo {
   '/polityka-prywatnosci': typeof PolitykaPrywatnosciRoute
   '/regulamin': typeof RegulaminRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/spotkania': typeof SpotkaniaRoute
   '/moje-tnb': typeof AuthenticatedMojeTnbRoute
   '/biblioteka/$slug': typeof BibliotekaSlugRoute
   '/newsletter/wypisz': typeof NewsletterWypiszRoute
   '/spolecznosc/$postId': typeof SpolecznoscPostIdRoute
+  '/spotkania/$slug': typeof SpotkaniaSlugRoute
   '/zakup/$token': typeof ZakupTokenRoute
   '/biblioteka': typeof BibliotekaIndexRoute
   '/spolecznosc': typeof SpolecznoscIndexRoute
+  '/spotkania': typeof SpotkaniaIndexRoute
   '/admin/biblioteka': typeof AuthenticatedAdminBibliotekaRoute
   '/admin/powiadomienia': typeof AuthenticatedAdminPowiadomieniaRoute
   '/admin/spolecznosc': typeof AuthenticatedAdminSpolecznoscRoute
+  '/admin/spotkania': typeof AuthenticatedAdminSpotkaniaRoute
   '/admin/subskrybenci': typeof AuthenticatedAdminSubskrybenciRoute
   '/admin/tresci': typeof AuthenticatedAdminTresciRoute
   '/admin/ustawienia-email': typeof AuthenticatedAdminUstawieniaEmailRoute
   '/admin/wiadomosci': typeof AuthenticatedAdminWiadomosciRoute
   '/admin/zamowienia': typeof AuthenticatedAdminZamowieniaRoute
+  '/spotkania/zgloszenie/$token': typeof SpotkaniaZgloszenieTokenRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/api/public/library-cover/$id': typeof ApiPublicLibraryCoverIdRoute
+  '/api/public/meeting-image/$id': typeof ApiPublicMeetingImageIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -272,25 +306,29 @@ export interface FileRoutesById {
   '/polityka-prywatnosci': typeof PolitykaPrywatnosciRoute
   '/regulamin': typeof RegulaminRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/spotkania': typeof SpotkaniaRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/moje-tnb': typeof AuthenticatedMojeTnbRoute
   '/biblioteka/$slug': typeof BibliotekaSlugRoute
   '/newsletter/wypisz': typeof NewsletterWypiszRoute
   '/spolecznosc/$postId': typeof SpolecznoscPostIdRoute
+  '/spotkania/$slug': typeof SpotkaniaSlugRoute
   '/zakup/$token': typeof ZakupTokenRoute
   '/biblioteka/': typeof BibliotekaIndexRoute
   '/spolecznosc/': typeof SpolecznoscIndexRoute
+  '/spotkania/': typeof SpotkaniaIndexRoute
   '/_authenticated/admin/biblioteka': typeof AuthenticatedAdminBibliotekaRoute
   '/_authenticated/admin/powiadomienia': typeof AuthenticatedAdminPowiadomieniaRoute
   '/_authenticated/admin/spolecznosc': typeof AuthenticatedAdminSpolecznoscRoute
+  '/_authenticated/admin/spotkania': typeof AuthenticatedAdminSpotkaniaRoute
   '/_authenticated/admin/subskrybenci': typeof AuthenticatedAdminSubskrybenciRoute
   '/_authenticated/admin/tresci': typeof AuthenticatedAdminTresciRoute
   '/_authenticated/admin/ustawienia-email': typeof AuthenticatedAdminUstawieniaEmailRoute
   '/_authenticated/admin/wiadomosci': typeof AuthenticatedAdminWiadomosciRoute
   '/_authenticated/admin/zamowienia': typeof AuthenticatedAdminZamowieniaRoute
+  '/spotkania/zgloszenie/$token': typeof SpotkaniaZgloszenieTokenRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/library-cover/$id': typeof ApiPublicLibraryCoverIdRoute
+  '/api/public/meeting-image/$id': typeof ApiPublicMeetingImageIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -305,25 +343,29 @@ export interface FileRouteTypes {
     | '/polityka-prywatnosci'
     | '/regulamin'
     | '/reset-password'
-    | '/spotkania'
     | '/admin'
     | '/moje-tnb'
     | '/biblioteka/$slug'
     | '/newsletter/wypisz'
     | '/spolecznosc/$postId'
+    | '/spotkania/$slug'
     | '/zakup/$token'
     | '/biblioteka/'
     | '/spolecznosc/'
+    | '/spotkania/'
     | '/admin/biblioteka'
     | '/admin/powiadomienia'
     | '/admin/spolecznosc'
+    | '/admin/spotkania'
     | '/admin/subskrybenci'
     | '/admin/tresci'
     | '/admin/ustawienia-email'
     | '/admin/wiadomosci'
     | '/admin/zamowienia'
+    | '/spotkania/zgloszenie/$token'
     | '/admin/'
     | '/api/public/library-cover/$id'
+    | '/api/public/meeting-image/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -336,24 +378,28 @@ export interface FileRouteTypes {
     | '/polityka-prywatnosci'
     | '/regulamin'
     | '/reset-password'
-    | '/spotkania'
     | '/moje-tnb'
     | '/biblioteka/$slug'
     | '/newsletter/wypisz'
     | '/spolecznosc/$postId'
+    | '/spotkania/$slug'
     | '/zakup/$token'
     | '/biblioteka'
     | '/spolecznosc'
+    | '/spotkania'
     | '/admin/biblioteka'
     | '/admin/powiadomienia'
     | '/admin/spolecznosc'
+    | '/admin/spotkania'
     | '/admin/subskrybenci'
     | '/admin/tresci'
     | '/admin/ustawienia-email'
     | '/admin/wiadomosci'
     | '/admin/zamowienia'
+    | '/spotkania/zgloszenie/$token'
     | '/admin'
     | '/api/public/library-cover/$id'
+    | '/api/public/meeting-image/$id'
   id:
     | '__root__'
     | '/'
@@ -367,25 +413,29 @@ export interface FileRouteTypes {
     | '/polityka-prywatnosci'
     | '/regulamin'
     | '/reset-password'
-    | '/spotkania'
     | '/_authenticated/admin'
     | '/_authenticated/moje-tnb'
     | '/biblioteka/$slug'
     | '/newsletter/wypisz'
     | '/spolecznosc/$postId'
+    | '/spotkania/$slug'
     | '/zakup/$token'
     | '/biblioteka/'
     | '/spolecznosc/'
+    | '/spotkania/'
     | '/_authenticated/admin/biblioteka'
     | '/_authenticated/admin/powiadomienia'
     | '/_authenticated/admin/spolecznosc'
+    | '/_authenticated/admin/spotkania'
     | '/_authenticated/admin/subskrybenci'
     | '/_authenticated/admin/tresci'
     | '/_authenticated/admin/ustawienia-email'
     | '/_authenticated/admin/wiadomosci'
     | '/_authenticated/admin/zamowienia'
+    | '/spotkania/zgloszenie/$token'
     | '/_authenticated/admin/'
     | '/api/public/library-cover/$id'
+    | '/api/public/meeting-image/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -400,14 +450,17 @@ export interface RootRouteChildren {
   PolitykaPrywatnosciRoute: typeof PolitykaPrywatnosciRoute
   RegulaminRoute: typeof RegulaminRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
-  SpotkaniaRoute: typeof SpotkaniaRoute
   BibliotekaSlugRoute: typeof BibliotekaSlugRoute
   NewsletterWypiszRoute: typeof NewsletterWypiszRoute
   SpolecznoscPostIdRoute: typeof SpolecznoscPostIdRoute
+  SpotkaniaSlugRoute: typeof SpotkaniaSlugRoute
   ZakupTokenRoute: typeof ZakupTokenRoute
   BibliotekaIndexRoute: typeof BibliotekaIndexRoute
   SpolecznoscIndexRoute: typeof SpolecznoscIndexRoute
+  SpotkaniaIndexRoute: typeof SpotkaniaIndexRoute
+  SpotkaniaZgloszenieTokenRoute: typeof SpotkaniaZgloszenieTokenRoute
   ApiPublicLibraryCoverIdRoute: typeof ApiPublicLibraryCoverIdRoute
+  ApiPublicMeetingImageIdRoute: typeof ApiPublicMeetingImageIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -489,13 +542,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/spotkania': {
-      id: '/spotkania'
-      path: '/spotkania'
-      fullPath: '/spotkania'
-      preLoaderRoute: typeof SpotkaniaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
       path: '/admin'
@@ -545,6 +591,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SpolecznoscPostIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/spotkania/': {
+      id: '/spotkania/'
+      path: '/spotkania'
+      fullPath: '/spotkania/'
+      preLoaderRoute: typeof SpotkaniaIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/spotkania/$slug': {
+      id: '/spotkania/$slug'
+      path: '/spotkania/$slug'
+      fullPath: '/spotkania/$slug'
+      preLoaderRoute: typeof SpotkaniaSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/zakup/$token': {
       id: '/zakup/$token'
       path: '/zakup/$token'
@@ -578,6 +638,13 @@ declare module '@tanstack/react-router' {
       path: '/spolecznosc'
       fullPath: '/admin/spolecznosc'
       preLoaderRoute: typeof AuthenticatedAdminSpolecznoscRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/spotkania': {
+      id: '/_authenticated/admin/spotkania'
+      path: '/spotkania'
+      fullPath: '/admin/spotkania'
+      preLoaderRoute: typeof AuthenticatedAdminSpotkaniaRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/subskrybenci': {
@@ -615,11 +682,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminZamowieniaRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/spotkania/zgloszenie/$token': {
+      id: '/spotkania/zgloszenie/$token'
+      path: '/spotkania/zgloszenie/$token'
+      fullPath: '/spotkania/zgloszenie/$token'
+      preLoaderRoute: typeof SpotkaniaZgloszenieTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/library-cover/$id': {
       id: '/api/public/library-cover/$id'
       path: '/api/public/library-cover/$id'
       fullPath: '/api/public/library-cover/$id'
       preLoaderRoute: typeof ApiPublicLibraryCoverIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/meeting-image/$id': {
+      id: '/api/public/meeting-image/$id'
+      path: '/api/public/meeting-image/$id'
+      fullPath: '/api/public/meeting-image/$id'
+      preLoaderRoute: typeof ApiPublicMeetingImageIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -629,6 +710,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminBibliotekaRoute: typeof AuthenticatedAdminBibliotekaRoute
   AuthenticatedAdminPowiadomieniaRoute: typeof AuthenticatedAdminPowiadomieniaRoute
   AuthenticatedAdminSpolecznoscRoute: typeof AuthenticatedAdminSpolecznoscRoute
+  AuthenticatedAdminSpotkaniaRoute: typeof AuthenticatedAdminSpotkaniaRoute
   AuthenticatedAdminSubskrybenciRoute: typeof AuthenticatedAdminSubskrybenciRoute
   AuthenticatedAdminTresciRoute: typeof AuthenticatedAdminTresciRoute
   AuthenticatedAdminUstawieniaEmailRoute: typeof AuthenticatedAdminUstawieniaEmailRoute
@@ -641,6 +723,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminBibliotekaRoute: AuthenticatedAdminBibliotekaRoute,
   AuthenticatedAdminPowiadomieniaRoute: AuthenticatedAdminPowiadomieniaRoute,
   AuthenticatedAdminSpolecznoscRoute: AuthenticatedAdminSpolecznoscRoute,
+  AuthenticatedAdminSpotkaniaRoute: AuthenticatedAdminSpotkaniaRoute,
   AuthenticatedAdminSubskrybenciRoute: AuthenticatedAdminSubskrybenciRoute,
   AuthenticatedAdminTresciRoute: AuthenticatedAdminTresciRoute,
   AuthenticatedAdminUstawieniaEmailRoute:
@@ -678,14 +761,17 @@ const rootRouteChildren: RootRouteChildren = {
   PolitykaPrywatnosciRoute: PolitykaPrywatnosciRoute,
   RegulaminRoute: RegulaminRoute,
   ResetPasswordRoute: ResetPasswordRoute,
-  SpotkaniaRoute: SpotkaniaRoute,
   BibliotekaSlugRoute: BibliotekaSlugRoute,
   NewsletterWypiszRoute: NewsletterWypiszRoute,
   SpolecznoscPostIdRoute: SpolecznoscPostIdRoute,
+  SpotkaniaSlugRoute: SpotkaniaSlugRoute,
   ZakupTokenRoute: ZakupTokenRoute,
   BibliotekaIndexRoute: BibliotekaIndexRoute,
   SpolecznoscIndexRoute: SpolecznoscIndexRoute,
+  SpotkaniaIndexRoute: SpotkaniaIndexRoute,
+  SpotkaniaZgloszenieTokenRoute: SpotkaniaZgloszenieTokenRoute,
   ApiPublicLibraryCoverIdRoute: ApiPublicLibraryCoverIdRoute,
+  ApiPublicMeetingImageIdRoute: ApiPublicMeetingImageIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

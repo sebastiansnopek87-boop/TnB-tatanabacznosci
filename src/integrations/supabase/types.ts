@@ -535,6 +535,143 @@ export type Database = {
           },
         ]
       }
+      meeting_registrations: {
+        Row: {
+          access_token: string
+          attended: boolean
+          consent_text: string
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          email: string
+          id: string
+          meeting_id: string
+          message: string | null
+          name: string
+          phone: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          access_token?: string
+          attended?: boolean
+          consent_text: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          email: string
+          id?: string
+          meeting_id: string
+          message?: string | null
+          name: string
+          phone?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          access_token?: string
+          attended?: boolean
+          consent_text?: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          email?: string
+          id?: string
+          meeting_id?: string
+          message?: string | null
+          name?: string
+          phone?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_registrations_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meetings: {
+        Row: {
+          capacity: number | null
+          created_at: string
+          created_by: string | null
+          description: string
+          ends_at: string | null
+          id: string
+          image_url: string | null
+          kind: string
+          location: string
+          location_public: boolean
+          online_link: string | null
+          published_at: string | null
+          registration_open: boolean
+          requires_approval: boolean
+          requires_login: boolean
+          rules: string
+          slug: string
+          starts_at: string
+          status: string
+          summary: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          capacity?: number | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          ends_at?: string | null
+          id?: string
+          image_url?: string | null
+          kind?: string
+          location?: string
+          location_public?: boolean
+          online_link?: string | null
+          published_at?: string | null
+          registration_open?: boolean
+          requires_approval?: boolean
+          requires_login?: boolean
+          rules?: string
+          slug: string
+          starts_at: string
+          status?: string
+          summary?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          capacity?: number | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          ends_at?: string | null
+          id?: string
+          image_url?: string | null
+          kind?: string
+          location?: string
+          location_public?: boolean
+          online_link?: string | null
+          published_at?: string | null
+          registration_open?: boolean
+          requires_approval?: boolean
+          requires_login?: boolean
+          rules?: string
+          slug?: string
+          starts_at?: string
+          status?: string
+          summary?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       newsletter_subscribers: {
         Row: {
           confirm_token: string | null
