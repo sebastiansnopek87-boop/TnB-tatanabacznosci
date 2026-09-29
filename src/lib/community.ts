@@ -10,16 +10,20 @@ export const PAGE = 10;
 export type Post = {
   id: string; author_id: string; author_name: string; body: string; status: string;
   created_at: string; updated_at: string; comments: number; reactions: number; reacted: boolean;
-  visibility: Visibility; guest: boolean;
+  visibility: Visibility; guest: boolean; sector: Sector;
 };
+export type Sort = "newest" | "oldest" | "active";
+export const SORT_LABEL: Record<Sort, string> = { newest: "Najnowsze", oldest: "Najstarsze", active: "Najaktywniejsze" };
+export const SECTORS = { ogolne: "Ogólne", ojcostwo: "Ojcostwo", relacje: "Relacje", wychowanie: "Wychowanie", rozwoj: "Rozwój", zdrowie: "Zdrowie" } as const;
+export type Sector = keyof typeof SECTORS;
 export type Visibility = "public" | "community";
 export const VIS_LABEL: Record<Visibility, string> = { public: "Publiczny", community: "Tylko dla społeczności" };
 export type Comment = { id: string; post_id: string; author_id: string; author_name: string; body: string; created_at: string; updated_at: string };
 
-const SELECT = "id, author_id, author_name, body, status, visibility, created_at, updated_at, community_comments(count), community_reactions(count)";
+const SELECT = "id, author_id, author_name, body, status, visibility, sector, created_at, updated_at, community_comments(count), community_reactions(count)";
 
 // Anonymous visitors may only read these columns of public, published posts (RLS + column grants).
-const PUBLIC_SELECT = "id, author_name, body, status, visibility, created_at, updated_at";
+const PUBLIC_SELECT = "id, author_name, body, status, visibility, sector, created_at, updated_at";
 const guestRow = (r: any): Post => ({ ...r, author_id: "", comments: 0, reactions: 0, reacted: false, guest: true });
 
 export function useUid() {
@@ -41,25 +45,17 @@ async function decorate(rows: any[]): Promise<Post[]> {
     : [];
   const set = new Set(mine.map((r) => r.post_id));
   return rows.map((r) => ({
-    id: r.id, author_id: r.author_id, author_name: r.author_name, body: r.body, status: r.status, visibility: r.visibility, guest: false,
+    id: r.id, author_id: r.author_id, author_name: r.author_name, body: r.body, status: r.status, visibility: r.visibility, sector: r.sector, guest: false,
     created_at: r.created_at, updated_at: r.updated_at,
     comments: r.community_comments?.[0]?.count ?? 0, reactions: r.community_reactions?.[0]?.count ?? 0,
     reacted: set.has(r.id),
   }));
 }
 
-export async function listPosts(page: number, onlyMine: boolean, signedIn = true): Promise<Post[]> {
-  if (!signedIn) {
-    const { data, error } = await supabase.from("community_posts").select(PUBLIC_SELECT).eq("status", "published").eq("visibility", "public")
-      .order("created_at", { ascending: false }).range(page * PAGE, page * PAGE + PAGE - 1);
-    if (error) throw new Error("Nie udało się pobrać postów.");
-    return (data ?? []).map(guestRow);
-  }
-  let q = supabase.from("community_posts").select(SELECT).order("created_at", { ascending: false }).range(page * PAGE, page * PAGE + PAGE - 1);
-  q = onlyMine ? q.eq("author_id", await me()) : q.eq("status", "published");
-  const { data, error } = await q;
+export async function listPosts(page: number, onlyMine: boolean, signedIn = true, sort: Sort = "newest"): Promise<Post[]> {
+  const { data, error } = await supabase.rpc("community_feed", { _sort: sort, _only_mine: signedIn && onlyMine, _offset: page * PAGE, _limit: PAGE });
   if (error) throw new Error("Nie udało się pobrać postów.");
-  return decorate(data ?? []);
+  return (data ?? []).map((r: any) => ({ ...r, author_id: r.author_id ?? "", comments: Number(r.comments), reactions: Number(r.reactions), guest: !signedIn }));
 }
 
 export async function getPost(id: string, signedIn = true): Promise<Post | null> {
@@ -73,10 +69,18 @@ export async function getPost(id: string, signedIn = true): Promise<Post | null>
   return data ? (await decorate([data]))[0] ?? null : null;
 }
 
-export async function listComments(postId: string): Promise<Comment[]> {
-  const { data, error } = await supabase.from("community_comments").select("*").eq("post_id", postId).order("created_at");
+export async function listComments(postId: string, signedIn = true): Promise<Comment[]> {
+  const { data, error } = await supabase.from("community_comments").select("id, post_id, author_name, body, created_at, updated_at" + (signedIn ? ", author_id" : "")).eq("post_id", postId).order("created_at");
   if (error) throw new Error("Nie udało się pobrać komentarzy.");
-  return data ?? [];
+  return ((data ?? []) as any[]).map((c) => ({ author_id: "", ...c }));
+}
+
+export async function reportPost(postId: string, reason: string) {
+  const t = reason.trim();
+  if (t.length < 3) throw new Error("Opisz krótko powód zgłoszenia (min. 3 znaki).");
+  if (t.length > 500) throw new Error("Powód może mieć najwyżej 500 znaków.");
+  const { error } = await supabase.from("community_reports").insert({ post_id: postId, reason: t });
+  if (error) throw new Error((error as { code?: string }).code === "23505" ? "Ten wpis został już przez Ciebie zgłoszony." : "Nie udało się wysłać zgłoszenia.");
 }
 
 function check(body: string, max: number) {
@@ -91,12 +95,12 @@ function one(res: { error: unknown; data: unknown[] | null }, fail: string) {
   if (res.error || !res.data?.length) throw new Error(fail);
 }
 
-export async function createPost(body: string, visibility: Visibility = "community") {
-  const { error } = await supabase.from("community_posts").insert({ body: check(body, POST_MAX), visibility });
+export async function createPost(body: string, visibility: Visibility = "community", sector: Sector = "ogolne") {
+  const { error } = await supabase.from("community_posts").insert({ body: check(body, POST_MAX), visibility, sector });
   if (error) throw new Error("Nie udało się opublikować posta.");
 }
-export async function updatePost(id: string, body: string, visibility: Visibility) {
-  one(await supabase.from("community_posts").update({ body: check(body, POST_MAX), visibility }).eq("id", id).select("id"), "Nie udało się zapisać zmian.");
+export async function updatePost(id: string, body: string, visibility: Visibility, sector: Sector) {
+  one(await supabase.from("community_posts").update({ body: check(body, POST_MAX), visibility, sector }).eq("id", id).select("id"), "Nie udało się zapisać zmian.");
 }
 export async function deletePost(id: string) {
   one(await supabase.from("community_posts").delete().eq("id", id).select("id"), "Nie udało się usunąć posta.");
