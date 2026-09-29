@@ -263,6 +263,121 @@ export type Database = {
         }
         Relationships: []
       }
+      library_categories: {
+        Row: {
+          created_at: string
+          name: string
+          slug: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          name: string
+          slug: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          name?: string
+          slug?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      library_item_content: {
+        Row: {
+          body: string
+          external_url: string | null
+          file_name: string | null
+          file_path: string | null
+          item_id: string
+          updated_at: string
+        }
+        Insert: {
+          body?: string
+          external_url?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          item_id: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          external_url?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          item_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "library_item_content_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: true
+            referencedRelation: "library_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      library_items: {
+        Row: {
+          access: string
+          author_name: string
+          category: string
+          cover_url: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          published_at: string | null
+          slug: string
+          status: string
+          summary: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          access?: string
+          author_name?: string
+          category: string
+          cover_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          published_at?: string | null
+          slug: string
+          status?: string
+          summary?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          access?: string
+          author_name?: string
+          category?: string
+          cover_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          published_at?: string | null
+          slug?: string
+          status?: string
+          summary?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "library_items_category_fkey"
+            columns: ["category"]
+            isOneToOne: false
+            referencedRelation: "library_categories"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
       newsletter_subscribers: {
         Row: {
           confirm_token: string | null
@@ -427,9 +542,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      library_can_read: { Args: { _item: string }; Returns: boolean }
     }
     Enums: {
-      app_role: "admin"
+      app_role: "admin" | "premium"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -557,7 +673,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin"],
+      app_role: ["admin", "premium"],
     },
   },
 } as const

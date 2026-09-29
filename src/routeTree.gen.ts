@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
-import { Route as BibliotekaRouteImport } from './routes/biblioteka'
 import { Route as KontaktRouteImport } from './routes/kontakt'
 import { Route as MaterialyPremiumRouteImport } from './routes/materialy-premium'
 import { Route as MojaHistoriaRouteImport } from './routes/moja-historia'
@@ -24,16 +23,20 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SpotkaniaRouteImport } from './routes/spotkania'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedMojeTnbRouteImport } from './routes/_authenticated/moje-tnb'
+import { Route as BibliotekaIndexRouteImport } from './routes/biblioteka.index'
+import { Route as BibliotekaSlugRouteImport } from './routes/biblioteka.$slug'
 import { Route as NewsletterWypiszRouteImport } from './routes/newsletter.wypisz'
 import { Route as SpolecznoscIndexRouteImport } from './routes/spolecznosc.index'
 import { Route as SpolecznoscPostIdRouteImport } from './routes/spolecznosc.$postId'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedAdminBibliotekaRouteImport } from './routes/_authenticated/admin.biblioteka'
 import { Route as AuthenticatedAdminPowiadomieniaRouteImport } from './routes/_authenticated/admin.powiadomienia'
 import { Route as AuthenticatedAdminSpolecznoscRouteImport } from './routes/_authenticated/admin.spolecznosc'
 import { Route as AuthenticatedAdminSubskrybenciRouteImport } from './routes/_authenticated/admin.subskrybenci'
 import { Route as AuthenticatedAdminTresciRouteImport } from './routes/_authenticated/admin.tresci'
 import { Route as AuthenticatedAdminUstawieniaEmailRouteImport } from './routes/_authenticated/admin.ustawienia-email'
 import { Route as AuthenticatedAdminWiadomosciRouteImport } from './routes/_authenticated/admin.wiadomosci'
+import { Route as ApiPublicLibraryCoverIdRouteImport } from './routes/api/public/library-cover.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -47,11 +50,6 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BibliotekaRoute = BibliotekaRouteImport.update({
-  id: '/biblioteka',
-  path: '/biblioteka',
   getParentRoute: () => rootRouteImport,
 } as any)
 const KontaktRoute = KontaktRouteImport.update({
@@ -109,6 +107,16 @@ const AuthenticatedMojeTnbRoute = AuthenticatedMojeTnbRouteImport.update({
   path: '/moje-tnb',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const BibliotekaIndexRoute = BibliotekaIndexRouteImport.update({
+  id: '/biblioteka/',
+  path: '/biblioteka/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BibliotekaSlugRoute = BibliotekaSlugRouteImport.update({
+  id: '/biblioteka/$slug',
+  path: '/biblioteka/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NewsletterWypiszRoute = NewsletterWypiszRouteImport.update({
   id: '/newsletter/wypisz',
   path: '/newsletter/wypisz',
@@ -129,6 +137,12 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminBibliotekaRoute =
+  AuthenticatedAdminBibliotekaRouteImport.update({
+    id: '/biblioteka',
+    path: '/biblioteka',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminPowiadomieniaRoute =
   AuthenticatedAdminPowiadomieniaRouteImport.update({
     id: '/powiadomienia',
@@ -165,11 +179,15 @@ const AuthenticatedAdminWiadomosciRoute =
     path: '/wiadomosci',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const ApiPublicLibraryCoverIdRoute = ApiPublicLibraryCoverIdRouteImport.update({
+  id: '/api/public/library-cover/$id',
+  path: '/api/public/library-cover/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/biblioteka': typeof BibliotekaRoute
   '/kontakt': typeof KontaktRoute
   '/materialy-premium': typeof MaterialyPremiumRoute
   '/moja-historia': typeof MojaHistoriaRoute
@@ -181,9 +199,12 @@ export interface FileRoutesByFullPath {
   '/spotkania': typeof SpotkaniaRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/moje-tnb': typeof AuthenticatedMojeTnbRoute
+  '/biblioteka/$slug': typeof BibliotekaSlugRoute
   '/newsletter/wypisz': typeof NewsletterWypiszRoute
   '/spolecznosc/$postId': typeof SpolecznoscPostIdRoute
+  '/biblioteka/': typeof BibliotekaIndexRoute
   '/spolecznosc/': typeof SpolecznoscIndexRoute
+  '/admin/biblioteka': typeof AuthenticatedAdminBibliotekaRoute
   '/admin/powiadomienia': typeof AuthenticatedAdminPowiadomieniaRoute
   '/admin/spolecznosc': typeof AuthenticatedAdminSpolecznoscRoute
   '/admin/subskrybenci': typeof AuthenticatedAdminSubskrybenciRoute
@@ -191,11 +212,11 @@ export interface FileRoutesByFullPath {
   '/admin/ustawienia-email': typeof AuthenticatedAdminUstawieniaEmailRoute
   '/admin/wiadomosci': typeof AuthenticatedAdminWiadomosciRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/api/public/library-cover/$id': typeof ApiPublicLibraryCoverIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/biblioteka': typeof BibliotekaRoute
   '/kontakt': typeof KontaktRoute
   '/materialy-premium': typeof MaterialyPremiumRoute
   '/moja-historia': typeof MojaHistoriaRoute
@@ -206,9 +227,12 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/spotkania': typeof SpotkaniaRoute
   '/moje-tnb': typeof AuthenticatedMojeTnbRoute
+  '/biblioteka/$slug': typeof BibliotekaSlugRoute
   '/newsletter/wypisz': typeof NewsletterWypiszRoute
   '/spolecznosc/$postId': typeof SpolecznoscPostIdRoute
+  '/biblioteka': typeof BibliotekaIndexRoute
   '/spolecznosc': typeof SpolecznoscIndexRoute
+  '/admin/biblioteka': typeof AuthenticatedAdminBibliotekaRoute
   '/admin/powiadomienia': typeof AuthenticatedAdminPowiadomieniaRoute
   '/admin/spolecznosc': typeof AuthenticatedAdminSpolecznoscRoute
   '/admin/subskrybenci': typeof AuthenticatedAdminSubskrybenciRoute
@@ -216,13 +240,13 @@ export interface FileRoutesByTo {
   '/admin/ustawienia-email': typeof AuthenticatedAdminUstawieniaEmailRoute
   '/admin/wiadomosci': typeof AuthenticatedAdminWiadomosciRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/api/public/library-cover/$id': typeof ApiPublicLibraryCoverIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
-  '/biblioteka': typeof BibliotekaRoute
   '/kontakt': typeof KontaktRoute
   '/materialy-premium': typeof MaterialyPremiumRoute
   '/moja-historia': typeof MojaHistoriaRoute
@@ -234,9 +258,12 @@ export interface FileRoutesById {
   '/spotkania': typeof SpotkaniaRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/moje-tnb': typeof AuthenticatedMojeTnbRoute
+  '/biblioteka/$slug': typeof BibliotekaSlugRoute
   '/newsletter/wypisz': typeof NewsletterWypiszRoute
   '/spolecznosc/$postId': typeof SpolecznoscPostIdRoute
+  '/biblioteka/': typeof BibliotekaIndexRoute
   '/spolecznosc/': typeof SpolecznoscIndexRoute
+  '/_authenticated/admin/biblioteka': typeof AuthenticatedAdminBibliotekaRoute
   '/_authenticated/admin/powiadomienia': typeof AuthenticatedAdminPowiadomieniaRoute
   '/_authenticated/admin/spolecznosc': typeof AuthenticatedAdminSpolecznoscRoute
   '/_authenticated/admin/subskrybenci': typeof AuthenticatedAdminSubskrybenciRoute
@@ -244,13 +271,13 @@ export interface FileRoutesById {
   '/_authenticated/admin/ustawienia-email': typeof AuthenticatedAdminUstawieniaEmailRoute
   '/_authenticated/admin/wiadomosci': typeof AuthenticatedAdminWiadomosciRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/api/public/library-cover/$id': typeof ApiPublicLibraryCoverIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/auth'
-    | '/biblioteka'
     | '/kontakt'
     | '/materialy-premium'
     | '/moja-historia'
@@ -262,9 +289,12 @@ export interface FileRouteTypes {
     | '/spotkania'
     | '/admin'
     | '/moje-tnb'
+    | '/biblioteka/$slug'
     | '/newsletter/wypisz'
     | '/spolecznosc/$postId'
+    | '/biblioteka/'
     | '/spolecznosc/'
+    | '/admin/biblioteka'
     | '/admin/powiadomienia'
     | '/admin/spolecznosc'
     | '/admin/subskrybenci'
@@ -272,11 +302,11 @@ export interface FileRouteTypes {
     | '/admin/ustawienia-email'
     | '/admin/wiadomosci'
     | '/admin/'
+    | '/api/public/library-cover/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
-    | '/biblioteka'
     | '/kontakt'
     | '/materialy-premium'
     | '/moja-historia'
@@ -287,9 +317,12 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/spotkania'
     | '/moje-tnb'
+    | '/biblioteka/$slug'
     | '/newsletter/wypisz'
     | '/spolecznosc/$postId'
+    | '/biblioteka'
     | '/spolecznosc'
+    | '/admin/biblioteka'
     | '/admin/powiadomienia'
     | '/admin/spolecznosc'
     | '/admin/subskrybenci'
@@ -297,12 +330,12 @@ export interface FileRouteTypes {
     | '/admin/ustawienia-email'
     | '/admin/wiadomosci'
     | '/admin'
+    | '/api/public/library-cover/$id'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
-    | '/biblioteka'
     | '/kontakt'
     | '/materialy-premium'
     | '/moja-historia'
@@ -314,9 +347,12 @@ export interface FileRouteTypes {
     | '/spotkania'
     | '/_authenticated/admin'
     | '/_authenticated/moje-tnb'
+    | '/biblioteka/$slug'
     | '/newsletter/wypisz'
     | '/spolecznosc/$postId'
+    | '/biblioteka/'
     | '/spolecznosc/'
+    | '/_authenticated/admin/biblioteka'
     | '/_authenticated/admin/powiadomienia'
     | '/_authenticated/admin/spolecznosc'
     | '/_authenticated/admin/subskrybenci'
@@ -324,13 +360,13 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/ustawienia-email'
     | '/_authenticated/admin/wiadomosci'
     | '/_authenticated/admin/'
+    | '/api/public/library-cover/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
-  BibliotekaRoute: typeof BibliotekaRoute
   KontaktRoute: typeof KontaktRoute
   MaterialyPremiumRoute: typeof MaterialyPremiumRoute
   MojaHistoriaRoute: typeof MojaHistoriaRoute
@@ -340,9 +376,12 @@ export interface RootRouteChildren {
   RegulaminRoute: typeof RegulaminRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SpotkaniaRoute: typeof SpotkaniaRoute
+  BibliotekaSlugRoute: typeof BibliotekaSlugRoute
   NewsletterWypiszRoute: typeof NewsletterWypiszRoute
   SpolecznoscPostIdRoute: typeof SpolecznoscPostIdRoute
+  BibliotekaIndexRoute: typeof BibliotekaIndexRoute
   SpolecznoscIndexRoute: typeof SpolecznoscIndexRoute
+  ApiPublicLibraryCoverIdRoute: typeof ApiPublicLibraryCoverIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -366,13 +405,6 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/biblioteka': {
-      id: '/biblioteka'
-      path: '/biblioteka'
-      fullPath: '/biblioteka'
-      preLoaderRoute: typeof BibliotekaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/kontakt': {
@@ -452,6 +484,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMojeTnbRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/biblioteka/': {
+      id: '/biblioteka/'
+      path: '/biblioteka'
+      fullPath: '/biblioteka/'
+      preLoaderRoute: typeof BibliotekaIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/biblioteka/$slug': {
+      id: '/biblioteka/$slug'
+      path: '/biblioteka/$slug'
+      fullPath: '/biblioteka/$slug'
+      preLoaderRoute: typeof BibliotekaSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/newsletter/wypisz': {
       id: '/newsletter/wypisz'
       path: '/newsletter/wypisz'
@@ -478,6 +524,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/biblioteka': {
+      id: '/_authenticated/admin/biblioteka'
+      path: '/biblioteka'
+      fullPath: '/admin/biblioteka'
+      preLoaderRoute: typeof AuthenticatedAdminBibliotekaRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/powiadomienia': {
@@ -522,10 +575,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminWiadomosciRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/api/public/library-cover/$id': {
+      id: '/api/public/library-cover/$id'
+      path: '/api/public/library-cover/$id'
+      fullPath: '/api/public/library-cover/$id'
+      preLoaderRoute: typeof ApiPublicLibraryCoverIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminBibliotekaRoute: typeof AuthenticatedAdminBibliotekaRoute
   AuthenticatedAdminPowiadomieniaRoute: typeof AuthenticatedAdminPowiadomieniaRoute
   AuthenticatedAdminSpolecznoscRoute: typeof AuthenticatedAdminSpolecznoscRoute
   AuthenticatedAdminSubskrybenciRoute: typeof AuthenticatedAdminSubskrybenciRoute
@@ -536,6 +597,7 @@ interface AuthenticatedAdminRouteChildren {
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminBibliotekaRoute: AuthenticatedAdminBibliotekaRoute,
   AuthenticatedAdminPowiadomieniaRoute: AuthenticatedAdminPowiadomieniaRoute,
   AuthenticatedAdminSpolecznoscRoute: AuthenticatedAdminSpolecznoscRoute,
   AuthenticatedAdminSubskrybenciRoute: AuthenticatedAdminSubskrybenciRoute,
@@ -566,7 +628,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
-  BibliotekaRoute: BibliotekaRoute,
   KontaktRoute: KontaktRoute,
   MaterialyPremiumRoute: MaterialyPremiumRoute,
   MojaHistoriaRoute: MojaHistoriaRoute,
@@ -576,9 +637,12 @@ const rootRouteChildren: RootRouteChildren = {
   RegulaminRoute: RegulaminRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SpotkaniaRoute: SpotkaniaRoute,
+  BibliotekaSlugRoute: BibliotekaSlugRoute,
   NewsletterWypiszRoute: NewsletterWypiszRoute,
   SpolecznoscPostIdRoute: SpolecznoscPostIdRoute,
+  BibliotekaIndexRoute: BibliotekaIndexRoute,
   SpolecznoscIndexRoute: SpolecznoscIndexRoute,
+  ApiPublicLibraryCoverIdRoute: ApiPublicLibraryCoverIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

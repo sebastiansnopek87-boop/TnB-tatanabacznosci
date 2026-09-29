@@ -78,6 +78,20 @@
       "when": 1790697936841,
       "tag": "0010_community_sectors_search",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790706771368,
+      "tag": "0011_app_role_premium",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1790706797281,
+      "tag": "0012_library",
+      "breakpoints": true
     }
   ]
 }
