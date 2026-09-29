@@ -3,10 +3,11 @@ import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { PageHeading, PageShell } from "@/components/tnb/PageShell";
-import { PostCard, VisibilitySelect } from "@/components/community/PostCard";
+import { PostCard, SectorSelect, VisibilitySelect } from "@/components/community/PostCard";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { PAGE, POST_MAX, createPost, listPosts, useUid, type Visibility } from "@/lib/community";
+import { PAGE, POST_MAX, SORT_LABEL, createPost, listPosts, useUid, type Sector, type Sort, type Visibility } from "@/lib/community";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const Route = createFileRoute("/spolecznosc/")({
   head: () => ({
@@ -36,11 +37,13 @@ function Community() {
   const [tab, setTab] = useState<"all" | "mine">("all");
   const [body, setBody] = useState("");
   const [vis, setVis] = useState<Visibility>("community");
+  const [sector, setSector] = useState<Sector>("ogolne");
+  const [sort, setSort] = useState<Sort>("newest");
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const feed = useInfiniteQuery({
-    queryKey: ["community", signedIn ? tab : "public", uid],
-    queryFn: ({ pageParam }) => listPosts(pageParam, signedIn && tab === "mine", signedIn),
+    queryKey: ["community", signedIn ? tab : "public", uid, sort],
+    queryFn: ({ pageParam }) => listPosts(pageParam, signedIn && tab === "mine", signedIn, sort),
     initialPageParam: 0,
     enabled: ready,
     getNextPageParam: (last, all) => (last.length === PAGE ? all.length : undefined),
@@ -52,7 +55,7 @@ function Community() {
     e.preventDefault();
     if (busy) return;
     setBusy(true); setErr(null);
-    try { await createPost(body, vis); setBody(""); setVis("community"); toast.success("Post został opublikowany."); refresh(); }
+    try { await createPost(body, vis, sector); setBody(""); setVis("community"); setSector("ogolne"); toast.success("Post został opublikowany."); refresh(); }
     catch (x) { setErr(x instanceof Error ? x.message : "Wystąpił błąd."); }
     finally { setBusy(false); }
   }
@@ -73,48 +76,58 @@ function Community() {
       </section>
 
       <div className="mx-auto max-w-3xl px-5 py-10 lg:py-14">
-        {ready && !signedIn && (
-          <section aria-labelledby="join" className="border border-gold/30 bg-card/60 p-6 sm:p-8">
-            <h2 id="join" className="font-display text-2xl font-semibold uppercase text-foreground">Dołącz do rozmowy</h2>
-            <p className="mt-3 text-[0.95rem] leading-[1.75] text-foreground/85">
-              Tutaj możesz czytać, komentować, publikować własne wpisy i zabierać głos w rozmowach. Aby w pełni uczestniczyć w życiu społeczności, potrzebujesz bezpłatnego konta TNB.
+        {ready && (
+          <section aria-labelledby="welcome" className="relative border border-gold/30 bg-card/60 px-6 py-10 text-center sm:px-10 sm:py-12">
+            <span aria-hidden className="absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-gold/70 to-transparent" />
+            <h2 id="welcome" className="font-display text-3xl font-semibold uppercase tracking-[0.04em] text-foreground sm:text-4xl">
+              {signedIn ? "Zacznij własną rozmowę." : "Rozmowy czekają na Ciebie."}
+            </h2>
+            <p className="mx-auto mt-3 max-w-md text-[0.95rem] leading-[1.75] text-foreground/80">
+              {signedIn ? "Podziel się doświadczeniem, zadaj pytanie albo wesprzyj innego ojca dobrym słowem." : "Zaloguj się, aby publikować, komentować i reagować."}
             </p>
-            <div className="mt-5 flex flex-wrap gap-3">
-              <Button asChild variant="outline" className="uppercase tracking-[0.15em]"><Link to="/auth">Zaloguj się</Link></Button>
-              <Button asChild className="uppercase tracking-[0.15em]"><Link to="/auth" search={{ tryb: "rejestracja" }}>Dołącz do TNB</Link></Button>
-            </div>
+            {!signedIn ? (
+              <div className="mt-7 flex flex-wrap justify-center gap-3">
+                <Button asChild variant="outline" className="min-w-40 uppercase tracking-[0.15em]"><Link to="/auth">Zaloguj się</Link></Button>
+                <Button asChild className="min-w-40 uppercase tracking-[0.15em]"><Link to="/auth" search={{ tryb: "rejestracja" }}>Dołącz do nas</Link></Button>
+              </div>
+            ) : (
+              <form onSubmit={submit} className="mt-7 text-left">
+                <label htmlFor="new-post" className="eyebrow text-gold">Nowy post</label>
+                <Textarea id="new-post" value={body} onChange={(e) => setBody(e.target.value)} rows={4} maxLength={POST_MAX}
+                  placeholder="Co chcesz powiedzieć innym ojcom?" className="mt-3 bg-background/60" />
+                <div className="mt-3 flex flex-col gap-3 sm:flex-row">
+                  <div><label htmlFor="new-post-sector" className="mb-1.5 block text-xs text-muted-foreground">Sektor</label><SectorSelect id="new-post-sector" value={sector} onChange={setSector} /></div>
+                  <div><label htmlFor="new-post-vis" className="mb-1.5 block text-xs text-muted-foreground">Widoczność</label><VisibilitySelect id="new-post-vis" value={vis} onChange={setVis} /></div>
+                </div>
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                  <span className="text-xs text-muted-foreground">{body.trim().length} / {POST_MAX}</span>
+                  <Button type="submit" disabled={busy} className="uppercase tracking-[0.15em]">{busy ? "Publikowanie…" : "Opublikuj"}</Button>
+                </div>
+                {err && <p role="alert" className="mt-3 text-sm text-destructive">{err}</p>}
+              </form>
+            )}
           </section>
         )}
 
-        {signedIn && (
-          <form onSubmit={submit} className="border border-gold/30 bg-card/60 p-5 sm:p-7">
-            <label htmlFor="new-post" className="eyebrow text-gold">Nowy post</label>
-            <Textarea id="new-post" value={body} onChange={(e) => setBody(e.target.value)} rows={4} maxLength={POST_MAX}
-              placeholder="Co chcesz powiedzieć innym ojcom?" className="mt-3 bg-background/60" />
-            <div className="mt-3">
-              <label htmlFor="new-post-vis" className="mb-1.5 block text-xs text-muted-foreground">Widoczność</label>
-              <VisibilitySelect id="new-post-vis" value={vis} onChange={setVis} />
-            </div>
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-              <span className="text-xs text-muted-foreground">{body.trim().length} / {POST_MAX}</span>
-              <Button type="submit" disabled={busy} className="uppercase tracking-[0.15em]">{busy ? "Publikowanie…" : "Opublikuj"}</Button>
-            </div>
-            {err && <p role="alert" className="mt-3 text-sm text-destructive">{err}</p>}
-          </form>
-        )}
-
-        {signedIn ? (
-          <div className="mt-10 flex gap-2 border-b border-border/60" role="tablist">
-            {(["all", "mine"] as const).map((t) => (
-              <button key={t} role="tab" aria-selected={tab === t} onClick={() => setTab(t)}
-                className={`-mb-px border-b-2 px-4 py-2 text-sm ${tab === t ? "border-gold text-gold" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
-                {t === "all" ? "Wszystkie posty" : "Moje posty"}
-              </button>
-            ))}
+        <div className="mt-12 flex flex-wrap items-end justify-between gap-3 border-b border-border/60 pb-3">
+          <div>
+            <h2 className="eyebrow text-gold">Feed rozmów</h2>
+            {signedIn && (
+              <div className="mt-3 flex gap-1" role="tablist">
+                {(["all", "mine"] as const).map((t) => (
+                  <button key={t} role="tab" aria-selected={tab === t} onClick={() => setTab(t)}
+                    className={`border-b-2 px-3 py-1 text-sm ${tab === t ? "border-gold text-gold" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+                    {t === "all" ? "Wszystkie posty" : "Moje posty"}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-        ) : (
-          <h2 className="mt-10 border-b border-border/60 pb-3 font-display text-2xl font-semibold uppercase text-foreground">Publiczne wpisy</h2>
-        )}
+          <Select value={sort} onValueChange={(v) => setSort(v as Sort)}>
+            <SelectTrigger className="w-44" aria-label="Sortowanie"><SelectValue /></SelectTrigger>
+            <SelectContent>{(Object.keys(SORT_LABEL) as Sort[]).map((k) => <SelectItem key={k} value={k}>{SORT_LABEL[k]}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
 
         <div className="mt-6 space-y-5">
           {(!ready || feed.isLoading) && <p className="text-sm text-muted-foreground">Wczytywanie postów…</p>}
@@ -128,7 +141,8 @@ function Community() {
               {!signedIn ? "Nie ma jeszcze publicznych wpisów. Dołącz, aby czytać rozmowy społeczności." : tab === "all" ? "Nie ma jeszcze żadnych postów. Napisz pierwszy." : "Nie opublikowałeś jeszcze żadnego posta."}
             </p>
           )}
-          {posts.map((p) => <PostCard key={`${p.id}-${p.updated_at}-${p.visibility}-${p.reactions}-${p.reacted}`} post={p} uid={uid} onChanged={refresh} />)}
+          {posts.map((p) => <PostCard key={`${p.id}-${p.updated_at}-${p.visibility}-${p.sector}-${p.reactions}-${p.reacted}-${p.comments}`} post={p} uid={uid} onChanged={refresh} />)}
+          {!feed.hasNextPage && posts.length > 0 && <p className="pt-2 text-center text-xs uppercase tracking-[0.2em] text-muted-foreground">To już wszystkie wpisy</p>}
           {feed.hasNextPage && (
             <Button variant="outline" className="w-full" disabled={feed.isFetchingNextPage} onClick={() => feed.fetchNextPage()}>
               {feed.isFetchingNextPage ? "Wczytywanie…" : "Pokaż starsze posty"}

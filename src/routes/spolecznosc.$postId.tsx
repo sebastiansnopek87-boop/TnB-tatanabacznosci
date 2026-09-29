@@ -29,7 +29,7 @@ function Thread() {
   const { uid, ready } = useUid();
   const signedIn = !!uid;
   const post = useQuery({ queryKey: ["community-post", postId, uid], queryFn: () => getPost(postId, signedIn), enabled: ready });
-  const comments = useQuery({ queryKey: ["community-comments", postId, uid], queryFn: () => listComments(postId), enabled: ready && signedIn });
+  const comments = useQuery({ queryKey: ["community-comments", postId, uid], queryFn: () => listComments(postId, signedIn), enabled: ready && !!post.data });
   const [body, setBody] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -57,17 +57,7 @@ function Thread() {
             onDeleted={() => navigate({ to: "/spolecznosc", replace: true })} />}
         </div>
 
-        {ready && !signedIn && (
-          <section className="mt-10 border border-gold/30 bg-card/60 p-6">
-            <h2 className="font-display text-2xl font-semibold uppercase text-foreground">Komentarze</h2>
-            <p className="mt-3 text-sm leading-[1.75] text-foreground/85">Komentarze, reakcje i pełne rozmowy są dostępne dla członków społeczności. Załóż bezpłatne konto TNB albo zaloguj się, aby zabrać głos.</p>
-            <div className="mt-4 flex flex-wrap gap-3">
-              <Button asChild variant="outline"><Link to="/auth">Zaloguj się</Link></Button>
-              <Button asChild><Link to="/auth" search={{ tryb: "rejestracja" }}>Dołącz do TNB</Link></Button>
-            </div>
-          </section>
-        )}
-        {p && signedIn && (
+        {p && (
           <section className="mt-10">
             <h2 className="font-display text-2xl font-semibold uppercase text-foreground">Komentarze</h2>
             <div className="mt-5 space-y-4">
@@ -76,7 +66,15 @@ function Thread() {
               {comments.data?.length === 0 && <p className="text-sm text-muted-foreground">Brak komentarzy. Bądź pierwszy.</p>}
               {comments.data?.map((c) => <CommentItem key={`${c.id}-${c.updated_at}`} c={c} uid={uid} onChanged={refresh} />)}
             </div>
-            {p.status === "published" ? (
+            {!signedIn ? (
+              <div className="mt-6 border border-gold/30 bg-card/60 p-5">
+                <p className="text-sm leading-[1.75] text-foreground/85">Chcesz dołączyć do rozmowy? Zaloguj się albo załóż bezpłatne konto TNB, aby komentować i reagować.</p>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <Button asChild variant="outline"><Link to="/auth">Zaloguj się</Link></Button>
+                  <Button asChild><Link to="/auth" search={{ tryb: "rejestracja" }}>Dołącz do nas</Link></Button>
+                </div>
+              </div>
+            ) : p.status === "published" ? (
               <form onSubmit={submit} className="mt-6 space-y-3">
                 <label htmlFor="new-comment" className="eyebrow text-gold">Twój komentarz</label>
                 <Textarea id="new-comment" rows={3} maxLength={COMMENT_MAX} value={body} onChange={(e) => setBody(e.target.value)} className="bg-background/60" />
@@ -116,7 +114,7 @@ function CommentItem({ c, uid, onChanged }: { c: Comment; uid: string | null; on
             </div>
           </div>
         ) : <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed text-foreground/90">{c.body}</p>}
-        {uid === c.author_id && !editing && (
+        {!!uid && uid === c.author_id && !editing && (
           <div className="mt-1 flex gap-1">
             <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>Edytuj</Button>
             <ConfirmDelete label="komentarz" onConfirm={() => run(() => deleteComment(c.id), "Komentarz został usunięty.")} />
