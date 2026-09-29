@@ -34,6 +34,7 @@ import { Route as AuthenticatedAdminSubskrybenciRouteImport } from './routes/_au
 import { Route as AuthenticatedAdminTresciRouteImport } from './routes/_authenticated/admin.tresci'
 import { Route as AuthenticatedAdminUstawieniaEmailRouteImport } from './routes/_authenticated/admin.ustawienia-email'
 import { Route as AuthenticatedAdminWiadomosciRouteImport } from './routes/_authenticated/admin.wiadomosci'
+import { Route as ApiPublicLibraryCoverIdRouteImport } from './routes/api/public/library-cover.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -165,6 +166,11 @@ const AuthenticatedAdminWiadomosciRoute =
     path: '/wiadomosci',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const ApiPublicLibraryCoverIdRoute = ApiPublicLibraryCoverIdRouteImport.update({
+  id: '/api/public/library-cover/$id',
+  path: '/api/public/library-cover/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -191,6 +197,7 @@ export interface FileRoutesByFullPath {
   '/admin/ustawienia-email': typeof AuthenticatedAdminUstawieniaEmailRoute
   '/admin/wiadomosci': typeof AuthenticatedAdminWiadomosciRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/api/public/library-cover/$id': typeof ApiPublicLibraryCoverIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -216,6 +223,7 @@ export interface FileRoutesByTo {
   '/admin/ustawienia-email': typeof AuthenticatedAdminUstawieniaEmailRoute
   '/admin/wiadomosci': typeof AuthenticatedAdminWiadomosciRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/api/public/library-cover/$id': typeof ApiPublicLibraryCoverIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -244,6 +252,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/ustawienia-email': typeof AuthenticatedAdminUstawieniaEmailRoute
   '/_authenticated/admin/wiadomosci': typeof AuthenticatedAdminWiadomosciRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/api/public/library-cover/$id': typeof ApiPublicLibraryCoverIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -272,6 +281,7 @@ export interface FileRouteTypes {
     | '/admin/ustawienia-email'
     | '/admin/wiadomosci'
     | '/admin/'
+    | '/api/public/library-cover/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -297,6 +307,7 @@ export interface FileRouteTypes {
     | '/admin/ustawienia-email'
     | '/admin/wiadomosci'
     | '/admin'
+    | '/api/public/library-cover/$id'
   id:
     | '__root__'
     | '/'
@@ -324,6 +335,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/ustawienia-email'
     | '/_authenticated/admin/wiadomosci'
     | '/_authenticated/admin/'
+    | '/api/public/library-cover/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -343,6 +355,7 @@ export interface RootRouteChildren {
   NewsletterWypiszRoute: typeof NewsletterWypiszRoute
   SpolecznoscPostIdRoute: typeof SpolecznoscPostIdRoute
   SpolecznoscIndexRoute: typeof SpolecznoscIndexRoute
+  ApiPublicLibraryCoverIdRoute: typeof ApiPublicLibraryCoverIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -522,6 +535,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminWiadomosciRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/api/public/library-cover/$id': {
+      id: '/api/public/library-cover/$id'
+      path: '/api/public/library-cover/$id'
+      fullPath: '/api/public/library-cover/$id'
+      preLoaderRoute: typeof ApiPublicLibraryCoverIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -579,6 +599,7 @@ const rootRouteChildren: RootRouteChildren = {
   NewsletterWypiszRoute: NewsletterWypiszRoute,
   SpolecznoscPostIdRoute: SpolecznoscPostIdRoute,
   SpolecznoscIndexRoute: SpolecznoscIndexRoute,
+  ApiPublicLibraryCoverIdRoute: ApiPublicLibraryCoverIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
