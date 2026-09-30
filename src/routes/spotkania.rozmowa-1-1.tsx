@@ -1,11 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CalendarDays, Clock, Lock, UserRound, Wallet } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, Clock, Lock, UserRound, Wallet } from "lucide-react";
 import { PageShell } from "@/components/tnb/PageShell";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { createConsultBooking, getConsultSlots } from "@/lib/consult.functions";
-import { fmtDate, fmtDayLabel, fmtHm } from "@/lib/consult";
+import { fmtDate, fmtHm, warsawYmd } from "@/lib/consult";
 
 const TITLE = "Rozmowa 1:1 — Spotkania TNB";
 const DESC = "Bezpłatna, poufna rozmowa jeden na jeden z Sebastianem. 30 minut, w terminie wybranym z kalendarza.";
@@ -22,11 +23,8 @@ export const Route = createFileRoute("/spotkania/rozmowa-1-1")({
 });
 
 const INTRO = [
-  "Czasem wystarczy spokojna rozmowa, żeby spojrzeć na pewne sprawy z innej perspektywy.",
-  "Te spotkania powstały z myślą o osobach, które potrzebują rozmowy, wsparcia lub po prostu przestrzeni, w której mogą powiedzieć, co naprawdę leży im na sercu.",
-  "Nie jestem coachem i nie zamierzam nikogo pouczać. Nie będę udawał, że znam odpowiedzi na wszystkie pytania. Chcę po prostu podzielić się swoim doświadczeniem, wysłuchać i porozmawiać po ludzku.",
-  "To indywidualne, bezpłatne rozmowy jeden na jeden. Ich treść pozostaje poufna i nie jest publikowana ani udostępniana innym uczestnikom społeczności.",
-  "Nie musisz przygotowywać się do tej rozmowy. Wystarczy, że przyjdziesz taki, jaki jesteś.",
+  "Czasem wystarczy rozmowa. Bez oceniania, bez pouczania, bez gotowych recept na życie. Nie jestem coachem i nie zamierzam nikogo ustawiać do pionu. Jestem człowiekiem, który przeszedł swoją drogę i wie, że czasem warto po prostu zostać wysłuchanym.",
+  "To bezpłatne, indywidualne spotkanie 1:1. Możesz porozmawiać o tym, co Cię obciąża, zadać pytanie, podzielić się doświadczeniem albo po prostu uporządkować myśli. Rozmowa pozostaje między nami. Twoja prywatność i wzajemny szacunek są podstawą tego spotkania.",
 ];
 const FACTS = [
   { icon: Clock, t: "Czas rozmowy: 30 minut" },
@@ -39,11 +37,35 @@ const FACTS = [
 type Form = { first_name: string; last_name: string; email: string; phone: string; topic: string; reason: string; question: string; consent: boolean; website: string };
 const EMPTY: Form = { first_name: "", last_name: "", email: "", phone: "", topic: "", reason: "", question: "", consent: false, website: "" };
 
+const WEEKDAY_SHORT = ["Pon", "Wt", "Śr", "Czw", "Pt", "Sob", "Niedz"];
+const monthKey = (ymd: string) => ymd.slice(0, 7);
+const shiftMonth = (key: string, amount: number) => {
+  const [year, month] = key.split("-").map(Number);
+  const shifted = new Date(Date.UTC(year ?? 0, (month ?? 1) - 1 + amount, 1));
+  return `${shifted.getUTCFullYear()}-${String(shifted.getUTCMonth() + 1).padStart(2, "0")}`;
+};
+const monthTitle = (key: string) => {
+  const [year, month] = key.split("-").map(Number);
+  const label = new Date(Date.UTC(year ?? 0, (month ?? 1) - 1, 1)).toLocaleDateString("pl-PL", { month: "long", year: "numeric", timeZone: "UTC" });
+  return label.charAt(0).toUpperCase() + label.slice(1);
+};
+const monthGrid = (key: string) => {
+  const [year, month] = key.split("-").map(Number);
+  const first = new Date(Date.UTC(year ?? 0, (month ?? 1) - 1, 1));
+  const mondayOffset = (first.getUTCDay() + 6) % 7;
+  return Array.from({ length: 42 }, (_, index) => {
+    const date = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth(), 1 - mondayOffset + index));
+    return { date: date.toISOString().slice(0, 10), number: date.getUTCDate(), inMonth: date.getUTCMonth() === first.getUTCMonth() };
+  });
+};
+
 function BookingPage() {
   const navigate = useNavigate();
   const slots = useQuery({ queryKey: ["consult-slots"], queryFn: () => getConsultSlots(), refetchInterval: 60_000 });
   const [day, setDay] = useState<string | null>(null);
   const [slot, setSlot] = useState<string | null>(null);
+  const today = warsawYmd(new Date());
+  const [visibleMonth, setVisibleMonth] = useState(() => monthKey(today));
   const [step, setStep] = useState<"pick" | "form" | "review">("pick");
   const [f, setF] = useState<Form>(EMPTY);
   const [err, setErr] = useState<string | null>(null);
@@ -60,6 +82,10 @@ function BookingPage() {
   }, []);
 
   const days = slots.data ?? [];
+  const availableByDay = useMemo(() => new Map(days.map((available) => [available.date, available.slots])), [days]);
+  const calendarDays = useMemo(() => monthGrid(visibleMonth), [visibleMonth]);
+  const firstMonth = monthKey(today);
+  const lastMonth = days.length ? monthKey(days[days.length - 1].date) : firstMonth;
   const daySlots = useMemo(() => days.find((d) => d.date === day)?.slots ?? [], [days, day]);
   useEffect(() => { if (slot && slots.data && !slots.data.some((d) => d.slots.includes(slot))) { setSlot(null); if (step !== "pick") setStep("pick"); setErr("Wybrany termin właśnie przestał być dostępny. Wybierz inny."); } }, [slots.data]); // eslint-disable-line react-hooks/exhaustive-deps
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setF((p) => ({ ...p, [k]: v }));
@@ -112,31 +138,62 @@ function BookingPage() {
               : slots.error ? <p className="mt-4 text-sm text-destructive">Nie udało się wczytać kalendarza. Odśwież stronę.</p>
               : !days.length ? (
                 <div className="mt-6 border border-gold/40 bg-surface-deep p-6 text-[0.95rem] leading-[1.75] text-foreground/85">
-                  Obecnie nie ma wolnych terminów. Zajrzyj ponownie za kilka dni albo napisz do nas przez <Link to="/kontakt" className="text-gold underline">formularz kontaktowy</Link>.
+                  Obecnie nie ma udostępnionych terminów. Wróć wkrótce.
                 </div>
               ) : (
-                <div className="mt-6 grid gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-                  <div>
-                    <p className="eyebrow text-muted-foreground">Dostępne dni</p>
-                    <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                      {days.map((d) => (
-                        <button key={d.date} type="button" onClick={() => { setDay(d.date); setSlot(null); setErr(null); }} aria-pressed={day === d.date}
-                          className={`border px-3 py-2.5 text-left text-sm ${day === d.date ? "border-gold bg-gold text-primary-foreground" : "border-border bg-card text-foreground hover:border-gold"}`}>
-                          {fmtDayLabel(d.date)}
-                          <span className={`mt-0.5 block text-[0.68rem] normal-case ${day === d.date ? "text-primary-foreground/80" : "text-muted-foreground"}`}>wolne: {d.slots.length}</span>
-                        </button>
-                      ))}
+                <div className="mt-6 max-w-3xl">
+                  <div className="border border-border/70 bg-card p-3 sm:p-5">
+                    <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2">
+                      <Button type="button" variant="outline" size="icon" disabled={visibleMonth <= firstMonth} onClick={() => { setVisibleMonth((current) => shiftMonth(current, -1)); setDay(null); setSlot(null); }} aria-label="Poprzedni miesiąc">
+                        <ChevronLeft aria-hidden />
+                      </Button>
+                      <div className="min-w-0 text-center">
+                        <h3 className="truncate font-display text-xl font-semibold text-foreground sm:text-2xl">{monthTitle(visibleMonth)}</h3>
+                        {visibleMonth !== firstMonth && <Button type="button" variant="link" size="sm" className="h-auto p-0 text-xs text-gold" onClick={() => { setVisibleMonth(firstMonth); setDay(null); setSlot(null); }}>Bieżący miesiąc</Button>}
+                      </div>
+                      <Button type="button" variant="outline" size="icon" disabled={visibleMonth >= lastMonth} onClick={() => { setVisibleMonth((current) => shiftMonth(current, 1)); setDay(null); setSlot(null); }} aria-label="Następny miesiąc">
+                        <ChevronRight aria-hidden />
+                      </Button>
+                    </div>
+                    <div className="mt-5 grid grid-cols-7 border-b border-border/60 pb-2 text-center text-[0.62rem] uppercase text-muted-foreground sm:text-xs">
+                      {WEEKDAY_SHORT.map((weekday) => <span key={weekday}>{weekday}</span>)}
+                    </div>
+                    <div className="mt-2 grid grid-cols-7 gap-1 sm:gap-2" role="grid" aria-label={`Kalendarz: ${monthTitle(visibleMonth)}`}>
+                      {calendarDays.map((cell) => {
+                        const available = availableByDay.get(cell.date) ?? [];
+                        const enabled = cell.inMonth && cell.date >= today && available.length > 0;
+                        const selected = day === cell.date;
+                        const isToday = cell.date === today;
+                        return (
+                          <Button
+                            key={cell.date}
+                            type="button"
+                            variant="ghost"
+                            disabled={!enabled}
+                            aria-label={`${cell.date}${available.length ? `, wolne terminy: ${available.length}` : ", brak wolnych terminów"}`}
+                            aria-pressed={selected}
+                            onClick={() => { setDay(cell.date); setSlot(null); setErr(null); }}
+                            className={`relative aspect-square h-auto min-h-9 w-full rounded-sm border p-0 text-xs tabular-nums sm:min-h-14 sm:text-sm ${!cell.inMonth ? "invisible" : selected ? "border-gold bg-gold text-primary-foreground hover:bg-gold-bright hover:text-primary-foreground" : enabled ? "border-gold/60 bg-gold/10 text-foreground hover:border-gold hover:bg-gold/20" : "border-transparent bg-transparent text-muted-foreground/45"} ${isToday && !selected ? "ring-1 ring-gold ring-offset-1 ring-offset-background" : ""}`}
+                          >
+                            <span>{cell.number}</span>
+                            {enabled && !selected && <span className="absolute bottom-1 h-1 w-1 rounded-full bg-gold sm:bottom-2" aria-hidden />}
+                          </Button>
+                        );
+                      })}
                     </div>
                   </div>
-                  <div>
+
+                  <div className="mt-6 border-t border-border/60 pt-6">
                     <p className="eyebrow text-muted-foreground">Godzina rozpoczęcia</p>
-                    {!day ? <p className="mt-3 text-sm text-muted-foreground">Najpierw wybierz dzień.</p> : (
-                      <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
-                        {daySlots.map((s) => (
-                          <button key={s} type="button" onClick={() => setSlot(s)} aria-pressed={slot === s}
-                            className={`border px-2 py-2.5 text-sm tabular-nums ${slot === s ? "border-gold bg-gold text-primary-foreground" : "border-border bg-card text-foreground hover:border-gold"}`}>{fmtHm(s)}</button>
-                        ))}
-                      </div>
+                    {!day ? <p className="mt-3 text-sm text-muted-foreground">Wybierz dostępny dzień w kalendarzu.</p> : (
+                      <>
+                        <p className="mt-2 text-sm text-foreground">{fmtDate(`${day}T12:00:00Z`)}</p>
+                        <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
+                          {daySlots.map((s) => (
+                            <Button key={s} type="button" variant={slot === s ? "default" : "outline"} onClick={() => setSlot(s)} aria-pressed={slot === s} className={`rounded-sm tabular-nums ${slot === s ? "bg-gold text-primary-foreground hover:bg-gold-bright" : "border-border"}`}>{fmtHm(s)}</Button>
+                          ))}
+                        </div>
+                      </>
                     )}
                     <p className="mt-3 text-xs text-muted-foreground">Godziny w czasie polskim. Czas rozmowy jest stały: 30 minut.</p>
                   </div>
