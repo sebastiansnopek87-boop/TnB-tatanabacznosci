@@ -1,4 +1,6 @@
-import { assertAdmin } from "./admin-auth.server";
+import { assertAdmin, logEvent } from "./admin-auth.server";
+const LOG = (ctx: { userId: string }, type: string, kind: string, id?: string, result: "ok" | "failed" = "ok", detail?: string) => logEvent({ type, actor: ctx.userId, objectKind: kind, objectId: id, result, detail });
+
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
@@ -169,6 +171,7 @@ export const adminSaveMeeting = createServerFn({ method: "POST" })
     const q = id ? context.supabase.from("meetings").update(row).eq("id", id).select("id").single()
       : context.supabase.from("meetings").insert(row).select("id").single();
     const { data: saved, error } = await q;
+    await LOG(context, id ? "meeting_edit" : "meeting_create", "meeting", saved?.id ?? id, error ? "failed" : "ok", rest.title);
     if (error) throw new Error(error.code === "23505" ? "Spotkanie o takim adresie już istnieje." : "Nie udało się zapisać spotkania.");
     return { id: saved.id as string };
   });
@@ -181,6 +184,7 @@ export const adminSetMeetingStatus = createServerFn({ method: "POST" })
     const patch: { status: string; published_at?: string } = { status: data.status };
     if (data.status === "published") patch.published_at = new Date().toISOString();
     const { error } = await context.supabase.from("meetings").update(patch).eq("id", data.id);
+    await LOG(context, `meeting_${data.status}`, "meeting", data.id, error ? "failed" : "ok");
     if (error) throw new Error("Nie udało się zmienić statusu.");
     return { ok: true };
   });
@@ -234,6 +238,7 @@ export const adminUpdateRegistration = createServerFn({ method: "POST" })
     if (data.status) Object.assign(patch, { status: data.status, decided_at: new Date().toISOString(), decided_by: context.userId });
     if (data.attended !== undefined) patch.attended = data.attended;
     const { error } = await context.supabase.from("meeting_registrations").update(patch).eq("id", data.id);
+    await LOG(context, data.status ? `registration_${data.status}` : "registration_attendance", "registration", data.id, error ? "failed" : "ok");
     if (error) throw new Error(/meeting_full/.test(error.message) ? "Brak wolnych miejsc — limit uczestników został osiągnięty." : "Nie udało się zaktualizować zgłoszenia.");
     return { ok: true };
   });

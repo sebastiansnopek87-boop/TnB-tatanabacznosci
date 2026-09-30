@@ -13,21 +13,61 @@ export const getAdminStatus = createServerFn({ method: "GET" })
     return { isAdmin: !!data, email: (context.claims as { email?: string }).email ?? null };
   });
 
+// One auth.users read shared by dashboard counts and journal actor names.
+async function usersIndex() {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const all: Array<{ id: string; email?: string; created_at: string }> = [];
+  for (let page = 1; page <= 20; page++) {
+    const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 1000 });
+    if (error) return null;
+    all.push(...data.users.map((u) => ({ id: u.id, email: u.email, created_at: u.created_at })));
+    if (data.users.length < 1000) break;
+  }
+  return all;
+}
+const EVENT_COLS = "id, created_at, type, actor, object_kind, object_id, result, detail";
+type AdminEvent = { id: string; created_at: string; type: string; actor: string | null; actor_email: string | null; object_kind: string | null; object_id: string | null; result: string; detail: string | null };
+const withEmails = (rows: any[], users: Array<{ id: string; email?: string }> | null): AdminEvent[] => {
+  const m = new Map((users ?? []).map((u) => [u.id, u.email ?? null]));
+  return rows.map((r) => ({ ...r, actor_email: r.actor ? m.get(r.actor) ?? null : null }));
+};
+
 export const getDashboard = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context);
     const db = context.supabase;
-    const c = async (q: any) => (await q).count ?? 0;
-    const [newMsgs, allMsgs, active, pending, unsub, failed] = await Promise.all([
-      c(db.from("contact_messages").select("id", { count: "exact", head: true }).eq("status", "new")),
-      c(db.from("contact_messages").select("id", { count: "exact", head: true }).neq("status", "archived")),
-      c(db.from("newsletter_subscribers").select("id", { count: "exact", head: true }).eq("status", "active")),
-      c(db.from("newsletter_subscribers").select("id", { count: "exact", head: true }).eq("status", "pending")),
-      c(db.from("newsletter_subscribers").select("id", { count: "exact", head: true }).eq("status", "unsubscribed")),
-      c(db.from("email_notification_log").select("id", { count: "exact", head: true }).eq("status", "failed")),
+    const now = new Date().toISOString();
+    const monthAgo = new Date(Date.now() - 30 * 864e5).toISOString();
+    const c = async (q: any) => { const r = await q; return r.error ? null : (r.count ?? 0); };
+    const h = { count: "exact", head: true } as const;
+    const [users, library, posts, meetings, bookings, orders, pendingOrders, newMsgs, reports, failedMail, pendingRegs, deniedWeek, paid, events] = await Promise.all([
+      usersIndex(),
+      c(db.from("library_items").select("id", h).eq("status", "published")),
+      c(db.from("community_posts").select("id", h)),
+      c(db.from("meetings").select("id", h).eq("status", "published").gte("starts_at", now)),
+      c(db.from("consult_bookings").select("id", h).eq("status", "booked").gte("starts_at", now)),
+      c(db.from("library_orders").select("id", h)),
+      c(db.from("library_orders").select("id", h).eq("status", "pending")),
+      c(db.from("contact_messages").select("id", h).eq("status", "new")),
+      c(db.from("community_reports").select("id", h).eq("status", "open")),
+      c(db.from("email_notification_log").select("id", h).eq("status", "failed")),
+      c(db.from("meeting_registrations").select("id", h).eq("status", "pending")),
+      c(db.from("admin_events").select("id", h).neq("result", "ok").gte("created_at", new Date(Date.now() - 7 * 864e5).toISOString())),
+      db.from("library_orders").select("amount, currency").in("status", ["paid", "delivered"]).limit(10000),
+      db.from("admin_events").select(EVENT_COLS).order("created_at", { ascending: false }).limit(8),
     ]);
-    return { newMsgs, allMsgs, active, pending, unsub, failed };
+    const paidRows = (paid.error ? null : paid.data) as Array<{ amount: number; currency: string }> | null;
+    const currencies = new Set((paidRows ?? []).map((r) => r.currency.toLowerCase()));
+    return {
+      usersTotal: users ? users.length : null,
+      usersNew30: users ? users.filter((u) => u.created_at >= monthAgo).length : null,
+      library, posts, meetings, bookings, orders, pendingOrders, newMsgs, reports, failedMail, pendingRegs, deniedWeek,
+      // Only sum when all paid orders share one currency, so the total is trustworthy.
+      paidTotal: paidRows && currencies.size <= 1 ? paidRows.reduce((a, r) => a + r.amount, 0) : null,
+      paidCurrency: [...currencies][0] ?? "pln",
+      recent: withEmails(events.data ?? [], users),
+    };
   });
 
 const msgFilter = z.object({
@@ -202,11 +242,40 @@ export const resolveReport = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-export const listAdminEvents = createServerFn({ method: "GET" })
+const eventFilter = z.object({
+  from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).or(z.literal("")).default(""),
+  to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).or(z.literal("")).default(""),
+  category: z.string().regex(/^[a-z]*$/).max(30).default(""),
+  actor: z.string().uuid().or(z.literal("")).default(""),
+  result: z.enum(["", "ok", "failed", "denied"]).default(""),
+  typeIn: z.array(z.string().regex(/^[a-z_]+$/).max(60)).max(200).default([]),
+  q: z.string().trim().max(100).default(""),
+  page: z.number().int().min(0).max(10000).default(0),
+});
+const PAGE = 50;
+
+export const listAdminEvents = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator((d: unknown) => eventFilter.parse(d ?? {}))
+  .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { data, error } = await context.supabase.from("admin_events").select("*").order("created_at", { ascending: false }).limit(300);
+    let q = context.supabase.from("admin_events").select(EVENT_COLS, { count: "exact" }).order("created_at", { ascending: false });
+    if (data.from) q = q.gte("created_at", `${data.from}T00:00:00+02:00`);
+    if (data.to) q = q.lte("created_at", `${data.to}T23:59:59.999+02:00`);
+    if (data.category) q = q.like("type", `${data.category}\\_%`);
+    if (data.actor) q = q.eq("actor", data.actor);
+    if (data.result) q = q.eq("result", data.result);
+    const s = data.q.replace(/[%,()*\\]/g, " ").trim();
+    if (s || data.typeIn.length) {
+      const ors = [s && `type.ilike.%${s}%`, s && `object_kind.ilike.%${s}%`, s && `detail.ilike.%${s}%`, data.typeIn.length && `type.in.(${data.typeIn.join(",")})`].filter(Boolean);
+      q = q.or(ors.join(","));
+    }
+    const { data: rows, error, count } = await q.range(data.page * PAGE, data.page * PAGE + PAGE - 1);
     if (error) throw new Error("Nie udało się pobrać dziennika zdarzeń.");
-    return data as Array<{ id: string; created_at: string; type: string; actor: string | null; object_kind: string | null; object_id: string | null; result: string; detail: string | null }>;
+    const users = await usersIndex();
+    const actorIds = new Set((rows ?? []).map((r: any) => r.actor).filter(Boolean));
+    return {
+      rows: withEmails(rows ?? [], users), total: count ?? 0, pageSize: PAGE,
+      actors: (users ?? []).filter((u) => actorIds.has(u.id) || u.id === data.actor).map((u) => ({ id: u.id, email: u.email ?? u.id })),
+    };
   });

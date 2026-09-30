@@ -1,4 +1,6 @@
-import { assertAdmin } from "./admin-auth.server";
+import { assertAdmin, logEvent } from "./admin-auth.server";
+const LOG = (ctx: { userId: string }, type: string, kind: string, id?: string, result: "ok" | "failed" = "ok", detail?: string) => logEvent({ type, actor: ctx.userId, objectKind: kind, objectId: id, result, detail });
+
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
@@ -113,6 +115,7 @@ export const adminSaveEpisode = createServerFn({ method: "POST" }).middleware([r
       ? context.supabase.from("podcast_episodes").update(row).eq("id", id).select("id").single()
       : context.supabase.from("podcast_episodes").insert(row).select("id").single();
     const { data: r, error } = await q;
+    await LOG(context, id ? "episode_edit" : "episode_create", "episode", r?.id ?? id, error ? "failed" : "ok", rest.title);
     if (error) throw new Error(error.code === "23505" ? "Odcinek o takim adresie już istnieje." : "Nie udało się zapisać odcinka.");
     return { id: r.id as string };
   });
@@ -127,6 +130,7 @@ export const adminSetEpisodeStatus = createServerFn({ method: "POST" }).middlewa
     const patch: { status: string; published_at?: string } = { status: data.status };
     if (data.status === "published" && !cur.published_at) patch.published_at = new Date().toISOString();
     const { error } = await context.supabase.from("podcast_episodes").update(patch).eq("id", data.id);
+    await LOG(context, `episode_${data.status}`, "episode", data.id, error ? "failed" : "ok");
     if (error) throw new Error("Nie udało się zmienić statusu.");
     return { ok: true };
   });
