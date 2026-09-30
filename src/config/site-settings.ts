@@ -49,7 +49,7 @@ const SETTINGS: SiteSettings = {
   footer: {
     brandDescription:
       "Przestrzeń prawdziwych historii, rozmów, doświadczeń i wartości. Miejsce, w którym możesz coś zabrać dla siebie i zostawić coś od siebie.",
-    aboutLink: { label: "O nas", href: "/#o-tnb", visible: true },
+    aboutLink: { label: "O nas", href: "/o-tnb", visible: true },
     columns: [
       {
         id: "odkrywaj",
@@ -57,7 +57,7 @@ const SETTINGS: SiteSettings = {
         order: 1,
         visible: true,
         links: [
-          { id: "historia", label: "Moja historia", href: "/#o-tnb", order: 1, visible: true },
+          { id: "historia", label: "Moja historia", href: "/moja-historia", order: 1, visible: true },
           { id: "biblioteka", label: "Biblioteka", href: "/#o-tnb", order: 2, visible: true },
           { id: "podcast", label: "Podcast", href: "/#o-tnb", order: 3, visible: true },
           { id: "spolecznosc", label: "Społeczność", href: "/#o-tnb", order: 4, visible: true },

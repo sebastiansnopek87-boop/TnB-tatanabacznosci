@@ -1010,6 +1010,54 @@ export type Database = {
         }
         Relationships: []
       }
+      site_pages: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          intro: string
+          published_at: string | null
+          sections: Json
+          seo_description: string
+          seo_title: string
+          slug: string
+          status: string
+          system_key: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          intro?: string
+          published_at?: string | null
+          sections?: Json
+          seo_description?: string
+          seo_title?: string
+          slug: string
+          status?: string
+          system_key?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          intro?: string
+          published_at?: string | null
+          sections?: Json
+          seo_description?: string
+          seo_title?: string
+          slug?: string
+          status?: string
+          system_key?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
