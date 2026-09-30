@@ -46,16 +46,15 @@ function readProfile(u: User): Profile {
 }
 
 function MojeTnb() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loadError, setLoadError] = useState(false);
+  // Same session source as the header; USER_UPDATED refreshes it after profile edits.
+  const auth = useAuth();
+  const user = auth.user;
+  const loadError = auth.status === "signed-out";
+  const setUser = (_u: User) => {};
   const navigate = useNavigate();
   const qc = useQueryClient();
   const adminFn = useServerFn(getAdminStatus);
-  const { data: admin } = useQuery({ queryKey: ["admin-status"], queryFn: () => adminFn() });
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data, error }) => (error || !data.user ? setLoadError(true) : setUser(data.user)));
-  }, []);
+  const { data: admin } = useQuery({ queryKey: ["admin-status", user?.id], queryFn: () => adminFn(), enabled: !!user });
 
   async function signOut() {
     await qc.cancelQueries();
