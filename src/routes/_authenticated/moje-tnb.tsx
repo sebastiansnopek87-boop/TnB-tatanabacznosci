@@ -13,6 +13,7 @@ import { AuthNotice } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MyMeetings } from "@/components/consult/MyMeetings";
 
 export const Route = createFileRoute("/_authenticated/moje-tnb")({
   head: () => ({
@@ -72,6 +73,7 @@ function MojeTnb() {
         {!user && !loadError && <div className="h-40 animate-pulse bg-card/60 lg:col-span-2" />}
         {user && (
           <>
+            <div className="lg:col-span-2"><Card title="Moje spotkania"><MyMeetings /></Card></div>
             <ProfileCard user={user} onSaved={setUser} />
             <div className="space-y-6">
               <PasswordCard email={user.email ?? ""} />

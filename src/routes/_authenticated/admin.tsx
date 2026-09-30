@@ -29,6 +29,7 @@ const NAV = [
   { to: "/admin/biblioteka", label: "Biblioteka" },
   { to: "/admin/zamowienia", label: "Zamówienia" },
   { to: "/admin/spotkania", label: "Spotkania" },
+  { to: "/admin/rozmowy", label: "Rozmowy 1:1" },
   { to: "/admin/podcast", label: "Podcast" },
   { to: "/admin/powiadomienia", label: "Historia powiadomień" },
   { to: "/admin/tresci", label: "Treści strony" },

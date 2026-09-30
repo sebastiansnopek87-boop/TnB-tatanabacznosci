@@ -30,11 +30,13 @@ import { Route as SpolecznoscIndexRouteImport } from './routes/spolecznosc.index
 import { Route as SpolecznoscPostIdRouteImport } from './routes/spolecznosc.$postId'
 import { Route as SpotkaniaIndexRouteImport } from './routes/spotkania.index'
 import { Route as SpotkaniaSlugRouteImport } from './routes/spotkania.$slug'
+import { Route as SpotkaniaRozmowa11RouteImport } from './routes/spotkania.rozmowa-1-1'
 import { Route as ZakupTokenRouteImport } from './routes/zakup.$token'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminBibliotekaRouteImport } from './routes/_authenticated/admin.biblioteka'
 import { Route as AuthenticatedAdminPodcastRouteImport } from './routes/_authenticated/admin.podcast'
 import { Route as AuthenticatedAdminPowiadomieniaRouteImport } from './routes/_authenticated/admin.powiadomienia'
+import { Route as AuthenticatedAdminRozmowyRouteImport } from './routes/_authenticated/admin.rozmowy'
 import { Route as AuthenticatedAdminSpolecznoscRouteImport } from './routes/_authenticated/admin.spolecznosc'
 import { Route as AuthenticatedAdminSpotkaniaRouteImport } from './routes/_authenticated/admin.spotkania'
 import { Route as AuthenticatedAdminSubskrybenciRouteImport } from './routes/_authenticated/admin.subskrybenci'
@@ -42,7 +44,9 @@ import { Route as AuthenticatedAdminTresciRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAdminUstawieniaEmailRouteImport } from './routes/_authenticated/admin.ustawienia-email'
 import { Route as AuthenticatedAdminWiadomosciRouteImport } from './routes/_authenticated/admin.wiadomosci'
 import { Route as AuthenticatedAdminZamowieniaRouteImport } from './routes/_authenticated/admin.zamowienia'
+import { Route as SpotkaniaRezerwacjaTokenRouteImport } from './routes/spotkania.rezerwacja.$token'
 import { Route as SpotkaniaZgloszenieTokenRouteImport } from './routes/spotkania.zgloszenie.$token'
+import { Route as ApiPublicCronConsultRemindersRouteImport } from './routes/api/public/cron/consult-reminders'
 import { Route as ApiPublicLibraryCoverIdRouteImport } from './routes/api/public/library-cover.$id'
 import { Route as ApiPublicMeetingImageIdRouteImport } from './routes/api/public/meeting-image.$id'
 import { Route as ApiPublicPodcastCoverIdRouteImport } from './routes/api/public/podcast-cover.$id'
@@ -151,6 +155,11 @@ const SpotkaniaSlugRoute = SpotkaniaSlugRouteImport.update({
   path: '/spotkania/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SpotkaniaRozmowa11Route = SpotkaniaRozmowa11RouteImport.update({
+  id: '/spotkania/rozmowa-1-1',
+  path: '/spotkania/rozmowa-1-1',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ZakupTokenRoute = ZakupTokenRouteImport.update({
   id: '/zakup/$token',
   path: '/zakup/$token',
@@ -177,6 +186,12 @@ const AuthenticatedAdminPowiadomieniaRoute =
   AuthenticatedAdminPowiadomieniaRouteImport.update({
     id: '/powiadomienia',
     path: '/powiadomienia',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminRozmowyRoute =
+  AuthenticatedAdminRozmowyRouteImport.update({
+    id: '/rozmowy',
+    path: '/rozmowy',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminSpolecznoscRoute =
@@ -221,10 +236,22 @@ const AuthenticatedAdminZamowieniaRoute =
     path: '/zamowienia',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const SpotkaniaRezerwacjaTokenRoute =
+  SpotkaniaRezerwacjaTokenRouteImport.update({
+    id: '/spotkania/rezerwacja/$token',
+    path: '/spotkania/rezerwacja/$token',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const SpotkaniaZgloszenieTokenRoute =
   SpotkaniaZgloszenieTokenRouteImport.update({
     id: '/spotkania/zgloszenie/$token',
     path: '/spotkania/zgloszenie/$token',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicCronConsultRemindersRoute =
+  ApiPublicCronConsultRemindersRouteImport.update({
+    id: '/api/public/cron/consult-reminders',
+    path: '/api/public/cron/consult-reminders',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicLibraryCoverIdRoute = ApiPublicLibraryCoverIdRouteImport.update({
@@ -260,6 +287,7 @@ export interface FileRoutesByFullPath {
   '/podcast/$slug': typeof PodcastSlugRoute
   '/spolecznosc/$postId': typeof SpolecznoscPostIdRoute
   '/spotkania/$slug': typeof SpotkaniaSlugRoute
+  '/spotkania/rozmowa-1-1': typeof SpotkaniaRozmowa11Route
   '/zakup/$token': typeof ZakupTokenRoute
   '/biblioteka/': typeof BibliotekaIndexRoute
   '/podcast/': typeof PodcastIndexRoute
@@ -268,6 +296,7 @@ export interface FileRoutesByFullPath {
   '/admin/biblioteka': typeof AuthenticatedAdminBibliotekaRoute
   '/admin/podcast': typeof AuthenticatedAdminPodcastRoute
   '/admin/powiadomienia': typeof AuthenticatedAdminPowiadomieniaRoute
+  '/admin/rozmowy': typeof AuthenticatedAdminRozmowyRoute
   '/admin/spolecznosc': typeof AuthenticatedAdminSpolecznoscRoute
   '/admin/spotkania': typeof AuthenticatedAdminSpotkaniaRoute
   '/admin/subskrybenci': typeof AuthenticatedAdminSubskrybenciRoute
@@ -275,8 +304,10 @@ export interface FileRoutesByFullPath {
   '/admin/ustawienia-email': typeof AuthenticatedAdminUstawieniaEmailRoute
   '/admin/wiadomosci': typeof AuthenticatedAdminWiadomosciRoute
   '/admin/zamowienia': typeof AuthenticatedAdminZamowieniaRoute
+  '/spotkania/rezerwacja/$token': typeof SpotkaniaRezerwacjaTokenRoute
   '/spotkania/zgloszenie/$token': typeof SpotkaniaZgloszenieTokenRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/api/public/cron/consult-reminders': typeof ApiPublicCronConsultRemindersRoute
   '/api/public/library-cover/$id': typeof ApiPublicLibraryCoverIdRoute
   '/api/public/meeting-image/$id': typeof ApiPublicMeetingImageIdRoute
   '/api/public/podcast-cover/$id': typeof ApiPublicPodcastCoverIdRoute
@@ -297,6 +328,7 @@ export interface FileRoutesByTo {
   '/podcast/$slug': typeof PodcastSlugRoute
   '/spolecznosc/$postId': typeof SpolecznoscPostIdRoute
   '/spotkania/$slug': typeof SpotkaniaSlugRoute
+  '/spotkania/rozmowa-1-1': typeof SpotkaniaRozmowa11Route
   '/zakup/$token': typeof ZakupTokenRoute
   '/biblioteka': typeof BibliotekaIndexRoute
   '/podcast': typeof PodcastIndexRoute
@@ -305,6 +337,7 @@ export interface FileRoutesByTo {
   '/admin/biblioteka': typeof AuthenticatedAdminBibliotekaRoute
   '/admin/podcast': typeof AuthenticatedAdminPodcastRoute
   '/admin/powiadomienia': typeof AuthenticatedAdminPowiadomieniaRoute
+  '/admin/rozmowy': typeof AuthenticatedAdminRozmowyRoute
   '/admin/spolecznosc': typeof AuthenticatedAdminSpolecznoscRoute
   '/admin/spotkania': typeof AuthenticatedAdminSpotkaniaRoute
   '/admin/subskrybenci': typeof AuthenticatedAdminSubskrybenciRoute
@@ -312,8 +345,10 @@ export interface FileRoutesByTo {
   '/admin/ustawienia-email': typeof AuthenticatedAdminUstawieniaEmailRoute
   '/admin/wiadomosci': typeof AuthenticatedAdminWiadomosciRoute
   '/admin/zamowienia': typeof AuthenticatedAdminZamowieniaRoute
+  '/spotkania/rezerwacja/$token': typeof SpotkaniaRezerwacjaTokenRoute
   '/spotkania/zgloszenie/$token': typeof SpotkaniaZgloszenieTokenRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/api/public/cron/consult-reminders': typeof ApiPublicCronConsultRemindersRoute
   '/api/public/library-cover/$id': typeof ApiPublicLibraryCoverIdRoute
   '/api/public/meeting-image/$id': typeof ApiPublicMeetingImageIdRoute
   '/api/public/podcast-cover/$id': typeof ApiPublicPodcastCoverIdRoute
@@ -337,6 +372,7 @@ export interface FileRoutesById {
   '/podcast/$slug': typeof PodcastSlugRoute
   '/spolecznosc/$postId': typeof SpolecznoscPostIdRoute
   '/spotkania/$slug': typeof SpotkaniaSlugRoute
+  '/spotkania/rozmowa-1-1': typeof SpotkaniaRozmowa11Route
   '/zakup/$token': typeof ZakupTokenRoute
   '/biblioteka/': typeof BibliotekaIndexRoute
   '/podcast/': typeof PodcastIndexRoute
@@ -345,6 +381,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/biblioteka': typeof AuthenticatedAdminBibliotekaRoute
   '/_authenticated/admin/podcast': typeof AuthenticatedAdminPodcastRoute
   '/_authenticated/admin/powiadomienia': typeof AuthenticatedAdminPowiadomieniaRoute
+  '/_authenticated/admin/rozmowy': typeof AuthenticatedAdminRozmowyRoute
   '/_authenticated/admin/spolecznosc': typeof AuthenticatedAdminSpolecznoscRoute
   '/_authenticated/admin/spotkania': typeof AuthenticatedAdminSpotkaniaRoute
   '/_authenticated/admin/subskrybenci': typeof AuthenticatedAdminSubskrybenciRoute
@@ -352,8 +389,10 @@ export interface FileRoutesById {
   '/_authenticated/admin/ustawienia-email': typeof AuthenticatedAdminUstawieniaEmailRoute
   '/_authenticated/admin/wiadomosci': typeof AuthenticatedAdminWiadomosciRoute
   '/_authenticated/admin/zamowienia': typeof AuthenticatedAdminZamowieniaRoute
+  '/spotkania/rezerwacja/$token': typeof SpotkaniaRezerwacjaTokenRoute
   '/spotkania/zgloszenie/$token': typeof SpotkaniaZgloszenieTokenRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/api/public/cron/consult-reminders': typeof ApiPublicCronConsultRemindersRoute
   '/api/public/library-cover/$id': typeof ApiPublicLibraryCoverIdRoute
   '/api/public/meeting-image/$id': typeof ApiPublicMeetingImageIdRoute
   '/api/public/podcast-cover/$id': typeof ApiPublicPodcastCoverIdRoute
@@ -377,6 +416,7 @@ export interface FileRouteTypes {
     | '/podcast/$slug'
     | '/spolecznosc/$postId'
     | '/spotkania/$slug'
+    | '/spotkania/rozmowa-1-1'
     | '/zakup/$token'
     | '/biblioteka/'
     | '/podcast/'
@@ -385,6 +425,7 @@ export interface FileRouteTypes {
     | '/admin/biblioteka'
     | '/admin/podcast'
     | '/admin/powiadomienia'
+    | '/admin/rozmowy'
     | '/admin/spolecznosc'
     | '/admin/spotkania'
     | '/admin/subskrybenci'
@@ -392,8 +433,10 @@ export interface FileRouteTypes {
     | '/admin/ustawienia-email'
     | '/admin/wiadomosci'
     | '/admin/zamowienia'
+    | '/spotkania/rezerwacja/$token'
     | '/spotkania/zgloszenie/$token'
     | '/admin/'
+    | '/api/public/cron/consult-reminders'
     | '/api/public/library-cover/$id'
     | '/api/public/meeting-image/$id'
     | '/api/public/podcast-cover/$id'
@@ -414,6 +457,7 @@ export interface FileRouteTypes {
     | '/podcast/$slug'
     | '/spolecznosc/$postId'
     | '/spotkania/$slug'
+    | '/spotkania/rozmowa-1-1'
     | '/zakup/$token'
     | '/biblioteka'
     | '/podcast'
@@ -422,6 +466,7 @@ export interface FileRouteTypes {
     | '/admin/biblioteka'
     | '/admin/podcast'
     | '/admin/powiadomienia'
+    | '/admin/rozmowy'
     | '/admin/spolecznosc'
     | '/admin/spotkania'
     | '/admin/subskrybenci'
@@ -429,8 +474,10 @@ export interface FileRouteTypes {
     | '/admin/ustawienia-email'
     | '/admin/wiadomosci'
     | '/admin/zamowienia'
+    | '/spotkania/rezerwacja/$token'
     | '/spotkania/zgloszenie/$token'
     | '/admin'
+    | '/api/public/cron/consult-reminders'
     | '/api/public/library-cover/$id'
     | '/api/public/meeting-image/$id'
     | '/api/public/podcast-cover/$id'
@@ -453,6 +500,7 @@ export interface FileRouteTypes {
     | '/podcast/$slug'
     | '/spolecznosc/$postId'
     | '/spotkania/$slug'
+    | '/spotkania/rozmowa-1-1'
     | '/zakup/$token'
     | '/biblioteka/'
     | '/podcast/'
@@ -461,6 +509,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/biblioteka'
     | '/_authenticated/admin/podcast'
     | '/_authenticated/admin/powiadomienia'
+    | '/_authenticated/admin/rozmowy'
     | '/_authenticated/admin/spolecznosc'
     | '/_authenticated/admin/spotkania'
     | '/_authenticated/admin/subskrybenci'
@@ -468,8 +517,10 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/ustawienia-email'
     | '/_authenticated/admin/wiadomosci'
     | '/_authenticated/admin/zamowienia'
+    | '/spotkania/rezerwacja/$token'
     | '/spotkania/zgloszenie/$token'
     | '/_authenticated/admin/'
+    | '/api/public/cron/consult-reminders'
     | '/api/public/library-cover/$id'
     | '/api/public/meeting-image/$id'
     | '/api/public/podcast-cover/$id'
@@ -491,12 +542,15 @@ export interface RootRouteChildren {
   PodcastSlugRoute: typeof PodcastSlugRoute
   SpolecznoscPostIdRoute: typeof SpolecznoscPostIdRoute
   SpotkaniaSlugRoute: typeof SpotkaniaSlugRoute
+  SpotkaniaRozmowa11Route: typeof SpotkaniaRozmowa11Route
   ZakupTokenRoute: typeof ZakupTokenRoute
   BibliotekaIndexRoute: typeof BibliotekaIndexRoute
   PodcastIndexRoute: typeof PodcastIndexRoute
   SpolecznoscIndexRoute: typeof SpolecznoscIndexRoute
   SpotkaniaIndexRoute: typeof SpotkaniaIndexRoute
+  SpotkaniaRezerwacjaTokenRoute: typeof SpotkaniaRezerwacjaTokenRoute
   SpotkaniaZgloszenieTokenRoute: typeof SpotkaniaZgloszenieTokenRoute
+  ApiPublicCronConsultRemindersRoute: typeof ApiPublicCronConsultRemindersRoute
   ApiPublicLibraryCoverIdRoute: typeof ApiPublicLibraryCoverIdRoute
   ApiPublicMeetingImageIdRoute: typeof ApiPublicMeetingImageIdRoute
   ApiPublicPodcastCoverIdRoute: typeof ApiPublicPodcastCoverIdRoute
@@ -651,6 +705,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SpotkaniaSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/spotkania/rozmowa-1-1': {
+      id: '/spotkania/rozmowa-1-1'
+      path: '/spotkania/rozmowa-1-1'
+      fullPath: '/spotkania/rozmowa-1-1'
+      preLoaderRoute: typeof SpotkaniaRozmowa11RouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/zakup/$token': {
       id: '/zakup/$token'
       path: '/zakup/$token'
@@ -684,6 +745,13 @@ declare module '@tanstack/react-router' {
       path: '/powiadomienia'
       fullPath: '/admin/powiadomienia'
       preLoaderRoute: typeof AuthenticatedAdminPowiadomieniaRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/rozmowy': {
+      id: '/_authenticated/admin/rozmowy'
+      path: '/rozmowy'
+      fullPath: '/admin/rozmowy'
+      preLoaderRoute: typeof AuthenticatedAdminRozmowyRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/spolecznosc': {
@@ -735,11 +803,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminZamowieniaRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/spotkania/rezerwacja/$token': {
+      id: '/spotkania/rezerwacja/$token'
+      path: '/spotkania/rezerwacja/$token'
+      fullPath: '/spotkania/rezerwacja/$token'
+      preLoaderRoute: typeof SpotkaniaRezerwacjaTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/spotkania/zgloszenie/$token': {
       id: '/spotkania/zgloszenie/$token'
       path: '/spotkania/zgloszenie/$token'
       fullPath: '/spotkania/zgloszenie/$token'
       preLoaderRoute: typeof SpotkaniaZgloszenieTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/cron/consult-reminders': {
+      id: '/api/public/cron/consult-reminders'
+      path: '/api/public/cron/consult-reminders'
+      fullPath: '/api/public/cron/consult-reminders'
+      preLoaderRoute: typeof ApiPublicCronConsultRemindersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/library-cover/$id': {
@@ -770,6 +852,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminBibliotekaRoute: typeof AuthenticatedAdminBibliotekaRoute
   AuthenticatedAdminPodcastRoute: typeof AuthenticatedAdminPodcastRoute
   AuthenticatedAdminPowiadomieniaRoute: typeof AuthenticatedAdminPowiadomieniaRoute
+  AuthenticatedAdminRozmowyRoute: typeof AuthenticatedAdminRozmowyRoute
   AuthenticatedAdminSpolecznoscRoute: typeof AuthenticatedAdminSpolecznoscRoute
   AuthenticatedAdminSpotkaniaRoute: typeof AuthenticatedAdminSpotkaniaRoute
   AuthenticatedAdminSubskrybenciRoute: typeof AuthenticatedAdminSubskrybenciRoute
@@ -784,6 +867,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminBibliotekaRoute: AuthenticatedAdminBibliotekaRoute,
   AuthenticatedAdminPodcastRoute: AuthenticatedAdminPodcastRoute,
   AuthenticatedAdminPowiadomieniaRoute: AuthenticatedAdminPowiadomieniaRoute,
+  AuthenticatedAdminRozmowyRoute: AuthenticatedAdminRozmowyRoute,
   AuthenticatedAdminSpolecznoscRoute: AuthenticatedAdminSpolecznoscRoute,
   AuthenticatedAdminSpotkaniaRoute: AuthenticatedAdminSpotkaniaRoute,
   AuthenticatedAdminSubskrybenciRoute: AuthenticatedAdminSubskrybenciRoute,
@@ -827,12 +911,15 @@ const rootRouteChildren: RootRouteChildren = {
   PodcastSlugRoute: PodcastSlugRoute,
   SpolecznoscPostIdRoute: SpolecznoscPostIdRoute,
   SpotkaniaSlugRoute: SpotkaniaSlugRoute,
+  SpotkaniaRozmowa11Route: SpotkaniaRozmowa11Route,
   ZakupTokenRoute: ZakupTokenRoute,
   BibliotekaIndexRoute: BibliotekaIndexRoute,
   PodcastIndexRoute: PodcastIndexRoute,
   SpolecznoscIndexRoute: SpolecznoscIndexRoute,
   SpotkaniaIndexRoute: SpotkaniaIndexRoute,
+  SpotkaniaRezerwacjaTokenRoute: SpotkaniaRezerwacjaTokenRoute,
   SpotkaniaZgloszenieTokenRoute: SpotkaniaZgloszenieTokenRoute,
+  ApiPublicCronConsultRemindersRoute: ApiPublicCronConsultRemindersRoute,
   ApiPublicLibraryCoverIdRoute: ApiPublicLibraryCoverIdRoute,
   ApiPublicMeetingImageIdRoute: ApiPublicMeetingImageIdRoute,
   ApiPublicPodcastCoverIdRoute: ApiPublicPodcastCoverIdRoute,
