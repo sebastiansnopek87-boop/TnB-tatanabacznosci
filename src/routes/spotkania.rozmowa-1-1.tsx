@@ -174,7 +174,7 @@ function BookingPage() {
                             aria-label={`${cell.date}${available.length ? `, wolne terminy: ${available.length}` : ", brak wolnych terminów"}`}
                             aria-pressed={selected}
                             onClick={() => { setDay(cell.date); setSlot(null); setErr(null); }}
-                            className={`relative h-7 w-full min-w-0 rounded-sm border p-0 text-[0.7rem] tabular-nums ${!cell.inMonth ? "invisible" : selected ? "border-gold bg-gold text-primary-foreground hover:bg-gold-bright hover:text-primary-foreground" : enabled ? "border-gold/50 bg-gold/10 text-foreground hover:border-gold hover:bg-gold/20" : "border-transparent bg-transparent text-muted-foreground/40"} ${isToday && !selected ? "ring-1 ring-gold/70 ring-offset-0" : ""}`}
+                            className={`relative h-7 w-full min-w-0 rounded-sm border p-0 text-[0.7rem] tabular-nums ${!cell.inMonth ? "invisible" : selected ? "border-gold bg-gold text-primary-foreground hover:bg-gold-bright hover:text-primary-foreground" : enabled ? "border-gold/40 bg-transparent text-foreground/85 hover:border-gold hover:bg-gold/10" : "border-transparent bg-transparent text-muted-foreground/40"} ${isToday && !selected ? "ring-1 ring-gold/70 ring-offset-0" : ""}`}
                           >
                             <span>{cell.number}</span>
                             {enabled && !selected && <span className="absolute bottom-[3px] left-1/2 h-[3px] w-[3px] -translate-x-1/2 rounded-full bg-gold" aria-hidden />}
