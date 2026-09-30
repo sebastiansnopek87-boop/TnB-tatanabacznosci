@@ -155,6 +155,197 @@ export type Database = {
           },
         ]
       }
+      consult_availability: {
+        Row: {
+          active: boolean
+          created_at: string
+          end_time: string
+          id: string
+          start_time: string
+          weekday: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          end_time: string
+          id?: string
+          start_time: string
+          weekday: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          end_time?: string
+          id?: string
+          start_time?: string
+          weekday?: number
+        }
+        Relationships: []
+      }
+      consult_blocked_dates: {
+        Row: {
+          created_at: string
+          day: string
+          reason: string
+        }
+        Insert: {
+          created_at?: string
+          day: string
+          reason?: string
+        }
+        Update: {
+          created_at?: string
+          day?: string
+          reason?: string
+        }
+        Relationships: []
+      }
+      consult_booking_events: {
+        Row: {
+          actor: string | null
+          booking_id: string
+          created_at: string
+          detail: string | null
+          id: string
+          type: string
+        }
+        Insert: {
+          actor?: string | null
+          booking_id: string
+          created_at?: string
+          detail?: string | null
+          id?: string
+          type: string
+        }
+        Update: {
+          actor?: string | null
+          booking_id?: string
+          created_at?: string
+          detail?: string | null
+          id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consult_booking_events_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "consult_bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consult_bookings: {
+        Row: {
+          access_token: string
+          booking_number: string
+          cancel_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          confirmation_error: string | null
+          confirmation_status: string
+          consent_text: string
+          created_at: string
+          email: string
+          ends_at: string
+          first_name: string
+          id: string
+          last_name: string
+          meeting_link: string | null
+          phone: string | null
+          question: string
+          reason: string
+          reminder_at: string | null
+          reminder_error: string | null
+          reminder_status: string
+          starts_at: string
+          status: string
+          status_changed_at: string | null
+          status_changed_by: string | null
+          topic: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          access_token?: string
+          booking_number?: string
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          confirmation_error?: string | null
+          confirmation_status?: string
+          consent_text: string
+          created_at?: string
+          email: string
+          ends_at: string
+          first_name: string
+          id?: string
+          last_name: string
+          meeting_link?: string | null
+          phone?: string | null
+          question: string
+          reason: string
+          reminder_at?: string | null
+          reminder_error?: string | null
+          reminder_status?: string
+          starts_at: string
+          status?: string
+          status_changed_at?: string | null
+          status_changed_by?: string | null
+          topic: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          access_token?: string
+          booking_number?: string
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          confirmation_error?: string | null
+          confirmation_status?: string
+          consent_text?: string
+          created_at?: string
+          email?: string
+          ends_at?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          meeting_link?: string | null
+          phone?: string | null
+          question?: string
+          reason?: string
+          reminder_at?: string | null
+          reminder_error?: string | null
+          reminder_status?: string
+          starts_at?: string
+          status?: string
+          status_changed_at?: string | null
+          status_changed_by?: string | null
+          topic?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      consult_settings: {
+        Row: {
+          default_meeting_link: string | null
+          id: number
+          updated_at: string
+        }
+        Insert: {
+          default_meeting_link?: string | null
+          id?: number
+          updated_at?: string
+        }
+        Update: {
+          default_meeting_link?: string | null
+          id?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       contact_messages: {
         Row: {
           archived_at: string | null

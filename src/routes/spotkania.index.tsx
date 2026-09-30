@@ -52,9 +52,9 @@ function Meetings() {
             <MessageCircle className="h-6 w-6 text-gold" />
             <h2 className="mt-4 font-display text-xl font-semibold uppercase text-foreground">Rozmowy 1:1</h2>
             <p className="mt-3 text-sm leading-[1.7] text-foreground/75">
-              Indywidualna rozmowa z Sebastianem. Napisz przez formularz kontaktowy, w kilku zdaniach opisz, o czym chcesz porozmawiać — odezwiemy się, by wspólnie ustalić termin.
+              Bezpłatna, poufna rozmowa z Sebastianem — 30 minut, jeden na jeden. Wybierz dogodny termin z kalendarza.
             </p>
-            <Link to="/kontakt" className="mt-5 inline-block self-start bg-gold px-5 py-2.5 text-[0.7rem] uppercase tracking-[0.14em] text-primary-foreground hover:bg-gold-bright">Umów rozmowę</Link>
+            <Link to="/spotkania/rozmowa-1-1" className="mt-5 inline-block self-start bg-gold px-5 py-2.5 text-[0.7rem] uppercase tracking-[0.14em] text-primary-foreground hover:bg-gold-bright">Umów rozmowę</Link>
           </div>
         </div>
 
