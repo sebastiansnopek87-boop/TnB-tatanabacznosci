@@ -73,7 +73,7 @@ function Editor({ id, onClose }: { id: string | null; onClose: () => void }) {
 
   const set = (patch: Partial<Draft>) => { setD((o) => ({ ...o, ...patch })); setDirty(true); };
   const setSec = (i: number, patch: Partial<PageSection>) => set({ sections: d.sections.map((s, j) => j === i ? { ...s, ...patch } : s) });
-  const move = (i: number, dir: -1 | 1) => { const a = [...d.sections]; const j = i + dir; if (j < 0 || j >= a.length) return; [a[i], a[j]] = [a[j], a[i]]; set({ sections: a }); };
+  const move = (i: number, dir: -1 | 1) => { const a = [...d.sections]; const j = i + dir; if (j < 0 || j >= a.length) return; [a[i], a[j]] = [a[j]!, a[i]!]; set({ sections: a }); };
 
   async function save(): Promise<string | null> {
     setBusy(true);

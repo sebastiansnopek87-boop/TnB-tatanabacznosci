@@ -112,6 +112,6 @@ export const adminPageImageUrls = createServerFn({ method: "POST" }).middleware(
     if (!data.names.length) return {} as Record<string, string>;
     const { data: s } = await (await admin()).storage.from(BUCKET).createSignedUrls(data.names.map((n) => `${data.id}/${n}`), 3600);
     const out: Record<string, string> = {};
-    (s ?? []).forEach((x, i) => { if (x.signedUrl) out[data.names[i]] = x.signedUrl; });
+    (s ?? []).forEach((x, i) => { if (x.signedUrl) out[data.names[i]!] = x.signedUrl; });
     return out;
   });
