@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as KontaktRouteImport } from './routes/kontakt'
 import { Route as MaterialyPremiumRouteImport } from './routes/materialy-premium'
 import { Route as MojaHistoriaRouteImport } from './routes/moja-historia'
+import { Route as OTnbRouteImport } from './routes/o-tnb'
 import { Route as PolitykaCookiesRouteImport } from './routes/polityka-cookies'
 import { Route as PolitykaPrywatnosciRouteImport } from './routes/polityka-prywatnosci'
 import { Route as RegulaminRouteImport } from './routes/regulamin'
@@ -31,6 +32,7 @@ import { Route as SpolecznoscPostIdRouteImport } from './routes/spolecznosc.$pos
 import { Route as SpotkaniaIndexRouteImport } from './routes/spotkania.index'
 import { Route as SpotkaniaSlugRouteImport } from './routes/spotkania.$slug'
 import { Route as SpotkaniaRozmowa11RouteImport } from './routes/spotkania.rozmowa-1-1'
+import { Route as StronySlugRouteImport } from './routes/strony.$slug'
 import { Route as ZakupTokenRouteImport } from './routes/zakup.$token'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminBibliotekaRouteImport } from './routes/_authenticated/admin.biblioteka'
@@ -79,6 +81,11 @@ const MaterialyPremiumRoute = MaterialyPremiumRouteImport.update({
 const MojaHistoriaRoute = MojaHistoriaRouteImport.update({
   id: '/moja-historia',
   path: '/moja-historia',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OTnbRoute = OTnbRouteImport.update({
+  id: '/o-tnb',
+  path: '/o-tnb',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PolitykaCookiesRoute = PolitykaCookiesRouteImport.update({
@@ -159,6 +166,11 @@ const SpotkaniaSlugRoute = SpotkaniaSlugRouteImport.update({
 const SpotkaniaRozmowa11Route = SpotkaniaRozmowa11RouteImport.update({
   id: '/spotkania/rozmowa-1-1',
   path: '/spotkania/rozmowa-1-1',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StronySlugRoute = StronySlugRouteImport.update({
+  id: '/strony/$slug',
+  path: '/strony/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ZakupTokenRoute = ZakupTokenRouteImport.update({
@@ -283,6 +295,7 @@ export interface FileRoutesByFullPath {
   '/kontakt': typeof KontaktRoute
   '/materialy-premium': typeof MaterialyPremiumRoute
   '/moja-historia': typeof MojaHistoriaRoute
+  '/o-tnb': typeof OTnbRoute
   '/polityka-cookies': typeof PolitykaCookiesRoute
   '/polityka-prywatnosci': typeof PolitykaPrywatnosciRoute
   '/regulamin': typeof RegulaminRoute
@@ -295,6 +308,7 @@ export interface FileRoutesByFullPath {
   '/spolecznosc/$postId': typeof SpolecznoscPostIdRoute
   '/spotkania/$slug': typeof SpotkaniaSlugRoute
   '/spotkania/rozmowa-1-1': typeof SpotkaniaRozmowa11Route
+  '/strony/$slug': typeof StronySlugRoute
   '/zakup/$token': typeof ZakupTokenRoute
   '/biblioteka/': typeof BibliotekaIndexRoute
   '/podcast/': typeof PodcastIndexRoute
@@ -326,6 +340,7 @@ export interface FileRoutesByTo {
   '/kontakt': typeof KontaktRoute
   '/materialy-premium': typeof MaterialyPremiumRoute
   '/moja-historia': typeof MojaHistoriaRoute
+  '/o-tnb': typeof OTnbRoute
   '/polityka-cookies': typeof PolitykaCookiesRoute
   '/polityka-prywatnosci': typeof PolitykaPrywatnosciRoute
   '/regulamin': typeof RegulaminRoute
@@ -337,6 +352,7 @@ export interface FileRoutesByTo {
   '/spolecznosc/$postId': typeof SpolecznoscPostIdRoute
   '/spotkania/$slug': typeof SpotkaniaSlugRoute
   '/spotkania/rozmowa-1-1': typeof SpotkaniaRozmowa11Route
+  '/strony/$slug': typeof StronySlugRoute
   '/zakup/$token': typeof ZakupTokenRoute
   '/biblioteka': typeof BibliotekaIndexRoute
   '/podcast': typeof PodcastIndexRoute
@@ -370,6 +386,7 @@ export interface FileRoutesById {
   '/kontakt': typeof KontaktRoute
   '/materialy-premium': typeof MaterialyPremiumRoute
   '/moja-historia': typeof MojaHistoriaRoute
+  '/o-tnb': typeof OTnbRoute
   '/polityka-cookies': typeof PolitykaCookiesRoute
   '/polityka-prywatnosci': typeof PolitykaPrywatnosciRoute
   '/regulamin': typeof RegulaminRoute
@@ -382,6 +399,7 @@ export interface FileRoutesById {
   '/spolecznosc/$postId': typeof SpolecznoscPostIdRoute
   '/spotkania/$slug': typeof SpotkaniaSlugRoute
   '/spotkania/rozmowa-1-1': typeof SpotkaniaRozmowa11Route
+  '/strony/$slug': typeof StronySlugRoute
   '/zakup/$token': typeof ZakupTokenRoute
   '/biblioteka/': typeof BibliotekaIndexRoute
   '/podcast/': typeof PodcastIndexRoute
@@ -415,6 +433,7 @@ export interface FileRouteTypes {
     | '/kontakt'
     | '/materialy-premium'
     | '/moja-historia'
+    | '/o-tnb'
     | '/polityka-cookies'
     | '/polityka-prywatnosci'
     | '/regulamin'
@@ -427,6 +446,7 @@ export interface FileRouteTypes {
     | '/spolecznosc/$postId'
     | '/spotkania/$slug'
     | '/spotkania/rozmowa-1-1'
+    | '/strony/$slug'
     | '/zakup/$token'
     | '/biblioteka/'
     | '/podcast/'
@@ -458,6 +478,7 @@ export interface FileRouteTypes {
     | '/kontakt'
     | '/materialy-premium'
     | '/moja-historia'
+    | '/o-tnb'
     | '/polityka-cookies'
     | '/polityka-prywatnosci'
     | '/regulamin'
@@ -469,6 +490,7 @@ export interface FileRouteTypes {
     | '/spolecznosc/$postId'
     | '/spotkania/$slug'
     | '/spotkania/rozmowa-1-1'
+    | '/strony/$slug'
     | '/zakup/$token'
     | '/biblioteka'
     | '/podcast'
@@ -501,6 +523,7 @@ export interface FileRouteTypes {
     | '/kontakt'
     | '/materialy-premium'
     | '/moja-historia'
+    | '/o-tnb'
     | '/polityka-cookies'
     | '/polityka-prywatnosci'
     | '/regulamin'
@@ -513,6 +536,7 @@ export interface FileRouteTypes {
     | '/spolecznosc/$postId'
     | '/spotkania/$slug'
     | '/spotkania/rozmowa-1-1'
+    | '/strony/$slug'
     | '/zakup/$token'
     | '/biblioteka/'
     | '/podcast/'
@@ -546,6 +570,7 @@ export interface RootRouteChildren {
   KontaktRoute: typeof KontaktRoute
   MaterialyPremiumRoute: typeof MaterialyPremiumRoute
   MojaHistoriaRoute: typeof MojaHistoriaRoute
+  OTnbRoute: typeof OTnbRoute
   PolitykaCookiesRoute: typeof PolitykaCookiesRoute
   PolitykaPrywatnosciRoute: typeof PolitykaPrywatnosciRoute
   RegulaminRoute: typeof RegulaminRoute
@@ -556,6 +581,7 @@ export interface RootRouteChildren {
   SpolecznoscPostIdRoute: typeof SpolecznoscPostIdRoute
   SpotkaniaSlugRoute: typeof SpotkaniaSlugRoute
   SpotkaniaRozmowa11Route: typeof SpotkaniaRozmowa11Route
+  StronySlugRoute: typeof StronySlugRoute
   ZakupTokenRoute: typeof ZakupTokenRoute
   BibliotekaIndexRoute: typeof BibliotekaIndexRoute
   PodcastIndexRoute: typeof PodcastIndexRoute
@@ -612,6 +638,13 @@ declare module '@tanstack/react-router' {
       path: '/moja-historia'
       fullPath: '/moja-historia'
       preLoaderRoute: typeof MojaHistoriaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/o-tnb': {
+      id: '/o-tnb'
+      path: '/o-tnb'
+      fullPath: '/o-tnb'
+      preLoaderRoute: typeof OTnbRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/polityka-cookies': {
@@ -724,6 +757,13 @@ declare module '@tanstack/react-router' {
       path: '/spotkania/rozmowa-1-1'
       fullPath: '/spotkania/rozmowa-1-1'
       preLoaderRoute: typeof SpotkaniaRozmowa11RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/strony/$slug': {
+      id: '/strony/$slug'
+      path: '/strony/$slug'
+      fullPath: '/strony/$slug'
+      preLoaderRoute: typeof StronySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/zakup/$token': {
@@ -923,6 +963,7 @@ const rootRouteChildren: RootRouteChildren = {
   KontaktRoute: KontaktRoute,
   MaterialyPremiumRoute: MaterialyPremiumRoute,
   MojaHistoriaRoute: MojaHistoriaRoute,
+  OTnbRoute: OTnbRoute,
   PolitykaCookiesRoute: PolitykaCookiesRoute,
   PolitykaPrywatnosciRoute: PolitykaPrywatnosciRoute,
   RegulaminRoute: RegulaminRoute,
@@ -933,6 +974,7 @@ const rootRouteChildren: RootRouteChildren = {
   SpolecznoscPostIdRoute: SpolecznoscPostIdRoute,
   SpotkaniaSlugRoute: SpotkaniaSlugRoute,
   SpotkaniaRozmowa11Route: SpotkaniaRozmowa11Route,
+  StronySlugRoute: StronySlugRoute,
   ZakupTokenRoute: ZakupTokenRoute,
   BibliotekaIndexRoute: BibliotekaIndexRoute,
   PodcastIndexRoute: PodcastIndexRoute,

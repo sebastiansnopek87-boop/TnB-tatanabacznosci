@@ -32,6 +32,7 @@ const NAV = [
   { to: "/admin/rozmowy", label: "Rozmowy 1:1" },
   { to: "/admin/podcast", label: "Podcast" },
   { to: "/admin/powiadomienia", label: "Historia powiadomień" },
+  { to: "/admin/strony", label: "Strony" },
   { to: "/admin/tresci", label: "Treści strony" },
 ] as const;
 
