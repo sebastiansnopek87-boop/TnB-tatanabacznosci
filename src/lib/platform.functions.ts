@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { assertAdmin, logEvent } from "./admin-auth.server";
+import { assertAdmin, assertSuperadmin, logEvent } from "./admin-auth.server";
 
 export type PublicPlatformSettings = {
   platform_name: string; contact_email: string | null; support_email: string | null;
@@ -29,14 +29,6 @@ export const getPublicPlatformSettings = createServerFn({ method: "GET" }).handl
 async function isSuper(ctx: { supabase: any; userId: string }) {
   const { data } = await ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "superadmin" });
   return !!data;
-}
-
-export async function assertSuperadmin(ctx: { supabase: any; userId: string }, op: string) {
-  await assertAdmin(ctx);
-  if (!(await isSuper(ctx))) {
-    await logEvent({ type: "access_denied", actor: ctx.userId, objectKind: "settings", objectId: op, result: "denied", detail: "Wymagana rola superadministratora" });
-    throw new Error("Tę zmianę może wykonać tylko superadministrator.");
-  }
 }
 
 export const getPlatformSettings = createServerFn({ method: "GET" })
