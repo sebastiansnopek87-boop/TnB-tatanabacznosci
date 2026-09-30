@@ -29,7 +29,7 @@ export function SiteHeader() {
             alt="Tata Na Baczności"
             className="h-[74px] w-[74px] rounded-full object-cover lg:h-[92px] lg:w-[92px] lg:-mb-6"
           />
-          <span className="block xl:hidden min-[1600px]:block">
+          <span className="block xl:max-[1599px]:hidden">
             <span className="block truncate font-display text-[1.05rem] font-semibold uppercase tracking-[0.1em] text-foreground sm:text-[1.45rem] sm:tracking-[0.12em]">
               Tata Na Baczności
             </span>
