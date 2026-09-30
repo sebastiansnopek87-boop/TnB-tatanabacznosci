@@ -16,7 +16,7 @@ export const getAdminStatus = createServerFn({ method: "GET" })
 // One auth.users read shared by dashboard counts and journal actor names.
 async function usersIndex() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const all: Array<{ id: string; email?: string; created_at: string }> = [];
+  const all: Array<{ id: string; email?: string | undefined; created_at: string }> = [];
   for (let page = 1; page <= 20; page++) {
     const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 1000 });
     if (error) return null;
@@ -27,7 +27,7 @@ async function usersIndex() {
 }
 const EVENT_COLS = "id, created_at, type, actor, object_kind, object_id, result, detail";
 type AdminEvent = { id: string; created_at: string; type: string; actor: string | null; actor_email: string | null; object_kind: string | null; object_id: string | null; result: string; detail: string | null };
-const withEmails = (rows: any[], users: Array<{ id: string; email?: string }> | null): AdminEvent[] => {
+const withEmails = (rows: any[], users: Array<{ id: string; email?: string | undefined }> | null): AdminEvent[] => {
   const m = new Map((users ?? []).map((u) => [u.id, u.email ?? null]));
   return rows.map((r) => ({ ...r, actor_email: r.actor ? m.get(r.actor) ?? null : null }));
 };
@@ -41,7 +41,7 @@ export const getDashboard = createServerFn({ method: "GET" })
     const monthAgo = new Date(Date.now() - 30 * 864e5).toISOString();
     const c = async (q: any) => { const r = await q; return r.error ? null : (r.count ?? 0); };
     const h = { count: "exact", head: true } as const;
-    const [users, library, posts, meetings, bookings, orders, pendingOrders, newMsgs, reports, failedMail, pendingRegs, deniedWeek, paid, events] = await Promise.all([
+    const [users, library, posts, meetings, bookings, orders, pendingOrders, newMsgs, reports, failedMail, pendingRegs, deniedWeek, paid, events, active, pending, unsub] = await Promise.all([
       usersIndex(),
       c(db.from("library_items").select("id", h).eq("status", "published")),
       c(db.from("community_posts").select("id", h)),
@@ -56,13 +56,16 @@ export const getDashboard = createServerFn({ method: "GET" })
       c(db.from("admin_events").select("id", h).neq("result", "ok").gte("created_at", new Date(Date.now() - 7 * 864e5).toISOString())),
       db.from("library_orders").select("amount, currency").in("status", ["paid", "delivered"]).limit(10000),
       db.from("admin_events").select(EVENT_COLS).order("created_at", { ascending: false }).limit(8),
+      c(db.from("newsletter_subscribers").select("id", h).eq("status", "active")),
+      c(db.from("newsletter_subscribers").select("id", h).eq("status", "pending")),
+      c(db.from("newsletter_subscribers").select("id", h).eq("status", "unsubscribed")),
     ]);
     const paidRows = (paid.error ? null : paid.data) as Array<{ amount: number; currency: string }> | null;
     const currencies = new Set((paidRows ?? []).map((r) => r.currency.toLowerCase()));
     return {
       usersTotal: users ? users.length : null,
       usersNew30: users ? users.filter((u) => u.created_at >= monthAgo).length : null,
-      library, posts, meetings, bookings, orders, pendingOrders, newMsgs, reports, failedMail, pendingRegs, deniedWeek,
+      library, posts, meetings, bookings, orders, pendingOrders, newMsgs, reports, failedMail, pendingRegs, deniedWeek, active: active ?? 0, pending: pending ?? 0, unsub: unsub ?? 0,
       // Only sum when all paid orders share one currency, so the total is trustworthy.
       paidTotal: paidRows && currencies.size <= 1 ? paidRows.reduce((a, r) => a + r.amount, 0) : null,
       paidCurrency: [...currencies][0] ?? "pln",
