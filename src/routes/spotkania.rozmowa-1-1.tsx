@@ -142,24 +142,24 @@ function BookingPage() {
                   Obecnie nie ma udostępnionych terminów. Wróć wkrótce.
                 </div>
               ) : (
-                <div className="mt-6 max-w-3xl">
-                  <div className="border border-border/70 bg-card p-3 sm:p-5">
-                    <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2">
-                      <Button type="button" variant="outline" size="icon" disabled={visibleMonth <= firstMonth} onClick={() => { setVisibleMonth((current) => shiftMonth(current, -1)); setDay(null); setSlot(null); }} aria-label="Poprzedni miesiąc">
-                        <ChevronLeft aria-hidden />
+                <div className="mt-6">
+                  <div className="w-full max-w-[280px] border border-border/70 bg-card p-2 sm:p-3">
+                    <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-1">
+                      <Button type="button" variant="outline" size="icon" className="h-6 w-6" disabled={visibleMonth <= firstMonth} onClick={() => { setVisibleMonth((current) => shiftMonth(current, -1)); setDay(null); setSlot(null); }} aria-label="Poprzedni miesiąc">
+                        <ChevronLeft aria-hidden className="h-3.5 w-3.5" />
                       </Button>
                       <div className="min-w-0 text-center">
-                        <h3 className="truncate font-display text-xl font-semibold text-foreground sm:text-2xl">{monthTitle(visibleMonth)}</h3>
-                        {visibleMonth !== firstMonth && <Button type="button" variant="link" size="sm" className="h-auto p-0 text-xs text-gold" onClick={() => { setVisibleMonth(firstMonth); setDay(null); setSlot(null); }}>Bieżący miesiąc</Button>}
+                        <h3 className="truncate font-display text-sm font-semibold text-foreground">{monthTitle(visibleMonth)}</h3>
+                        {visibleMonth !== firstMonth && <Button type="button" variant="link" size="sm" className="h-auto p-0 text-[0.68rem] text-gold" onClick={() => { setVisibleMonth(firstMonth); setDay(null); setSlot(null); }}>Bieżący miesiąc</Button>}
                       </div>
-                      <Button type="button" variant="outline" size="icon" disabled={visibleMonth >= lastMonth} onClick={() => { setVisibleMonth((current) => shiftMonth(current, 1)); setDay(null); setSlot(null); }} aria-label="Następny miesiąc">
-                        <ChevronRight aria-hidden />
+                      <Button type="button" variant="outline" size="icon" className="h-6 w-6" disabled={visibleMonth >= lastMonth} onClick={() => { setVisibleMonth((current) => shiftMonth(current, 1)); setDay(null); setSlot(null); }} aria-label="Następny miesiąc">
+                        <ChevronRight aria-hidden className="h-3.5 w-3.5" />
                       </Button>
                     </div>
-                    <div className="mt-5 grid grid-cols-7 border-b border-border/60 pb-2 text-center text-[0.62rem] uppercase text-muted-foreground sm:text-xs">
+                    <div className="mt-2 grid grid-cols-7 border-b border-border/60 pb-1 text-center text-[0.55rem] uppercase tracking-wide text-muted-foreground">
                       {WEEKDAY_SHORT.map((weekday) => <span key={weekday}>{weekday}</span>)}
                     </div>
-                    <div className="mt-2 grid grid-cols-7 gap-1 sm:gap-2" role="grid" aria-label={`Kalendarz: ${monthTitle(visibleMonth)}`}>
+                    <div className="mt-1 grid grid-cols-7 gap-px" role="grid" aria-label={`Kalendarz: ${monthTitle(visibleMonth)}`}>
                       {calendarDays.map((cell) => {
                         const available = availableByDay.get(cell.date) ?? [];
                         const enabled = cell.inMonth && cell.date >= today && available.length > 0;
@@ -174,10 +174,10 @@ function BookingPage() {
                             aria-label={`${cell.date}${available.length ? `, wolne terminy: ${available.length}` : ", brak wolnych terminów"}`}
                             aria-pressed={selected}
                             onClick={() => { setDay(cell.date); setSlot(null); setErr(null); }}
-                            className={`relative aspect-square h-auto min-h-9 w-full rounded-sm border p-0 text-xs tabular-nums sm:min-h-14 sm:text-sm ${!cell.inMonth ? "invisible" : selected ? "border-gold bg-gold text-primary-foreground hover:bg-gold-bright hover:text-primary-foreground" : enabled ? "border-gold/60 bg-gold/10 text-foreground hover:border-gold hover:bg-gold/20" : "border-transparent bg-transparent text-muted-foreground/45"} ${isToday && !selected ? "ring-1 ring-gold ring-offset-1 ring-offset-background" : ""}`}
+                            className={`relative h-7 w-full min-w-0 rounded-sm border p-0 text-[0.7rem] tabular-nums ${!cell.inMonth ? "invisible" : selected ? "border-gold bg-gold text-primary-foreground hover:bg-gold-bright hover:text-primary-foreground" : enabled ? "border-gold/40 bg-transparent text-foreground/85 hover:border-gold hover:bg-gold/10" : "border-transparent bg-transparent text-muted-foreground/40"} ${isToday && !selected ? "ring-1 ring-gold/70 ring-offset-0" : ""}`}
                           >
                             <span>{cell.number}</span>
-                            {enabled && !selected && <span className="absolute bottom-1 h-1 w-1 rounded-full bg-gold sm:bottom-2" aria-hidden />}
+                            {enabled && !selected && <span className="absolute bottom-[3px] left-1/2 h-[3px] w-[3px] -translate-x-1/2 rounded-full bg-gold" aria-hidden />}
                           </Button>
                         );
                       })}
