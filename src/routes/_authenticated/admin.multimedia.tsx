@@ -23,7 +23,7 @@ const ACCEPT = ".jpg,.jpeg,.png,.webp,.gif,.mp3,.m4a,.aac,.ogg,.wav,.webm,.pdf,.
 export const fmtSize = (b: number) => b >= 1048576 ? `${(b / 1048576).toFixed(1)} MB` : b >= 1024 ? `${Math.round(b / 1024)} KB` : `${b} B`;
 
 function uploadWithProgress(bucket: string, path: string, token: string, file: File, onProgress: (p: number) => void) {
-  const url = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/upload/sign/${bucket}/${path.split("/").map(encodeURIComponent).join("/")}?token=${encodeURIComponent(token)}`;
+  const url = `${import.meta.env['VITE_SUPABASE_URL']}/storage/v1/object/upload/sign/${bucket}/${path.split("/").map(encodeURIComponent).join("/")}?token=${encodeURIComponent(token)}`;
   return new Promise<void>((resolve, reject) => {
     const x = new XMLHttpRequest();
     x.open("PUT", url);
