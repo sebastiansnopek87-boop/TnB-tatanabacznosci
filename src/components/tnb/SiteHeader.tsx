@@ -4,7 +4,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import logo from "@/assets/logo.png.asset.json";
 
 const NAV = [
-  { label: "O TNB", to: "/", hash: "o-tnb" },
+  { label: "O TNB", to: "/o-tnb" },
   { label: "Moja historia", to: "/moja-historia" },
   { label: "Biblioteka", to: "/biblioteka" },
   { label: "Podcast", to: "/podcast" },

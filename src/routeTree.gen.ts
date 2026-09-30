@@ -50,6 +50,7 @@ import { Route as ApiPublicCronConsultRemindersRouteImport } from './routes/api/
 import { Route as ApiPublicLibraryCoverIdRouteImport } from './routes/api/public/library-cover.$id'
 import { Route as ApiPublicMeetingImageIdRouteImport } from './routes/api/public/meeting-image.$id'
 import { Route as ApiPublicPodcastCoverIdRouteImport } from './routes/api/public/podcast-cover.$id'
+import { Route as ApiPublicPageImageIdNameRouteImport } from './routes/api/public/page-image.$id.$name'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -269,6 +270,12 @@ const ApiPublicPodcastCoverIdRoute = ApiPublicPodcastCoverIdRouteImport.update({
   path: '/api/public/podcast-cover/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPageImageIdNameRoute =
+  ApiPublicPageImageIdNameRouteImport.update({
+    id: '/api/public/page-image/$id/$name',
+    path: '/api/public/page-image/$id/$name',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -311,6 +318,7 @@ export interface FileRoutesByFullPath {
   '/api/public/library-cover/$id': typeof ApiPublicLibraryCoverIdRoute
   '/api/public/meeting-image/$id': typeof ApiPublicMeetingImageIdRoute
   '/api/public/podcast-cover/$id': typeof ApiPublicPodcastCoverIdRoute
+  '/api/public/page-image/$id/$name': typeof ApiPublicPageImageIdNameRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -352,6 +360,7 @@ export interface FileRoutesByTo {
   '/api/public/library-cover/$id': typeof ApiPublicLibraryCoverIdRoute
   '/api/public/meeting-image/$id': typeof ApiPublicMeetingImageIdRoute
   '/api/public/podcast-cover/$id': typeof ApiPublicPodcastCoverIdRoute
+  '/api/public/page-image/$id/$name': typeof ApiPublicPageImageIdNameRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -396,6 +405,7 @@ export interface FileRoutesById {
   '/api/public/library-cover/$id': typeof ApiPublicLibraryCoverIdRoute
   '/api/public/meeting-image/$id': typeof ApiPublicMeetingImageIdRoute
   '/api/public/podcast-cover/$id': typeof ApiPublicPodcastCoverIdRoute
+  '/api/public/page-image/$id/$name': typeof ApiPublicPageImageIdNameRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -440,6 +450,7 @@ export interface FileRouteTypes {
     | '/api/public/library-cover/$id'
     | '/api/public/meeting-image/$id'
     | '/api/public/podcast-cover/$id'
+    | '/api/public/page-image/$id/$name'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -481,6 +492,7 @@ export interface FileRouteTypes {
     | '/api/public/library-cover/$id'
     | '/api/public/meeting-image/$id'
     | '/api/public/podcast-cover/$id'
+    | '/api/public/page-image/$id/$name'
   id:
     | '__root__'
     | '/'
@@ -524,6 +536,7 @@ export interface FileRouteTypes {
     | '/api/public/library-cover/$id'
     | '/api/public/meeting-image/$id'
     | '/api/public/podcast-cover/$id'
+    | '/api/public/page-image/$id/$name'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -554,6 +567,7 @@ export interface RootRouteChildren {
   ApiPublicLibraryCoverIdRoute: typeof ApiPublicLibraryCoverIdRoute
   ApiPublicMeetingImageIdRoute: typeof ApiPublicMeetingImageIdRoute
   ApiPublicPodcastCoverIdRoute: typeof ApiPublicPodcastCoverIdRoute
+  ApiPublicPageImageIdNameRoute: typeof ApiPublicPageImageIdNameRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -845,6 +859,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPodcastCoverIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/page-image/$id/$name': {
+      id: '/api/public/page-image/$id/$name'
+      path: '/api/public/page-image/$id/$name'
+      fullPath: '/api/public/page-image/$id/$name'
+      preLoaderRoute: typeof ApiPublicPageImageIdNameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -923,6 +944,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicLibraryCoverIdRoute: ApiPublicLibraryCoverIdRoute,
   ApiPublicMeetingImageIdRoute: ApiPublicMeetingImageIdRoute,
   ApiPublicPodcastCoverIdRoute: ApiPublicPodcastCoverIdRoute,
+  ApiPublicPageImageIdNameRoute: ApiPublicPageImageIdNameRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
