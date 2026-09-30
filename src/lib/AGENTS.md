@@ -7,3 +7,4 @@
 - Podcast: admin-only RLS; public reads via safe columns; media returned by getEpisodeMedia (signed 3h) only after access check.
 - 1:1 consults: slots computed server-side (Europe/Warsaw); DB exclusion constraint blocks double booking; reminders cron not yet scheduled.
 - CMS: reuse site_pages (JSONB sections) for new content pages; images via /api/public/page-image only when published+referenced.
+- Media panel (/admin/multimedia, media.functions.ts): lists files of existing private buckets via service-role admin_media_objects(); usage computed live from module tables; new uploads go to private bucket 'media'; delete only when no usage. Why: no duplicate storage or file-copy.
