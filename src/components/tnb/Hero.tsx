@@ -1,4 +1,4 @@
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import hero from "@/assets/hero.jpg.asset.json";
 
 const PILLARS = [
@@ -58,21 +58,11 @@ export function Hero() {
 
           <div className="mt-8 flex flex-wrap items-center gap-4">
             <a
-              href="#o-tnb"
+              href="/o-tnb"
               className="inline-flex items-center gap-8 bg-gold px-7 py-4 text-[0.75rem] uppercase tracking-[0.16em] text-primary-foreground transition-colors hover:bg-gold-bright"
             >
               Poznaj TNB
               <ArrowRight className="h-4 w-4" strokeWidth={2} />
-            </a>
-            <a
-              href="#wideo"
-              className="inline-flex items-center gap-5 border border-border bg-background/40 px-5 py-3 text-[0.75rem] uppercase tracking-[0.16em] text-foreground backdrop-blur-sm transition-colors hover:border-gold/70"
-            >
-              <span className="flex h-9 w-9 items-center justify-center rounded-full border border-foreground/70">
-                <Play className="h-3.5 w-3.5 fill-current" strokeWidth={0} />
-              </span>
-              Obejrzyj wideo
-              <span className="ml-3 text-foreground/70">2:18</span>
             </a>
           </div>
         </div>
@@ -93,7 +83,7 @@ export function Hero() {
               Nie musisz być sam
             </p>
             <a
-              href="#spolecznosc"
+              href="/spolecznosc"
               className="mt-2 flex items-center gap-10 text-[0.85rem] text-foreground/85 transition-colors hover:text-gold"
             >
               Dołącz do społeczności
