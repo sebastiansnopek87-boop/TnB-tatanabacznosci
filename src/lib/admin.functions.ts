@@ -175,6 +175,7 @@ export const moderateCommunity = createServerFn({ method: "POST" })
         : data.action === "set_visibility"
         ? await db.from("community_posts").update({ visibility: data.visibility }).eq("id", data.id).select("id")
         : await db.from("community_posts").update({ status: data.action === "hide" ? "hidden" : "published" }).eq("id", data.id).select("id");
+    await logEvent({ type: `community_${data.action}`, actor: context.userId, objectKind: data.action === "delete_comment" ? "comment" : "post", objectId: data.id, result: res.error || !res.data?.length ? "failed" : "ok" });
     if (res.error || !res.data?.length) throw new Error("Nie udało się wykonać operacji.");
     return { ok: true };
   });
@@ -196,6 +197,16 @@ export const resolveReport = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const res = await context.supabase.from("community_reports").update({ status: "resolved" }).eq("id", data.id).select("id");
+    await logEvent({ type: "report_resolved", actor: context.userId, objectKind: "report", objectId: data.id, result: res.error || !res.data?.length ? "failed" : "ok" });
     if (res.error || !res.data?.length) throw new Error("Nie udało się zamknąć zgłoszenia.");
     return { ok: true };
+  });
+
+export const listAdminEvents = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { data, error } = await context.supabase.from("admin_events").select("*").order("created_at", { ascending: false }).limit(300);
+    if (error) throw new Error("Nie udało się pobrać dziennika zdarzeń.");
+    return data as Array<{ id: string; created_at: string; type: string; actor: string | null; object_kind: string | null; object_id: string | null; result: string; detail: string | null }>;
   });
