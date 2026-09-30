@@ -38,6 +38,7 @@ import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminBezpieczenstwoRouteImport } from './routes/_authenticated/admin.bezpieczenstwo'
 import { Route as AuthenticatedAdminBibliotekaRouteImport } from './routes/_authenticated/admin.biblioteka'
 import { Route as AuthenticatedAdminDziennikRouteImport } from './routes/_authenticated/admin.dziennik'
+import { Route as AuthenticatedAdminMultimediaRouteImport } from './routes/_authenticated/admin.multimedia'
 import { Route as AuthenticatedAdminPodcastRouteImport } from './routes/_authenticated/admin.podcast'
 import { Route as AuthenticatedAdminPowiadomieniaRouteImport } from './routes/_authenticated/admin.powiadomienia'
 import { Route as AuthenticatedAdminRozmowyRouteImport } from './routes/_authenticated/admin.rozmowy'
@@ -206,6 +207,12 @@ const AuthenticatedAdminDziennikRoute =
     path: '/dziennik',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminMultimediaRoute =
+  AuthenticatedAdminMultimediaRouteImport.update({
+    id: '/multimedia',
+    path: '/multimedia',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminPodcastRoute =
   AuthenticatedAdminPodcastRouteImport.update({
     id: '/podcast',
@@ -352,6 +359,7 @@ export interface FileRoutesByFullPath {
   '/admin/bezpieczenstwo': typeof AuthenticatedAdminBezpieczenstwoRoute
   '/admin/biblioteka': typeof AuthenticatedAdminBibliotekaRoute
   '/admin/dziennik': typeof AuthenticatedAdminDziennikRoute
+  '/admin/multimedia': typeof AuthenticatedAdminMultimediaRoute
   '/admin/podcast': typeof AuthenticatedAdminPodcastRoute
   '/admin/powiadomienia': typeof AuthenticatedAdminPowiadomieniaRoute
   '/admin/rozmowy': typeof AuthenticatedAdminRozmowyRoute
@@ -401,6 +409,7 @@ export interface FileRoutesByTo {
   '/admin/bezpieczenstwo': typeof AuthenticatedAdminBezpieczenstwoRoute
   '/admin/biblioteka': typeof AuthenticatedAdminBibliotekaRoute
   '/admin/dziennik': typeof AuthenticatedAdminDziennikRoute
+  '/admin/multimedia': typeof AuthenticatedAdminMultimediaRoute
   '/admin/podcast': typeof AuthenticatedAdminPodcastRoute
   '/admin/powiadomienia': typeof AuthenticatedAdminPowiadomieniaRoute
   '/admin/rozmowy': typeof AuthenticatedAdminRozmowyRoute
@@ -453,6 +462,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/bezpieczenstwo': typeof AuthenticatedAdminBezpieczenstwoRoute
   '/_authenticated/admin/biblioteka': typeof AuthenticatedAdminBibliotekaRoute
   '/_authenticated/admin/dziennik': typeof AuthenticatedAdminDziennikRoute
+  '/_authenticated/admin/multimedia': typeof AuthenticatedAdminMultimediaRoute
   '/_authenticated/admin/podcast': typeof AuthenticatedAdminPodcastRoute
   '/_authenticated/admin/powiadomienia': typeof AuthenticatedAdminPowiadomieniaRoute
   '/_authenticated/admin/rozmowy': typeof AuthenticatedAdminRozmowyRoute
@@ -505,6 +515,7 @@ export interface FileRouteTypes {
     | '/admin/bezpieczenstwo'
     | '/admin/biblioteka'
     | '/admin/dziennik'
+    | '/admin/multimedia'
     | '/admin/podcast'
     | '/admin/powiadomienia'
     | '/admin/rozmowy'
@@ -554,6 +565,7 @@ export interface FileRouteTypes {
     | '/admin/bezpieczenstwo'
     | '/admin/biblioteka'
     | '/admin/dziennik'
+    | '/admin/multimedia'
     | '/admin/podcast'
     | '/admin/powiadomienia'
     | '/admin/rozmowy'
@@ -605,6 +617,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/bezpieczenstwo'
     | '/_authenticated/admin/biblioteka'
     | '/_authenticated/admin/dziennik'
+    | '/_authenticated/admin/multimedia'
     | '/_authenticated/admin/podcast'
     | '/_authenticated/admin/powiadomienia'
     | '/_authenticated/admin/rozmowy'
@@ -866,6 +879,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminDziennikRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/multimedia': {
+      id: '/_authenticated/admin/multimedia'
+      path: '/multimedia'
+      fullPath: '/admin/multimedia'
+      preLoaderRoute: typeof AuthenticatedAdminMultimediaRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/podcast': {
       id: '/_authenticated/admin/podcast'
       path: '/podcast'
@@ -1013,6 +1033,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminBezpieczenstwoRoute: typeof AuthenticatedAdminBezpieczenstwoRoute
   AuthenticatedAdminBibliotekaRoute: typeof AuthenticatedAdminBibliotekaRoute
   AuthenticatedAdminDziennikRoute: typeof AuthenticatedAdminDziennikRoute
+  AuthenticatedAdminMultimediaRoute: typeof AuthenticatedAdminMultimediaRoute
   AuthenticatedAdminPodcastRoute: typeof AuthenticatedAdminPodcastRoute
   AuthenticatedAdminPowiadomieniaRoute: typeof AuthenticatedAdminPowiadomieniaRoute
   AuthenticatedAdminRozmowyRoute: typeof AuthenticatedAdminRozmowyRoute
@@ -1033,6 +1054,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminBezpieczenstwoRoute: AuthenticatedAdminBezpieczenstwoRoute,
   AuthenticatedAdminBibliotekaRoute: AuthenticatedAdminBibliotekaRoute,
   AuthenticatedAdminDziennikRoute: AuthenticatedAdminDziennikRoute,
+  AuthenticatedAdminMultimediaRoute: AuthenticatedAdminMultimediaRoute,
   AuthenticatedAdminPodcastRoute: AuthenticatedAdminPodcastRoute,
   AuthenticatedAdminPowiadomieniaRoute: AuthenticatedAdminPowiadomieniaRoute,
   AuthenticatedAdminRozmowyRoute: AuthenticatedAdminRozmowyRoute,
