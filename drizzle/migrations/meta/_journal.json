@@ -176,6 +176,13 @@
       "when": 1790796668161,
       "tag": "0024_platform_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1790797108621,
+      "tag": "0025_admin_media_index",
+      "breakpoints": true
     }
   ]
 }

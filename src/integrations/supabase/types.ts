@@ -1153,6 +1153,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_media_objects: {
+        Args: never
+        Returns: {
+          bucket_id: string
+          created_at: string
+          mimetype: string
+          name: string
+          size: number
+        }[]
+      }
       community_feed: {
         Args: {
           _limit: number
