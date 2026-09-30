@@ -16,8 +16,8 @@ export const MEETING_CARDS = [
   },
   {
     id: "spotkania-1-na-1",
-    href: "/spotkania-1-na-1",
-    active: false,
+    href: "/spotkania/rozmowa-1-1",
+    active: true,
     image: null,
     title: "Porozmawiajmy indywidualnie",
     body: "Czasem łatwiej powiedzieć coś w cztery oczy. Jeśli potrzebujesz rozmowy, chcesz podzielić się swoją historią albo spojrzeć na coś z innej perspektywy — możemy porozmawiać indywidualnie.",
