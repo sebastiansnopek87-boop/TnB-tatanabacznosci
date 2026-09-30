@@ -45,7 +45,7 @@ function Img({ s, src, className, eager }: { s: PageSection; src: string; classN
   );
 }
 
-function Section({ s, src, first }: { s: PageSection; src?: string; first: boolean }) {
+function Section({ s, src, first }: { s: PageSection; src?: string | undefined; first: boolean }) {
   const imgLeft = s.layout === "left";
   switch (s.kind) {
     case "hero":
