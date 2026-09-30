@@ -977,6 +977,42 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_settings: {
+        Row: {
+          contact_email: string | null
+          id: number
+          maintenance_enabled: boolean
+          maintenance_message: string
+          notice_enabled: boolean
+          platform_name: string
+          support_email: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          contact_email?: string | null
+          id?: number
+          maintenance_enabled?: boolean
+          maintenance_message?: string
+          notice_enabled?: boolean
+          platform_name?: string
+          support_email?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          contact_email?: string | null
+          id?: number
+          maintenance_enabled?: boolean
+          maintenance_message?: string
+          notice_enabled?: boolean
+          platform_name?: string
+          support_email?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       podcast_episodes: {
         Row: {
           access: string
