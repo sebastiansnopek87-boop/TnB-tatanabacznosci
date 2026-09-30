@@ -25,6 +25,7 @@ type NavItem = { to: string; label: string; exact?: boolean };
 const GROUPS: Array<{ title: string; items: NavItem[] }> = [
   { title: "Pulpit", items: [{ to: "/admin", label: "Przegląd platformy", exact: true }] },
   { title: "Zarządzanie", items: [
+    { to: "/admin/uzytkownicy", label: "Użytkownicy" },
     { to: "/admin/spolecznosc", label: "Społeczność i moderacja" },
     { to: "/admin/spotkania", label: "Spotkania" },
     { to: "/admin/rozmowy", label: "Rozmowy 1:1" },
@@ -34,7 +35,7 @@ const GROUPS: Array<{ title: string; items: NavItem[] }> = [
   ] },
   { title: "Treści i wygląd", items: [
     { to: "/admin/strony", label: "Strony i edytor treści" },
-    { to: "/admin/tresci", label: "Treści strony" },
+    // "Treści strony" (/admin/tresci) hidden until the feature exists; route kept.
   ] },
   { title: "Komunikacja", items: [
     { to: "/admin/wiadomosci", label: "Wiadomości kontaktowe" },

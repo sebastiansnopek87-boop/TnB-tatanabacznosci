@@ -18,8 +18,8 @@ function Dashboard() {
   });
   const d = data;
   const cards = d ? [
-    { label: "Użytkownicy łącznie", value: n(d.usersTotal), to: null },
-    { label: "Nowi użytkownicy (30 dni)", value: n(d.usersNew30), to: null },
+    { label: "Użytkownicy łącznie", value: n(d.usersTotal), to: "/admin/uzytkownicy" },
+    { label: "Nowi użytkownicy (30 dni)", value: n(d.usersNew30), to: "/admin/uzytkownicy" },
     { label: "Opublikowane materiały", value: n(d.library), to: "/admin/biblioteka" },
     { label: "Posty w Społeczności", value: n(d.posts), to: "/admin/spolecznosc" },
     { label: "Nadchodzące spotkania", value: n(d.meetings), to: "/admin/spotkania" },

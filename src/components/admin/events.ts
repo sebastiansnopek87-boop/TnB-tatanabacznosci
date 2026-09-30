@@ -6,6 +6,8 @@ const OBJECT: Record<string, [string, string]> = {
 
 export const EVENT_LABELS: Record<string, string> = {
   access_denied: "Odmowa dostępu do panelu",
+  role_granted: "Nadano rolę użytkownikowi",
+  role_revoked: "Odebrano rolę użytkownikowi",
   order_paid: "Oznaczono zamówienie jako opłacone",
   order_delivered: "Oznaczono zamówienie jako dostarczone",
   order_cancelled: "Anulowano zamówienie",
@@ -37,7 +39,7 @@ export const eventLabel = (t: string) => EVENT_LABELS[t] ?? `Inne zdarzenie (${t
 
 export const EVENT_CATEGORIES: Array<{ value: string; label: string }> = [
   { value: "page", label: "Strony" }, { value: "library", label: "Biblioteka" }, { value: "episode", label: "Podcast" },
-  { value: "meeting", label: "Spotkania" }, { value: "registration", label: "Zgłoszenia na spotkania" }, { value: "booking", label: "Rozmowy 1:1" },
+  { value: "meeting", label: "Spotkania" }, { value: "registration", label: "Zgłoszenia na spotkania" }, { value: "booking", label: "Rozmowy 1:1" }, { value: "role", label: "Role użytkowników" },
   { value: "order", label: "Zamówienia" }, { value: "community", label: "Społeczność" }, { value: "report", label: "Zgłoszenia moderacyjne" },
   { value: "access", label: "Dostęp" },
 ];

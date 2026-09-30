@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { toast } from "sonner";
 import { listUsers, getUserDetail, setUserRole, ROLE_VALUES } from "@/lib/users.functions";
 import { errMsg, fmtDate } from "@/components/admin/format";
@@ -93,7 +93,7 @@ function UserDetail({ id }: { id: string }) {
   return (
     <div className="space-y-5 text-sm">
       <dl className="grid grid-cols-[auto,1fr] gap-x-4 gap-y-1.5">
-        {rows.map(([k, v]) => <><dt key={k} className="text-muted-foreground">{k}</dt><dd className="break-all">{v}</dd></>)}
+        {rows.map(([k, v]) => <Fragment key={k}><dt className="text-muted-foreground">{k}</dt><dd className="break-all">{v}</dd></Fragment>)}
       </dl>
       <div>
         <h3 className="eyebrow text-gold">Role</h3>
@@ -116,7 +116,7 @@ function UserDetail({ id }: { id: string }) {
           <AlertDialogHeader>
             <AlertDialogTitle>{confirm?.grant ? "Nadać rolę?" : "Odebrać rolę?"}</AlertDialogTitle>
             <AlertDialogDescription>
-              {confirm && `${confirm.grant ? "Nadajesz" : "Odbierasz"} rolę „${ROLE_LABELS[confirm.role]}” ${confirm.grant ? "kontu" : "kontu"} ${u.email ?? ""}.`}
+              {confirm && `${confirm.grant ? "Nadajesz" : "Odbierasz"} rolę „${ROLE_LABELS[confirm.role]}” kontu ${u.email ?? ""}.`}
               {u.isSelf && confirm && !confirm.grant ? " To Twoje własne konto." : ""} Zmiana zostanie zapisana w Dzienniku zdarzeń.
             </AlertDialogDescription>
           </AlertDialogHeader>
