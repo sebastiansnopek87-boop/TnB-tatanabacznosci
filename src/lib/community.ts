@@ -2,6 +2,7 @@
 // RLS + database triggers (author identity, ownership, status) — not by the UI.
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 
 export const POST_MAX = 5000;
 export const COMMENT_MAX = 2000;

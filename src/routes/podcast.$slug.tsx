@@ -5,6 +5,7 @@ import { Clock, ExternalLink, Headphones, Lock } from "lucide-react";
 import { PageShell } from "@/components/tnb/PageShell";
 import { AudioPlayer } from "@/components/podcast/AudioPlayer";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 import { getEpisode, getEpisodeMedia } from "@/lib/podcast.functions";
 import { listCategories } from "@/lib/library";
 import { EP_ACCESS, coverUrl, fmtDay, fmtDuration, type EpisodeDetail } from "@/lib/podcast";
