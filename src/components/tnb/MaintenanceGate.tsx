@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRouterState, Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { usePlatformSettings } from "@/hooks/use-platform-settings";
 
@@ -8,12 +9,14 @@ import { usePlatformSettings } from "@/hooks/use-platform-settings";
 const EXEMPT = [/^\/admin(\/|$)/, /^\/auth(\/|$)/, /^\/reset-password/, /^\/api\//];
 
 function useIsAdmin() {
+  const auth = useAuth();
+  const uid = auth.user?.id ?? null;
   return useQuery({
-    queryKey: ["is-admin-self"],
+    queryKey: ["is-admin-self", uid],
+    enabled: auth.status !== "loading",
     queryFn: async () => {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) return false;
-      const { data } = await supabase.rpc("has_role", { _user_id: u.user.id, _role: "admin" });
+      if (!uid) return false;
+      const { data } = await supabase.rpc("has_role", { _user_id: uid, _role: "admin" });
       return !!data;
     },
     staleTime: 5 * 60_000,

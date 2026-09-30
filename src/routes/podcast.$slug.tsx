@@ -1,10 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
 import { Clock, ExternalLink, Headphones, Lock } from "lucide-react";
 import { PageShell } from "@/components/tnb/PageShell";
 import { AudioPlayer } from "@/components/podcast/AudioPlayer";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 import { getEpisode, getEpisodeMedia } from "@/lib/podcast.functions";
 import { listCategories } from "@/lib/library";
 import { EP_ACCESS, coverUrl, fmtDay, fmtDuration, type EpisodeDetail } from "@/lib/podcast";
@@ -68,12 +67,8 @@ function EpisodePage() {
 }
 
 function Media({ e }: { e: EpisodeDetail }) {
-  const [uid, setUid] = useState<string | null | undefined>(undefined);
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setUid(data.session?.user.id ?? null));
-    const { data } = supabase.auth.onAuthStateChange((_e, s) => setUid(s?.user.id ?? null));
-    return () => data.subscription.unsubscribe();
-  }, []);
+  const auth = useAuth();
+  const uid = auth.status === "loading" ? undefined : auth.user?.id ?? null;
   const m = useQuery({
     queryKey: ["podcast-media", e.id, uid], enabled: uid !== undefined,
     queryFn: () => getEpisodeMedia({ data: { id: e.id } }), staleTime: 60 * 60 * 1000,

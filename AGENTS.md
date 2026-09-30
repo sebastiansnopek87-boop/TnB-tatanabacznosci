@@ -14,3 +14,4 @@
 - Private buckets only; public media served via /api/public/* routes after access checks. Module rules: src/lib/AGENTS.md.
 - Roles: user_roles enum (superadmin, admin, moderator, editor, support, premium); panel access = admin; only superadmin changes roles (src/lib/users.functions.ts), last superadmin protected; why: reuse existing has_role/RLS.
 - Platform settings: singleton platform_settings (public read of safe columns); writes only via server fn after assertSuperadmin; maintenance screen is a UI gate in __root, /admin and /auth exempt. Why: config editable, admins never locked out.
+- Client sign-in state: only via useAuth() (src/hooks/use-auth.ts, one onAuthStateChange store); no per-component getUser/getSession copies for UI state. Why: header/pages stay consistent.
