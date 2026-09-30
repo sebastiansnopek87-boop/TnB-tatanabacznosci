@@ -5,7 +5,10 @@ const OBJECT: Record<string, [string, string]> = {
 };
 
 export const EVENT_LABELS: Record<string, string> = {
-  access_denied: "Odmowa dostępu do panelu",
+  access_denied: "Odmowa dostępu lub nieuprawniona operacja",
+  settings_update: "Zmieniono ustawienia",
+  maintenance_on: "Włączono tryb konserwacji",
+  maintenance_off: "Wyłączono tryb konserwacji",
   role_granted: "Nadano rolę użytkownikowi",
   role_revoked: "Odebrano rolę użytkownikowi",
   order_paid: "Oznaczono zamówienie jako opłacone",
