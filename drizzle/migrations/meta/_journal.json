@@ -141,6 +141,13 @@
       "when": 1790771696174,
       "tag": "0019_consult_bookings",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1790772212213,
+      "tag": "0020_consult_revoke_writes",
+      "breakpoints": true
     }
   ]
 }
