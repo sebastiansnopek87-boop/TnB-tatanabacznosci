@@ -1,3 +1,4 @@
+import { assertAdmin } from "./admin-auth.server";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { createClient } from "@supabase/supabase-js";
@@ -5,10 +6,6 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 type Ctx = { supabase: any; userId: string };
-async function assertAdmin(ctx: Ctx) {
-  const { data, error } = await ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "admin" });
-  if (error || !data) throw new Error("Brak uprawnień administratora.");
-}
 
 const BUCKET = "library-files";
 

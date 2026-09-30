@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_events: {
+        Row: {
+          actor: string | null
+          created_at: string
+          detail: string | null
+          id: string
+          object_id: string | null
+          object_kind: string | null
+          result: string
+          type: string
+        }
+        Insert: {
+          actor?: string | null
+          created_at?: string
+          detail?: string | null
+          id?: string
+          object_id?: string | null
+          object_kind?: string | null
+          result?: string
+          type: string
+        }
+        Update: {
+          actor?: string | null
+          created_at?: string
+          detail?: string | null
+          id?: string
+          object_id?: string | null
+          object_kind?: string | null
+          result?: string
+          type?: string
+        }
+        Relationships: []
+      }
       community_comments: {
         Row: {
           author_id: string

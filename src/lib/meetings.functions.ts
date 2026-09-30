@@ -1,3 +1,4 @@
+import { assertAdmin } from "./admin-auth.server";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
@@ -8,10 +9,6 @@ import type { MeetingDetail, PublicMeeting } from "./meetings";
 // online_link, unpublished locations and participants' data never leave the server.
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin;
 type Ctx = { supabase: any; userId: string };
-async function assertAdmin(ctx: Ctx) {
-  const { data, error } = await ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "admin" });
-  if (error || !data) throw new Error("Brak uprawnień administratora.");
-}
 async function optionalUser() {
   const auth = getRequest()?.headers.get("authorization") ?? "";
   const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";

@@ -1,3 +1,4 @@
+import { assertAdmin, logEvent } from "./admin-auth.server";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -8,10 +9,6 @@ import { isSafeHref, type PublicPage } from "./pages";
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin;
 const BUCKET = "page-images";
 type Ctx = { supabase: any; userId: string };
-async function assertAdmin(ctx: Ctx) {
-  const { data, error } = await ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "admin" });
-  if (error || !data) throw new Error("Brak uprawnień administratora.");
-}
 const COLS = "id, slug, system_key, title, intro, sections, seo_title, seo_description, published_at, updated_at";
 const SLUG = z.string().regex(/^[a-z0-9-]{1,120}$/, "Adres może zawierać tylko małe litery, cyfry i myślniki.");
 
@@ -79,6 +76,7 @@ export const adminSavePage = createServerFn({ method: "POST" }).middleware([requ
       : context.supabase.from("site_pages").insert({ ...row, created_by: context.userId }).select("id").single();
     const { data: r, error } = await q;
     if (error) throw new Error(error.code === "23505" ? "Strona o takim adresie już istnieje." : "Nie udało się zapisać strony.");
+    await logEvent({ type: id ? "page_edit" : "page_create", actor: context.userId, objectKind: "page", objectId: r.id, detail: row.slug });
     return { id: r.id as string };
   });
 
@@ -89,6 +87,7 @@ export const adminSetPageStatus = createServerFn({ method: "POST" }).middleware(
     const patch: { status: string; published_at?: string } = { status: data.status };
     if (data.status === "published") patch.published_at = new Date().toISOString();
     const { error } = await context.supabase.from("site_pages").update(patch).eq("id", data.id);
+    await logEvent({ type: `page_${data.status}`, actor: context.userId, objectKind: "page", objectId: data.id, result: error ? "failed" : "ok" });
     if (error) throw new Error("Nie udało się zmienić statusu.");
     return { ok: true };
   });
