@@ -1,0 +1,148 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import { Clock, Headphones, Lock, Search } from "lucide-react";
+import { PageShell } from "@/components/tnb/PageShell";
+import { listEpisodes } from "@/lib/podcast.functions";
+import { listCategories } from "@/lib/library";
+import { EP_ACCESS, coverUrl, fmtDay, fmtDuration, type PublicEpisode } from "@/lib/podcast";
+
+const TITLE = "Podcast TNB — Tata Na Baczności";
+const DESC = "Rozmowy o ojcostwie, służbie, małżeństwie i męskiej odpowiedzialności. Słuchaj odcinków podcastu Tata Na Baczności.";
+
+export const Route = createFileRoute("/podcast/")({
+  head: () => ({
+    meta: [
+      { title: TITLE }, { name: "description", content: DESC },
+      { property: "og:title", content: TITLE }, { property: "og:description", content: DESC },
+      { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: PodcastPage,
+});
+
+function PodcastPage() {
+  const eps = useQuery({ queryKey: ["podcast"], queryFn: () => listEpisodes() });
+  const cats = useQuery({ queryKey: ["library-categories"], queryFn: listCategories });
+  const [q, setQ] = useState("");
+  const [cat, setCat] = useState<string | null>(null);
+  const catName = (s: string) => cats.data?.find((c) => c.slug === s)?.name ?? s;
+
+  const all = eps.data ?? [];
+  const latest = all[0];
+  const filtering = q.trim().length > 0 || !!cat;
+  const list = useMemo(() => {
+    const s = q.trim().toLowerCase();
+    return all.filter((e) => (filtering || e.id !== latest?.id)
+      && (!cat || e.category === cat)
+      && (!s || e.title.toLowerCase().includes(s) || e.summary.toLowerCase().includes(s)));
+  }, [all, q, cat, filtering, latest?.id]);
+  const usedCats = (cats.data ?? []).filter((c) => all.some((e) => e.category === c.slug));
+
+  return (
+    <PageShell>
+      <section className="border-b border-border/60 px-5 py-14 lg:px-14 lg:py-20">
+        <p className="eyebrow text-gold">Rozmowy TNB</p>
+        <h1 className="mt-4 font-display text-[2.6rem] font-semibold uppercase leading-none tracking-[0.02em] text-foreground sm:text-[3.4rem]">Podcast TNB</h1>
+        <p className="mt-6 max-w-2xl text-[0.95rem] leading-[1.75] text-foreground/80">
+          Szczere rozmowy o ojcostwie, służbie, małżeństwie i męskiej odpowiedzialności. Bez pozy — o tym, co naprawdę dzieje się w życiu taty.
+        </p>
+      </section>
+
+      <div className="px-5 py-12 lg:px-14">
+        {eps.isLoading ? <p className="text-sm text-muted-foreground">Ładowanie odcinków…</p>
+          : eps.error ? <p className="text-sm text-destructive">Nie udało się pobrać odcinków. Odśwież stronę.</p>
+          : !all.length ? (
+            <div className="max-w-2xl border border-gold/40 bg-surface-deep p-8">
+              <Headphones className="h-6 w-6 text-gold" />
+              <p className="mt-4 font-display text-2xl font-semibold uppercase text-foreground">Brak opublikowanych odcinków</p>
+              <p className="mt-3 text-[0.95rem] leading-[1.75] text-foreground/80">Pierwsze nagrania są w przygotowaniu. Zajrzyj tu wkrótce.</p>
+            </div>
+          ) : (
+            <>
+              {latest && !filtering && (
+                <section aria-labelledby="latest">
+                  <p id="latest" className="eyebrow text-gold">{latest.featured ? "Wyróżniony odcinek" : "Najnowszy odcinek"}</p>
+                  <Link to="/podcast/$slug" params={{ slug: latest.slug }} className="group mt-4 grid gap-6 border border-border/60 bg-card p-5 hover:border-gold/60 md:grid-cols-[minmax(0,320px)_1fr] lg:p-7">
+                    <Cover e={latest} className="aspect-square w-full" />
+                    <div className="min-w-0">
+                      <Meta e={latest} catName={catName} />
+                      <h2 className="mt-3 break-words font-display text-[2rem] font-semibold uppercase leading-tight text-foreground group-hover:text-gold">{latest.title}</h2>
+                      {latest.summary && <p className="mt-4 text-[0.95rem] leading-[1.75] text-foreground/80">{latest.summary}</p>}
+                      <span className="mt-6 inline-flex items-center gap-2 bg-gold px-6 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-primary-foreground">
+                        <Headphones className="h-4 w-4" /> Posłuchaj odcinka
+                      </span>
+                    </div>
+                  </Link>
+                </section>
+              )}
+
+              <section className={latest && !filtering ? "mt-14" : ""}>
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                  <h2 className="font-display text-2xl font-semibold uppercase text-foreground">{filtering ? "Wyniki" : "Wszystkie odcinki"}</h2>
+                  <label className="relative block w-full lg:w-80">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Szukaj odcinka…" aria-label="Szukaj odcinka"
+                      className="w-full border border-border bg-surface-deep py-2.5 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-gold focus:outline-none" />
+                  </label>
+                </div>
+                {usedCats.length > 0 && (
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    <Chip active={!cat} onClick={() => setCat(null)}>Wszystkie</Chip>
+                    {usedCats.map((c) => <Chip key={c.slug} active={cat === c.slug} onClick={() => setCat(c.slug)}>{c.name}</Chip>)}
+                  </div>
+                )}
+                {!list.length ? (
+                  <p className="mt-8 border border-border/60 p-6 text-sm text-muted-foreground">
+                    {filtering ? "Brak odcinków pasujących do wyszukiwania." : "To na razie jedyny opublikowany odcinek."}
+                  </p>
+                ) : (
+                  <div className="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                    {list.map((e) => (
+                      <Link key={e.id} to="/podcast/$slug" params={{ slug: e.slug }} className="group flex flex-col border border-border/60 bg-card hover:border-gold/60">
+                        <Cover e={e} className="aspect-[16/10] w-full" />
+                        <div className="flex flex-1 flex-col p-5">
+                          <Meta e={e} catName={catName} />
+                          <h3 className="mt-3 break-words font-display text-xl font-semibold uppercase leading-snug text-foreground group-hover:text-gold">{e.title}</h3>
+                          {e.summary && <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-foreground/75">{e.summary}</p>}
+                          <span className="mt-auto pt-4 text-xs uppercase tracking-[0.14em] text-gold">Szczegóły →</span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </section>
+            </>
+          )}
+      </div>
+    </PageShell>
+  );
+}
+
+function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button type="button" onClick={onClick} aria-pressed={active}
+      className={`border px-3 py-1.5 text-xs uppercase tracking-[0.1em] ${active ? "border-gold bg-gold text-primary-foreground" : "border-border text-foreground/80 hover:border-gold hover:text-gold"}`}>
+      {children}
+    </button>
+  );
+}
+
+export function Cover({ e, className }: { e: PublicEpisode; className: string }) {
+  const src = coverUrl(e);
+  return src
+    ? <img src={src} alt="" loading="lazy" className={`${className} border-b border-border/60 object-cover`} />
+    : <div className={`${className} flex items-center justify-center border-b border-border/60 bg-surface-deep`}><Headphones className="h-10 w-10 text-gold/60" /></div>;
+}
+
+function Meta({ e, catName }: { e: PublicEpisode; catName: (s: string) => string }) {
+  const d = fmtDuration(e.duration_seconds);
+  return (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.7rem] uppercase tracking-[0.12em] text-muted-foreground">
+      <span className="text-gold">{catName(e.category)}</span>
+      <span>{fmtDay(e.published_at)}</span>
+      {d && <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" />{d}</span>}
+      <span className="inline-flex items-center gap-1">{e.access !== "public" && <Lock className="h-3 w-3" />}{EP_ACCESS[e.access]}</span>
+    </div>
+  );
+}
