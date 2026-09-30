@@ -56,7 +56,7 @@ function Bookings({ onOpen }: { onOpen: (id: string) => void }) {
             <div key={b.id} className="border border-border/60 p-4">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0 space-y-1 text-sm">
-                  <p className="font-medium text-foreground"><span className="capitalize">{fmtDate(b.starts_at)}</span>, {fmtHm(b.starts_at)} · {b.booking_number}</p>
+                  <p className="font-medium text-foreground"><span>{fmtDate(b.starts_at)}</span>, {fmtHm(b.starts_at)} · {b.booking_number}</p>
                   <p className="break-words text-foreground/85">{b.first_name} {b.last_name} · {b.email}{b.phone ? ` · ${b.phone}` : ""}</p>
                   <p className="break-words text-foreground/85">Temat: {b.topic}</p>
                   <p className="line-clamp-2 break-words text-muted-foreground">{b.reason}</p>
@@ -103,7 +103,7 @@ function Details({ id, onClose }: { id: string; onClose: () => void }) {
         <Button variant="outline" onClick={onClose}>← Wróć</Button>
       </div>
       <dl className="grid gap-4 border border-border/60 p-5 text-sm sm:grid-cols-2">
-        {row("Termin", <span className="capitalize">{fmtDate(b.starts_at)}, {fmtHm(b.starts_at)}–{fmtHm(b.ends_at)}</span>)}
+        {row("Termin", <span>{fmtDate(b.starts_at)}, {fmtHm(b.starts_at)}–{fmtHm(b.ends_at)}</span>)}
         {row("Status", BOOKING_STATUS[b.status as BookingStatus])}
         {row("Imię i nazwisko", `${b.first_name} ${b.last_name}`)}
         {row("E-mail", b.email)}

@@ -27,7 +27,7 @@ export function MyMeetings() {
             return (
               <li key={b.id} className="border border-border/60 p-4" data-testid="my-consult">
                 <p className="text-xs uppercase tracking-[0.12em] text-gold">Rozmowa 1:1 · {b.booking_number}</p>
-                <p className="mt-2 text-foreground"><span className="capitalize">{fmtDate(b.starts_at)}</span>, {fmtHm(b.starts_at)}–{fmtHm(b.ends_at)}</p>
+                <p className="mt-2 text-foreground"><span>{fmtDate(b.starts_at)}</span>, {fmtHm(b.starts_at)}–{fmtHm(b.ends_at)}</p>
                 <p className="mt-1 break-words text-sm text-foreground/80">Temat: {b.topic}</p>
                 <p className="mt-1 text-sm text-foreground/80">Status: {BOOKING_STATUS[b.status as BookingStatus]}</p>
                 <p className="mt-1 break-all text-sm">{b.meeting_link ? <a href={b.meeting_link} target="_blank" rel="noopener noreferrer" className="text-gold underline">Dołącz do spotkania</a> : <span className="text-muted-foreground">Link do spotkania pojawi się przed rozmową.</span>}</p>

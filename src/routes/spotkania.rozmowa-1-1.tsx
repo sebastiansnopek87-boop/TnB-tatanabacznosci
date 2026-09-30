@@ -121,7 +121,7 @@ function BookingPage() {
                     <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
                       {days.map((d) => (
                         <button key={d.date} type="button" onClick={() => { setDay(d.date); setSlot(null); setErr(null); }} aria-pressed={day === d.date}
-                          className={`border px-3 py-2.5 text-left text-sm capitalize ${day === d.date ? "border-gold bg-gold text-primary-foreground" : "border-border bg-card text-foreground hover:border-gold"}`}>
+                          className={`border px-3 py-2.5 text-left text-sm ${day === d.date ? "border-gold bg-gold text-primary-foreground" : "border-border bg-card text-foreground hover:border-gold"}`}>
                           {fmtDayLabel(d.date)}
                           <span className={`mt-0.5 block text-[0.68rem] normal-case ${day === d.date ? "text-primary-foreground/80" : "text-muted-foreground"}`}>wolne: {d.slots.length}</span>
                         </button>
@@ -145,7 +145,7 @@ function BookingPage() {
             {slot && (
               <div className="mt-8 border border-gold/40 bg-surface-deep p-5">
                 <p className="eyebrow text-gold">Wybrany termin</p>
-                <p className="mt-2 text-foreground"><span className="capitalize">{fmtDate(slot)}</span>, godz. {fmtHm(slot)}–{fmtHm(new Date(new Date(slot).getTime() + 30 * 60000).toISOString())} (30 minut)</p>
+                <p className="mt-2 text-foreground"><span>{fmtDate(slot)}</span>, godz. {fmtHm(slot)}–{fmtHm(new Date(new Date(slot).getTime() + 30 * 60000).toISOString())} (30 minut)</p>
                 <button type="button" onClick={() => { setStep("form"); setErr(null); }} className="mt-4 bg-gold px-6 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-primary-foreground hover:bg-gold-bright">Dalej — Twoje dane</button>
               </div>
             )}
@@ -155,7 +155,7 @@ function BookingPage() {
         {step === "form" && slot && (
           <section>
             <h2 className="font-display text-2xl font-semibold uppercase text-foreground">2. Twoje dane i opis rozmowy</h2>
-            <p className="mt-2 text-sm text-muted-foreground"><span className="capitalize">{fmtDate(slot)}</span>, godz. {fmtHm(slot)} · 30 minut · <button type="button" className="text-gold underline" onClick={() => setStep("pick")}>zmień termin</button></p>
+            <p className="mt-2 text-sm text-muted-foreground"><span>{fmtDate(slot)}</span>, godz. {fmtHm(slot)} · 30 minut · <button type="button" className="text-gold underline" onClick={() => setStep("pick")}>zmień termin</button></p>
             <form className="mt-6 space-y-5" noValidate onSubmit={(e) => { e.preventDefault(); const v = validate(); setErr(v); if (!v) setStep("review"); }}>
               <input type="text" name="website" tabIndex={-1} autoComplete="off" value={f.website} onChange={(e) => set("website", e.target.value)} className="hidden" aria-hidden />
               <div className="grid gap-4 sm:grid-cols-2">
@@ -186,7 +186,7 @@ function BookingPage() {
           <section>
             <h2 className="font-display text-2xl font-semibold uppercase text-foreground">3. Sprawdź rezerwację</h2>
             <dl className="mt-6 grid gap-4 border border-border/60 bg-card p-5 text-sm sm:grid-cols-2">
-              <R k="Data"><span className="capitalize">{fmtDate(slot)}</span></R>
+              <R k="Data"><span>{fmtDate(slot)}</span></R>
               <R k="Godzina">{fmtHm(slot)}</R>
               <R k="Czas trwania">30 minut (bezpłatnie)</R>
               <R k="Imię i nazwisko">{f.first_name} {f.last_name}</R>

@@ -37,7 +37,7 @@ function Confirmation() {
             <dl className="mt-8 grid gap-4 border border-border/60 bg-card p-5 text-sm sm:grid-cols-2">
               <div><dt className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Numer rezerwacji</dt><dd className="mt-1 text-foreground">{b.number}</dd></div>
               <div><dt className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Status</dt><dd className="mt-1 text-foreground">{BOOKING_STATUS[b.status as BookingStatus]}</dd></div>
-              <div><dt className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Data</dt><dd className="mt-1 capitalize text-foreground">{fmtDate(b.starts_at)}</dd></div>
+              <div><dt className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Data</dt><dd className="mt-1 text-foreground">{fmtDate(b.starts_at)}</dd></div>
               <div><dt className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Godzina</dt><dd className="mt-1 text-foreground">{fmtHm(b.starts_at)}–{fmtHm(b.ends_at)} (30 minut)</dd></div>
               <div className="sm:col-span-2"><dt className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Koszt</dt><dd className="mt-1 text-foreground">Rozmowa jest bezpłatna.</dd></div>
             </dl>

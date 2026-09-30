@@ -50,8 +50,9 @@ export const warsawHm = (d: Date) => { const p = parts(d); return `${String(p.h)
 export const isoWeekday = (ymd: string) => { const [y, m, d] = ymd.split("-").map(Number); const w = new Date(Date.UTC(y!, m! - 1, d!)).getUTCDay(); return w === 0 ? 7 : w; };
 export const addDays = (ymd: string, n: number) => { const [y, m, d] = ymd.split("-").map(Number); const t = new Date(Date.UTC(y!, m! - 1, d! + n)); return t.toISOString().slice(0, 10); };
 
-export const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("pl-PL", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: TZ });
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+export const fmtDate = (iso: string) => cap(new Date(iso).toLocaleDateString("pl-PL", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: TZ }));
 export const fmtHm = (iso: string) => new Date(iso).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit", timeZone: TZ });
-export const fmtDayLabel = (ymd: string) => new Date(`${ymd}T12:00:00Z`).toLocaleDateString("pl-PL", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
+export const fmtDayLabel = (ymd: string) => cap(new Date(`${ymd}T12:00:00Z`).toLocaleDateString("pl-PL", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }));
 
 export const canUserCancel = (startsAt: string, now = Date.now()) => new Date(startsAt).getTime() - now >= CANCEL_LIMIT_HOURS * 3600_000;
