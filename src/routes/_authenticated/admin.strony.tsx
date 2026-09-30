@@ -64,7 +64,9 @@ function Editor({ id, onClose }: { id: string | null; onClose: () => void }) {
 
   useEffect(() => {
     if (!id) return;
-    getFn({ data: { id } }).then((p) => { setD({ ...EMPTY, ...p, sections: normalizeSections(p.sections) }); setLoading(false); }).catch((e) => { toast.error(errMsg(e)); onClose(); });
+    let live = true; // a late duplicate load must never overwrite edits already typed
+    getFn({ data: { id } }).then((p) => { if (!live) return; setD({ ...EMPTY, ...p, sections: normalizeSections(p.sections) }); setLoading(false); }).catch((e) => { if (live) { toast.error(errMsg(e)); onClose(); } });
+    return () => { live = false; };
   }, [id]);
   const names = d.sections.map((s) => s.image).filter(Boolean) as string[];
   useEffect(() => {
@@ -73,8 +75,9 @@ function Editor({ id, onClose }: { id: string | null; onClose: () => void }) {
   }, [pageId, names.join(",")]);
 
   const set = (patch: Partial<Draft>) => { setD((o) => ({ ...o, ...patch })); setDirty(true); };
-  const setSec = (i: number, patch: Partial<PageSection>) => set({ sections: d.sections.map((s, j) => j === i ? { ...s, ...patch } : s) });
-  const move = (i: number, dir: -1 | 1) => { const a = [...d.sections]; const j = i + dir; if (j < 0 || j >= a.length) return; [a[i], a[j]] = [a[j]!, a[i]!]; set({ sections: a }); };
+  // Functional updates: async callbacks (image upload) must not overwrite edits made meanwhile.
+  const setSec = (i: number, patch: Partial<PageSection>) => { setD((o) => ({ ...o, sections: o.sections.map((s, j) => j === i ? { ...s, ...patch } : s) })); setDirty(true); };
+  const move = (i: number, dir: -1 | 1) => { setD((o) => { const a = [...o.sections]; const j = i + dir; if (j < 0 || j >= a.length) return o; [a[i], a[j]] = [a[j]!, a[i]!]; return { ...o, sections: a }; }); setDirty(true); };
 
   async function save(): Promise<string | null> {
     setBusy(true);
@@ -223,7 +226,7 @@ function Editor({ id, onClose }: { id: string | null; onClose: () => void }) {
       </div>
 
       <div className="sticky bottom-0 flex flex-wrap gap-2 border-t border-border/60 bg-background py-3">
-        <Button onClick={save} disabled={busy}>Zapisz szkic</Button>
+        <Button onClick={save} disabled={busy}>{d.status === "published" ? "Zapisz zmiany" : "Zapisz szkic"}</Button>
         <Button variant="outline" onClick={() => setPreview(true)}>Podgląd</Button>
         {d.status !== "published" && <Button variant="outline" disabled={busy} onClick={() => setStatus("published")}>Opublikuj</Button>}
         {d.status === "published" && <Button variant="outline" disabled={busy} onClick={() => setStatus("draft")}>Cofnij publikację</Button>}

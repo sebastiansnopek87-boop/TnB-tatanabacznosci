@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { ArrowRight, ChevronRight } from "lucide-react";
 import cardHistoria from "@/assets/card-historia.jpg.asset.json";
 import cardBiblioteka from "@/assets/card-biblioteka.jpg.asset.json";
@@ -9,7 +10,7 @@ import tileTworczosc from "@/assets/tile-tworczosc.jpg.asset.json";
 const CARDS = [
   {
     num: "01",
-    id: "moja-historia",
+    id: "moja-historia", to: "/moja-historia",
     title: "Moja historia",
     desc: "Od trudnych początków, przez 18 lat służby, po rodzinę, życie po mundurze i wszystko to, co nauczyło mnie pokory, odpowiedzialności i wdzięczności.",
     cta: "Poznaj moją drogę",
@@ -18,7 +19,7 @@ const CARDS = [
   },
   {
     num: "02",
-    id: "biblioteka",
+    id: "biblioteka", to: "/biblioteka",
     title: "Biblioteka TNB",
     desc: "Artykuły, e-booki, podcasty, muzyka, wiersze i rozmowy, które zostają na dłużej.",
     cta: "Przeglądaj materiały",
@@ -27,7 +28,7 @@ const CARDS = [
   },
   {
     num: "03",
-    id: "podcast",
+    id: "podcast", to: "/podcast",
     title: "Podcast TNB",
     desc: "Rozmowy o życiu, wartościach, relacjach, wyzwaniach i powrotach. Prawdziwe historie, bez udawania.",
     cta: "Słuchaj podcastu",
@@ -38,21 +39,21 @@ const CARDS = [
 
 const TILES = [
   {
-    id: "spolecznosc",
+    id: "spolecznosc", to: "/spolecznosc",
     title: "Społeczność",
     desc: "Miejsce, w którym możesz czytać, komentować, dzielić się doświadczeniami i być częścią czegoś większego.",
     image: tileSpolecznosc.url,
     alt: "Ludzie przy ognisku",
   },
   {
-    id: "spotkania",
+    id: "spotkania", to: "/spotkania/rozmowa-1-1",
     title: "Spotkania 1:1",
     desc: "Czas na rozmowę.\nCzas dla Ciebie.",
     image: tileSpotkania.url,
     alt: "Rozświetlona chata wieczorem",
   },
   {
-    id: "tworczosc",
+    id: "tworczosc", to: "/biblioteka",
     title: "Moja twórczość",
     desc: "Muzyka, wiersze, teksty.\nInny wymiar tych samych doświadczeń.",
     image: tileTworczosc.url,
@@ -90,13 +91,13 @@ export function PillarCards() {
               <p className="mt-4 max-w-[19rem] text-[0.86rem] leading-[1.7] text-foreground/85">
                 {card.desc}
               </p>
-              <a
-                href={`#${card.id}`}
+              <Link
+                to={card.to}
                 className="mt-auto inline-flex w-fit items-center gap-6 border border-gold/60 px-5 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-foreground transition-colors hover:bg-gold/10"
               >
                 {card.cta}
                 <ArrowRight className="h-4 w-4" strokeWidth={1.75} />
-              </a>
+              </Link>
             </div>
           </article>
         ))}
@@ -104,10 +105,10 @@ export function PillarCards() {
 
       <div className="grid gap-4 lg:grid-cols-3 lg:gap-6">
         {TILES.map((tile) => (
-          <a
+          <Link
             key={tile.id}
             id={tile.id}
-            href={`#${tile.id}`}
+            to={tile.to}
             className="group flex items-stretch border border-border/50 bg-surface transition-colors hover:border-gold/50"
           >
             <img
@@ -129,7 +130,7 @@ export function PillarCards() {
                 strokeWidth={1.5}
               />
             </div>
-          </a>
+          </Link>
         ))}
       </div>
     </div></section>

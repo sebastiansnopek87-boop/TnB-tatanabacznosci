@@ -29,7 +29,7 @@ export function SiteHeader() {
             alt="Tata Na Baczności"
             className="h-[74px] w-[74px] rounded-full object-cover lg:h-[92px] lg:w-[92px] lg:-mb-6"
           />
-          <span className="block">
+          <span className="block xl:hidden min-[1600px]:block">
             <span className="block truncate font-display text-[1.05rem] font-semibold uppercase tracking-[0.1em] text-foreground sm:text-[1.45rem] sm:tracking-[0.12em]">
               Tata Na Baczności
             </span>
@@ -37,7 +37,7 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        <nav className="ml-6 hidden flex-1 flex-nowrap items-center gap-6 whitespace-nowrap xl:flex">
+        <nav className="ml-4 hidden min-w-0 flex-1 flex-nowrap items-center justify-center gap-5 2xl:gap-6 whitespace-nowrap xl:flex">
           {NAV.map((item) => (
             <Link
               key={item.label}
