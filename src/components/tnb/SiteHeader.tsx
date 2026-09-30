@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { Menu, Search, UserRound, X } from "lucide-react";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 import logo from "@/assets/logo.png.asset.json";
 
 const NAV = [
@@ -19,6 +22,18 @@ export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const path = useRouterState({ select: (st) => st.location.pathname });
   const isActive = (to: string) => to !== "/" && (path === to || path.startsWith(to + "/"));
+  const auth = useAuth();
+  const qc = useQueryClient();
+  const navigate = useNavigate();
+  async function signOut() {
+    setOpen(false);
+    await qc.cancelQueries();
+    qc.clear();
+    await navigate({ to: "/", replace: true });
+    await supabase.auth.signOut();
+  }
+  const outline = "border border-gold/70 text-[0.72rem] uppercase tracking-[0.14em] transition-colors hover:bg-gold/10";
+  const solid = "bg-gold text-[0.72rem] uppercase tracking-[0.14em] text-primary-foreground transition-colors hover:bg-gold-bright";
 
   return (
     <header className="relative z-30 bg-surface-deep">
@@ -57,20 +72,21 @@ export function SiteHeader() {
           >
             <Search className="h-5 w-5" strokeWidth={1.5} />
           </button>
-          <Link
-            to="/auth"
-            className="hidden whitespace-nowrap border border-gold/70 px-6 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-foreground transition-colors hover:bg-gold/10 lg:block"
-          >
-            Zaloguj się
-          </Link>
-          <Link
-            to="/auth"
-            search={{ tryb: "rejestracja" }}
-            className="hidden items-center gap-2 bg-gold px-6 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-primary-foreground transition-colors hover:bg-gold-bright lg:flex"
-          >
-            <UserRound className="h-4 w-4" strokeWidth={1.75} />
-            Dołącz
-          </Link>
+          {auth.status === "loading" && <span aria-hidden className="hidden h-[42px] w-[230px] lg:block" />}
+          {auth.status === "signed-out" && (<>
+            <Link to="/auth" className={`hidden whitespace-nowrap px-6 py-3 text-foreground lg:block ${outline}`}>Zaloguj się</Link>
+            <Link to="/auth" search={{ tryb: "rejestracja" }} className={`hidden items-center gap-2 px-6 py-3 lg:flex ${solid}`}>
+              <UserRound className="h-4 w-4" strokeWidth={1.75} />
+              Dołącz
+            </Link>
+          </>)}
+          {auth.status === "signed-in" && (<>
+            <button type="button" onClick={signOut} className={`hidden whitespace-nowrap px-6 py-3 text-foreground lg:block ${outline}`}>Wyloguj</button>
+            <Link to="/moje-tnb" className={`hidden items-center gap-2 whitespace-nowrap px-6 py-3 lg:flex ${solid}`}>
+              <UserRound className="h-4 w-4" strokeWidth={1.75} />
+              Moje TNB
+            </Link>
+          </>)}
           <button
             aria-label="Menu"
             onClick={() => setOpen((v) => !v)}
@@ -97,19 +113,14 @@ export function SiteHeader() {
             ))}
           </nav>
           <div className="mt-5 flex gap-3">
-            <Link
-              to="/auth"
-              className="flex-1 border border-gold/70 py-3 text-center text-[0.72rem] uppercase tracking-[0.14em]"
-            >
-              Zaloguj się
-            </Link>
-            <Link
-              to="/auth"
-              search={{ tryb: "rejestracja" }}
-              className="flex-1 bg-gold py-3 text-center text-[0.72rem] uppercase tracking-[0.14em] text-primary-foreground"
-            >
-              Dołącz
-            </Link>
+            {auth.status === "signed-out" && (<>
+              <Link to="/auth" onClick={() => setOpen(false)} className={`flex-1 py-3 text-center ${outline}`}>Zaloguj się</Link>
+              <Link to="/auth" search={{ tryb: "rejestracja" }} onClick={() => setOpen(false)} className={`flex-1 py-3 text-center ${solid}`}>Dołącz</Link>
+            </>)}
+            {auth.status === "signed-in" && (<>
+              <button type="button" onClick={signOut} className={`flex-1 py-3 text-center ${outline}`}>Wyloguj</button>
+              <Link to="/moje-tnb" onClick={() => setOpen(false)} className={`flex-1 py-3 text-center ${solid}`}>Moje TNB</Link>
+            </>)}
           </div>
         </div>
       )}
