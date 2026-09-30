@@ -1,8 +1,12 @@
 // Shared, browser-safe model for CMS pages (O TNB, Moja historia and future subpages).
 export type PageButton = { label: string; href: string };
+export type PageItem = { title: string; body: string };
+export type SectionKind = "hero" | "text" | "values" | "columns" | "quote" | "image" | "cta";
 export type PageSection = {
   id: string;
-  kind: "text" | "quote" | "image";
+  kind: SectionKind;
+  eyebrow: string;
+  layout: "left" | "right"; // image side for hero/text sections
   heading: string;
   body: string;
   image: string | null; // storage file name inside the page folder
@@ -10,6 +14,7 @@ export type PageSection = {
   caption: string;
   quoteAuthor: string;
   buttons: PageButton[];
+  items: PageItem[]; // value cards or the two columns of a comparison
 };
 export type PublicPage = {
   id: string; slug: string; system_key: string | null; title: string; intro: string;
@@ -25,9 +30,19 @@ export const pagePath = (p: { slug: string; system_key: string | null }) =>
 
 export const PAGE_STATUS: Record<string, string> = { draft: "Szkic", published: "Opublikowana", archived: "Zarchiwizowana" };
 
-export const newSection = (kind: PageSection["kind"] = "text"): PageSection => ({
-  id: Math.random().toString(36).slice(2, 10), kind, heading: "", body: "", image: null, imageAlt: "", caption: "", quoteAuthor: "", buttons: [],
+export const SECTION_KINDS: Record<SectionKind, string> = {
+  hero: "Otwarcie strony", text: "Tekst (opcjonalnie ze zdjęciem)", values: "Karty wartości", columns: "Dwie kolumny (listy)",
+  quote: "Cytat", image: "Zdjęcie na całą szerokość", cta: "Wezwanie do działania",
+};
+
+export const newSection = (kind: SectionKind = "text"): PageSection => ({
+  id: Math.random().toString(36).slice(2, 10), kind, eyebrow: "", layout: "right", heading: "", body: "", image: null, imageAlt: "", caption: "", quoteAuthor: "", buttons: [],
+  items: kind === "columns" ? [{ title: "", body: "" }, { title: "", body: "" }] : [],
 });
+
+// Older rows lack the newer fields — fill defaults so every renderer can rely on them.
+export const normalizeSections = (raw: unknown): PageSection[] =>
+  (Array.isArray(raw) ? raw : []).map((s: any) => ({ ...newSection(s?.kind ?? "text"), ...s, items: Array.isArray(s?.items) ? s.items : [], buttons: Array.isArray(s?.buttons) ? s.buttons : [] }));
 
 export const pageImageUrl = (pageId: string, file: string) => `/api/public/page-image/${pageId}/${encodeURIComponent(file)}`;
 
