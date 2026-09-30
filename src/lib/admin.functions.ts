@@ -1,4 +1,4 @@
-import { assertAdmin } from "./admin-auth.server";
+import { assertAdmin, logEvent } from "./admin-auth.server";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";

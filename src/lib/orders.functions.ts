@@ -134,6 +134,7 @@ export const adminSetOrderStatus = createServerFn({ method: "POST" })
     const ok = data.action === "paid" ? await m.markOrderPaid(data.id, context.userId)
       : data.action === "delivered" ? await m.markOrderDelivered(data.id, context.userId)
       : await m.markOrderStatus(data.id, data.action, data.action === "cancelled" ? "Anulowane przez administratora." : "Zwrot oznaczony przez administratora.", context.userId);
+    await logEvent({ type: `order_${data.action}`, actor: context.userId, objectKind: "order", objectId: data.id, result: ok ? "ok" : "failed" });
     if (!ok) throw new Error("Tej zmiany nie można wykonać przy obecnym statusie zamówienia.");
     return { ok: true };
   });
