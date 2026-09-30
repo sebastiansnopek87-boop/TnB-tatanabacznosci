@@ -107,7 +107,7 @@ function AdminNav() {
             {on && (
               <div className="mt-1 flex flex-wrap gap-1 lg:flex-col">
                 {g.items.map((n) => (
-                  <Link key={n.to} to={n.to} aria-current={isActive(n) ? "page" : undefined}
+                  <Link key={n.to} to={n.to} activeOptions={{ exact: true }} aria-current={isActive(n) ? "page" : undefined}
                     className={isActive(n)
                       ? "rounded border-l-2 border-gold bg-foreground/10 px-3 py-2 text-sm text-gold"
                       : "rounded border-l-2 border-transparent px-3 py-2 text-sm text-foreground/80 hover:bg-foreground/5"}>
