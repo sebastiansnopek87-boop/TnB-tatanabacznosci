@@ -85,7 +85,8 @@ function BookingPage() {
   const availableByDay = useMemo(() => new Map(days.map((available) => [available.date, available.slots])), [days]);
   const calendarDays = useMemo(() => monthGrid(visibleMonth), [visibleMonth]);
   const firstMonth = monthKey(today);
-  const lastMonth = days.length ? monthKey(days[days.length - 1].date) : firstMonth;
+  const lastAvailableDay = days.at(-1);
+  const lastMonth = lastAvailableDay ? monthKey(lastAvailableDay.date) : firstMonth;
   const daySlots = useMemo(() => days.find((d) => d.date === day)?.slots ?? [], [days, day]);
   useEffect(() => { if (slot && slots.data && !slots.data.some((d) => d.slots.includes(slot))) { setSlot(null); if (step !== "pick") setStep("pick"); setErr("Wybrany termin właśnie przestał być dostępny. Wybierz inny."); } }, [slots.data]); // eslint-disable-line react-hooks/exhaustive-deps
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setF((p) => ({ ...p, [k]: v }));
