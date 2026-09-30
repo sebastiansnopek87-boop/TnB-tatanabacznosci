@@ -46,7 +46,7 @@ export const EVENT_CATEGORIES: Array<{ value: string; label: string }> = [
 
 export const OBJECT_KIND: Record<string, string> = {
   page: "Strona", library: "Materiał", episode: "Odcinek", meeting: "Spotkanie", registration: "Zgłoszenie", booking: "Rozmowa 1:1",
-  order: "Zamówienie", post: "Post", comment: "Komentarz", report: "Zgłoszenie", availability: "Dostępność",
+  order: "Zamówienie", post: "Post", comment: "Komentarz", report: "Zgłoszenie", availability: "Dostępność", user: "Użytkownik",
 };
 export const RESULT: Record<string, string> = { ok: "Wykonano", failed: "Błąd", denied: "Odmowa dostępu" };
 

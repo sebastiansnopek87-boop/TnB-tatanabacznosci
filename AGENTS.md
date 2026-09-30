@@ -12,3 +12,4 @@
 - Admin panel under /admin (src/routes/_authenticated/admin*); every admin server fn calls assertAdmin from src/lib/admin-auth.server.ts and logs via logEvent to admin_events; RLS repeats the rule — defense in depth.
 - Signup open (email+confirmation, Google, Apple) -> /moje-tnb; roles granted only manually in user_roles.
 - Private buckets only; public media served via /api/public/* routes after access checks. Module rules: src/lib/AGENTS.md.
+- Roles: user_roles enum (superadmin, admin, moderator, editor, support, premium); panel access = admin; only superadmin changes roles (src/lib/users.functions.ts), last superadmin protected; why: reuse existing has_role/RLS.
