@@ -1,3 +1,4 @@
+import { assertAdmin } from "./admin-auth.server";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
@@ -8,10 +9,6 @@ import { CANCEL_REASONS, SLOT_MINUTES, addDays, canUserCancel, warsawToUtc } fro
 // or to the booking's own user (RLS: user_id = auth.uid()) / token holder (limited fields, no topic).
 const srv = () => import("./consult.server");
 type Ctx = { supabase: any; userId: string };
-async function assertAdmin(ctx: Ctx) {
-  const { data, error } = await ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "admin" });
-  if (error || !data) throw new Error("Brak uprawnień administratora.");
-}
 async function optionalUser() {
   const auth = getRequest()?.headers.get("authorization") ?? "";
   const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";

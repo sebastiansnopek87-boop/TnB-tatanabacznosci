@@ -1,3 +1,4 @@
+import { assertAdmin } from "./admin-auth.server";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
@@ -74,10 +75,6 @@ export const listMyPurchases = createServerFn({ method: "POST" })
 
 // ---------- admin ----------
 type Ctx = { supabase: any; userId: string };
-async function assertAdmin(ctx: Ctx) {
-  const { data, error } = await ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "admin" });
-  if (error || !data) throw new Error("Brak uprawnień administratora.");
-}
 
 export const adminListOrders = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

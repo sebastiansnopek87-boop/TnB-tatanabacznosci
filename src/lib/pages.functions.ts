@@ -1,3 +1,4 @@
+import { assertAdmin } from "./admin-auth.server";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -8,10 +9,6 @@ import { isSafeHref, type PublicPage } from "./pages";
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin;
 const BUCKET = "page-images";
 type Ctx = { supabase: any; userId: string };
-async function assertAdmin(ctx: Ctx) {
-  const { data, error } = await ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "admin" });
-  if (error || !data) throw new Error("Brak uprawnień administratora.");
-}
 const COLS = "id, slug, system_key, title, intro, sections, seo_title, seo_description, published_at, updated_at";
 const SLUG = z.string().regex(/^[a-z0-9-]{1,120}$/, "Adres może zawierać tylko małe litery, cyfry i myślniki.");
 
