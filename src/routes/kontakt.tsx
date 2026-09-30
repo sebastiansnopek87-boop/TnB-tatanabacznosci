@@ -5,6 +5,7 @@ import { ArrowRight, CheckCircle2, Loader2, Mail, Phone } from "lucide-react";
 import { PageHeading, PageShell } from "@/components/tnb/PageShell";
 import { SocialIcon } from "@/components/tnb/SocialIcon";
 import { getSiteSettings, visibleSocial } from "@/config/site-settings";
+import { usePlatformSettings } from "@/hooks/use-platform-settings";
 import { contactSchema, submitContact } from "@/lib/contact.functions";
 
 const DESC = "Napisz do Tata Na Baczności — pytania, historie, propozycje współpracy.";
@@ -31,8 +32,11 @@ function ContactPage() {
   const s = getSiteSettings();
   const t = s.contactPage;
   const social = visibleSocial(s);
-  const { email, phone } = s.contact;
-  const hasData = !!email || !!phone || social.length > 0;
+  const { data: ps } = usePlatformSettings();
+  const { phone } = s.contact;
+  const email = ps?.contact_email ?? s.contact.email;
+  const support = ps?.support_email ?? null;
+  const hasData = !!email || !!support || !!phone || social.length > 0;
 
   const send = useServerFn(submitContact);
   const [f, setF] = useState<Fields>(EMPTY);
@@ -164,6 +168,14 @@ function ContactPage() {
                 <li>
                   <a href={`mailto:${email}`} className="inline-flex items-center gap-3 text-foreground hover:text-gold">
                     <Mail className="h-4 w-4 text-gold" strokeWidth={1.5} /> {email}
+                  </a>
+                </li>
+              )}
+              {support && support !== email && (
+                <li>
+                  <span className="block text-xs text-muted-foreground">Obsługa użytkowników</span>
+                  <a href={`mailto:${support}`} className="inline-flex items-center gap-3 text-foreground hover:text-gold">
+                    <Mail className="h-4 w-4 text-gold" strokeWidth={1.5} /> {support}
                   </a>
                 </li>
               )}

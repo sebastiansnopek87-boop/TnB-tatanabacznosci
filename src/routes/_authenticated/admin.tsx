@@ -43,7 +43,11 @@ const GROUPS: Array<{ title: string; items: NavItem[] }> = [
     { to: "/admin/ustawienia-email", label: "Powiadomienia" },
     { to: "/admin/powiadomienia", label: "Historia wysyłek" },
   ] },
-  { title: "System", items: [{ to: "/admin/dziennik", label: "Dziennik zdarzeń" }] },
+  { title: "System", items: [
+    { to: "/admin/ustawienia", label: "Ustawienia platformy" },
+    { to: "/admin/bezpieczenstwo", label: "Bezpieczeństwo" },
+    { to: "/admin/dziennik", label: "Dziennik zdarzeń" },
+  ] },
 ];
 
 function AdminLayout() {
