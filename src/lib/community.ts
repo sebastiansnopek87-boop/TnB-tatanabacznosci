@@ -29,8 +29,8 @@ const PUBLIC_SELECT = "id, author_name, body, status, visibility, sector, create
 const guestRow = (r: any): Post => ({ ...r, author_id: "", comments: 0, reactions: 0, reacted: false, guest: true });
 
 export function useUid() {
-  const q = useQuery({ queryKey: ["uid"], queryFn: async () => (await supabase.auth.getUser()).data.user?.id ?? null });
-  return { uid: q.data ?? null, ready: q.isFetched };
+  const a = useAuth();
+  return { uid: a.user?.id ?? null, ready: a.status !== "loading" };
 }
 
 async function me() {

@@ -68,12 +68,8 @@ function EpisodePage() {
 }
 
 function Media({ e }: { e: EpisodeDetail }) {
-  const [uid, setUid] = useState<string | null | undefined>(undefined);
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setUid(data.session?.user.id ?? null));
-    const { data } = supabase.auth.onAuthStateChange((_e, s) => setUid(s?.user.id ?? null));
-    return () => data.subscription.unsubscribe();
-  }, []);
+  const auth = useAuth();
+  const uid = auth.status === "loading" ? undefined : auth.user?.id ?? null;
   const m = useQuery({
     queryKey: ["podcast-media", e.id, uid], enabled: uid !== undefined,
     queryFn: () => getEpisodeMedia({ data: { id: e.id } }), staleTime: 60 * 60 * 1000,
