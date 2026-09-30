@@ -18,8 +18,8 @@ function Dashboard() {
   });
   const d = data;
   const cards = d ? [
-    { label: "Użytkownicy łącznie", value: n(d.usersTotal), to: null },
-    { label: "Nowi użytkownicy (30 dni)", value: n(d.usersNew30), to: null },
+    { label: "Użytkownicy łącznie", value: n(d.usersTotal), to: "/admin/uzytkownicy" },
+    { label: "Nowi użytkownicy (30 dni)", value: n(d.usersNew30), to: "/admin/uzytkownicy" },
     { label: "Opublikowane materiały", value: n(d.library), to: "/admin/biblioteka" },
     { label: "Posty w Społeczności", value: n(d.posts), to: "/admin/spolecznosc" },
     { label: "Nadchodzące spotkania", value: n(d.meetings), to: "/admin/spotkania" },
@@ -62,9 +62,7 @@ function Dashboard() {
               <p className="text-xs text-muted-foreground">{c.label}</p>
               <p className={c.value === "Brak danych" ? "mt-2 text-sm text-muted-foreground" : "mt-2 font-display text-3xl text-gold"}>{c.value}</p>
             </>;
-            return c.to
-              ? <Link key={c.label} to={c.to} className="border border-border/60 p-4 hover:border-gold">{body}</Link>
-              : <div key={c.label} className="border border-border/60 p-4">{body}</div>;
+            return <Link key={c.label} to={c.to} className="border border-border/60 p-4 hover:border-gold">{body}</Link>;
           })}
         </div>
 

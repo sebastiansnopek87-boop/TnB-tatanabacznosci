@@ -1198,7 +1198,13 @@ export type Database = {
       library_can_read: { Args: { _item: string }; Returns: boolean }
     }
     Enums: {
-      app_role: "admin" | "premium"
+      app_role:
+        | "admin"
+        | "premium"
+        | "superadmin"
+        | "moderator"
+        | "editor"
+        | "support"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1326,7 +1332,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "premium"],
+      app_role: [
+        "admin",
+        "premium",
+        "superadmin",
+        "moderator",
+        "editor",
+        "support",
+      ],
     },
   },
 } as const

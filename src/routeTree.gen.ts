@@ -46,6 +46,7 @@ import { Route as AuthenticatedAdminStronyRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAdminSubskrybenciRouteImport } from './routes/_authenticated/admin.subskrybenci'
 import { Route as AuthenticatedAdminTresciRouteImport } from './routes/_authenticated/admin.tresci'
 import { Route as AuthenticatedAdminUstawieniaEmailRouteImport } from './routes/_authenticated/admin.ustawienia-email'
+import { Route as AuthenticatedAdminUzytkownicyRouteImport } from './routes/_authenticated/admin.uzytkownicy'
 import { Route as AuthenticatedAdminWiadomosciRouteImport } from './routes/_authenticated/admin.wiadomosci'
 import { Route as AuthenticatedAdminZamowieniaRouteImport } from './routes/_authenticated/admin.zamowienia'
 import { Route as SpotkaniaRezerwacjaTokenRouteImport } from './routes/spotkania.rezerwacja.$token'
@@ -251,6 +252,12 @@ const AuthenticatedAdminUstawieniaEmailRoute =
     path: '/ustawienia-email',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminUzytkownicyRoute =
+  AuthenticatedAdminUzytkownicyRouteImport.update({
+    id: '/uzytkownicy',
+    path: '/uzytkownicy',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminWiadomosciRoute =
   AuthenticatedAdminWiadomosciRouteImport.update({
     id: '/wiadomosci',
@@ -339,6 +346,7 @@ export interface FileRoutesByFullPath {
   '/admin/subskrybenci': typeof AuthenticatedAdminSubskrybenciRoute
   '/admin/tresci': typeof AuthenticatedAdminTresciRoute
   '/admin/ustawienia-email': typeof AuthenticatedAdminUstawieniaEmailRoute
+  '/admin/uzytkownicy': typeof AuthenticatedAdminUzytkownicyRoute
   '/admin/wiadomosci': typeof AuthenticatedAdminWiadomosciRoute
   '/admin/zamowienia': typeof AuthenticatedAdminZamowieniaRoute
   '/spotkania/rezerwacja/$token': typeof SpotkaniaRezerwacjaTokenRoute
@@ -385,6 +393,7 @@ export interface FileRoutesByTo {
   '/admin/subskrybenci': typeof AuthenticatedAdminSubskrybenciRoute
   '/admin/tresci': typeof AuthenticatedAdminTresciRoute
   '/admin/ustawienia-email': typeof AuthenticatedAdminUstawieniaEmailRoute
+  '/admin/uzytkownicy': typeof AuthenticatedAdminUzytkownicyRoute
   '/admin/wiadomosci': typeof AuthenticatedAdminWiadomosciRoute
   '/admin/zamowienia': typeof AuthenticatedAdminZamowieniaRoute
   '/spotkania/rezerwacja/$token': typeof SpotkaniaRezerwacjaTokenRoute
@@ -434,6 +443,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/subskrybenci': typeof AuthenticatedAdminSubskrybenciRoute
   '/_authenticated/admin/tresci': typeof AuthenticatedAdminTresciRoute
   '/_authenticated/admin/ustawienia-email': typeof AuthenticatedAdminUstawieniaEmailRoute
+  '/_authenticated/admin/uzytkownicy': typeof AuthenticatedAdminUzytkownicyRoute
   '/_authenticated/admin/wiadomosci': typeof AuthenticatedAdminWiadomosciRoute
   '/_authenticated/admin/zamowienia': typeof AuthenticatedAdminZamowieniaRoute
   '/spotkania/rezerwacja/$token': typeof SpotkaniaRezerwacjaTokenRoute
@@ -483,6 +493,7 @@ export interface FileRouteTypes {
     | '/admin/subskrybenci'
     | '/admin/tresci'
     | '/admin/ustawienia-email'
+    | '/admin/uzytkownicy'
     | '/admin/wiadomosci'
     | '/admin/zamowienia'
     | '/spotkania/rezerwacja/$token'
@@ -529,6 +540,7 @@ export interface FileRouteTypes {
     | '/admin/subskrybenci'
     | '/admin/tresci'
     | '/admin/ustawienia-email'
+    | '/admin/uzytkownicy'
     | '/admin/wiadomosci'
     | '/admin/zamowienia'
     | '/spotkania/rezerwacja/$token'
@@ -577,6 +589,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/subskrybenci'
     | '/_authenticated/admin/tresci'
     | '/_authenticated/admin/ustawienia-email'
+    | '/_authenticated/admin/uzytkownicy'
     | '/_authenticated/admin/wiadomosci'
     | '/_authenticated/admin/zamowienia'
     | '/spotkania/rezerwacja/$token'
@@ -883,6 +896,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminUstawieniaEmailRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/uzytkownicy': {
+      id: '/_authenticated/admin/uzytkownicy'
+      path: '/uzytkownicy'
+      fullPath: '/admin/uzytkownicy'
+      preLoaderRoute: typeof AuthenticatedAdminUzytkownicyRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/wiadomosci': {
       id: '/_authenticated/admin/wiadomosci'
       path: '/wiadomosci'
@@ -961,6 +981,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminSubskrybenciRoute: typeof AuthenticatedAdminSubskrybenciRoute
   AuthenticatedAdminTresciRoute: typeof AuthenticatedAdminTresciRoute
   AuthenticatedAdminUstawieniaEmailRoute: typeof AuthenticatedAdminUstawieniaEmailRoute
+  AuthenticatedAdminUzytkownicyRoute: typeof AuthenticatedAdminUzytkownicyRoute
   AuthenticatedAdminWiadomosciRoute: typeof AuthenticatedAdminWiadomosciRoute
   AuthenticatedAdminZamowieniaRoute: typeof AuthenticatedAdminZamowieniaRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
@@ -979,6 +1000,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminTresciRoute: AuthenticatedAdminTresciRoute,
   AuthenticatedAdminUstawieniaEmailRoute:
     AuthenticatedAdminUstawieniaEmailRoute,
+  AuthenticatedAdminUzytkownicyRoute: AuthenticatedAdminUzytkownicyRoute,
   AuthenticatedAdminWiadomosciRoute: AuthenticatedAdminWiadomosciRoute,
   AuthenticatedAdminZamowieniaRoute: AuthenticatedAdminZamowieniaRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
