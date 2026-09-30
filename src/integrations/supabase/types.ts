@@ -753,6 +753,72 @@ export type Database = {
         }
         Relationships: []
       }
+      podcast_episodes: {
+        Row: {
+          access: string
+          audio_mime: string | null
+          audio_path: string | null
+          category: string
+          cover_path: string | null
+          created_at: string
+          created_by: string | null
+          description: string
+          duration_seconds: number | null
+          external_url: string | null
+          featured: boolean
+          id: string
+          published_at: string | null
+          slug: string
+          sort_order: number
+          status: string
+          summary: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          access?: string
+          audio_mime?: string | null
+          audio_path?: string | null
+          category?: string
+          cover_path?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          duration_seconds?: number | null
+          external_url?: string | null
+          featured?: boolean
+          id?: string
+          published_at?: string | null
+          slug: string
+          sort_order?: number
+          status?: string
+          summary?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          access?: string
+          audio_mime?: string | null
+          audio_path?: string | null
+          category?: string
+          cover_path?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          duration_seconds?: number | null
+          external_url?: string | null
+          featured?: boolean
+          id?: string
+          published_at?: string | null
+          slug?: string
+          sort_order?: number
+          status?: string
+          summary?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
