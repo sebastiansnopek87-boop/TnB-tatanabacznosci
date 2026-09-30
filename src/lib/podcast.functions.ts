@@ -115,7 +115,7 @@ export const adminSaveEpisode = createServerFn({ method: "POST" }).middleware([r
       ? context.supabase.from("podcast_episodes").update(row).eq("id", id).select("id").single()
       : context.supabase.from("podcast_episodes").insert(row).select("id").single();
     const { data: r, error } = await q;
-    await LOG(context, id ? "episode_edit" : "episode_create", "episode", r?.id ?? id, error ? "failed" : "ok", rest.title);
+    await LOG(context, id ? "episode_edit" : "episode_create", "episode", r?.id ?? id ?? undefined, error ? "failed" : "ok", rest.title);
     if (error) throw new Error(error.code === "23505" ? "Odcinek o takim adresie już istnieje." : "Nie udało się zapisać odcinka.");
     return { id: r.id as string };
   });

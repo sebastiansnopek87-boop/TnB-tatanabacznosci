@@ -171,7 +171,7 @@ export const adminSaveMeeting = createServerFn({ method: "POST" })
     const q = id ? context.supabase.from("meetings").update(row).eq("id", id).select("id").single()
       : context.supabase.from("meetings").insert(row).select("id").single();
     const { data: saved, error } = await q;
-    await LOG(context, id ? "meeting_edit" : "meeting_create", "meeting", saved?.id ?? id, error ? "failed" : "ok", rest.title);
+    await LOG(context, id ? "meeting_edit" : "meeting_create", "meeting", saved?.id ?? id ?? undefined, error ? "failed" : "ok", rest.title);
     if (error) throw new Error(error.code === "23505" ? "Spotkanie o takim adresie już istnieje." : "Nie udało się zapisać spotkania.");
     return { id: saved.id as string };
   });
