@@ -62,9 +62,7 @@ function Dashboard() {
               <p className="text-xs text-muted-foreground">{c.label}</p>
               <p className={c.value === "Brak danych" ? "mt-2 text-sm text-muted-foreground" : "mt-2 font-display text-3xl text-gold"}>{c.value}</p>
             </>;
-            return c.to
-              ? <Link key={c.label} to={c.to} className="border border-border/60 p-4 hover:border-gold">{body}</Link>
-              : <div key={c.label} className="border border-border/60 p-4">{body}</div>;
+            return <Link key={c.label} to={c.to} className="border border-border/60 p-4 hover:border-gold">{body}</Link>;
           })}
         </div>
 
