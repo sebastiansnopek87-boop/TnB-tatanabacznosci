@@ -84,7 +84,7 @@ export const adminSetPageStatus = createServerFn({ method: "POST" }).middleware(
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), status: z.enum(["draft", "published", "archived"]) }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const patch: Record<string, unknown> = { status: data.status };
+    const patch: { status: string; published_at?: string } = { status: data.status };
     if (data.status === "published") patch.published_at = new Date().toISOString();
     const { error } = await context.supabase.from("site_pages").update(patch).eq("id", data.id);
     if (error) throw new Error("Nie udało się zmienić statusu.");
@@ -98,7 +98,7 @@ export const adminCreatePageUpload = createServerFn({ method: "POST" }).middlewa
     await assertAdmin(context);
     if (!IMAGES.includes(data.type)) throw new Error("Zdjęcie musi być plikiem JPG, PNG lub WEBP.");
     if (data.size > 8 * 1024 * 1024) throw new Error("Zdjęcie może mieć maksymalnie 8 MB.");
-    const name = `img-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${data.type.split("/")[1].replace("jpeg", "jpg")}`;
+    const name = `img-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${(data.type.split("/")[1] ?? "jpg").replace("jpeg", "jpg")}`;
     const { data: s, error } = await (await admin()).storage.from(BUCKET).createSignedUploadUrl(`${data.id}/${name}`);
     if (error || !s) throw new Error("Nie udało się przygotować przesyłania.");
     return { path: s.path, token: s.token, name };

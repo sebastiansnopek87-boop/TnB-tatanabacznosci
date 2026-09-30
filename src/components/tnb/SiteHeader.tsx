@@ -42,7 +42,7 @@ export function SiteHeader() {
             <Link
               key={item.label}
               to={item.to}
-              {...("hash" in item ? { hash: item.hash } : {})}
+              
               className={isActive(item.to) ? ACTIVE : "nav-link"}
             >
               {item.label}
@@ -88,7 +88,7 @@ export function SiteHeader() {
               <Link
                 key={item.label}
                 to={item.to}
-                {...("hash" in item ? { hash: item.hash } : {})}
+                
                 onClick={() => setOpen(false)}
                 className={`nav-link border-b border-border/60 py-4 ${isActive(item.to) ? "text-gold" : ""}`}
               >
