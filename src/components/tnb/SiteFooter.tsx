@@ -3,6 +3,7 @@ import { ArrowRight, Mail, Phone } from "lucide-react";
 import logo from "@/assets/logo.png.asset.json";
 import { byOrder, getSiteSettings, visibleSocial } from "@/config/site-settings";
 import { SocialIcon } from "./SocialIcon";
+import { usePlatformSettings } from "@/hooks/use-platform-settings";
 
 function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
   const cls = "text-[0.85rem] text-muted-foreground transition-colors hover:text-gold";
@@ -23,10 +24,12 @@ function FooterLink({ href, children }: { href: string; children: React.ReactNod
 export function SiteFooter() {
   const s = getSiteSettings();
   const social = visibleSocial(s);
-  const { email, phone, showInFooter } = s.contact;
+  const { data: ps } = usePlatformSettings();
+  const { phone, showInFooter } = s.contact;
+  const email = ps?.contact_email ?? s.contact.email;
   const hasContactColumn = showInFooter && (!!email || !!phone || social.length > 0);
   const year = new Date().getFullYear();
-  const owner = s.organization.legalName || s.organization.name;
+  const owner = s.organization.legalName || ps?.platform_name || s.organization.name;
 
   return (
     <footer className="border-t border-border/60 bg-surface-deep">

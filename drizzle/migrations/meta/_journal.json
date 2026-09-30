@@ -169,6 +169,13 @@
       "when": 1790795709938,
       "tag": "0023_app_role_granular",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1790796668161,
+      "tag": "0024_platform_settings",
+      "breakpoints": true
     }
   ]
 }

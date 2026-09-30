@@ -5,7 +5,10 @@ const OBJECT: Record<string, [string, string]> = {
 };
 
 export const EVENT_LABELS: Record<string, string> = {
-  access_denied: "Odmowa dostępu do panelu",
+  access_denied: "Odmowa dostępu lub nieuprawniona operacja",
+  settings_update: "Zmieniono ustawienia",
+  maintenance_on: "Włączono tryb konserwacji",
+  maintenance_off: "Wyłączono tryb konserwacji",
   role_granted: "Nadano rolę użytkownikowi",
   role_revoked: "Odebrano rolę użytkownikowi",
   order_paid: "Oznaczono zamówienie jako opłacone",
@@ -41,12 +44,12 @@ export const EVENT_CATEGORIES: Array<{ value: string; label: string }> = [
   { value: "page", label: "Strony" }, { value: "library", label: "Biblioteka" }, { value: "episode", label: "Podcast" },
   { value: "meeting", label: "Spotkania" }, { value: "registration", label: "Zgłoszenia na spotkania" }, { value: "booking", label: "Rozmowy 1:1" }, { value: "role", label: "Role użytkowników" },
   { value: "order", label: "Zamówienia" }, { value: "community", label: "Społeczność" }, { value: "report", label: "Zgłoszenia moderacyjne" },
-  { value: "access", label: "Dostęp" },
+  { value: "access", label: "Dostęp" }, { value: "settings", label: "Ustawienia" }, { value: "maintenance", label: "Tryb konserwacji" },
 ];
 
 export const OBJECT_KIND: Record<string, string> = {
   page: "Strona", library: "Materiał", episode: "Odcinek", meeting: "Spotkanie", registration: "Zgłoszenie", booking: "Rozmowa 1:1",
-  order: "Zamówienie", post: "Post", comment: "Komentarz", report: "Zgłoszenie", availability: "Dostępność", user: "Użytkownik",
+  order: "Zamówienie", post: "Post", comment: "Komentarz", report: "Zgłoszenie", availability: "Dostępność", user: "Użytkownik", settings: "Ustawienia",
 };
 export const RESULT: Record<string, string> = { ok: "Wykonano", failed: "Błąd", denied: "Odmowa dostępu" };
 

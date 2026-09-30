@@ -35,6 +35,7 @@ import { Route as SpotkaniaRozmowa11RouteImport } from './routes/spotkania.rozmo
 import { Route as StronySlugRouteImport } from './routes/strony.$slug'
 import { Route as ZakupTokenRouteImport } from './routes/zakup.$token'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedAdminBezpieczenstwoRouteImport } from './routes/_authenticated/admin.bezpieczenstwo'
 import { Route as AuthenticatedAdminBibliotekaRouteImport } from './routes/_authenticated/admin.biblioteka'
 import { Route as AuthenticatedAdminDziennikRouteImport } from './routes/_authenticated/admin.dziennik'
 import { Route as AuthenticatedAdminPodcastRouteImport } from './routes/_authenticated/admin.podcast'
@@ -45,6 +46,7 @@ import { Route as AuthenticatedAdminSpotkaniaRouteImport } from './routes/_authe
 import { Route as AuthenticatedAdminStronyRouteImport } from './routes/_authenticated/admin.strony'
 import { Route as AuthenticatedAdminSubskrybenciRouteImport } from './routes/_authenticated/admin.subskrybenci'
 import { Route as AuthenticatedAdminTresciRouteImport } from './routes/_authenticated/admin.tresci'
+import { Route as AuthenticatedAdminUstawieniaRouteImport } from './routes/_authenticated/admin.ustawienia'
 import { Route as AuthenticatedAdminUstawieniaEmailRouteImport } from './routes/_authenticated/admin.ustawienia-email'
 import { Route as AuthenticatedAdminUzytkownicyRouteImport } from './routes/_authenticated/admin.uzytkownicy'
 import { Route as AuthenticatedAdminWiadomosciRouteImport } from './routes/_authenticated/admin.wiadomosci'
@@ -186,6 +188,12 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminBezpieczenstwoRoute =
+  AuthenticatedAdminBezpieczenstwoRouteImport.update({
+    id: '/bezpieczenstwo',
+    path: '/bezpieczenstwo',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminBibliotekaRoute =
   AuthenticatedAdminBibliotekaRouteImport.update({
     id: '/biblioteka',
@@ -244,6 +252,12 @@ const AuthenticatedAdminTresciRoute =
   AuthenticatedAdminTresciRouteImport.update({
     id: '/tresci',
     path: '/tresci',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminUstawieniaRoute =
+  AuthenticatedAdminUstawieniaRouteImport.update({
+    id: '/ustawienia',
+    path: '/ustawienia',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminUstawieniaEmailRoute =
@@ -335,6 +349,7 @@ export interface FileRoutesByFullPath {
   '/podcast/': typeof PodcastIndexRoute
   '/spolecznosc/': typeof SpolecznoscIndexRoute
   '/spotkania/': typeof SpotkaniaIndexRoute
+  '/admin/bezpieczenstwo': typeof AuthenticatedAdminBezpieczenstwoRoute
   '/admin/biblioteka': typeof AuthenticatedAdminBibliotekaRoute
   '/admin/dziennik': typeof AuthenticatedAdminDziennikRoute
   '/admin/podcast': typeof AuthenticatedAdminPodcastRoute
@@ -345,6 +360,7 @@ export interface FileRoutesByFullPath {
   '/admin/strony': typeof AuthenticatedAdminStronyRoute
   '/admin/subskrybenci': typeof AuthenticatedAdminSubskrybenciRoute
   '/admin/tresci': typeof AuthenticatedAdminTresciRoute
+  '/admin/ustawienia': typeof AuthenticatedAdminUstawieniaRoute
   '/admin/ustawienia-email': typeof AuthenticatedAdminUstawieniaEmailRoute
   '/admin/uzytkownicy': typeof AuthenticatedAdminUzytkownicyRoute
   '/admin/wiadomosci': typeof AuthenticatedAdminWiadomosciRoute
@@ -382,6 +398,7 @@ export interface FileRoutesByTo {
   '/podcast': typeof PodcastIndexRoute
   '/spolecznosc': typeof SpolecznoscIndexRoute
   '/spotkania': typeof SpotkaniaIndexRoute
+  '/admin/bezpieczenstwo': typeof AuthenticatedAdminBezpieczenstwoRoute
   '/admin/biblioteka': typeof AuthenticatedAdminBibliotekaRoute
   '/admin/dziennik': typeof AuthenticatedAdminDziennikRoute
   '/admin/podcast': typeof AuthenticatedAdminPodcastRoute
@@ -392,6 +409,7 @@ export interface FileRoutesByTo {
   '/admin/strony': typeof AuthenticatedAdminStronyRoute
   '/admin/subskrybenci': typeof AuthenticatedAdminSubskrybenciRoute
   '/admin/tresci': typeof AuthenticatedAdminTresciRoute
+  '/admin/ustawienia': typeof AuthenticatedAdminUstawieniaRoute
   '/admin/ustawienia-email': typeof AuthenticatedAdminUstawieniaEmailRoute
   '/admin/uzytkownicy': typeof AuthenticatedAdminUzytkownicyRoute
   '/admin/wiadomosci': typeof AuthenticatedAdminWiadomosciRoute
@@ -432,6 +450,7 @@ export interface FileRoutesById {
   '/podcast/': typeof PodcastIndexRoute
   '/spolecznosc/': typeof SpolecznoscIndexRoute
   '/spotkania/': typeof SpotkaniaIndexRoute
+  '/_authenticated/admin/bezpieczenstwo': typeof AuthenticatedAdminBezpieczenstwoRoute
   '/_authenticated/admin/biblioteka': typeof AuthenticatedAdminBibliotekaRoute
   '/_authenticated/admin/dziennik': typeof AuthenticatedAdminDziennikRoute
   '/_authenticated/admin/podcast': typeof AuthenticatedAdminPodcastRoute
@@ -442,6 +461,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/strony': typeof AuthenticatedAdminStronyRoute
   '/_authenticated/admin/subskrybenci': typeof AuthenticatedAdminSubskrybenciRoute
   '/_authenticated/admin/tresci': typeof AuthenticatedAdminTresciRoute
+  '/_authenticated/admin/ustawienia': typeof AuthenticatedAdminUstawieniaRoute
   '/_authenticated/admin/ustawienia-email': typeof AuthenticatedAdminUstawieniaEmailRoute
   '/_authenticated/admin/uzytkownicy': typeof AuthenticatedAdminUzytkownicyRoute
   '/_authenticated/admin/wiadomosci': typeof AuthenticatedAdminWiadomosciRoute
@@ -482,6 +502,7 @@ export interface FileRouteTypes {
     | '/podcast/'
     | '/spolecznosc/'
     | '/spotkania/'
+    | '/admin/bezpieczenstwo'
     | '/admin/biblioteka'
     | '/admin/dziennik'
     | '/admin/podcast'
@@ -492,6 +513,7 @@ export interface FileRouteTypes {
     | '/admin/strony'
     | '/admin/subskrybenci'
     | '/admin/tresci'
+    | '/admin/ustawienia'
     | '/admin/ustawienia-email'
     | '/admin/uzytkownicy'
     | '/admin/wiadomosci'
@@ -529,6 +551,7 @@ export interface FileRouteTypes {
     | '/podcast'
     | '/spolecznosc'
     | '/spotkania'
+    | '/admin/bezpieczenstwo'
     | '/admin/biblioteka'
     | '/admin/dziennik'
     | '/admin/podcast'
@@ -539,6 +562,7 @@ export interface FileRouteTypes {
     | '/admin/strony'
     | '/admin/subskrybenci'
     | '/admin/tresci'
+    | '/admin/ustawienia'
     | '/admin/ustawienia-email'
     | '/admin/uzytkownicy'
     | '/admin/wiadomosci'
@@ -578,6 +602,7 @@ export interface FileRouteTypes {
     | '/podcast/'
     | '/spolecznosc/'
     | '/spotkania/'
+    | '/_authenticated/admin/bezpieczenstwo'
     | '/_authenticated/admin/biblioteka'
     | '/_authenticated/admin/dziennik'
     | '/_authenticated/admin/podcast'
@@ -588,6 +613,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/strony'
     | '/_authenticated/admin/subskrybenci'
     | '/_authenticated/admin/tresci'
+    | '/_authenticated/admin/ustawienia'
     | '/_authenticated/admin/ustawienia-email'
     | '/_authenticated/admin/uzytkownicy'
     | '/_authenticated/admin/wiadomosci'
@@ -819,6 +845,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/bezpieczenstwo': {
+      id: '/_authenticated/admin/bezpieczenstwo'
+      path: '/bezpieczenstwo'
+      fullPath: '/admin/bezpieczenstwo'
+      preLoaderRoute: typeof AuthenticatedAdminBezpieczenstwoRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/biblioteka': {
       id: '/_authenticated/admin/biblioteka'
       path: '/biblioteka'
@@ -887,6 +920,13 @@ declare module '@tanstack/react-router' {
       path: '/tresci'
       fullPath: '/admin/tresci'
       preLoaderRoute: typeof AuthenticatedAdminTresciRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/ustawienia': {
+      id: '/_authenticated/admin/ustawienia'
+      path: '/ustawienia'
+      fullPath: '/admin/ustawienia'
+      preLoaderRoute: typeof AuthenticatedAdminUstawieniaRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/ustawienia-email': {
@@ -970,6 +1010,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminBezpieczenstwoRoute: typeof AuthenticatedAdminBezpieczenstwoRoute
   AuthenticatedAdminBibliotekaRoute: typeof AuthenticatedAdminBibliotekaRoute
   AuthenticatedAdminDziennikRoute: typeof AuthenticatedAdminDziennikRoute
   AuthenticatedAdminPodcastRoute: typeof AuthenticatedAdminPodcastRoute
@@ -980,6 +1021,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminStronyRoute: typeof AuthenticatedAdminStronyRoute
   AuthenticatedAdminSubskrybenciRoute: typeof AuthenticatedAdminSubskrybenciRoute
   AuthenticatedAdminTresciRoute: typeof AuthenticatedAdminTresciRoute
+  AuthenticatedAdminUstawieniaRoute: typeof AuthenticatedAdminUstawieniaRoute
   AuthenticatedAdminUstawieniaEmailRoute: typeof AuthenticatedAdminUstawieniaEmailRoute
   AuthenticatedAdminUzytkownicyRoute: typeof AuthenticatedAdminUzytkownicyRoute
   AuthenticatedAdminWiadomosciRoute: typeof AuthenticatedAdminWiadomosciRoute
@@ -988,6 +1030,7 @@ interface AuthenticatedAdminRouteChildren {
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminBezpieczenstwoRoute: AuthenticatedAdminBezpieczenstwoRoute,
   AuthenticatedAdminBibliotekaRoute: AuthenticatedAdminBibliotekaRoute,
   AuthenticatedAdminDziennikRoute: AuthenticatedAdminDziennikRoute,
   AuthenticatedAdminPodcastRoute: AuthenticatedAdminPodcastRoute,
@@ -998,6 +1041,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminStronyRoute: AuthenticatedAdminStronyRoute,
   AuthenticatedAdminSubskrybenciRoute: AuthenticatedAdminSubskrybenciRoute,
   AuthenticatedAdminTresciRoute: AuthenticatedAdminTresciRoute,
+  AuthenticatedAdminUstawieniaRoute: AuthenticatedAdminUstawieniaRoute,
   AuthenticatedAdminUstawieniaEmailRoute:
     AuthenticatedAdminUstawieniaEmailRoute,
   AuthenticatedAdminUzytkownicyRoute: AuthenticatedAdminUzytkownicyRoute,

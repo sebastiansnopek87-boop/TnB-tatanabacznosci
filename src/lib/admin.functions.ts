@@ -1,4 +1,4 @@
-import { assertAdmin, logEvent } from "./admin-auth.server";
+import { assertAdmin, assertSuperadmin, logEvent } from "./admin-auth.server";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -161,10 +161,14 @@ export const updateEmailSettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => emailSettingsSchema.parse(d))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context);
+    await assertSuperadmin(context, "email_settings");
     const { error, count } = await context.supabase.from("email_settings")
       .update({ ...data, updated_at: new Date().toISOString() }, { count: "exact" }).eq("id", 1);
-    if (error || !count) throw new Error("Nie udało się zapisać ustawień.");
+    if (error || !count) {
+      await logEvent({ type: "settings_update", actor: context.userId, objectKind: "settings", objectId: "email", result: "failed" });
+      throw new Error("Nie udało się zapisać ustawień.");
+    }
+    await logEvent({ type: "settings_update", actor: context.userId, objectKind: "settings", objectId: "email" });
     return { ok: true as const };
   });
 
