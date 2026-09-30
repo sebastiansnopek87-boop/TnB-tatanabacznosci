@@ -1,0 +1,9 @@
+- Admin e-mails: notifications.server.ts, configured by single-row email_settings, logged to email_notification_log.
+- Newsletter stores consent text/version/time + opt-in method; active only when the opt-in rule is satisfied.
+- Community: guests read only public+published posts via anon RLS/column grants (no author_id); writes authenticated-only.
+- Library: metadata in library_items (anon, published); content in library_item_content gated by library_can_read(); files via signed URLs, covers via /api/public/library-cover/$id. Premium = paid library_orders row, never the premium role.
+- Orders: created server-side with DB price, bank transfer only (online_p24 placeholder); only admins mark paid/delivered (orders.server.ts) — client can never set paid.
+- Meetings: public reads with explicit safe columns (online_link hidden); registrations server-only with honeypot, per-email uniqueness, DB capacity trigger.
+- Podcast: admin-only RLS; public reads via safe columns; media returned by getEpisodeMedia (signed 3h) only after access check.
+- 1:1 consults: slots computed server-side (Europe/Warsaw); DB exclusion constraint blocks double booking; reminders cron not yet scheduled.
+- CMS: reuse site_pages (JSONB sections) for new content pages; images via /api/public/page-image only when published+referenced.
