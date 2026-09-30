@@ -1,4 +1,4 @@
-import { assertAdmin } from "./admin-auth.server";
+import { assertAdmin, logEvent as logAdmin } from "./admin-auth.server";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
@@ -152,6 +152,7 @@ export const adminUpdateBooking = createServerFn({ method: "POST" }).middleware(
     if (data.action === "set_link") {
       await s.from("consult_bookings").update({ meeting_link: data.link || null }).eq("id", data.id);
       await logEvent(data.id, "link_changed", data.link || "Usunięto link", context.userId);
+      await logAdmin({ type: "booking_link_changed", actor: context.userId, objectKind: "booking", objectId: data.id, detail: cur.booking_number });
       return { ok: true };
     }
     if (cur.status !== "booked") throw new Error("Ta rezerwacja ma już status końcowy.");
@@ -159,6 +160,7 @@ export const adminUpdateBooking = createServerFn({ method: "POST" }).middleware(
     const patch: Record<string, string | null> & { status: string } = { status, status_changed_by: context.userId, status_changed_at: now };
     if (status === "cancelled_admin") Object.assign(patch, { cancelled_at: now, cancelled_by: context.userId, cancel_reason: data.reason || "Anulowane przez organizatora", reminder_status: "not_needed" });
     const { error } = await s.from("consult_bookings").update(patch as any).eq("id", data.id).eq("status", "booked");
+    await logAdmin({ type: `booking_${status}`, actor: context.userId, objectKind: "booking", objectId: data.id, result: error ? "failed" : "ok", detail: cur.booking_number });
     if (error) throw new Error("Nie udało się zmienić statusu.");
     await logEvent(data.id, status, data.reason || null, context.userId);
     if (status === "cancelled_admin") await sendBookingMail("cancelled_admin", cur);
@@ -190,6 +192,7 @@ export const adminSaveAvailability = createServerFn({ method: "POST" }).middlewa
     if (del.error) throw new Error("Nie udało się zapisać dostępności.");
     if (norm.length) { const ins = await context.supabase.from("consult_availability").insert(norm); if (ins.error) throw new Error("Nie udało się zapisać dostępności."); }
     const up = await context.supabase.from("consult_settings").update({ default_meeting_link: data.defaultLink || null, updated_at: new Date().toISOString() }).eq("id", 1);
+    await logAdmin({ type: "availability_saved", actor: context.userId, objectKind: "availability", result: up.error ? "failed" : "ok" });
     if (up.error) throw new Error("Nie udało się zapisać linku.");
     return { ok: true };
   });
@@ -201,6 +204,7 @@ export const adminBlockDate = createServerFn({ method: "POST" }).middleware([req
     const r = data.remove
       ? await context.supabase.from("consult_blocked_dates").delete().eq("day", data.day)
       : await context.supabase.from("consult_blocked_dates").upsert({ day: data.day, reason: data.reason });
+    await logAdmin({ type: data.remove ? "date_unblocked" : "date_blocked", actor: context.userId, objectKind: "availability", result: r.error ? "failed" : "ok", detail: data.day });
     if (r.error) throw new Error("Nie udało się zapisać blokady.");
     return { ok: true };
   });

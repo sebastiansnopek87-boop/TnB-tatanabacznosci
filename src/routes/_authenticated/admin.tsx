@@ -1,10 +1,11 @@
-import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { getAdminStatus } from "@/lib/admin.functions";
 import { Button } from "@/components/ui/button";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { errMsg, isSessionError } from "@/components/admin/format";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -20,22 +21,29 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminLayout,
 });
 
-const NAV = [
-  { to: "/admin", label: "Pulpit", exact: true },
-  { to: "/admin/wiadomosci", label: "Wiadomości" },
-  { to: "/admin/subskrybenci", label: "Subskrybenci" },
-  { to: "/admin/ustawienia-email", label: "Ustawienia e-mail" },
-  { to: "/admin/spolecznosc", label: "Społeczność" },
-  { to: "/admin/biblioteka", label: "Biblioteka" },
-  { to: "/admin/zamowienia", label: "Zamówienia" },
-  { to: "/admin/spotkania", label: "Spotkania" },
-  { to: "/admin/rozmowy", label: "Rozmowy 1:1" },
-  { to: "/admin/podcast", label: "Podcast" },
-  { to: "/admin/powiadomienia", label: "Historia powiadomień" },
-  { to: "/admin/dziennik", label: "Dziennik zdarzeń" },
-  { to: "/admin/strony", label: "Strony" },
-  { to: "/admin/tresci", label: "Treści strony" },
-] as const;
+type NavItem = { to: string; label: string; exact?: boolean };
+const GROUPS: Array<{ title: string; items: NavItem[] }> = [
+  { title: "Pulpit", items: [{ to: "/admin", label: "Przegląd platformy", exact: true }] },
+  { title: "Zarządzanie", items: [
+    { to: "/admin/spolecznosc", label: "Społeczność i moderacja" },
+    { to: "/admin/spotkania", label: "Spotkania" },
+    { to: "/admin/rozmowy", label: "Rozmowy 1:1" },
+    { to: "/admin/biblioteka", label: "Biblioteka i materiały premium" },
+    { to: "/admin/podcast", label: "Podcast" },
+    { to: "/admin/zamowienia", label: "Zamówienia i sprzedaż" },
+  ] },
+  { title: "Treści i wygląd", items: [
+    { to: "/admin/strony", label: "Strony i edytor treści" },
+    { to: "/admin/tresci", label: "Treści strony" },
+  ] },
+  { title: "Komunikacja", items: [
+    { to: "/admin/wiadomosci", label: "Wiadomości kontaktowe" },
+    { to: "/admin/subskrybenci", label: "Newsletter" },
+    { to: "/admin/ustawienia-email", label: "Powiadomienia" },
+    { to: "/admin/powiadomienia", label: "Historia wysyłek" },
+  ] },
+  { title: "System", items: [{ to: "/admin/dziennik", label: "Dziennik zdarzeń" }] },
+];
 
 function AdminLayout() {
   const fn = useServerFn(getAdminStatus);
@@ -71,15 +79,7 @@ function AdminLayout() {
       <aside className="border-b border-border/60 p-5 lg:min-h-screen lg:w-64 lg:shrink-0 lg:border-b-0 lg:border-r">
         <Link to="/" className="font-display text-xl font-semibold uppercase">Tata Na Baczności</Link>
         <p className="eyebrow mt-1 text-gold">Panel administratora</p>
-        <nav className="mt-6 flex flex-wrap gap-2 lg:flex-col lg:gap-1">
-          {NAV.map((n) => (
-            <Link key={n.to} to={n.to} activeOptions={{ exact: "exact" in n }}
-              className="rounded px-3 py-2 text-sm text-foreground/80 hover:bg-foreground/5"
-              activeProps={{ className: "rounded px-3 py-2 text-sm bg-foreground/10 text-gold" }}>
-              {n.label}
-            </Link>
-          ))}
-        </nav>
+        <AdminNav />
         <div className="mt-6 space-y-2 border-t border-border/60 pt-4 text-xs text-muted-foreground">
           <p className="truncate">{data.email}</p>
           <Button variant="outline" size="sm" onClick={signOut}>Wyloguj</Button>
@@ -87,5 +87,38 @@ function AdminLayout() {
       </aside>
       <main className="min-w-0 flex-1 p-5 lg:p-10"><Outlet /></main>
     </div>
+  );
+}
+
+function AdminNav() {
+  const path = useRouterState({ select: (r) => r.location.pathname.replace(/\/$/, "") || "/" });
+  const isActive = (i: NavItem) => (i.exact ? path === i.to : path === i.to || path.startsWith(i.to + "/"));
+  const [open, setOpen] = useState<Record<string, boolean>>(() => Object.fromEntries(GROUPS.map((g) => [g.title, true])));
+  return (
+    <nav className="mt-6 space-y-3" aria-label="Menu panelu">
+      {GROUPS.map((g) => {
+        const on = open[g.title] || g.items.some(isActive);
+        return (
+          <div key={g.title}>
+            <button type="button" aria-expanded={on} onClick={() => setOpen((o) => ({ ...o, [g.title]: !on }))}
+              className="flex w-full items-center justify-between px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-widest text-muted-foreground hover:text-foreground">
+              {g.title}<ChevronDown className={`h-3.5 w-3.5 transition-transform ${on ? "" : "-rotate-90"}`} aria-hidden />
+            </button>
+            {on && (
+              <div className="mt-1 flex flex-wrap gap-1 lg:flex-col">
+                {g.items.map((n) => (
+                  <Link key={n.to} to={n.to} activeOptions={{ exact: true }} aria-current={isActive(n) ? "page" : undefined}
+                    className={isActive(n)
+                      ? "rounded border-l-2 border-gold bg-foreground/10 px-3 py-2 text-sm text-gold"
+                      : "rounded border-l-2 border-transparent px-3 py-2 text-sm text-foreground/80 hover:bg-foreground/5"}>
+                    {n.label}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </nav>
   );
 }

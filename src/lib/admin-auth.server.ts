@@ -9,7 +9,7 @@ export async function assertAdmin(ctx: Ctx) {
   }
 }
 
-export async function logEvent(e: { type: string; actor?: string | null; objectKind?: string; objectId?: string; result?: "ok" | "failed" | "denied"; detail?: string }) {
+export async function logEvent(e: { type: string; actor?: string | null; objectKind?: string | undefined; objectId?: string | undefined; result?: "ok" | "failed" | "denied"; detail?: string | undefined }) {
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("admin_events").insert({

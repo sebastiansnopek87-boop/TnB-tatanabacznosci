@@ -1,4 +1,6 @@
-import { assertAdmin } from "./admin-auth.server";
+import { assertAdmin, logEvent } from "./admin-auth.server";
+const LOG = (ctx: { userId: string }, type: string, kind: string, id?: string, result: "ok" | "failed" = "ok", detail?: string) => logEvent({ type, actor: ctx.userId, objectKind: kind, objectId: id, result, detail });
+
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { createClient } from "@supabase/supabase-js";
@@ -80,6 +82,7 @@ export const adminSaveLibraryItem = createServerFn({ method: "POST" })
     }
     const id = res.data.id as string;
     const { error } = await db.from("library_item_content").upsert({ item_id: id, body: data.body, external_url: data.external_url || null, updated_at: new Date().toISOString() });
+    await LOG(context, data.id ? "library_edit" : "library_create", "library", id, error ? "failed" : "ok", data.title);
     if (error) throw new Error("Zapisano dane materiału, ale nie udało się zapisać treści.");
     return { id };
   });
@@ -90,6 +93,7 @@ export const adminSetLibraryStatus = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { error } = await context.supabase.from("library_items").update({ status: data.status }).eq("id", data.id);
+    await LOG(context, `library_${data.status}`, "library", data.id, error ? "failed" : "ok");
     if (error) throw new Error("Nie udało się zmienić statusu.");
     return { ok: true };
   });
