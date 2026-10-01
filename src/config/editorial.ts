@@ -2,7 +2,7 @@
 export type Block = { heading: string; items: string[] };
 export type Template = { id: string; name: string; purpose: string; sections: Block[]; skeleton: string };
 
-export const EDITORIAL_VERSION = "1.0 (Etap 25)";
+export const EDITORIAL_VERSION = "1.1 (Etap 26.2)";
 
 export const IDENTITY: Block = {
   heading: "Tożsamość redakcyjna TNB",
@@ -79,6 +79,7 @@ export const CHECKLIST: string[] = [
   "Użyteczność ćwiczeń: każde ma cel, instrukcję i miejsce na odpowiedź; wykonalne bez dodatkowych narzędzi.",
   "Prawa do zdjęć i materiałów: znana licencja lub własne zdjęcie; zgoda osób rozpoznawalnych.",
   "Czytelność na telefonie: plik sprawdzony na ekranie ok. 390 px.",
+  "Znak wodny TNB: logo na stronie tytułowej i w stopce każdej strony, bez kolizji z treścią.",
   "Poprawność pliku końcowego: PDF otwiera się, ma numerację stron, spis treści działa, rozmiar rozsądny.",
   "Zgodność opisu, okładki i zawartości: tytuł, opis w Bibliotece, poziom dostępu i cena odpowiadają temu, co jest w pliku.",
   "Ograniczenia materiału: tam, gdzie to potrzebne, jest informacja, że materiał nie zastępuje pomocy specjalisty.",
