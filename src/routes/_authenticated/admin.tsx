@@ -60,6 +60,9 @@ function AdminLayout() {
   const qc = useQueryClient();
   const { data, isLoading, error } = useQuery({ queryKey: ["admin-status"], queryFn: () => fn() });
 
+  const [menu, setMenu] = useState(false);
+  const pathname = useRouterState({ select: (r) => r.location.pathname });
+  useEffect(() => { setMenu(false); }, [pathname]);
   async function signOut() {
     await qc.cancelQueries();
     qc.clear();
@@ -88,7 +91,8 @@ function AdminLayout() {
       <aside className="border-b border-border/60 p-5 lg:min-h-screen lg:w-64 lg:shrink-0 lg:border-b-0 lg:border-r">
         <Link to="/" className="font-display text-xl font-semibold uppercase">Tata Na Baczności</Link>
         <p className="eyebrow mt-1 text-gold">Panel administratora</p>
-        <AdminNav />
+        <button type="button" onClick={() => setMenu((v) => !v)} aria-expanded={menu} className="mt-4 w-full border border-border/60 px-3 py-2.5 text-left text-sm lg:hidden">{menu ? "Ukryj menu panelu ▲" : "Pokaż menu panelu ▼"}</button>
+        <div className={menu ? "" : "hidden lg:block"}><AdminNav /></div>
         <div className="mt-6 space-y-2 border-t border-border/60 pt-4 text-xs text-muted-foreground">
           <p className="truncate">{data.email}</p>
           <Button variant="outline" size="sm" onClick={signOut}>Wyloguj</Button>

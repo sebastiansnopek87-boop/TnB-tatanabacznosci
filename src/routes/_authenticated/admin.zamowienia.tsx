@@ -8,6 +8,7 @@ import { fmtDate, errMsg } from "@/components/admin/format";
 import { fmtPrice } from "@/lib/library";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { EVENT_MAP } from "@/lib/notify/registry";
 
 export const Route = createFileRoute("/_authenticated/admin/zamowienia")({ component: Orders });
 
@@ -54,19 +55,26 @@ function Orders() {
       {isLoading ? <p className="text-sm text-muted-foreground">Ładowanie…</p> : error ? <p className="text-sm text-destructive">{errMsg(error)}</p> : !data?.length ? (
         <p className="border border-border/60 p-6 text-sm text-muted-foreground">Brak zamówień.</p>
       ) : (
-        <div className="overflow-x-auto border border-border/60">
+        <><ul className="space-y-2 md:hidden">{data.map((r: any) => (
+          <li key={r.id}><button type="button" onClick={() => setOpenId(r.id)} className={`w-full border p-4 text-left text-sm ${openId === r.id ? "border-gold bg-card" : "border-border/60"}`}>
+            <span className="flex justify-between gap-2"><span className="font-mono text-xs">{r.order_number}</span><span className="text-gold">{STATUS[r.status] ?? r.status}</span></span>
+            <span className="mt-1 block break-words">{r.library_items?.title}</span>
+            <span className="mt-1 block break-all text-xs text-muted-foreground">{r.buyer_email}</span>
+            <span className="mt-1 flex justify-between text-xs text-muted-foreground"><span>{fmtDate(r.created_at)} · {PROVIDER[r.provider] ?? r.provider}{r.environment === "sandbox" && r.provider !== "manual" ? " (test)" : ""}</span><span className="text-foreground">{fmtPrice(r.amount)}</span></span>
+          </button></li>))}</ul>
+        <div className="hidden overflow-x-auto border border-border/60 md:block">
           <table className="w-full min-w-[820px] text-sm">
             <thead className="text-left text-xs uppercase tracking-wider text-muted-foreground"><tr className="border-b border-border/60">
               <th className="p-3">Nr</th><th className="p-3">Data</th><th className="p-3">Materiał</th><th className="p-3">E-mail</th><th className="p-3">Kwota</th><th className="p-3">Metoda</th><th className="p-3">Status</th></tr></thead>
             <tbody>{data.map((r: any) => (
-              <tr key={r.id} onClick={() => setOpenId(r.id)} className={`cursor-pointer border-b border-border/40 hover:bg-card ${openId === r.id ? "bg-card" : ""}`}>
+              <tr key={r.id} tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter") setOpenId(r.id); }} onClick={() => setOpenId(r.id)} className={`cursor-pointer border-b border-border/40 hover:bg-card ${openId === r.id ? "bg-card" : ""}`}>
                 <td className="p-3 font-mono text-xs">{r.order_number}</td>
                 <td className="p-3">{fmtDate(r.created_at)}</td><td className="p-3">{r.library_items?.title}</td><td className="p-3">{r.buyer_email}</td>
                 <td className="p-3">{fmtPrice(r.amount)}</td><td className="p-3">{PROVIDER[r.provider] ?? r.provider}{r.environment === "sandbox" && r.provider !== "manual" ? " (test)" : ""}</td>
                 <td className="p-3">{STATUS[r.status] ?? r.status}</td>
               </tr>))}</tbody>
           </table>
-        </div>
+        </div></>
       )}
       {openId && <OrderDetail id={openId} onClose={() => setOpenId(null)} />}
     </div>
@@ -98,7 +106,7 @@ function OrderDetail({ id, onClose }: { id: string; onClose: () => void }) {
   const row = (k: string, v: React.ReactNode) => <div className="flex flex-wrap justify-between gap-2 border-b border-border/40 py-2"><span className="text-muted-foreground">{k}</span><span className="break-all text-right">{v ?? "—"}</span></div>;
   const online = o.payment_method === "online";
   return (
-    <section className="border border-gold/40 bg-card p-5 text-sm">
+    <section ref={(el) => { if (el && el.dataset["shown"] !== o.id) { el.dataset["shown"] = o.id; el.scrollIntoView({ behavior: "smooth", block: "start" }); } }} className="scroll-mt-4 border border-gold/40 bg-card p-5 text-sm">
       <div className="flex items-center justify-between"><h2 className="font-display text-2xl font-semibold">Zamówienie {o.order_number}</h2><button onClick={onClose} className="text-gold underline">Zamknij</button></div>
       <div className="mt-4 grid gap-x-8 md:grid-cols-2">
         <div>
@@ -143,7 +151,7 @@ function OrderDetail({ id, onClose }: { id: string; onClose: () => void }) {
       <h3 className="mt-6 eyebrow text-gold">Historia zamówienia i płatności</h3>
       <ul className="mt-2 space-y-1">{data.events.map((e: any, i: number) => <li key={i}><span className="text-muted-foreground">{fmtDate(e.created_at)}</span> — {EVENT[e.type] ?? e.type}{e.detail ? `: ${e.detail}` : ""}</li>)}</ul>
       <h3 className="mt-6 eyebrow text-gold">Wiadomości e-mail</h3>
-      {!data.mails.length ? <p className="mt-2 text-muted-foreground">Brak.</p> : <ul className="mt-2 space-y-1">{data.mails.map((e: any, i: number) => <li key={i}><span className="text-muted-foreground">{fmtDate(e.created_at)}</span> — {e.template_key ?? e.kind}: {e.status === "sent" ? "wysłano" : e.status === "simulated" ? "symulacja (nie wysłano)" : `${e.status}${e.reason ? ` (${e.reason})` : ""}`}</li>)}</ul>}
+      {!data.mails.length ? <p className="mt-2 text-muted-foreground">Brak.</p> : <ul className="mt-2 space-y-1">{data.mails.map((e: any, i: number) => <li key={i}><span className="text-muted-foreground">{fmtDate(e.created_at)}</span> — {EVENT_MAP[e.template_key ?? e.kind]?.name ?? e.template_key ?? e.kind}: {e.status === "sent" ? "wysłano" : e.status === "simulated" ? "symulacja (nie wysłano)" : `${e.status}${e.reason ? ` (${e.reason})` : ""}`}</li>)}</ul>}
     </section>
   );
 }

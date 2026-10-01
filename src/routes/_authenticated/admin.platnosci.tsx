@@ -66,11 +66,12 @@ function ProviderCard({ p, canEdit }: { p: any; canEdit: boolean }) {
           <p className="text-xs">Adres powiadomień (webhook) do wpisania w panelu operatora:<br /><span className="break-all font-mono">{p.webhookUrl}</span></p>
           <p className="text-xs text-muted-foreground">Zwroty: {p.refunds}</p>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={() => t.mutate()} disabled={t.isPending}>{t.isPending ? "Sprawdzanie…" : "Test połączenia"}</Button>
+            <Button variant="outline" onClick={() => t.mutate()} disabled={t.isPending || !p.status.configured} title={p.status.configured ? undefined : "Najpierw uzupełnij brakujące dane"}>{t.isPending ? "Sprawdzanie…" : "Test połączenia"}</Button>
             {canEdit && (live
               ? <Button variant="outline" onClick={() => e.mutate({ environment: "sandbox", confirm: "" })} disabled={e.isPending}>Przełącz na testowe</Button>
-              : <Button variant="outline" onClick={() => { const c = window.prompt("Środowisko produkcyjne pobiera PRAWDZIWE pieniądze. Upewnij się, że klucze produkcyjne są ustawione.\n\nAby potwierdzić, wpisz: URUCHAMIAM PRODUKCJĘ"); if (c) e.mutate({ environment: "live", confirm: c }); }} disabled={e.isPending}>Uruchom produkcję…</Button>)}
+              : <Button variant="outline" onClick={() => { const c = window.prompt("Środowisko produkcyjne pobiera PRAWDZIWE pieniądze. Upewnij się, że klucze produkcyjne są ustawione.\n\nAby potwierdzić, wpisz: URUCHAMIAM PRODUKCJĘ"); if (c) e.mutate({ environment: "live", confirm: c }); }} disabled={e.isPending || !p.status.configured || !p.last_test_ok} title={!p.status.configured ? "Najpierw uzupełnij brakujące dane" : !p.last_test_ok ? "Najpierw wykonaj udany test połączenia" : undefined}>Uruchom produkcję…</Button>)}
           </div>
+          {(!p.status.configured || (!live && canEdit && !p.last_test_ok)) && <p className="text-xs text-muted-foreground">{!p.status.configured ? "Test połączenia i produkcja będą dostępne po uzupełnieniu danych." : "Produkcję można uruchomić po udanym teście połączenia."}</p>}
           {p.last_test_at && <p className={`text-xs ${p.last_test_ok ? "text-gold" : "text-destructive"}`}>Ostatni test {fmtDate(p.last_test_at)}: {p.last_test_detail}</p>}
         </div>
       </div>
