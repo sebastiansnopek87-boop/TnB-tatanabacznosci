@@ -171,7 +171,7 @@ function Editor({ id, cats, onClose, onSaved }: { id: string | null; cats: { slu
   if (id && cur.isLoading) return <p className="text-sm text-muted-foreground">Ładowanie materiału…</p>;
   if (id && cur.error) return <p className="text-sm text-destructive">{errMsg(cur.error)}</p>;
   const needsFile = f.kind !== "link";
-  const c = cur.data?.content as (Record<string, any> | undefined);
+  const c = cur.data?.content as any;
   const wm = (c?.watermark_status ?? "none") as string;
   const stale = !!(c?.pdf_generated_at && c?.body_updated_at && new Date(c.body_updated_at) > new Date(c.pdf_generated_at));
   const needsUrl = f.kind === "link" || f.kind === "video" || f.kind === "audio";
