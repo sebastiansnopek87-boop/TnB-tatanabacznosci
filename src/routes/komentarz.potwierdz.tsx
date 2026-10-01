@@ -26,11 +26,11 @@ export const Route = createFileRoute("/komentarz/potwierdz")({
 const pending = new Map<string, Promise<R>>();
 type R = Awaited<ReturnType<typeof confirmGuestComment>>;
 const TEXT: Record<R["status"], { title: string; body: string }> = {
-  published: { title: "Dziękujemy! Komentarz został opublikowany", body: "Twój adres e-mail został potwierdzony, a komentarz jest już widoczny pod artykułem." },
-  used: { title: "Ten link został już wykorzystany", body: "Każdy link potwierdzający działa tylko raz. Jeśli komentarz został wcześniej potwierdzony, jest już widoczny pod artykułem." },
-  expired: { title: "Link potwierdzający wygasł", body: "Minęło 48 godzin od wysłania wiadomości. Możesz poprosić o nowy link." },
+  published: { title: "Komentarz opublikowany", body: "Dziękujemy! Twój adres e-mail został potwierdzony, a komentarz jest już widoczny pod artykułem." },
+  used: { title: "Link już wykorzystany", body: "Każdy link potwierdzający działa tylko raz. Jeśli komentarz został wcześniej potwierdzony, jest już widoczny pod artykułem." },
+  expired: { title: "Link wygasł", body: "Minęło 48 godzin od wysłania wiadomości. Możesz poprosić o nowy link." },
   invalid: { title: "Link jest nieprawidłowy", body: "Nie rozpoznajemy tego linku. Sprawdź, czy skopiowałeś go w całości, albo dodaj komentarz ponownie." },
-  blocked: { title: "Nie można opublikować tego komentarza", body: "Komentarz został zatrzymany przez moderację i nie zostanie opublikowany." },
+  blocked: { title: "Komentarz zatrzymany", body: "Komentarz został zatrzymany przez moderację i nie zostanie opublikowany." },
 };
 
 function Confirm() {
