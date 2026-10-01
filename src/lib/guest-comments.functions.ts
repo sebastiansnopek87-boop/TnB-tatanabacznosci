@@ -71,7 +71,7 @@ export const submitGuestComment = createServerFn({ method: "POST" })
     return ok;
   });
 
-type ConfirmResult = { status: "published" | "invalid" | "used" | "expired" | "blocked"; slug?: string; canResend?: boolean };
+type ConfirmResult = { status: "published" | "invalid" | "used" | "expired" | "blocked"; slug?: string | undefined; canResend?: boolean };
 
 export const confirmGuestComment = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ token: z.string().min(20).max(100) }).parse(d))
