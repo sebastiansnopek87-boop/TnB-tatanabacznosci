@@ -37,6 +37,7 @@ import { Route as SpotkaniaRozmowa11RouteImport } from './routes/spotkania.rozmo
 import { Route as StronySlugRouteImport } from './routes/strony.$slug'
 import { Route as ZakupTokenRouteImport } from './routes/zakup.$token'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedAdminArtykulyRouteImport } from './routes/_authenticated/admin.artykuly'
 import { Route as AuthenticatedAdminBezpieczenstwoRouteImport } from './routes/_authenticated/admin.bezpieczenstwo'
 import { Route as AuthenticatedAdminBibliotekaRouteImport } from './routes/_authenticated/admin.biblioteka'
 import { Route as AuthenticatedAdminDziennikRouteImport } from './routes/_authenticated/admin.dziennik'
@@ -208,6 +209,12 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminArtykulyRoute =
+  AuthenticatedAdminArtykulyRouteImport.update({
+    id: '/artykuly',
+    path: '/artykuly',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminBezpieczenstwoRoute =
   AuthenticatedAdminBezpieczenstwoRouteImport.update({
     id: '/bezpieczenstwo',
@@ -416,6 +423,7 @@ export interface FileRoutesByFullPath {
   '/podcast/': typeof PodcastIndexRoute
   '/spolecznosc/': typeof SpolecznoscIndexRoute
   '/spotkania/': typeof SpotkaniaIndexRoute
+  '/admin/artykuly': typeof AuthenticatedAdminArtykulyRoute
   '/admin/bezpieczenstwo': typeof AuthenticatedAdminBezpieczenstwoRoute
   '/admin/biblioteka': typeof AuthenticatedAdminBibliotekaRoute
   '/admin/dziennik': typeof AuthenticatedAdminDziennikRoute
@@ -475,6 +483,7 @@ export interface FileRoutesByTo {
   '/podcast': typeof PodcastIndexRoute
   '/spolecznosc': typeof SpolecznoscIndexRoute
   '/spotkania': typeof SpotkaniaIndexRoute
+  '/admin/artykuly': typeof AuthenticatedAdminArtykulyRoute
   '/admin/bezpieczenstwo': typeof AuthenticatedAdminBezpieczenstwoRoute
   '/admin/biblioteka': typeof AuthenticatedAdminBibliotekaRoute
   '/admin/dziennik': typeof AuthenticatedAdminDziennikRoute
@@ -537,6 +546,7 @@ export interface FileRoutesById {
   '/podcast/': typeof PodcastIndexRoute
   '/spolecznosc/': typeof SpolecznoscIndexRoute
   '/spotkania/': typeof SpotkaniaIndexRoute
+  '/_authenticated/admin/artykuly': typeof AuthenticatedAdminArtykulyRoute
   '/_authenticated/admin/bezpieczenstwo': typeof AuthenticatedAdminBezpieczenstwoRoute
   '/_authenticated/admin/biblioteka': typeof AuthenticatedAdminBibliotekaRoute
   '/_authenticated/admin/dziennik': typeof AuthenticatedAdminDziennikRoute
@@ -599,6 +609,7 @@ export interface FileRouteTypes {
     | '/podcast/'
     | '/spolecznosc/'
     | '/spotkania/'
+    | '/admin/artykuly'
     | '/admin/bezpieczenstwo'
     | '/admin/biblioteka'
     | '/admin/dziennik'
@@ -658,6 +669,7 @@ export interface FileRouteTypes {
     | '/podcast'
     | '/spolecznosc'
     | '/spotkania'
+    | '/admin/artykuly'
     | '/admin/bezpieczenstwo'
     | '/admin/biblioteka'
     | '/admin/dziennik'
@@ -719,6 +731,7 @@ export interface FileRouteTypes {
     | '/podcast/'
     | '/spolecznosc/'
     | '/spotkania/'
+    | '/_authenticated/admin/artykuly'
     | '/_authenticated/admin/bezpieczenstwo'
     | '/_authenticated/admin/biblioteka'
     | '/_authenticated/admin/dziennik'
@@ -990,6 +1003,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/artykuly': {
+      id: '/_authenticated/admin/artykuly'
+      path: '/artykuly'
+      fullPath: '/admin/artykuly'
+      preLoaderRoute: typeof AuthenticatedAdminArtykulyRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/bezpieczenstwo': {
       id: '/_authenticated/admin/bezpieczenstwo'
       path: '/bezpieczenstwo'
@@ -1211,6 +1231,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminArtykulyRoute: typeof AuthenticatedAdminArtykulyRoute
   AuthenticatedAdminBezpieczenstwoRoute: typeof AuthenticatedAdminBezpieczenstwoRoute
   AuthenticatedAdminBibliotekaRoute: typeof AuthenticatedAdminBibliotekaRoute
   AuthenticatedAdminDziennikRoute: typeof AuthenticatedAdminDziennikRoute
@@ -1235,6 +1256,7 @@ interface AuthenticatedAdminRouteChildren {
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminArtykulyRoute: AuthenticatedAdminArtykulyRoute,
   AuthenticatedAdminBezpieczenstwoRoute: AuthenticatedAdminBezpieczenstwoRoute,
   AuthenticatedAdminBibliotekaRoute: AuthenticatedAdminBibliotekaRoute,
   AuthenticatedAdminDziennikRoute: AuthenticatedAdminDziennikRoute,
