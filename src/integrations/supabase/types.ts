@@ -47,6 +47,235 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_analyses: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          error: string | null
+          findings: Json | null
+          finished_at: string | null
+          id: string
+          period_from: string | null
+          period_to: string | null
+          scope: Json
+          source_count: number
+          sources_used: Json
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          findings?: Json | null
+          finished_at?: string | null
+          id?: string
+          period_from?: string | null
+          period_to?: string | null
+          scope?: Json
+          source_count?: number
+          sources_used?: Json
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          findings?: Json | null
+          finished_at?: string | null
+          id?: string
+          period_from?: string | null
+          period_to?: string | null
+          scope?: Json
+          source_count?: number
+          sources_used?: Json
+          status?: string
+        }
+        Relationships: []
+      }
+      ai_editor_settings: {
+        Row: {
+          community_decision_note: string
+          community_enabled: boolean
+          guidelines: string
+          id: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          community_decision_note?: string
+          community_enabled?: boolean
+          guidelines?: string
+          id?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          community_decision_note?: string
+          community_enabled?: boolean
+          guidelines?: string
+          id?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      ai_proposal_events: {
+        Row: {
+          action: string
+          actor: string | null
+          created_at: string
+          from_status: string | null
+          id: string
+          note: string | null
+          proposal_id: string
+          to_status: string | null
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          proposal_id: string
+          to_status?: string | null
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          proposal_id?: string
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_proposal_events_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "ai_proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_proposals: {
+        Row: {
+          analysis_id: string | null
+          created_at: string
+          data: Json
+          description: string
+          expansion: string | null
+          format: string
+          id: string
+          linked_id: string | null
+          linked_kind: string | null
+          outline: string | null
+          reject_reason: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          analysis_id?: string | null
+          created_at?: string
+          data?: Json
+          description?: string
+          expansion?: string | null
+          format: string
+          id?: string
+          linked_id?: string | null
+          linked_kind?: string | null
+          outline?: string | null
+          reject_reason?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          analysis_id?: string | null
+          created_at?: string
+          data?: Json
+          description?: string
+          expansion?: string | null
+          format?: string
+          id?: string
+          linked_id?: string | null
+          linked_kind?: string | null
+          outline?: string | null
+          reject_reason?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_proposals_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "ai_analyses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_sources: {
+        Row: {
+          admin_comment: string
+          author: string | null
+          content: string
+          created_at: string
+          created_by: string | null
+          fetch_error: string | null
+          fetch_status: string
+          id: string
+          kind: string
+          published_on: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          title: string
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          admin_comment?: string
+          author?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          fetch_error?: string | null
+          fetch_status?: string
+          id?: string
+          kind: string
+          published_on?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          admin_comment?: string
+          author?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          fetch_error?: string | null
+          fetch_status?: string
+          id?: string
+          kind?: string
+          published_on?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
       article_categories: {
         Row: {
           created_at: string
