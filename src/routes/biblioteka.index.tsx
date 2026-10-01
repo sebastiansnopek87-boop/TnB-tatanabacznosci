@@ -44,6 +44,7 @@ function Library() {
       </section>
 
       <div className="mx-auto max-w-[1200px] px-5 py-10 lg:px-14">
+        <AiRecommender />
         <div className="space-y-5 border border-border/60 bg-surface-deep p-5 sm:p-6">
           <label className="relative block">
             <span className="sr-only">Szukaj materiałów</span>
