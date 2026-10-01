@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft, Clock, Share2 } from "lucide-react";
 import { toast } from "sonner";
@@ -9,7 +10,7 @@ import type { PageSection } from "@/lib/pages";
 
 type Props = {
   title: string; excerpt: string; category: string | null; author: string; publishedAt: string | null; minutes: number;
-  cover: string | undefined; coverAlt: string; sections: PageSection[]; imageSrc: (f: string) => string | undefined; preview?: boolean;
+  cover: string | undefined; coverAlt: string; sections: PageSection[]; imageSrc: (f: string) => string | undefined; preview?: boolean; after?: ReactNode;
 };
 
 async function share(title: string) {
@@ -51,6 +52,7 @@ export function ArticleView(p: Props) {
           </figure>
         )}
         <PageSections sections={p.sections} imageSrc={p.imageSrc} />
+        {p.after}
         <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-4 border-t border-border/60 px-5 py-10 lg:px-0">
           <Link to="/artykuly" className="inline-flex items-center gap-2 text-[0.72rem] uppercase tracking-[0.16em] text-gold hover:text-gold-bright">
             <ArrowLeft className="h-4 w-4" /> Wróć do listy artykułów
