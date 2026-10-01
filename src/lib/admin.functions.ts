@@ -173,8 +173,8 @@ export const updateEmailSettings = createServerFn({ method: "POST" })
   });
 
 const logFilter = z.object({
-  kind: z.enum(["all", "contact_message", "newsletter_signup"]).default("all"),
-  status: z.enum(["all", "sent", "skipped", "failed", "suppressed"]).default("all"),
+  kind: z.string().max(64).default("all"),
+  status: z.enum(["all", "pending", "sending", "sent", "delivered", "failed", "cancelled", "skipped", "suppressed", "simulated"]).default("all"),
 });
 
 export const listNotificationLog = createServerFn({ method: "POST" })
@@ -182,12 +182,12 @@ export const listNotificationLog = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => logFilter.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    let q = context.supabase.from("email_notification_log").select("*").order("created_at", { ascending: false }).limit(500);
+    let q = context.supabase.from("email_notification_log").select("id, kind, related_id, recipient, status, reason, created_at, template_key, mode, attempts, provider_message_id, retryable, updated_at").order("created_at", { ascending: false }).limit(500);
     if (data.kind !== "all") q = q.eq("kind", data.kind);
     if (data.status !== "all") q = q.eq("status", data.status);
     const { data: rows, error } = await q;
     if (error) throw new Error("Nie udało się pobrać historii powiadomień.");
-    return rows as Array<{ id: string; kind: string; related_id: string | null; recipient: string | null; status: string; reason: string | null; created_at: string }>;
+    return rows as Array<{ id: string; kind: string; related_id: string | null; recipient: string | null; status: string; reason: string | null; created_at: string; template_key: string | null; mode: string; attempts: number; provider_message_id: string | null; retryable: boolean; updated_at: string }>;
   });
 
 // ---- Moderacja społeczności ----

@@ -46,12 +46,14 @@ import { Route as AuthenticatedAdminSpolecznoscRouteImport } from './routes/_aut
 import { Route as AuthenticatedAdminSpotkaniaRouteImport } from './routes/_authenticated/admin.spotkania'
 import { Route as AuthenticatedAdminStronyRouteImport } from './routes/_authenticated/admin.strony'
 import { Route as AuthenticatedAdminSubskrybenciRouteImport } from './routes/_authenticated/admin.subskrybenci'
+import { Route as AuthenticatedAdminSzablonyRouteImport } from './routes/_authenticated/admin.szablony'
 import { Route as AuthenticatedAdminTresciRouteImport } from './routes/_authenticated/admin.tresci'
 import { Route as AuthenticatedAdminUstawieniaRouteImport } from './routes/_authenticated/admin.ustawienia'
 import { Route as AuthenticatedAdminUstawieniaEmailRouteImport } from './routes/_authenticated/admin.ustawienia-email'
 import { Route as AuthenticatedAdminUzytkownicyRouteImport } from './routes/_authenticated/admin.uzytkownicy'
 import { Route as AuthenticatedAdminWiadomosciRouteImport } from './routes/_authenticated/admin.wiadomosci'
 import { Route as AuthenticatedAdminZamowieniaRouteImport } from './routes/_authenticated/admin.zamowienia'
+import { Route as AuthenticatedAdminZdarzeniaRouteImport } from './routes/_authenticated/admin.zdarzenia'
 import { Route as SpotkaniaRezerwacjaTokenRouteImport } from './routes/spotkania.rezerwacja.$token'
 import { Route as SpotkaniaZgloszenieTokenRouteImport } from './routes/spotkania.zgloszenie.$token'
 import { Route as ApiPublicCronConsultRemindersRouteImport } from './routes/api/public/cron/consult-reminders'
@@ -255,6 +257,12 @@ const AuthenticatedAdminSubskrybenciRoute =
     path: '/subskrybenci',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminSzablonyRoute =
+  AuthenticatedAdminSzablonyRouteImport.update({
+    id: '/szablony',
+    path: '/szablony',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminTresciRoute =
   AuthenticatedAdminTresciRouteImport.update({
     id: '/tresci',
@@ -289,6 +297,12 @@ const AuthenticatedAdminZamowieniaRoute =
   AuthenticatedAdminZamowieniaRouteImport.update({
     id: '/zamowienia',
     path: '/zamowienia',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminZdarzeniaRoute =
+  AuthenticatedAdminZdarzeniaRouteImport.update({
+    id: '/zdarzenia',
+    path: '/zdarzenia',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const SpotkaniaRezerwacjaTokenRoute =
@@ -367,12 +381,14 @@ export interface FileRoutesByFullPath {
   '/admin/spotkania': typeof AuthenticatedAdminSpotkaniaRoute
   '/admin/strony': typeof AuthenticatedAdminStronyRoute
   '/admin/subskrybenci': typeof AuthenticatedAdminSubskrybenciRoute
+  '/admin/szablony': typeof AuthenticatedAdminSzablonyRoute
   '/admin/tresci': typeof AuthenticatedAdminTresciRoute
   '/admin/ustawienia': typeof AuthenticatedAdminUstawieniaRoute
   '/admin/ustawienia-email': typeof AuthenticatedAdminUstawieniaEmailRoute
   '/admin/uzytkownicy': typeof AuthenticatedAdminUzytkownicyRoute
   '/admin/wiadomosci': typeof AuthenticatedAdminWiadomosciRoute
   '/admin/zamowienia': typeof AuthenticatedAdminZamowieniaRoute
+  '/admin/zdarzenia': typeof AuthenticatedAdminZdarzeniaRoute
   '/spotkania/rezerwacja/$token': typeof SpotkaniaRezerwacjaTokenRoute
   '/spotkania/zgloszenie/$token': typeof SpotkaniaZgloszenieTokenRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -417,12 +433,14 @@ export interface FileRoutesByTo {
   '/admin/spotkania': typeof AuthenticatedAdminSpotkaniaRoute
   '/admin/strony': typeof AuthenticatedAdminStronyRoute
   '/admin/subskrybenci': typeof AuthenticatedAdminSubskrybenciRoute
+  '/admin/szablony': typeof AuthenticatedAdminSzablonyRoute
   '/admin/tresci': typeof AuthenticatedAdminTresciRoute
   '/admin/ustawienia': typeof AuthenticatedAdminUstawieniaRoute
   '/admin/ustawienia-email': typeof AuthenticatedAdminUstawieniaEmailRoute
   '/admin/uzytkownicy': typeof AuthenticatedAdminUzytkownicyRoute
   '/admin/wiadomosci': typeof AuthenticatedAdminWiadomosciRoute
   '/admin/zamowienia': typeof AuthenticatedAdminZamowieniaRoute
+  '/admin/zdarzenia': typeof AuthenticatedAdminZdarzeniaRoute
   '/spotkania/rezerwacja/$token': typeof SpotkaniaRezerwacjaTokenRoute
   '/spotkania/zgloszenie/$token': typeof SpotkaniaZgloszenieTokenRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -470,12 +488,14 @@ export interface FileRoutesById {
   '/_authenticated/admin/spotkania': typeof AuthenticatedAdminSpotkaniaRoute
   '/_authenticated/admin/strony': typeof AuthenticatedAdminStronyRoute
   '/_authenticated/admin/subskrybenci': typeof AuthenticatedAdminSubskrybenciRoute
+  '/_authenticated/admin/szablony': typeof AuthenticatedAdminSzablonyRoute
   '/_authenticated/admin/tresci': typeof AuthenticatedAdminTresciRoute
   '/_authenticated/admin/ustawienia': typeof AuthenticatedAdminUstawieniaRoute
   '/_authenticated/admin/ustawienia-email': typeof AuthenticatedAdminUstawieniaEmailRoute
   '/_authenticated/admin/uzytkownicy': typeof AuthenticatedAdminUzytkownicyRoute
   '/_authenticated/admin/wiadomosci': typeof AuthenticatedAdminWiadomosciRoute
   '/_authenticated/admin/zamowienia': typeof AuthenticatedAdminZamowieniaRoute
+  '/_authenticated/admin/zdarzenia': typeof AuthenticatedAdminZdarzeniaRoute
   '/spotkania/rezerwacja/$token': typeof SpotkaniaRezerwacjaTokenRoute
   '/spotkania/zgloszenie/$token': typeof SpotkaniaZgloszenieTokenRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -523,12 +543,14 @@ export interface FileRouteTypes {
     | '/admin/spotkania'
     | '/admin/strony'
     | '/admin/subskrybenci'
+    | '/admin/szablony'
     | '/admin/tresci'
     | '/admin/ustawienia'
     | '/admin/ustawienia-email'
     | '/admin/uzytkownicy'
     | '/admin/wiadomosci'
     | '/admin/zamowienia'
+    | '/admin/zdarzenia'
     | '/spotkania/rezerwacja/$token'
     | '/spotkania/zgloszenie/$token'
     | '/admin/'
@@ -573,12 +595,14 @@ export interface FileRouteTypes {
     | '/admin/spotkania'
     | '/admin/strony'
     | '/admin/subskrybenci'
+    | '/admin/szablony'
     | '/admin/tresci'
     | '/admin/ustawienia'
     | '/admin/ustawienia-email'
     | '/admin/uzytkownicy'
     | '/admin/wiadomosci'
     | '/admin/zamowienia'
+    | '/admin/zdarzenia'
     | '/spotkania/rezerwacja/$token'
     | '/spotkania/zgloszenie/$token'
     | '/admin'
@@ -625,12 +649,14 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/spotkania'
     | '/_authenticated/admin/strony'
     | '/_authenticated/admin/subskrybenci'
+    | '/_authenticated/admin/szablony'
     | '/_authenticated/admin/tresci'
     | '/_authenticated/admin/ustawienia'
     | '/_authenticated/admin/ustawienia-email'
     | '/_authenticated/admin/uzytkownicy'
     | '/_authenticated/admin/wiadomosci'
     | '/_authenticated/admin/zamowienia'
+    | '/_authenticated/admin/zdarzenia'
     | '/spotkania/rezerwacja/$token'
     | '/spotkania/zgloszenie/$token'
     | '/_authenticated/admin/'
@@ -935,6 +961,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSubskrybenciRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/szablony': {
+      id: '/_authenticated/admin/szablony'
+      path: '/szablony'
+      fullPath: '/admin/szablony'
+      preLoaderRoute: typeof AuthenticatedAdminSzablonyRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/tresci': {
       id: '/_authenticated/admin/tresci'
       path: '/tresci'
@@ -975,6 +1008,13 @@ declare module '@tanstack/react-router' {
       path: '/zamowienia'
       fullPath: '/admin/zamowienia'
       preLoaderRoute: typeof AuthenticatedAdminZamowieniaRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/zdarzenia': {
+      id: '/_authenticated/admin/zdarzenia'
+      path: '/zdarzenia'
+      fullPath: '/admin/zdarzenia'
+      preLoaderRoute: typeof AuthenticatedAdminZdarzeniaRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/spotkania/rezerwacja/$token': {
@@ -1041,12 +1081,14 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminSpotkaniaRoute: typeof AuthenticatedAdminSpotkaniaRoute
   AuthenticatedAdminStronyRoute: typeof AuthenticatedAdminStronyRoute
   AuthenticatedAdminSubskrybenciRoute: typeof AuthenticatedAdminSubskrybenciRoute
+  AuthenticatedAdminSzablonyRoute: typeof AuthenticatedAdminSzablonyRoute
   AuthenticatedAdminTresciRoute: typeof AuthenticatedAdminTresciRoute
   AuthenticatedAdminUstawieniaRoute: typeof AuthenticatedAdminUstawieniaRoute
   AuthenticatedAdminUstawieniaEmailRoute: typeof AuthenticatedAdminUstawieniaEmailRoute
   AuthenticatedAdminUzytkownicyRoute: typeof AuthenticatedAdminUzytkownicyRoute
   AuthenticatedAdminWiadomosciRoute: typeof AuthenticatedAdminWiadomosciRoute
   AuthenticatedAdminZamowieniaRoute: typeof AuthenticatedAdminZamowieniaRoute
+  AuthenticatedAdminZdarzeniaRoute: typeof AuthenticatedAdminZdarzeniaRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
@@ -1062,6 +1104,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminSpotkaniaRoute: AuthenticatedAdminSpotkaniaRoute,
   AuthenticatedAdminStronyRoute: AuthenticatedAdminStronyRoute,
   AuthenticatedAdminSubskrybenciRoute: AuthenticatedAdminSubskrybenciRoute,
+  AuthenticatedAdminSzablonyRoute: AuthenticatedAdminSzablonyRoute,
   AuthenticatedAdminTresciRoute: AuthenticatedAdminTresciRoute,
   AuthenticatedAdminUstawieniaRoute: AuthenticatedAdminUstawieniaRoute,
   AuthenticatedAdminUstawieniaEmailRoute:
@@ -1069,6 +1112,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminUzytkownicyRoute: AuthenticatedAdminUzytkownicyRoute,
   AuthenticatedAdminWiadomosciRoute: AuthenticatedAdminWiadomosciRoute,
   AuthenticatedAdminZamowieniaRoute: AuthenticatedAdminZamowieniaRoute,
+  AuthenticatedAdminZdarzeniaRoute: AuthenticatedAdminZdarzeniaRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 

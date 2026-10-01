@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { getNotificationOverview, runDuplicateCheck, sendTestMessage, updateDeliveryConfig } from "@/lib/notifications.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/ustawienia-email")({ component: EmailSettings });
 
@@ -55,15 +56,7 @@ function EmailSettings() {
   return (
     <form onSubmit={onSubmit} className="max-w-2xl space-y-6">
       <h1 className="font-display text-3xl font-semibold uppercase">Ustawienia e-mail</h1>
-      <section className="border border-gold/50 p-4 text-sm" aria-label="Stan wysyłki">
-        <p className="font-semibold text-foreground">Stan wysyłki: <span className="text-destructive">nieaktywna</span></p>
-        <ul className="mt-2 space-y-1 text-foreground/80">
-          <li>{data?.notification_recipient ? "✔" : "✖"} Adres odbiorcy powiadomień {data?.notification_recipient ? "ustawiony" : "— nieustawiony"}</li>
-          <li>{data?.sender_domain ? "✔" : "✖"} Domena nadawcy {data?.sender_domain ? "wpisana" : "— niewpisana"}</li>
-          <li>✖ Dostawca poczty — niepodłączony (wymaga zweryfikowanej domeny)</li>
-        </ul>
-        <p className="mt-2 text-xs text-muted-foreground">Dopóki wysyłka nie działa, żaden e-mail nie jest wysyłany — każda próba trafia do Historii powiadomień jako „pominięta” z przyczyną.</p>
-      </section>
+      <ProviderSection />
       <div className="space-y-2"><Label htmlFor="rcpt">Adres odbiorcy powiadomień</Label>
         <Input id="rcpt" type="email" value={f.notification_recipient} onChange={(e) => set("notification_recipient", e.target.value)} placeholder="np. kontakt@twojadomena.pl" /></div>
       <div className="grid gap-4 sm:grid-cols-2">
@@ -80,7 +73,7 @@ function EmailSettings() {
         <Toggle id="t2" label="Powiadomienia o nowych zapisach do newslettera" checked={f.newsletter_notifications_enabled} onChange={(v) => set("newsletter_notifications_enabled", v)} />
         <Toggle id="t3" label="Potwierdzanie zapisu do newslettera przez e-mail (double opt-in)" checked={f.newsletter_double_opt_in} onChange={(v) => set("newsletter_double_opt_in", v)} />
         {f.newsletter_double_opt_in && (
-          <p className="text-xs text-destructive">Uwaga: dopóki wysyłka e-mail nie działa, nowi subskrybenci nie dostaną linku potwierdzającego i pozostaną w statusie „oczekuje”.</p>
+          <p className="text-xs text-destructive">Uwaga: dopóki rzeczywista wysyłka nie jest włączona, nowi subskrybenci nie dostaną linku potwierdzającego i pozostaną w statusie „oczekuje”.</p>
         )}
       </div>
       {err && <p className="text-sm text-destructive">{err}</p>}
@@ -98,5 +91,76 @@ function Toggle({ id, label, checked, onChange }: { id: string; label: string; c
       <Label htmlFor={id}>{label}</Label>
       <Switch id={id} checked={checked} onCheckedChange={onChange} />
     </div>
+  );
+}
+
+function ProviderSection() {
+  const overview = useServerFn(getNotificationOverview);
+  const saveCfg = useServerFn(updateDeliveryConfig);
+  const test = useServerFn(sendTestMessage);
+  const dup = useServerFn(runDuplicateCheck);
+  const qc = useQueryClient();
+  const { data } = useQuery({ queryKey: ["admin-notif-overview"], queryFn: () => overview() });
+  const [replyTo, setReplyTo] = useState<string | null>(null);
+  const [to, setTo] = useState("");
+  const [busy, setBusy] = useState(false);
+  if (!data) return null;
+  const rt = replyTo ?? data.settings.reply_to ?? "";
+  const live = data.settings.delivery_mode === "live";
+
+  async function act(fn: () => Promise<string>) {
+    setBusy(true);
+    try { toast.success(await fn()); qc.invalidateQueries({ queryKey: ["admin-notif-overview"] }); qc.invalidateQueries({ queryKey: ["admin-log"] }); }
+    catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
+  }
+
+  return (
+    <section className="space-y-4 border border-gold/50 p-4 text-sm" aria-label="Dostawca poczty">
+      <h2 className="font-display text-xl uppercase">Dostawca poczty</h2>
+      <dl className="grid gap-2 sm:grid-cols-[12rem_1fr]">
+        <dt className="text-muted-foreground">Dostawca</dt><dd>{data.provider.name}</dd>
+        <dt className="text-muted-foreground">Adres nadawcy</dt><dd>{data.settings.sender_name} &lt;{data.settings.sender}&gt;</dd>
+        <dt className="text-muted-foreground">Status domeny</dt>
+        <dd>{data.provider.connected ? <span className="text-gold">Zweryfikowana</span> : <span className="text-destructive">Oczekuje na weryfikację</span>}</dd>
+        <dt className="text-muted-foreground">Tryb wysyłki</dt>
+        <dd>{live ? "Rzeczywista wysyłka" : "Tryb testowy — wiadomości są przechwytywane i widoczne w Historii wysyłek jako „Symulacja”, nic nie trafia do odbiorców"}</dd>
+        <dt className="text-muted-foreground">Klucz API</dt><dd>Nie jest potrzebny — wbudowana poczta używa bezpiecznego połączenia serwera. Żaden klucz nie trafia do przeglądarki.</dd>
+      </dl>
+      {!data.provider.connected && (
+        <div className="border-l-2 border-gold pl-3 text-foreground/80">
+          <p className="font-semibold">Co trzeba zrobić, aby włączyć rzeczywistą wysyłkę:</p>
+          <ol className="mt-1 list-decimal space-y-1 pl-5">
+            <li>W ustawieniach projektu Lovable (Cloud → Emails) dodać domenę tatanabacznosci.pl jako domenę nadawcy.</li>
+            <li>U rejestratora domeny dodać rekordy DNS wskazane w tym kreatorze i poczekać na weryfikację (do 72 godzin).</li>
+            <li>Podłączyć wysyłkę w silniku powiadomień (jedna zmiana po stronie serwera) i przełączyć tryb na „Rzeczywista wysyłka”.</li>
+          </ol>
+          <p className="mt-1 text-xs text-muted-foreground">Szablony, zdarzenia i historia nie wymagają przebudowy.</p>
+        </div>
+      )}
+      {data.canEdit && <>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2"><Label htmlFor="rt">Adres odpowiedzi (Reply-To)</Label><Input id="rt" type="email" value={rt} onChange={(e) => setReplyTo(e.target.value)} placeholder="kontakt@tatanabacznosci.pl" /></div>
+          <div className="flex items-end gap-3"><Switch id="live" checked={live} disabled={!data.provider.connected || busy}
+            onCheckedChange={(v) => act(async () => { await saveCfg({ data: { reply_to: rt, delivery_mode: v ? "live" : "test" } }); return v ? "Włączono rzeczywistą wysyłkę." : "Włączono tryb testowy."; })} />
+            <Label htmlFor="live">Rzeczywista wysyłka{!data.provider.connected && " (niedostępna do czasu weryfikacji)"}</Label></div>
+        </div>
+        <Button type="button" variant="outline" disabled={busy} onClick={() => act(async () => { await saveCfg({ data: { reply_to: rt, delivery_mode: data.settings.delivery_mode } }); return "Zapisano adres odpowiedzi."; })}>Zapisz konfigurację dostawcy</Button>
+        <div className="space-y-2 border-t border-border/60 pt-4">
+          <Label htmlFor="tt">Wiadomość testowa</Label>
+          <div className="flex gap-2"><Input id="tt" type="email" value={to} onChange={(e) => setTo(e.target.value)} placeholder="adres@example.com" />
+            <Button type="button" variant="outline" disabled={busy || !to} onClick={() => act(async () => {
+              const r = await test({ data: { key: "test_message", to } });
+              if (r.status === "simulated") return "Tryb testowy: wiadomość przechwycona (symulacja), nie została wysłana.";
+              if (r.status === "sent") return "Wiadomość testowa wysłana.";
+              throw new Error(`Nie wysłano: ${r.reason ?? r.status}`);
+            })}>Wyślij test</Button>
+            <Button type="button" variant="outline" disabled={busy} onClick={() => act(async () => {
+              const r = await dup();
+              if (r.second !== "duplicate") throw new Error(`Ochrona przed duplikatami nie zadziałała (druga próba: ${r.second}).`);
+              return "Ochrona przed duplikatami działa: druga wysyłka z tym samym kluczem została zablokowana.";
+            })}>Test duplikatów</Button></div>
+        </div>
+      </>}
+    </section>
   );
 }
