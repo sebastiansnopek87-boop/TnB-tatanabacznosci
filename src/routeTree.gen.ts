@@ -40,6 +40,7 @@ import { Route as StronySlugRouteImport } from './routes/strony.$slug'
 import { Route as ZakupTokenRouteImport } from './routes/zakup.$token'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminArtykulyRouteImport } from './routes/_authenticated/admin.artykuly'
+import { Route as AuthenticatedAdminAsystentAiRouteImport } from './routes/_authenticated/admin.asystent-ai'
 import { Route as AuthenticatedAdminBezpieczenstwoRouteImport } from './routes/_authenticated/admin.bezpieczenstwo'
 import { Route as AuthenticatedAdminBibliotekaRouteImport } from './routes/_authenticated/admin.biblioteka'
 import { Route as AuthenticatedAdminDziennikRouteImport } from './routes/_authenticated/admin.dziennik'
@@ -226,6 +227,12 @@ const AuthenticatedAdminArtykulyRoute =
   AuthenticatedAdminArtykulyRouteImport.update({
     id: '/artykuly',
     path: '/artykuly',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminAsystentAiRoute =
+  AuthenticatedAdminAsystentAiRouteImport.update({
+    id: '/asystent-ai',
+    path: '/asystent-ai',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminBezpieczenstwoRoute =
@@ -445,6 +452,7 @@ export interface FileRoutesByFullPath {
   '/spolecznosc/': typeof SpolecznoscIndexRoute
   '/spotkania/': typeof SpotkaniaIndexRoute
   '/admin/artykuly': typeof AuthenticatedAdminArtykulyRoute
+  '/admin/asystent-ai': typeof AuthenticatedAdminAsystentAiRoute
   '/admin/bezpieczenstwo': typeof AuthenticatedAdminBezpieczenstwoRoute
   '/admin/biblioteka': typeof AuthenticatedAdminBibliotekaRoute
   '/admin/dziennik': typeof AuthenticatedAdminDziennikRoute
@@ -508,6 +516,7 @@ export interface FileRoutesByTo {
   '/spolecznosc': typeof SpolecznoscIndexRoute
   '/spotkania': typeof SpotkaniaIndexRoute
   '/admin/artykuly': typeof AuthenticatedAdminArtykulyRoute
+  '/admin/asystent-ai': typeof AuthenticatedAdminAsystentAiRoute
   '/admin/bezpieczenstwo': typeof AuthenticatedAdminBezpieczenstwoRoute
   '/admin/biblioteka': typeof AuthenticatedAdminBibliotekaRoute
   '/admin/dziennik': typeof AuthenticatedAdminDziennikRoute
@@ -574,6 +583,7 @@ export interface FileRoutesById {
   '/spolecznosc/': typeof SpolecznoscIndexRoute
   '/spotkania/': typeof SpotkaniaIndexRoute
   '/_authenticated/admin/artykuly': typeof AuthenticatedAdminArtykulyRoute
+  '/_authenticated/admin/asystent-ai': typeof AuthenticatedAdminAsystentAiRoute
   '/_authenticated/admin/bezpieczenstwo': typeof AuthenticatedAdminBezpieczenstwoRoute
   '/_authenticated/admin/biblioteka': typeof AuthenticatedAdminBibliotekaRoute
   '/_authenticated/admin/dziennik': typeof AuthenticatedAdminDziennikRoute
@@ -640,6 +650,7 @@ export interface FileRouteTypes {
     | '/spolecznosc/'
     | '/spotkania/'
     | '/admin/artykuly'
+    | '/admin/asystent-ai'
     | '/admin/bezpieczenstwo'
     | '/admin/biblioteka'
     | '/admin/dziennik'
@@ -703,6 +714,7 @@ export interface FileRouteTypes {
     | '/spolecznosc'
     | '/spotkania'
     | '/admin/artykuly'
+    | '/admin/asystent-ai'
     | '/admin/bezpieczenstwo'
     | '/admin/biblioteka'
     | '/admin/dziennik'
@@ -768,6 +780,7 @@ export interface FileRouteTypes {
     | '/spolecznosc/'
     | '/spotkania/'
     | '/_authenticated/admin/artykuly'
+    | '/_authenticated/admin/asystent-ai'
     | '/_authenticated/admin/bezpieczenstwo'
     | '/_authenticated/admin/biblioteka'
     | '/_authenticated/admin/dziennik'
@@ -1063,6 +1076,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminArtykulyRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/asystent-ai': {
+      id: '/_authenticated/admin/asystent-ai'
+      path: '/asystent-ai'
+      fullPath: '/admin/asystent-ai'
+      preLoaderRoute: typeof AuthenticatedAdminAsystentAiRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/bezpieczenstwo': {
       id: '/_authenticated/admin/bezpieczenstwo'
       path: '/bezpieczenstwo'
@@ -1292,6 +1312,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminArtykulyRoute: typeof AuthenticatedAdminArtykulyRoute
+  AuthenticatedAdminAsystentAiRoute: typeof AuthenticatedAdminAsystentAiRoute
   AuthenticatedAdminBezpieczenstwoRoute: typeof AuthenticatedAdminBezpieczenstwoRoute
   AuthenticatedAdminBibliotekaRoute: typeof AuthenticatedAdminBibliotekaRoute
   AuthenticatedAdminDziennikRoute: typeof AuthenticatedAdminDziennikRoute
@@ -1318,6 +1339,7 @@ interface AuthenticatedAdminRouteChildren {
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminArtykulyRoute: AuthenticatedAdminArtykulyRoute,
+  AuthenticatedAdminAsystentAiRoute: AuthenticatedAdminAsystentAiRoute,
   AuthenticatedAdminBezpieczenstwoRoute: AuthenticatedAdminBezpieczenstwoRoute,
   AuthenticatedAdminBibliotekaRoute: AuthenticatedAdminBibliotekaRoute,
   AuthenticatedAdminDziennikRoute: AuthenticatedAdminDziennikRoute,

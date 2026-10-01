@@ -253,6 +253,20 @@
       "when": 1790879193836,
       "tag": "0035_library_pdf_watermark_and_free_delivery",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1790883056340,
+      "tag": "0036_editorial_ai_assistant",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1790883697480,
+      "tag": "0037_ai_editor_touch_fix",
+      "breakpoints": true
     }
   ]
 }
