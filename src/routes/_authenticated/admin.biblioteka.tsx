@@ -171,7 +171,7 @@ function Editor({ id, cats, onClose, onSaved }: { id: string | null; cats: { slu
   if (id && cur.isLoading) return <p className="text-sm text-muted-foreground">Ładowanie materiału…</p>;
   if (id && cur.error) return <p className="text-sm text-destructive">{errMsg(cur.error)}</p>;
   const needsFile = f.kind !== "link";
-  const c = cur.data?.content as (Record<string, any> | undefined);
+  const c = cur.data?.content as any;
   const wm = (c?.watermark_status ?? "none") as string;
   const stale = !!(c?.pdf_generated_at && c?.body_updated_at && new Date(c.body_updated_at) > new Date(c.pdf_generated_at));
   const needsUrl = f.kind === "link" || f.kind === "video" || f.kind === "audio";
@@ -272,6 +272,71 @@ function Editor({ id, cats, onClose, onSaved }: { id: string | null; cats: { slu
           {f.status === "published" && <Button variant="outline" disabled={save.isPending} onClick={() => save.mutate("draft")}>Cofnij do szkicu</Button>}
           {f.id && f.status !== "archived" && <Button variant="outline" disabled={save.isPending} onClick={() => save.mutate("archived")}>Archiwizuj</Button>}
         </div>
+      </div>
+    </div>
+  );
+}
+
+const WM: Record<string, string> = { pending: "Oczekuje na przetworzenie", processing: "Przetwarzanie", ready: "Gotowy", failed: "Błąd przetwarzania", none: "—" };
+const REQ_STATUS: Record<string, string> = {
+  accepted: "Zgłoszenie przyjęte", pending_send: "Oczekuje na wysyłkę", simulated: "Wysyłka symulowana (test)", sent: "Wysłano",
+  download_ready: "Pobranie udostępnione", downloaded: "Pobranie zrealizowane", send_failed: "Błąd wysyłki", expired: "Link wygasł", cancelled: "Zgłoszenie anulowane / dane usunięte",
+};
+
+function History({ items }: { items: { id: string; title: string }[] }) {
+  const listFn = useServerFn(adminListLibraryRequests);
+  const eraseFn = useServerFn(adminEraseLibraryRequest);
+  const qc = useQueryClient();
+  const [itemId, setItemId] = useState<string | null>(null);
+  const [emailIn, setEmailIn] = useState(""); const [email, setEmail] = useState("");
+  const [mode, setMode] = useState<FreeDelivery | null>(null);
+  const [st, setSt] = useState<string | null>(null);
+  const [open, setOpen] = useState<string | null>(null);
+  useEffect(() => { const t = setTimeout(() => setEmail(emailIn), 300); return () => clearTimeout(t); }, [emailIn]);
+  const q = useQuery({ queryKey: ["admin-lib-req", itemId, email, mode, st], queryFn: () => listFn({ data: { itemId, email, mode, status: st } }) });
+  const erase = async (id: string) => {
+    if (!confirm("Usunąć dane osobowe z tego zgłoszenia? Zostanie tylko anonimowy wpis.")) return;
+    try { await eraseFn({ data: { id } }); toast.success("Dane usunięte."); qc.invalidateQueries({ queryKey: ["admin-lib-req"] }); } catch (e) { toast.error(errMsg(e)); }
+  };
+  return (
+    <div>
+      <h1 className="font-display text-3xl font-semibold uppercase">Historia udostępnień</h1>
+      <p className="mt-2 text-sm text-muted-foreground">Pobrania, zgłoszenia i wysyłki bezpłatnych materiałów. Dane osobowe widzą tylko administratorzy; są usuwane po 12 miesiącach.</p>
+      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Select value={itemId ?? "all"} onValueChange={(v) => setItemId(v === "all" ? null : v)}><SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent><SelectItem value="all">Wszystkie materiały</SelectItem>{items.map((i) => <SelectItem key={i.id} value={i.id}>{i.title}</SelectItem>)}</SelectContent></Select>
+        <Input placeholder="Szukaj po adresie e-mail" value={emailIn} onChange={(e) => setEmailIn(e.target.value)} maxLength={100} />
+        <Select value={mode ?? "all"} onValueChange={(v) => setMode(v === "all" ? null : (v as FreeDelivery))}><SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent><SelectItem value="all">Każdy sposób</SelectItem>{(Object.keys(FREE_DELIVERY) as FreeDelivery[]).map((m) => <SelectItem key={m} value={m}>{FREE_DELIVERY[m]}</SelectItem>)}</SelectContent></Select>
+        <Select value={st ?? "all"} onValueChange={(v) => setSt(v === "all" ? null : v)}><SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent><SelectItem value="all">Każdy status</SelectItem>{Object.entries(REQ_STATUS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select>
+      </div>
+      <div className="mt-6 space-y-2">
+        {q.isLoading ? <p className="text-sm text-muted-foreground">Ładowanie…</p>
+          : q.error ? <p className="text-sm text-destructive">{errMsg(q.error)}</p>
+          : !q.data?.length ? <p className="border border-border/60 p-6 text-sm text-muted-foreground">Brak zdarzeń.</p>
+          : q.data.map((r) => (
+            <div key={r.id} className="border border-border/60 p-4">
+              <button className="flex w-full flex-col gap-1 text-left sm:flex-row sm:items-center sm:justify-between" onClick={() => setOpen(open === r.id ? null : r.id)}>
+                <span className="min-w-0 break-words"><span className="font-medium">{r.item_title}</span><span className="block text-xs text-muted-foreground">{fmtDate(r.created_at)} · {FREE_DELIVERY[r.mode as FreeDelivery]} · {r.email ?? (r.user_id ? "zalogowany użytkownik" : "anonimowo")}</span></span>
+                <Badge variant={r.status === "send_failed" ? "destructive" : "outline"}>{REQ_STATUS[r.status] ?? r.status}</Badge>
+              </button>
+              {open === r.id && (
+                <dl className="mt-3 grid gap-x-4 gap-y-1 break-words text-xs sm:grid-cols-[12rem_1fr]">
+                  <dt className="text-muted-foreground">Identyfikator zdarzenia</dt><dd>{r.id}</dd>
+                  <dt className="text-muted-foreground">Materiał</dt><dd>{r.item_id}</dd>
+                  <dt className="text-muted-foreground">Imię i nazwisko</dt><dd>{[r.first_name, r.last_name].filter(Boolean).join(" ") || "—"}</dd>
+                  <dt className="text-muted-foreground">Użytkownik</dt><dd>{r.user_id ?? "—"}</dd>
+                  <dt className="text-muted-foreground">Wysyłka</dt><dd>{r.notification_status ?? "—"}</dd>
+                  <dt className="text-muted-foreground">Pobrano</dt><dd>{r.downloaded_at ? `${fmtDate(r.downloaded_at)} (×${r.download_count})` : "—"}</dd>
+                  <dt className="text-muted-foreground">Link ważny do</dt><dd>{r.token_expires_at ? fmtDate(r.token_expires_at) : "—"}</dd>
+                  <dt className="text-muted-foreground">Zgoda</dt><dd>{r.consent_at ? `${fmtDate(r.consent_at)} · wersja ${r.privacy_version}` : "—"}</dd>
+                  <dt className="text-muted-foreground">Usunięcie danych</dt><dd>{fmtDate(r.retention_until)}</dd>
+                  {r.email && <dd className="sm:col-start-2"><Button size="sm" variant="outline" onClick={() => erase(r.id)}>Usuń dane osobowe</Button></dd>}
+                </dl>
+              )}
+            </div>
+          ))}
       </div>
     </div>
   );

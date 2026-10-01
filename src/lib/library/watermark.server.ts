@@ -14,6 +14,11 @@ export function isPdf(bytes: Uint8Array) {
 }
 
 export async function watermarkPdf(bytes: Uint8Array): Promise<Uint8Array> {
+  try { return await mark(bytes); }
+  catch (e) { if (e instanceof WatermarkError) throw e; throw new WatermarkError("PDF jest uszkodzony lub w nieobsługiwanym formacie."); }
+}
+
+async function mark(bytes: Uint8Array): Promise<Uint8Array> {
   if (!isPdf(bytes)) throw new WatermarkError("Plik nie jest prawidłowym dokumentem PDF.");
   let doc: PDFDocument;
   try {
