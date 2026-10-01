@@ -206,31 +206,35 @@ export const adminDeletePoll = createServerFn({ method: "POST" }).middleware([re
   });
 
 export const adminListArticleComments = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ filter: z.enum(["all", "reported", "hidden"]) }).parse(d))
+  .inputValidator((d: unknown) => z.object({ filter: z.enum(["all", "reported", "hidden", "pending"]) }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { data: rows, error } = await context.supabase.from("article_comments")
-      .select("id, article_id, author_name, body, status, created_at, updated_at, articles(title, slug), article_comment_reports(id, reason, status)")
+      .select("id, article_id, author_name, body, status, created_at, updated_at, articles(title, slug), article_comment_reports(id, reason, status), article_comment_guests(comment_id)")
       .order("created_at", { ascending: false }).limit(300);
     if (error) throw new Error("Nie udało się pobrać komentarzy.");
     const items = (rows ?? []).map((r: any) => ({
       id: r.id as string, author_name: r.author_name as string, body: r.body as string, status: r.status as string, created_at: r.created_at as string,
-      article: r.articles as { title: string; slug: string } | null,
+      article: r.articles as { title: string; slug: string } | null, guest: !!r.article_comment_guests,
       reports: ((r.article_comment_reports ?? []) as any[]).filter((x) => x.status === "open").map((x) => x.reason as string),
     }));
-    return items.filter((c) => data.filter === "all" || (data.filter === "reported" ? c.reports.length > 0 : c.status === "hidden"));
+    return items.filter((c) => data.filter === "all" || (data.filter === "reported" ? c.reports.length > 0 : data.filter === "pending" ? ["pending_email", "expired", "confirmed"].includes(c.status) : c.status === "hidden"));
   });
 
 export const adminModerateArticleComment = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), action: z.enum(["hide", "show", "delete", "dismiss"]) }).parse(d))
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), action: z.enum(["hide", "show", "delete", "dismiss", "reject"]) }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const sb = context.supabase;
-    const { error } = data.action === "delete" ? await sb.from("article_comments").delete().eq("id", data.id)
-      : data.action === "dismiss" ? { error: null }
-      : await sb.from("article_comments").update({ status: data.action === "hide" ? "hidden" : "visible" }).eq("id", data.id);
+    // "show" only restores a comment a moderator hid — it can never publish an unconfirmed guest comment.
+    const upd = (status: string, from: string[]) => sb.from("article_comments").update({ status }).eq("id", data.id).in("status", from);
+    const { error } = data.action === "dismiss" ? { error: null }
+      : data.action === "delete" ? await upd("deleted", ["pending_email", "confirmed", "visible", "hidden", "rejected", "expired"])
+      : data.action === "hide" ? await upd("hidden", ["visible", "confirmed"])
+      : data.action === "reject" ? await upd("rejected", ["pending_email", "expired", "confirmed"])
+      : await upd("visible", ["hidden"]);
     if (error) throw new Error("Nie udało się wykonać operacji.");
-    if (data.action !== "delete") await sb.from("article_comment_reports").update({ status: "resolved" }).eq("comment_id", data.id).eq("status", "open");
+    if (data.action !== "reject") await sb.from("article_comment_reports").update({ status: "resolved" }).eq("comment_id", data.id).eq("status", "open");
     await logEvent({ type: `article_comment_${data.action}`, actor: context.userId, objectKind: "article_comment", objectId: data.id });
     return { ok: true };
   });

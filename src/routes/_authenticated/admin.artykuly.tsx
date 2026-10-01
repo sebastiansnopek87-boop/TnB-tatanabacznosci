@@ -364,18 +364,23 @@ function PollAndStats({ id }: { id: string }) {
   );
 }
 
+const COMMENT_STATUS: Record<string, string> = {
+  pending_email: "Oczekuje na potwierdzenie e-mail", confirmed: "Potwierdzony", visible: "Opublikowany", hidden: "Ukryty przez moderatora",
+  rejected: "Odrzucony", deleted: "Usunięty", expired: "Potwierdzenie wygasło",
+};
+
 function CommentsModeration() {
   const listFn = useServerFn(adminListArticleComments); const modFn = useServerFn(adminModerateArticleComment);
-  const [filter, setFilter] = useState<"all" | "reported" | "hidden">("all");
+  const [filter, setFilter] = useState<"all" | "reported" | "hidden" | "pending">("all");
   const q = useQuery({ queryKey: ["admin-article-comments", filter], queryFn: () => listFn({ data: { filter } }) });
-  async function act(id: string, action: "hide" | "show" | "delete" | "dismiss") {
-    if (action === "delete" && !confirm("Trwale usunąć komentarz?")) return;
+  async function act(id: string, action: "hide" | "show" | "delete" | "dismiss" | "reject") {
+    if (action === "delete" && !confirm("Usunąć komentarz? Zniknie ze strony na stałe.")) return;
     try { await modFn({ data: { id, action } }); toast.success("Zapisano."); q.refetch(); } catch (e) { toast.error(errMsg(e)); }
   }
   return (
     <div className="mt-6 space-y-4">
       <div className="flex flex-wrap gap-2">
-        {([["all", "Wszystkie"], ["reported", "Zgłoszone"], ["hidden", "Ukryte"]] as const).map(([k, l]) => (
+        {([["all", "Wszystkie"], ["pending", "Czekają na potwierdzenie"], ["reported", "Zgłoszone"], ["hidden", "Ukryte"]] as const).map(([k, l]) => (
           <Button key={k} size="sm" variant={filter === k ? "default" : "outline"} onClick={() => setFilter(k)}>{l}</Button>
         ))}
       </div>
@@ -386,16 +391,17 @@ function CommentsModeration() {
         {(q.data ?? []).map((c) => (
           <div key={c.id} className="space-y-2 p-4">
             <div className="flex flex-wrap items-baseline justify-between gap-2 text-xs text-muted-foreground">
-              <span><b className="text-foreground">{c.author_name}</b> · {c.article ? <a href={`/artykuly/${c.article.slug}`} target="_blank" rel="noreferrer" className="text-gold underline">{c.article.title}</a> : "—"}</span>
+              <span><b className="text-foreground">{c.author_name}</b>{c.guest && <span className="ml-1 border border-border px-1 text-[0.65rem] uppercase">gość</span>} · <span className="text-gold">{COMMENT_STATUS[c.status] ?? c.status}</span> · {c.article ? <a href={`/artykuly/${c.article.slug}`} target="_blank" rel="noreferrer" className="text-gold underline">{c.article.title}</a> : "—"}</span>
               <span>{new Date(c.created_at).toLocaleString("pl-PL")}</span>
             </div>
             <p className="whitespace-pre-line break-words text-sm">{c.body}</p>
-            {c.status === "hidden" && <p className="text-xs uppercase tracking-wide text-destructive">Ukryty</p>}
             {c.reports.length > 0 && <p className="text-xs text-destructive">Zgłoszenia ({c.reports.length}): {c.reports.map((r) => r || "bez powodu").join(" · ")}</p>}
             <div className="flex flex-wrap gap-2">
-              {c.status === "visible" ? <Button size="sm" variant="outline" onClick={() => act(c.id, "hide")}>Ukryj</Button> : <Button size="sm" variant="outline" onClick={() => act(c.id, "show")}>Przywróć</Button>}
+              {(c.status === "visible" || c.status === "confirmed") && <Button size="sm" variant="outline" onClick={() => act(c.id, "hide")}>Ukryj</Button>}
+              {c.status === "hidden" && <Button size="sm" variant="outline" onClick={() => act(c.id, "show")}>Przywróć</Button>}
+              {["pending_email", "expired", "confirmed"].includes(c.status) && <Button size="sm" variant="outline" onClick={() => act(c.id, "reject")}>Odrzuć</Button>}
               {c.reports.length > 0 && <Button size="sm" variant="ghost" onClick={() => act(c.id, "dismiss")}>Odrzuć zgłoszenia</Button>}
-              <Button size="sm" variant="ghost" onClick={() => act(c.id, "delete")}><Trash2 className="mr-1 h-4 w-4" />Usuń</Button>
+              {c.status !== "deleted" && <Button size="sm" variant="ghost" onClick={() => act(c.id, "delete")}><Trash2 className="mr-1 h-4 w-4" />Usuń</Button>}
             </div>
           </div>
         ))}
