@@ -58,6 +58,7 @@ const itemSchema = z.object({
   purchasable: z.boolean(),
   payment_product_id: z.string().trim().max(120),
   delivery_method: z.enum(["email_link", "email_attachment", "account_access"]),
+  free_delivery: z.enum(["direct", "form_download", "email"]).default("direct"),
   external_url: z.string().trim().max(2000).refine((v) => v === "" || /^https:\/\/\S+$/.test(v), "Adres zewnętrzny musi zaczynać się od https://"),
 });
 
@@ -72,7 +73,7 @@ export const adminSaveLibraryItem = createServerFn({ method: "POST" })
     if (price !== null && price < 100) throw new Error("Cena musi wynosić co najmniej 1 zł.");
     const meta = { title: data.title, slug: data.slug, summary: data.summary, category: data.category, kind: data.kind, access: data.access, status: data.status, author_name: data.author_name,
       price_amount: data.access === "premium" ? price : null, purchasable: data.access === "premium" && data.purchasable,
-      payment_product_id: data.payment_product_id || null, delivery_method: data.delivery_method };
+      payment_product_id: data.payment_product_id || null, delivery_method: data.delivery_method, free_delivery: data.free_delivery };
     const res = data.id
       ? await db.from("library_items").update(meta).eq("id", data.id).select("id").single()
       : await db.from("library_items").insert(meta).select("id").single();
@@ -81,7 +82,10 @@ export const adminSaveLibraryItem = createServerFn({ method: "POST" })
       throw new Error("Nie udało się zapisać materiału.");
     }
     const id = res.data.id as string;
-    const { error } = await db.from("library_item_content").upsert({ item_id: id, body: data.body, external_url: data.external_url || null, updated_at: new Date().toISOString() });
+    const { data: prev } = await db.from("library_item_content").select("body").eq("item_id", id).maybeSingle();
+    const now = new Date().toISOString();
+    const bodyChanged = (prev?.body ?? "") !== data.body;
+    const { error } = await db.from("library_item_content").upsert({ item_id: id, body: data.body, external_url: data.external_url || null, updated_at: now, ...(bodyChanged ? { body_updated_at: now } : {}) });
     await LOG(context, data.id ? "library_edit" : "library_create", "library", id, error ? "failed" : "ok", data.title);
     if (error) throw new Error("Zapisano dane materiału, ale nie udało się zapisać treści.");
     return { id };
