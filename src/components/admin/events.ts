@@ -8,6 +8,12 @@ export const EVENT_LABELS: Record<string, string> = {
   article_category_save: "Zapisano kategorię artykułów",
   article_category_delete: "Usunięto kategorię artykułów",
   article_home_mode: "Zmieniono artykuły na stronie głównej",
+  article_poll_save: "Zapisano ankietę artykułu",
+  article_poll_delete: "Usunięto ankietę artykułu",
+  article_comment_hide: "Ukryto komentarz pod artykułem",
+  article_comment_show: "Przywrócono komentarz pod artykułem",
+  article_comment_delete: "Usunięto komentarz pod artykułem",
+  article_comment_dismiss: "Odrzucono zgłoszenie komentarza",
   access_denied: "Odmowa dostępu lub nieuprawniona operacja",
   settings_update: "Zmieniono ustawienia",
   maintenance_on: "Włączono tryb konserwacji",
@@ -72,7 +78,7 @@ export const EVENT_CATEGORIES: Array<{ value: string; label: string }> = [
 ];
 
 export const OBJECT_KIND: Record<string, string> = {
-  page: "Strona", article: "Artykuł", library: "Materiał", episode: "Odcinek", meeting: "Spotkanie", registration: "Zgłoszenie", booking: "Rozmowa 1:1",
+  page: "Strona", article: "Artykuł", article_comment: "Komentarz", library: "Materiał", episode: "Odcinek", meeting: "Spotkanie", registration: "Zgłoszenie", booking: "Rozmowa 1:1",
   order: "Zamówienie", post: "Post", comment: "Komentarz", report: "Zgłoszenie", availability: "Dostępność", user: "Użytkownik", settings: "Ustawienia", media: "Plik", template: "Szablon", rule: "Reguła", notification: "Wiadomość", payment: "Płatność",
 };
 export const RESULT: Record<string, string> = { ok: "Wykonano", failed: "Błąd", denied: "Odmowa dostępu" };

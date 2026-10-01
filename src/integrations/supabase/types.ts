@@ -68,6 +68,198 @@ export type Database = {
         }
         Relationships: []
       }
+      article_comment_reports: {
+        Row: {
+          comment_id: string
+          created_at: string
+          id: string
+          reason: string
+          reporter_id: string
+          status: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          id?: string
+          reason?: string
+          reporter_id?: string
+          status?: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          id?: string
+          reason?: string
+          reporter_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_comment_reports_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "article_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      article_comments: {
+        Row: {
+          article_id: string
+          author_id: string
+          author_name: string
+          body: string
+          created_at: string
+          id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          article_id: string
+          author_id?: string
+          author_name?: string
+          body: string
+          created_at?: string
+          id?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          article_id?: string
+          author_id?: string
+          author_name?: string
+          body?: string
+          created_at?: string
+          id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_comments_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      article_poll_votes: {
+        Row: {
+          article_id: string
+          created_at: string
+          option_index: number
+          user_id: string
+        }
+        Insert: {
+          article_id: string
+          created_at?: string
+          option_index: number
+          user_id?: string
+        }
+        Update: {
+          article_id?: string
+          created_at?: string
+          option_index?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_poll_votes_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "article_polls"
+            referencedColumns: ["article_id"]
+          },
+        ]
+      }
+      article_polls: {
+        Row: {
+          active: boolean
+          article_id: string
+          options: Json
+          question: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          article_id: string
+          options: Json
+          question: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          article_id?: string
+          options?: Json
+          question?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_polls_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: true
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      article_reactions: {
+        Row: {
+          article_id: string
+          created_at: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          article_id: string
+          created_at?: string
+          type: string
+          user_id?: string
+        }
+        Update: {
+          article_id?: string
+          created_at?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_reactions_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      article_saves: {
+        Row: {
+          article_id: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          article_id: string
+          created_at?: string
+          user_id?: string
+        }
+        Update: {
+          article_id?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_saves_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       article_settings: {
         Row: {
           home_mode: string
@@ -94,12 +286,14 @@ export type Database = {
           cover_alt: string
           created_at: string
           created_by: string | null
+          discussion_question: string
           excerpt: string
           featured: boolean
           home_order: number
           id: string
           published_at: string | null
           reading_minutes: number
+          reflection_question: string
           sections: Json
           seo_description: string
           seo_title: string
@@ -115,12 +309,14 @@ export type Database = {
           cover_alt?: string
           created_at?: string
           created_by?: string | null
+          discussion_question?: string
           excerpt?: string
           featured?: boolean
           home_order?: number
           id?: string
           published_at?: string | null
           reading_minutes?: number
+          reflection_question?: string
           sections?: Json
           seo_description?: string
           seo_title?: string
@@ -136,12 +332,14 @@ export type Database = {
           cover_alt?: string
           created_at?: string
           created_by?: string | null
+          discussion_question?: string
           excerpt?: string
           featured?: boolean
           home_order?: number
           id?: string
           published_at?: string | null
           reading_minutes?: number
+          reflection_question?: string
           sections?: Json
           seo_description?: string
           seo_title?: string
@@ -1445,6 +1643,19 @@ export type Database = {
           mimetype: string
           name: string
           size: number
+        }[]
+      }
+      article_is_public: { Args: { _article: string }; Returns: boolean }
+      article_poll_open: {
+        Args: { _article: string; _opt: number }
+        Returns: boolean
+      }
+      article_stats: {
+        Args: { _article: string }
+        Returns: {
+          key: string
+          kind: string
+          n: number
         }[]
       }
       community_feed: {

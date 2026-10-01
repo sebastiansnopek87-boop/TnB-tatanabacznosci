@@ -225,6 +225,13 @@
       "when": 1790866103331,
       "tag": "0031_articles",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1790867279350,
+      "tag": "0032_article_interactions",
+      "breakpoints": true
     }
   ]
 }

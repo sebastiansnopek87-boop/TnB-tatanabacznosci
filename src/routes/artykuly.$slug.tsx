@@ -1,6 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { ArticleView } from "@/components/articles/ArticleView";
+import { ArticleInteractions } from "@/components/articles/ArticleInteractions";
 import { PageHeading, PageShell } from "@/components/tnb/PageShell";
 import { articleCategoriesQuery, articleImageUrl, articleQuery } from "@/lib/articles";
 
@@ -45,6 +46,6 @@ function ArticlePage() {
   return (
     <ArticleView title={a.title} excerpt={a.excerpt} category={cat} author={a.author_name} publishedAt={a.published_at} minutes={a.reading_minutes}
       cover={a.cover ? articleImageUrl(a.id, a.cover, a.updated_at) : undefined} coverAlt={a.cover_alt} sections={a.sections}
-      imageSrc={(f) => articleImageUrl(a.id, f, a.updated_at)} />
+      imageSrc={(f) => articleImageUrl(a.id, f, a.updated_at)} after={<ArticleInteractions key={a.id} a={a} />} />
   );
 }

@@ -8,7 +8,7 @@ export type ArticleCard = {
   id: string; slug: string; title: string; excerpt: string; category: string | null; cover: string | null; cover_alt: string;
   author_name: string; reading_minutes: number; published_at: string | null; updated_at: string;
 };
-export type Article = ArticleCard & { sections: PageSection[]; seo_title: string; seo_description: string };
+export type Article = ArticleCard & { sections: PageSection[]; seo_title: string; seo_description: string; reflection_question: string; discussion_question: string };
 export type ArticleCategory = { slug: string; name: string; sort_order: number };
 export type HomeMode = "latest" | "featured";
 
@@ -47,7 +47,7 @@ export async function listArticles(): Promise<ArticleCard[]> {
 }
 
 export async function getArticle(slug: string): Promise<Article | null> {
-  const { data, error } = await supabase.from("articles").select(`${CARD}, sections, seo_title, seo_description`).eq("slug", slug).maybeSingle();
+  const { data, error } = await supabase.from("articles").select(`${CARD}, sections, seo_title, seo_description, reflection_question, discussion_question`).eq("slug", slug).maybeSingle();
   if (error) throw new Error("Nie udało się pobrać artykułu.");
   return data ? ({ ...(data as any), sections: normalizeSections((data as any).sections) } as Article) : null;
 }

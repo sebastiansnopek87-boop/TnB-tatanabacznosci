@@ -57,6 +57,8 @@ const ArticleInput = z.object({
   published_at: z.string().datetime({ offset: true }).nullable(),
   featured: z.boolean(), home_order: z.number().int().min(0).max(999),
   seo_title: z.string().max(70, "Tytuł SEO: maks. 70 znaków."), seo_description: z.string().max(170, "Opis SEO: maks. 170 znaków."),
+  reflection_question: z.string().trim().max(400, "Pytanie do refleksji: maks. 400 znaków.").default(""),
+  discussion_question: z.string().trim().max(400, "Pytanie do dyskusji: maks. 400 znaków.").default(""),
 });
 
 export const adminSaveArticle = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
@@ -156,4 +158,79 @@ export const adminArticleImageUrls = createServerFn({ method: "POST" }).middlewa
     const out: Record<string, string> = {};
     (s ?? []).forEach((x, i) => { if (x.signedUrl) out[data.names[i]!] = x.signedUrl; });
     return out;
+  });
+
+// ---- Reader interactions (0032): polls, aggregate stats, comment moderation ----
+export const adminArticleInteractions = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const [{ data: poll }, { data: st }] = await Promise.all([
+      context.supabase.from("article_polls").select("question, options, active").eq("article_id", data.id).maybeSingle(),
+      context.supabase.rpc("article_stats", { _article: data.id }),
+    ]);
+    const stats = { reactions: {} as Record<string, number>, poll: {} as Record<string, number>, comments: 0 };
+    for (const r of (st ?? []) as any[]) { if (r.kind === "reaction") stats.reactions[r.key] = Number(r.n); else if (r.kind === "poll") stats.poll[r.key] = Number(r.n); else stats.comments = Number(r.n); }
+    return { poll: poll ? { question: poll.question as string, options: poll.options as string[], active: poll.active as boolean } : null, stats };
+  });
+
+export const adminSavePoll = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({
+    id: z.string().uuid(),
+    question: z.string().trim().min(3, "Pytanie ankiety: min. 3 znaki.").max(200),
+    options: z.array(z.string().trim().min(1, "Odpowiedź nie może być pusta.").max(120)).min(2, "Ankieta potrzebuje co najmniej 2 odpowiedzi.").max(6, "Maks. 6 odpowiedzi."),
+    active: z.boolean(),
+  }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { data: old } = await context.supabase.from("article_polls").select("options").eq("article_id", data.id).maybeSingle();
+    if (old) {
+      const { count } = await context.supabase.from("article_poll_votes").select("user_id", { count: "exact", head: true }).eq("article_id", data.id);
+      if (count && JSON.stringify(old.options) !== JSON.stringify(data.options))
+        throw new Error("Ankieta ma już głosy — odpowiedzi nie można zmienić, bo wyniki straciłyby sens. Możesz zmienić pytanie lub zamknąć głosowanie.");
+    }
+    const { error } = await context.supabase.from("article_polls").upsert({ article_id: data.id, question: data.question, options: data.options, active: data.active, updated_at: new Date().toISOString() });
+    if (error) throw new Error("Nie udało się zapisać ankiety.");
+    await logEvent({ type: "article_poll_save", actor: context.userId, objectKind: "article", objectId: data.id, detail: data.question });
+    return { ok: true };
+  });
+
+export const adminDeletePoll = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { error } = await context.supabase.from("article_polls").delete().eq("article_id", data.id);
+    if (error) throw new Error("Nie udało się usunąć ankiety.");
+    await logEvent({ type: "article_poll_delete", actor: context.userId, objectKind: "article", objectId: data.id });
+    return { ok: true };
+  });
+
+export const adminListArticleComments = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ filter: z.enum(["all", "reported", "hidden"]) }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { data: rows, error } = await context.supabase.from("article_comments")
+      .select("id, article_id, author_name, body, status, created_at, updated_at, articles(title, slug), article_comment_reports(id, reason, status)")
+      .order("created_at", { ascending: false }).limit(300);
+    if (error) throw new Error("Nie udało się pobrać komentarzy.");
+    const items = (rows ?? []).map((r: any) => ({
+      id: r.id as string, author_name: r.author_name as string, body: r.body as string, status: r.status as string, created_at: r.created_at as string,
+      article: r.articles as { title: string; slug: string } | null,
+      reports: ((r.article_comment_reports ?? []) as any[]).filter((x) => x.status === "open").map((x) => x.reason as string),
+    }));
+    return items.filter((c) => data.filter === "all" || (data.filter === "reported" ? c.reports.length > 0 : c.status === "hidden"));
+  });
+
+export const adminModerateArticleComment = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), action: z.enum(["hide", "show", "delete", "dismiss"]) }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const sb = context.supabase;
+    const { error } = data.action === "delete" ? await sb.from("article_comments").delete().eq("id", data.id)
+      : data.action === "dismiss" ? { error: null }
+      : await sb.from("article_comments").update({ status: data.action === "hide" ? "hidden" : "visible" }).eq("id", data.id);
+    if (error) throw new Error("Nie udało się wykonać operacji.");
+    if (data.action !== "delete") await sb.from("article_comment_reports").update({ status: "resolved" }).eq("comment_id", data.id).eq("status", "open");
+    await logEvent({ type: `article_comment_${data.action}`, actor: context.userId, objectKind: "article_comment", objectId: data.id });
+    return { ok: true };
   });
