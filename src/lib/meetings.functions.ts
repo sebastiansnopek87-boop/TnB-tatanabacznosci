@@ -97,12 +97,15 @@ export const registerForMeeting = createServerFn({ method: "POST" })
     const { data: r, error } = await s.from("meeting_registrations").insert({
       meeting_id: m.id, user_id: user?.id ?? null, name: data.name, email: data.email, phone: data.phone || null,
       message: data.message || null, consent_text: CONSENT, status, decided_at: status === "approved" ? new Date().toISOString() : null,
-    }).select("access_token").single();
+    }).select("id, access_token").single();
     if (error) {
       if (error.code === "23505") return { error: "Na ten adres e-mail wysłano już zgłoszenie na to spotkanie." };
       if (/meeting_full/.test(error.message)) return { error: "Brak wolnych miejsc na to spotkanie." };
       return { error: "Nie udało się wysłać zgłoszenia. Spróbuj ponownie." };
     }
+    const { notifyRegistration } = await import("./meetings-notify.server");
+    await notifyRegistration(status === "approved" ? "meeting_approved" : "meeting_registration",
+      { id: r.id, name: data.name, email: data.email, access_token: r.access_token }, m.starts_at);
     return { token: r.access_token, status };
   });
 
@@ -167,12 +170,19 @@ export const adminSaveMeeting = createServerFn({ method: "POST" })
     await assertAdmin(context);
     if (data.ends_at && new Date(data.ends_at) <= new Date(data.starts_at)) throw new Error("Zakończenie musi być późniejsze niż rozpoczęcie.");
     const { id, online_link, ...rest } = data;
+    const prev = id ? (await context.supabase.from("meetings").select("starts_at").eq("id", id).maybeSingle()).data : null;
     const row = { ...rest, online_link: online_link || null };
     const q = id ? context.supabase.from("meetings").update(row).eq("id", id).select("id").single()
       : context.supabase.from("meetings").insert(row).select("id").single();
     const { data: saved, error } = await q;
     await LOG(context, id ? "meeting_edit" : "meeting_create", "meeting", saved?.id ?? id ?? undefined, error ? "failed" : "ok", rest.title);
     if (error) throw new Error(error.code === "23505" ? "Spotkanie o takim adresie już istnieje." : "Nie udało się zapisać spotkania.");
+    if (prev && new Date(prev.starts_at).getTime() !== new Date(rest.starts_at).getTime()) {
+      // Date changed: tell everyone with an active registration (once per registration and new date).
+      const { data: regs } = await (await admin()).from("meeting_registrations").select("id, name, email, access_token").eq("meeting_id", id!).in("status", ["pending", "approved"]);
+      const { notifyRegistration } = await import("./meetings-notify.server");
+      for (const r of regs ?? []) await notifyRegistration("meeting_rescheduled", r, rest.starts_at, `-${new Date(rest.starts_at).getTime()}`);
+    }
     return { id: saved.id as string };
   });
 
@@ -237,8 +247,16 @@ export const adminUpdateRegistration = createServerFn({ method: "POST" })
     const patch: { status?: string; decided_at?: string; decided_by?: string; attended?: boolean } = {};
     if (data.status) Object.assign(patch, { status: data.status, decided_at: new Date().toISOString(), decided_by: context.userId });
     if (data.attended !== undefined) patch.attended = data.attended;
+    const { data: before } = await context.supabase.from("meeting_registrations").select("status").eq("id", data.id).maybeSingle();
     const { error } = await context.supabase.from("meeting_registrations").update(patch).eq("id", data.id);
     await LOG(context, data.status ? `registration_${data.status}` : "registration_attendance", "registration", data.id, error ? "failed" : "ok");
     if (error) throw new Error(/meeting_full/.test(error.message) ? "Brak wolnych miejsc — limit uczestników został osiągnięty." : "Nie udało się zaktualizować zgłoszenia.");
+    // E-mail only after the decision is really saved and only on an actual status change.
+    if ((data.status === "approved" || data.status === "rejected") && before?.status !== data.status) {
+      const s = await admin();
+      const { data: r } = await s.from("meeting_registrations").select("id, name, email, access_token, meeting_id").eq("id", data.id).maybeSingle();
+      const { data: m } = r ? await s.from("meetings").select("starts_at").eq("id", r.meeting_id).maybeSingle() : { data: null };
+      if (r && m) await (await import("./meetings-notify.server")).notifyRegistration(data.status === "approved" ? "meeting_approved" : "meeting_rejected", r, m.starts_at);
+    }
     return { ok: true };
   });
