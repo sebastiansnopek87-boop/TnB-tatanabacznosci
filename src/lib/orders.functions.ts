@@ -136,12 +136,14 @@ export const adminListOrders = createServerFn({ method: "POST" })
     status: z.enum(["all", ...STATUSES]).default("all"),
     provider: z.enum(["all", "manual", ...PROVIDERS]).default("all"),
     from: z.string().max(10).default(""), to: z.string().max(10).default(""),
+    kind: z.enum(["all", "real", "test"]).default("all"),
   }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    let q = context.supabase.from("library_orders").select("id, order_number, created_at, paid_at, delivered_at, status, delivery_status, buyer_email, buyer_name, amount, currency, payment_method, provider, environment, access_revoked_at, library_items!inner(title)").order("created_at", { ascending: false }).limit(500);
+    let q = context.supabase.from("library_orders").select("id, order_number, created_at, paid_at, delivered_at, status, delivery_status, buyer_email, buyer_name, amount, currency, payment_method, provider, environment, is_test, access_revoked_at, library_items!inner(title)").order("created_at", { ascending: false }).limit(500);
     if (data.status !== "all") q = q.eq("status", data.status);
     if (data.provider !== "all") q = q.eq("provider", data.provider);
+    if (data.kind !== "all") q = q.eq("is_test", data.kind === "test");
     if (/^\d{4}-\d{2}-\d{2}$/.test(data.from)) q = q.gte("created_at", `${data.from}T00:00:00`);
     if (/^\d{4}-\d{2}-\d{2}$/.test(data.to)) q = q.lte("created_at", `${data.to}T23:59:59`);
     const { data: rows, error } = await q;
@@ -155,9 +157,9 @@ export const adminSalesSummary = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context);
-    const { data } = await context.supabase.from("library_orders").select("status, amount, provider, environment, paid_at, created_at").limit(20000);
+    const { data } = await context.supabase.from("library_orders").select("status, amount, provider, environment, is_test, paid_at, created_at").limit(20000);
     const rows = (data ?? []) as any[];
-    const real = rows.filter((r) => r.environment !== "sandbox");
+    const real = rows.filter((r) => r.environment !== "sandbox" && !r.is_test);
     const paid = real.filter((r) => r.paid_at && ["paid", "refund_pending"].includes(r.status));
     const sum = (a: any[]) => a.reduce((t, r) => t + r.amount, 0);
     const byProvider: Record<string, { count: number; amount: number }> = {};
@@ -176,7 +178,7 @@ export const adminGetOrder = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { data: o } = await context.supabase.from("library_orders").select("id, order_number, created_at, updated_at, paid_at, delivered_at, cancelled_at, refunded_at, failed_at, status, delivery_status, delivery_error, buyer_email, buyer_name, buyer_phone, amount, currency, payment_method, provider, provider_ref, environment, user_id, access_expires_at, access_revoked_at, refund_reason, review_reason, paid_marked_by, delivered_marked_by, status_changed_by, status_changed_at, library_items(title, slug)").eq("id", data.id).maybeSingle();
+    const { data: o } = await context.supabase.from("library_orders").select("id, order_number, created_at, updated_at, paid_at, delivered_at, cancelled_at, refunded_at, failed_at, status, delivery_status, delivery_error, buyer_email, buyer_name, buyer_phone, amount, currency, payment_method, provider, provider_ref, environment, is_test, user_id, access_expires_at, access_revoked_at, refund_reason, review_reason, paid_marked_by, delivered_marked_by, status_changed_by, status_changed_at, library_items(title, slug)").eq("id", data.id).maybeSingle();
     if (!o) throw new Error("Nie znaleziono zamówienia.");
     const { data: events } = await context.supabase.from("library_order_events").select("type, detail, created_at").eq("order_id", data.id).order("created_at");
     const { data: mails } = await context.supabase.from("email_notification_log").select("kind, template_key, status, reason, created_at").eq("related_id", data.id).order("created_at");
