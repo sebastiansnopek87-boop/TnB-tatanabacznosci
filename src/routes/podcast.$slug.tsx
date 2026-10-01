@@ -98,7 +98,7 @@ function Media({ e }: { e: EpisodeDetail }) {
               To odcinek premium. Twoje konto nie ma jeszcze dostępu do materiałów premium. Napisz do nas, a wyjaśnimy, jak go uzyskać.
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
-              <Link to="/materialy-premium" className="bg-gold px-6 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-primary-foreground hover:bg-gold-bright">Materiały premium</Link>
+              <Link to="/materialy-premium" className="bg-gold px-6 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-primary-foreground hover:bg-gold-bright">Premium w Bibliotece</Link>
               <Link to="/kontakt" className="border border-gold/60 px-6 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-gold hover:bg-gold/10">Kontakt</Link>
             </div>
           </>
