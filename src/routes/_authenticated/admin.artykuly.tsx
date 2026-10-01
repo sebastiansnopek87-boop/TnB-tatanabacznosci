@@ -14,7 +14,9 @@ import { ArticleView } from "@/components/articles/ArticleView";
 import {
   adminArticleImageUrls, adminCheckArticleSlug, adminCreateArticleUpload, adminDeleteCategory, adminGetArticle, adminListArticles,
   adminSaveArticle, adminSaveCategory, adminSetArticleStatus, adminSetFeatured, adminSetHomeMode,
+  adminArticleInteractions, adminSavePoll, adminDeletePoll, adminListArticleComments, adminModerateArticleComment,
 } from "@/lib/articles.functions";
+import { REACTIONS } from "@/lib/article-interactions";
 import { ARTICLE_KINDS, ARTICLE_STATUS, HOME_MODE, articleCategoriesQuery, fmtArticleDate, readingMinutes, type HomeMode } from "@/lib/articles";
 import { newSection, normalizeSections, type PageSection } from "@/lib/pages";
 import { slugify } from "@/lib/library";
@@ -24,17 +26,19 @@ export const Route = createFileRoute("/_authenticated/admin/artykuly")({ compone
 type Draft = {
   id: string | null; slug: string; title: string; excerpt: string; category: string | null; author_name: string; cover: string | null; cover_alt: string;
   sections: PageSection[]; published_at: string | null; featured: boolean; home_order: number; seo_title: string; seo_description: string; status: string;
+  reflection_question: string; discussion_question: string;
 };
 const EMPTY: Draft = {
   id: null, slug: "", title: "", excerpt: "", category: null, author_name: "Sebastian Snopek", cover: null, cover_alt: "",
   sections: [newSection("text")], published_at: null, featured: false, home_order: 0, seo_title: "", seo_description: "", status: "draft",
+  reflection_question: "", discussion_question: "",
 };
 // datetime-local works in local time; stored value is ISO with offset.
 const toLocal = (iso: string | null) => { if (!iso) return ""; const d = new Date(iso); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); };
 const fromLocal = (v: string) => (v ? new Date(v).toISOString() : null);
 
 function ArticlesAdmin() {
-  const [tab, setTab] = useState<"list" | "categories">("list");
+  const [tab, setTab] = useState<"list" | "categories" | "comments">("list");
   const [editing, setEditing] = useState<string | "new" | null>(null);
   if (editing) return <Editor id={editing === "new" ? null : editing} onClose={() => setEditing(null)} />;
   return (
@@ -45,13 +49,13 @@ function ArticlesAdmin() {
       </div>
       <p className="mt-2 text-sm text-muted-foreground">Autorskie teksty redakcyjne. Niezależne od Rozmów społeczności i Biblioteki. Publicznie widać tylko opublikowane artykuły z datą publikacji, która już minęła.</p>
       <div className="mt-6 flex gap-1 border-b border-border/60" role="tablist">
-        {(["list", "categories"] as const).map((t) => (
+        {(["list", "categories", "comments"] as const).map((t) => (
           <button key={t} role="tab" aria-selected={tab === t} onClick={() => setTab(t)} className={`border-b-2 px-3 py-2 text-sm ${tab === t ? "border-gold text-gold" : "border-transparent text-muted-foreground"}`}>
-            {t === "list" ? "Artykuły i strona główna" : "Kategorie"}
+            {t === "list" ? "Artykuły i strona główna" : t === "categories" ? "Kategorie" : "Komentarze"}
           </button>
         ))}
       </div>
-      {tab === "list" ? <List onEdit={setEditing} /> : <Categories />}
+      {tab === "list" ? <List onEdit={setEditing} /> : tab === "categories" ? <Categories /> : <CommentsModeration />}
     </div>
   );
 }
@@ -77,7 +81,7 @@ function List({ onEdit }: { onEdit: (id: string) => void }) {
             </label>
           ))}
         </div>
-        <p className="mt-2 text-xs text-muted-foreground">W trybie wyróżnionych: najpierw artykuły z gwiazdką według kolejności (mniejsza liczba = wyżej), brakujące miejsca uzupełniają najnowsze. Kryterium „najczęściej komentowane” pojawi się dopiero, gdy zostaną uruchomione komentarze pod artykułami.</p>
+        <p className="mt-2 text-xs text-muted-foreground">W trybie wyróżnionych: najpierw artykuły z gwiazdką według kolejności (mniejsza liczba = wyżej), brakujące miejsca uzupełniają najnowsze. </p>
       </div>
       {list.isLoading && <p className="mt-6 text-sm text-muted-foreground">Wczytywanie…</p>}
       {list.error && <p className="mt-6 text-sm text-destructive">{errMsg(list.error)}</p>}
@@ -172,6 +176,7 @@ function Editor({ id, onClose }: { id: string | null; onClose: () => void }) {
       const r = await saveFn({ data: {
         id: artId, slug: d.slug, title: d.title, excerpt: d.excerpt, category: d.category, author_name: d.author_name, cover: d.cover, cover_alt: d.cover_alt,
         sections: d.sections, published_at: d.published_at, featured: d.featured, home_order: d.home_order, seo_title: d.seo_title, seo_description: d.seo_description,
+        reflection_question: d.reflection_question, discussion_question: d.discussion_question,
       } });
       setArtId(r.id); setDirty(false); qc.invalidateQueries({ queryKey: ["admin-articles"] }); qc.invalidateQueries({ queryKey: ["articles"] });
       toast.success(d.status === "published" ? "Zapisano zmiany." : "Zapisano szkic.");
@@ -277,6 +282,14 @@ function Editor({ id, onClose }: { id: string | null; onClose: () => void }) {
       </div>
 
       <div className="space-y-3 border border-border/60 p-4">
+        <h2 className="font-display text-lg font-semibold uppercase">Zatrzymaj się na chwilę</h2>
+        <p className="text-xs text-muted-foreground">Sekcja pod artykułem. Puste pola nie są wyświetlane.</p>
+        <Field label={`Pytanie do refleksji (${d.reflection_question.length}/400)`}><Textarea rows={2} maxLength={400} value={d.reflection_question} onChange={(e) => set({ reflection_question: e.target.value })} /></Field>
+        <Field label={`Pytanie do dyskusji w komentarzach (${d.discussion_question.length}/400)`}><Textarea rows={2} maxLength={400} value={d.discussion_question} onChange={(e) => set({ discussion_question: e.target.value })} /></Field>
+        {artId ? <PollAndStats id={artId} /> : <p className="text-xs text-muted-foreground">Ankietę i statystyki skonfigurujesz po pierwszym zapisaniu artykułu.</p>}
+      </div>
+
+      <div className="space-y-3 border border-border/60 p-4">
         <h2 className="font-display text-lg font-semibold uppercase">SEO</h2>
         <Field label={`Tytuł w wyszukiwarce (${d.seo_title.length}/70)`}><Input value={d.seo_title} maxLength={70} placeholder={`${d.title || "Tytuł"} — Tata Na Baczności`} onChange={(e) => set({ seo_title: e.target.value })} /></Field>
         <Field label={`Opis w wyszukiwarce (${d.seo_description.length}/170)`}><Textarea rows={2} value={d.seo_description} maxLength={170} placeholder="Pusty = początek zajawki" onChange={(e) => set({ seo_description: e.target.value })} /></Field>
@@ -296,4 +309,92 @@ function Editor({ id, onClose }: { id: string | null; onClose: () => void }) {
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return <label className="block"><span className="mb-1 block text-xs uppercase tracking-wide text-muted-foreground">{label}</span>{children}</label>;
+}
+
+function PollAndStats({ id }: { id: string }) {
+  const getFn = useServerFn(adminArticleInteractions); const saveFn = useServerFn(adminSavePoll); const delFn = useServerFn(adminDeletePoll);
+  const q = useQuery({ queryKey: ["admin-article-int", id], queryFn: () => getFn({ data: { id } }) });
+  const [poll, setPoll] = useState<{ question: string; options: string[]; active: boolean } | null>(null);
+  useEffect(() => { if (q.data) setPoll(q.data.poll); }, [q.data]);
+  const votes = q.data?.stats.poll ?? {}; const total = Object.values(votes).reduce((a, b) => a + b, 0);
+  async function save() {
+    if (!poll) return;
+    try { await saveFn({ data: { id, ...poll, options: poll.options.map((o) => o.trim()) } }); toast.success("Zapisano ankietę."); q.refetch(); } catch (e) { toast.error(errMsg(e)); }
+  }
+  async function del() {
+    if (!confirm(total ? `Usunąć ankietę razem z ${total} głosami?` : "Usunąć ankietę?")) return;
+    try { await delFn({ data: { id } }); toast.success("Usunięto ankietę."); setPoll(null); q.refetch(); } catch (e) { toast.error(errMsg(e)); }
+  }
+  if (q.isLoading) return <p className="text-xs text-muted-foreground">Wczytywanie ankiety…</p>;
+  const s = q.data?.stats;
+  return (
+    <div className="space-y-4">
+      <div className="border-t border-border/60 pt-3">
+        <h3 className="text-xs uppercase tracking-wide text-muted-foreground">Ankieta (opcjonalna)</h3>
+        {!poll ? <Button size="sm" variant="outline" className="mt-2" onClick={() => setPoll({ question: "", options: ["", ""], active: true })}><Plus className="mr-1 h-4 w-4" />Dodaj ankietę</Button> : (
+          <div className="mt-2 space-y-2">
+            <Input placeholder="Pytanie ankiety" maxLength={200} value={poll.question} onChange={(e) => setPoll({ ...poll, question: e.target.value })} />
+            {poll.options.map((o, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <Input placeholder={`Odpowiedź ${i + 1}`} maxLength={120} value={o} disabled={total > 0} onChange={(e) => setPoll({ ...poll, options: poll.options.map((x, j) => (j === i ? e.target.value : x)) })} />
+                <span className="w-20 shrink-0 text-right text-xs text-muted-foreground">{votes[String(i)] ?? 0} gł.</span>
+                {total === 0 && poll.options.length > 2 && <Button size="icon" variant="ghost" aria-label="Usuń odpowiedź" onClick={() => setPoll({ ...poll, options: poll.options.filter((_, j) => j !== i) })}><Trash2 className="h-4 w-4" /></Button>}
+              </div>
+            ))}
+            {total === 0 && poll.options.length < 6 && <Button size="sm" variant="ghost" onClick={() => setPoll({ ...poll, options: [...poll.options, ""] })}><Plus className="mr-1 h-4 w-4" />Dodaj odpowiedź</Button>}
+            {total > 0 && <p className="text-xs text-muted-foreground">Ankieta ma {total} głosów — odpowiedzi są zablokowane, żeby wyniki zachowały sens.</p>}
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={poll.active} onChange={(e) => setPoll({ ...poll, active: e.target.checked })} />Głosowanie otwarte</label>
+            <div className="flex gap-2"><Button size="sm" onClick={save}>Zapisz ankietę</Button>{q.data?.poll && <Button size="sm" variant="ghost" onClick={del}>Usuń ankietę</Button>}</div>
+          </div>
+        )}
+      </div>
+      <div className="border-t border-border/60 pt-3">
+        <h3 className="text-xs uppercase tracking-wide text-muted-foreground">Statystyki czytelników (zbiorcze, anonimowe)</h3>
+        <p className="mt-2 text-sm">Komentarze widoczne: {s?.comments ?? 0} · Głosy w ankiecie: {total}</p>
+        <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+          {(Object.keys(REACTIONS) as (keyof typeof REACTIONS)[]).map((k) => <span key={k}>{REACTIONS[k]}: <b>{s?.reactions[k] ?? 0}</b></span>)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CommentsModeration() {
+  const listFn = useServerFn(adminListArticleComments); const modFn = useServerFn(adminModerateArticleComment);
+  const [filter, setFilter] = useState<"all" | "reported" | "hidden">("all");
+  const q = useQuery({ queryKey: ["admin-article-comments", filter], queryFn: () => listFn({ data: { filter } }) });
+  async function act(id: string, action: "hide" | "show" | "delete" | "dismiss") {
+    if (action === "delete" && !confirm("Trwale usunąć komentarz?")) return;
+    try { await modFn({ data: { id, action } }); toast.success("Zapisano."); q.refetch(); } catch (e) { toast.error(errMsg(e)); }
+  }
+  return (
+    <div className="mt-6 space-y-4">
+      <div className="flex flex-wrap gap-2">
+        {([["all", "Wszystkie"], ["reported", "Zgłoszone"], ["hidden", "Ukryte"]] as const).map(([k, l]) => (
+          <Button key={k} size="sm" variant={filter === k ? "default" : "outline"} onClick={() => setFilter(k)}>{l}</Button>
+        ))}
+      </div>
+      {q.isLoading && <p className="text-sm text-muted-foreground">Wczytywanie…</p>}
+      {q.error && <p className="text-sm text-destructive">{errMsg(q.error)}</p>}
+      {q.data?.length === 0 && <p className="text-sm text-muted-foreground">Brak komentarzy w tym widoku.</p>}
+      <div className="divide-y divide-border/60 border border-border/60">
+        {(q.data ?? []).map((c) => (
+          <div key={c.id} className="space-y-2 p-4">
+            <div className="flex flex-wrap items-baseline justify-between gap-2 text-xs text-muted-foreground">
+              <span><b className="text-foreground">{c.author_name}</b> · {c.article ? <a href={`/artykuly/${c.article.slug}`} target="_blank" rel="noreferrer" className="text-gold underline">{c.article.title}</a> : "—"}</span>
+              <span>{new Date(c.created_at).toLocaleString("pl-PL")}</span>
+            </div>
+            <p className="whitespace-pre-line break-words text-sm">{c.body}</p>
+            {c.status === "hidden" && <p className="text-xs uppercase tracking-wide text-destructive">Ukryty</p>}
+            {c.reports.length > 0 && <p className="text-xs text-destructive">Zgłoszenia ({c.reports.length}): {c.reports.map((r) => r || "bez powodu").join(" · ")}</p>}
+            <div className="flex flex-wrap gap-2">
+              {c.status === "visible" ? <Button size="sm" variant="outline" onClick={() => act(c.id, "hide")}>Ukryj</Button> : <Button size="sm" variant="outline" onClick={() => act(c.id, "show")}>Przywróć</Button>}
+              {c.reports.length > 0 && <Button size="sm" variant="ghost" onClick={() => act(c.id, "dismiss")}>Odrzuć zgłoszenia</Button>}
+              <Button size="sm" variant="ghost" onClick={() => act(c.id, "delete")}><Trash2 className="mr-1 h-4 w-4" />Usuń</Button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
