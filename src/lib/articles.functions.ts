@@ -41,7 +41,7 @@ export const adminCheckArticleSlug = createServerFn({ method: "GET" }).middlewar
 const Btn = z.object({ label: z.string().trim().min(1, "Przycisk musi mieć etykietę.").max(60), href: z.string().trim().max(500).refine(isSafeHref, "Adres przycisku musi zaczynać się od / lub https://") });
 const Section = z.object({
   id: z.string().regex(/^[a-z0-9]{1,20}$/), kind: z.enum(["hero", "text", "values", "columns", "quote", "image", "cta"]),
-  eyebrow: z.string().max(200).default(""), layout: z.enum(["left", "right"]).default("right"),
+  eyebrow: z.string().max(200).default(""), layout: z.enum(["left", "right"]).default("right"), display: z.enum(["full", "inset", "featured"]).default("full"), decorative: z.boolean().default(false),
   items: z.array(z.object({ title: z.string().max(120), body: z.string().max(3000) })).max(12).default([]),
   heading: z.string().max(200), body: z.string().max(30000), image: IMG.nullable(),
   imageAlt: z.string().max(200), caption: z.string().max(300), quoteAuthor: z.string().max(120), buttons: z.array(Btn).max(4),
