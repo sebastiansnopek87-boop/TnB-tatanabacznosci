@@ -26,6 +26,7 @@ import { Route as ArtykulyIndexRouteImport } from './routes/artykuly.index'
 import { Route as ArtykulySlugRouteImport } from './routes/artykuly.$slug'
 import { Route as BibliotekaIndexRouteImport } from './routes/biblioteka.index'
 import { Route as BibliotekaSlugRouteImport } from './routes/biblioteka.$slug'
+import { Route as KomentarzPotwierdzRouteImport } from './routes/komentarz.potwierdz'
 import { Route as NewsletterWypiszRouteImport } from './routes/newsletter.wypisz'
 import { Route as PodcastIndexRouteImport } from './routes/podcast.index'
 import { Route as PodcastSlugRouteImport } from './routes/podcast.$slug'
@@ -152,6 +153,11 @@ const BibliotekaIndexRoute = BibliotekaIndexRouteImport.update({
 const BibliotekaSlugRoute = BibliotekaSlugRouteImport.update({
   id: '/biblioteka/$slug',
   path: '/biblioteka/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KomentarzPotwierdzRoute = KomentarzPotwierdzRouteImport.update({
+  id: '/komentarz/potwierdz',
+  path: '/komentarz/potwierdz',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NewsletterWypiszRoute = NewsletterWypiszRouteImport.update({
@@ -411,6 +417,7 @@ export interface FileRoutesByFullPath {
   '/moje-tnb': typeof AuthenticatedMojeTnbRoute
   '/artykuly/$slug': typeof ArtykulySlugRoute
   '/biblioteka/$slug': typeof BibliotekaSlugRoute
+  '/komentarz/potwierdz': typeof KomentarzPotwierdzRoute
   '/newsletter/wypisz': typeof NewsletterWypiszRoute
   '/podcast/$slug': typeof PodcastSlugRoute
   '/spolecznosc/$postId': typeof SpolecznoscPostIdRoute
@@ -471,6 +478,7 @@ export interface FileRoutesByTo {
   '/moje-tnb': typeof AuthenticatedMojeTnbRoute
   '/artykuly/$slug': typeof ArtykulySlugRoute
   '/biblioteka/$slug': typeof BibliotekaSlugRoute
+  '/komentarz/potwierdz': typeof KomentarzPotwierdzRoute
   '/newsletter/wypisz': typeof NewsletterWypiszRoute
   '/podcast/$slug': typeof PodcastSlugRoute
   '/spolecznosc/$postId': typeof SpolecznoscPostIdRoute
@@ -534,6 +542,7 @@ export interface FileRoutesById {
   '/_authenticated/moje-tnb': typeof AuthenticatedMojeTnbRoute
   '/artykuly/$slug': typeof ArtykulySlugRoute
   '/biblioteka/$slug': typeof BibliotekaSlugRoute
+  '/komentarz/potwierdz': typeof KomentarzPotwierdzRoute
   '/newsletter/wypisz': typeof NewsletterWypiszRoute
   '/podcast/$slug': typeof PodcastSlugRoute
   '/spolecznosc/$postId': typeof SpolecznoscPostIdRoute
@@ -597,6 +606,7 @@ export interface FileRouteTypes {
     | '/moje-tnb'
     | '/artykuly/$slug'
     | '/biblioteka/$slug'
+    | '/komentarz/potwierdz'
     | '/newsletter/wypisz'
     | '/podcast/$slug'
     | '/spolecznosc/$postId'
@@ -657,6 +667,7 @@ export interface FileRouteTypes {
     | '/moje-tnb'
     | '/artykuly/$slug'
     | '/biblioteka/$slug'
+    | '/komentarz/potwierdz'
     | '/newsletter/wypisz'
     | '/podcast/$slug'
     | '/spolecznosc/$postId'
@@ -719,6 +730,7 @@ export interface FileRouteTypes {
     | '/_authenticated/moje-tnb'
     | '/artykuly/$slug'
     | '/biblioteka/$slug'
+    | '/komentarz/potwierdz'
     | '/newsletter/wypisz'
     | '/podcast/$slug'
     | '/spolecznosc/$postId'
@@ -780,6 +792,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   ArtykulySlugRoute: typeof ArtykulySlugRoute
   BibliotekaSlugRoute: typeof BibliotekaSlugRoute
+  KomentarzPotwierdzRoute: typeof KomentarzPotwierdzRoute
   NewsletterWypiszRoute: typeof NewsletterWypiszRoute
   PodcastSlugRoute: typeof PodcastSlugRoute
   SpolecznoscPostIdRoute: typeof SpolecznoscPostIdRoute
@@ -924,6 +937,13 @@ declare module '@tanstack/react-router' {
       path: '/biblioteka/$slug'
       fullPath: '/biblioteka/$slug'
       preLoaderRoute: typeof BibliotekaSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/komentarz/potwierdz': {
+      id: '/komentarz/potwierdz'
+      path: '/komentarz/potwierdz'
+      fullPath: '/komentarz/potwierdz'
+      preLoaderRoute: typeof KomentarzPotwierdzRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/newsletter/wypisz': {
@@ -1311,6 +1331,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   ArtykulySlugRoute: ArtykulySlugRoute,
   BibliotekaSlugRoute: BibliotekaSlugRoute,
+  KomentarzPotwierdzRoute: KomentarzPotwierdzRoute,
   NewsletterWypiszRoute: NewsletterWypiszRoute,
   PodcastSlugRoute: PodcastSlugRoute,
   SpolecznoscPostIdRoute: SpolecznoscPostIdRoute,
