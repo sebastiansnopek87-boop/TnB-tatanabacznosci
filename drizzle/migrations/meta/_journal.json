@@ -239,6 +239,13 @@
       "when": 1790868093198,
       "tag": "0033_poll_vote_withdraw",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1790869235181,
+      "tag": "0034_migration",
+      "breakpoints": true
     }
   ]
 }
