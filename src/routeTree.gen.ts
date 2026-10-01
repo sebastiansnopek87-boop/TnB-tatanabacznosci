@@ -39,6 +39,7 @@ import { Route as AuthenticatedAdminBezpieczenstwoRouteImport } from './routes/_
 import { Route as AuthenticatedAdminBibliotekaRouteImport } from './routes/_authenticated/admin.biblioteka'
 import { Route as AuthenticatedAdminDziennikRouteImport } from './routes/_authenticated/admin.dziennik'
 import { Route as AuthenticatedAdminMultimediaRouteImport } from './routes/_authenticated/admin.multimedia'
+import { Route as AuthenticatedAdminPlatnosciRouteImport } from './routes/_authenticated/admin.platnosci'
 import { Route as AuthenticatedAdminPodcastRouteImport } from './routes/_authenticated/admin.podcast'
 import { Route as AuthenticatedAdminPowiadomieniaRouteImport } from './routes/_authenticated/admin.powiadomienia'
 import { Route as AuthenticatedAdminRozmowyRouteImport } from './routes/_authenticated/admin.rozmowy'
@@ -59,6 +60,9 @@ import { Route as SpotkaniaZgloszenieTokenRouteImport } from './routes/spotkania
 import { Route as ApiPublicCronConsultRemindersRouteImport } from './routes/api/public/cron/consult-reminders'
 import { Route as ApiPublicLibraryCoverIdRouteImport } from './routes/api/public/library-cover.$id'
 import { Route as ApiPublicMeetingImageIdRouteImport } from './routes/api/public/meeting-image.$id'
+import { Route as ApiPublicPaymentsP24RouteImport } from './routes/api/public/payments/p24'
+import { Route as ApiPublicPaymentsPayuRouteImport } from './routes/api/public/payments/payu'
+import { Route as ApiPublicPaymentsTpayRouteImport } from './routes/api/public/payments/tpay'
 import { Route as ApiPublicPodcastCoverIdRouteImport } from './routes/api/public/podcast-cover.$id'
 import { Route as ApiPublicPageImageIdNameRouteImport } from './routes/api/public/page-image.$id.$name'
 
@@ -215,6 +219,12 @@ const AuthenticatedAdminMultimediaRoute =
     path: '/multimedia',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminPlatnosciRoute =
+  AuthenticatedAdminPlatnosciRouteImport.update({
+    id: '/platnosci',
+    path: '/platnosci',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminPodcastRoute =
   AuthenticatedAdminPodcastRouteImport.update({
     id: '/podcast',
@@ -333,6 +343,21 @@ const ApiPublicMeetingImageIdRoute = ApiPublicMeetingImageIdRouteImport.update({
   path: '/api/public/meeting-image/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPaymentsP24Route = ApiPublicPaymentsP24RouteImport.update({
+  id: '/api/public/payments/p24',
+  path: '/api/public/payments/p24',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicPaymentsPayuRoute = ApiPublicPaymentsPayuRouteImport.update({
+  id: '/api/public/payments/payu',
+  path: '/api/public/payments/payu',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicPaymentsTpayRoute = ApiPublicPaymentsTpayRouteImport.update({
+  id: '/api/public/payments/tpay',
+  path: '/api/public/payments/tpay',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPodcastCoverIdRoute = ApiPublicPodcastCoverIdRouteImport.update({
   id: '/api/public/podcast-cover/$id',
   path: '/api/public/podcast-cover/$id',
@@ -374,6 +399,7 @@ export interface FileRoutesByFullPath {
   '/admin/biblioteka': typeof AuthenticatedAdminBibliotekaRoute
   '/admin/dziennik': typeof AuthenticatedAdminDziennikRoute
   '/admin/multimedia': typeof AuthenticatedAdminMultimediaRoute
+  '/admin/platnosci': typeof AuthenticatedAdminPlatnosciRoute
   '/admin/podcast': typeof AuthenticatedAdminPodcastRoute
   '/admin/powiadomienia': typeof AuthenticatedAdminPowiadomieniaRoute
   '/admin/rozmowy': typeof AuthenticatedAdminRozmowyRoute
@@ -395,6 +421,9 @@ export interface FileRoutesByFullPath {
   '/api/public/cron/consult-reminders': typeof ApiPublicCronConsultRemindersRoute
   '/api/public/library-cover/$id': typeof ApiPublicLibraryCoverIdRoute
   '/api/public/meeting-image/$id': typeof ApiPublicMeetingImageIdRoute
+  '/api/public/payments/p24': typeof ApiPublicPaymentsP24Route
+  '/api/public/payments/payu': typeof ApiPublicPaymentsPayuRoute
+  '/api/public/payments/tpay': typeof ApiPublicPaymentsTpayRoute
   '/api/public/podcast-cover/$id': typeof ApiPublicPodcastCoverIdRoute
   '/api/public/page-image/$id/$name': typeof ApiPublicPageImageIdNameRoute
 }
@@ -426,6 +455,7 @@ export interface FileRoutesByTo {
   '/admin/biblioteka': typeof AuthenticatedAdminBibliotekaRoute
   '/admin/dziennik': typeof AuthenticatedAdminDziennikRoute
   '/admin/multimedia': typeof AuthenticatedAdminMultimediaRoute
+  '/admin/platnosci': typeof AuthenticatedAdminPlatnosciRoute
   '/admin/podcast': typeof AuthenticatedAdminPodcastRoute
   '/admin/powiadomienia': typeof AuthenticatedAdminPowiadomieniaRoute
   '/admin/rozmowy': typeof AuthenticatedAdminRozmowyRoute
@@ -447,6 +477,9 @@ export interface FileRoutesByTo {
   '/api/public/cron/consult-reminders': typeof ApiPublicCronConsultRemindersRoute
   '/api/public/library-cover/$id': typeof ApiPublicLibraryCoverIdRoute
   '/api/public/meeting-image/$id': typeof ApiPublicMeetingImageIdRoute
+  '/api/public/payments/p24': typeof ApiPublicPaymentsP24Route
+  '/api/public/payments/payu': typeof ApiPublicPaymentsPayuRoute
+  '/api/public/payments/tpay': typeof ApiPublicPaymentsTpayRoute
   '/api/public/podcast-cover/$id': typeof ApiPublicPodcastCoverIdRoute
   '/api/public/page-image/$id/$name': typeof ApiPublicPageImageIdNameRoute
 }
@@ -481,6 +514,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/biblioteka': typeof AuthenticatedAdminBibliotekaRoute
   '/_authenticated/admin/dziennik': typeof AuthenticatedAdminDziennikRoute
   '/_authenticated/admin/multimedia': typeof AuthenticatedAdminMultimediaRoute
+  '/_authenticated/admin/platnosci': typeof AuthenticatedAdminPlatnosciRoute
   '/_authenticated/admin/podcast': typeof AuthenticatedAdminPodcastRoute
   '/_authenticated/admin/powiadomienia': typeof AuthenticatedAdminPowiadomieniaRoute
   '/_authenticated/admin/rozmowy': typeof AuthenticatedAdminRozmowyRoute
@@ -502,6 +536,9 @@ export interface FileRoutesById {
   '/api/public/cron/consult-reminders': typeof ApiPublicCronConsultRemindersRoute
   '/api/public/library-cover/$id': typeof ApiPublicLibraryCoverIdRoute
   '/api/public/meeting-image/$id': typeof ApiPublicMeetingImageIdRoute
+  '/api/public/payments/p24': typeof ApiPublicPaymentsP24Route
+  '/api/public/payments/payu': typeof ApiPublicPaymentsPayuRoute
+  '/api/public/payments/tpay': typeof ApiPublicPaymentsTpayRoute
   '/api/public/podcast-cover/$id': typeof ApiPublicPodcastCoverIdRoute
   '/api/public/page-image/$id/$name': typeof ApiPublicPageImageIdNameRoute
 }
@@ -536,6 +573,7 @@ export interface FileRouteTypes {
     | '/admin/biblioteka'
     | '/admin/dziennik'
     | '/admin/multimedia'
+    | '/admin/platnosci'
     | '/admin/podcast'
     | '/admin/powiadomienia'
     | '/admin/rozmowy'
@@ -557,6 +595,9 @@ export interface FileRouteTypes {
     | '/api/public/cron/consult-reminders'
     | '/api/public/library-cover/$id'
     | '/api/public/meeting-image/$id'
+    | '/api/public/payments/p24'
+    | '/api/public/payments/payu'
+    | '/api/public/payments/tpay'
     | '/api/public/podcast-cover/$id'
     | '/api/public/page-image/$id/$name'
   fileRoutesByTo: FileRoutesByTo
@@ -588,6 +629,7 @@ export interface FileRouteTypes {
     | '/admin/biblioteka'
     | '/admin/dziennik'
     | '/admin/multimedia'
+    | '/admin/platnosci'
     | '/admin/podcast'
     | '/admin/powiadomienia'
     | '/admin/rozmowy'
@@ -609,6 +651,9 @@ export interface FileRouteTypes {
     | '/api/public/cron/consult-reminders'
     | '/api/public/library-cover/$id'
     | '/api/public/meeting-image/$id'
+    | '/api/public/payments/p24'
+    | '/api/public/payments/payu'
+    | '/api/public/payments/tpay'
     | '/api/public/podcast-cover/$id'
     | '/api/public/page-image/$id/$name'
   id:
@@ -642,6 +687,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/biblioteka'
     | '/_authenticated/admin/dziennik'
     | '/_authenticated/admin/multimedia'
+    | '/_authenticated/admin/platnosci'
     | '/_authenticated/admin/podcast'
     | '/_authenticated/admin/powiadomienia'
     | '/_authenticated/admin/rozmowy'
@@ -663,6 +709,9 @@ export interface FileRouteTypes {
     | '/api/public/cron/consult-reminders'
     | '/api/public/library-cover/$id'
     | '/api/public/meeting-image/$id'
+    | '/api/public/payments/p24'
+    | '/api/public/payments/payu'
+    | '/api/public/payments/tpay'
     | '/api/public/podcast-cover/$id'
     | '/api/public/page-image/$id/$name'
   fileRoutesById: FileRoutesById
@@ -696,6 +745,9 @@ export interface RootRouteChildren {
   ApiPublicCronConsultRemindersRoute: typeof ApiPublicCronConsultRemindersRoute
   ApiPublicLibraryCoverIdRoute: typeof ApiPublicLibraryCoverIdRoute
   ApiPublicMeetingImageIdRoute: typeof ApiPublicMeetingImageIdRoute
+  ApiPublicPaymentsP24Route: typeof ApiPublicPaymentsP24Route
+  ApiPublicPaymentsPayuRoute: typeof ApiPublicPaymentsPayuRoute
+  ApiPublicPaymentsTpayRoute: typeof ApiPublicPaymentsTpayRoute
   ApiPublicPodcastCoverIdRoute: typeof ApiPublicPodcastCoverIdRoute
   ApiPublicPageImageIdNameRoute: typeof ApiPublicPageImageIdNameRoute
 }
@@ -912,6 +964,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminMultimediaRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/platnosci': {
+      id: '/_authenticated/admin/platnosci'
+      path: '/platnosci'
+      fullPath: '/admin/platnosci'
+      preLoaderRoute: typeof AuthenticatedAdminPlatnosciRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/podcast': {
       id: '/_authenticated/admin/podcast'
       path: '/podcast'
@@ -1052,6 +1111,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicMeetingImageIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/payments/p24': {
+      id: '/api/public/payments/p24'
+      path: '/api/public/payments/p24'
+      fullPath: '/api/public/payments/p24'
+      preLoaderRoute: typeof ApiPublicPaymentsP24RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/payments/payu': {
+      id: '/api/public/payments/payu'
+      path: '/api/public/payments/payu'
+      fullPath: '/api/public/payments/payu'
+      preLoaderRoute: typeof ApiPublicPaymentsPayuRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/payments/tpay': {
+      id: '/api/public/payments/tpay'
+      path: '/api/public/payments/tpay'
+      fullPath: '/api/public/payments/tpay'
+      preLoaderRoute: typeof ApiPublicPaymentsTpayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/podcast-cover/$id': {
       id: '/api/public/podcast-cover/$id'
       path: '/api/public/podcast-cover/$id'
@@ -1074,6 +1154,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminBibliotekaRoute: typeof AuthenticatedAdminBibliotekaRoute
   AuthenticatedAdminDziennikRoute: typeof AuthenticatedAdminDziennikRoute
   AuthenticatedAdminMultimediaRoute: typeof AuthenticatedAdminMultimediaRoute
+  AuthenticatedAdminPlatnosciRoute: typeof AuthenticatedAdminPlatnosciRoute
   AuthenticatedAdminPodcastRoute: typeof AuthenticatedAdminPodcastRoute
   AuthenticatedAdminPowiadomieniaRoute: typeof AuthenticatedAdminPowiadomieniaRoute
   AuthenticatedAdminRozmowyRoute: typeof AuthenticatedAdminRozmowyRoute
@@ -1097,6 +1178,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminBibliotekaRoute: AuthenticatedAdminBibliotekaRoute,
   AuthenticatedAdminDziennikRoute: AuthenticatedAdminDziennikRoute,
   AuthenticatedAdminMultimediaRoute: AuthenticatedAdminMultimediaRoute,
+  AuthenticatedAdminPlatnosciRoute: AuthenticatedAdminPlatnosciRoute,
   AuthenticatedAdminPodcastRoute: AuthenticatedAdminPodcastRoute,
   AuthenticatedAdminPowiadomieniaRoute: AuthenticatedAdminPowiadomieniaRoute,
   AuthenticatedAdminRozmowyRoute: AuthenticatedAdminRozmowyRoute,
@@ -1161,6 +1243,9 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicCronConsultRemindersRoute: ApiPublicCronConsultRemindersRoute,
   ApiPublicLibraryCoverIdRoute: ApiPublicLibraryCoverIdRoute,
   ApiPublicMeetingImageIdRoute: ApiPublicMeetingImageIdRoute,
+  ApiPublicPaymentsP24Route: ApiPublicPaymentsP24Route,
+  ApiPublicPaymentsPayuRoute: ApiPublicPaymentsPayuRoute,
+  ApiPublicPaymentsTpayRoute: ApiPublicPaymentsTpayRoute,
   ApiPublicPodcastCoverIdRoute: ApiPublicPodcastCoverIdRoute,
   ApiPublicPageImageIdNameRoute: ApiPublicPageImageIdNameRoute,
 }

@@ -1,11 +1,8 @@
-// Payment methods offered at checkout. Only bank transfer is active.
-// "online_p24" is a placeholder for a future Przelewy24 integration — no operator connection exists yet.
-export const PAYMENT_METHODS = [
-  { id: "bank_transfer", label: "Przelew tradycyjny", note: "Dane do przelewu pokażemy po złożeniu zamówienia. Materiał wyślemy po zaksięgowaniu wpłaty.", enabled: true },
-  { id: "online_p24", label: "Płatność online", note: "Integracja w przygotowaniu", enabled: false },
-] as const;
+// Bank transfer is always available; online operators (Przelewy24, Tpay, PayU) are
+// configured in /admin/platnosci and offered only when enabled and fully configured.
+export type PaymentMethodId = "bank_transfer" | "p24" | "tpay" | "payu";
 
-export type PaymentMethodId = (typeof PAYMENT_METHODS)[number]["id"];
+export const BANK_METHOD = { id: "bank_transfer" as const, label: "Przelew tradycyjny", note: "Dane do przelewu pokażemy po złożeniu zamówienia. Dostęp przyznamy po zaksięgowaniu wpłaty." };
 
 // Bank transfer details — fill in before going live. Empty values show "do uzupełnienia".
 export const BANK_TRANSFER = {

@@ -721,6 +721,7 @@ export type Database = {
       library_orders: {
         Row: {
           access_expires_at: string | null
+          access_revoked_at: string | null
           access_token: string
           amount: number
           buyer_email: string
@@ -745,7 +746,9 @@ export type Database = {
           payment_method: string
           provider: string | null
           provider_ref: string | null
+          refund_reason: string | null
           refunded_at: string | null
+          review_reason: string | null
           status: string
           status_changed_at: string | null
           status_changed_by: string | null
@@ -754,6 +757,7 @@ export type Database = {
         }
         Insert: {
           access_expires_at?: string | null
+          access_revoked_at?: string | null
           access_token?: string
           amount: number
           buyer_email: string
@@ -778,7 +782,9 @@ export type Database = {
           payment_method?: string
           provider?: string | null
           provider_ref?: string | null
+          refund_reason?: string | null
           refunded_at?: string | null
+          review_reason?: string | null
           status?: string
           status_changed_at?: string | null
           status_changed_by?: string | null
@@ -787,6 +793,7 @@ export type Database = {
         }
         Update: {
           access_expires_at?: string | null
+          access_revoked_at?: string | null
           access_token?: string
           amount?: number
           buyer_email?: string
@@ -811,7 +818,9 @@ export type Database = {
           payment_method?: string
           provider?: string | null
           provider_ref?: string | null
+          refund_reason?: string | null
           refunded_at?: string | null
+          review_reason?: string | null
           status?: string
           status_changed_at?: string | null
           status_changed_by?: string | null
@@ -1041,6 +1050,51 @@ export type Database = {
         Update: {
           enabled?: boolean
           event_key?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      payment_providers: {
+        Row: {
+          client_id: string | null
+          enabled: boolean
+          environment: string
+          id: string
+          is_default: boolean
+          last_test_at: string | null
+          last_test_detail: string | null
+          last_test_ok: boolean | null
+          merchant_id: string | null
+          pos_id: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          enabled?: boolean
+          environment?: string
+          id: string
+          is_default?: boolean
+          last_test_at?: string | null
+          last_test_detail?: string | null
+          last_test_ok?: boolean | null
+          merchant_id?: string | null
+          pos_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          enabled?: boolean
+          environment?: string
+          id?: string
+          is_default?: boolean
+          last_test_at?: string | null
+          last_test_detail?: string | null
+          last_test_ok?: boolean | null
+          merchant_id?: string | null
+          pos_id?: string | null
           updated_at?: string
           updated_by?: string | null
         }

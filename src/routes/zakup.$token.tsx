@@ -18,7 +18,9 @@ export const Route = createFileRoute("/zakup/$token")({
 function Purchased() {
   const { token } = Route.useParams();
   const ok = /^[0-9a-f-]{36}$/.test(token);
-  const q = useQuery({ queryKey: ["purchased", token], enabled: ok, queryFn: () => getPurchasedMaterial({ data: { token, file: false } }) });
+  const back = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("powrot");
+  const q = useQuery({ queryKey: ["purchased", token], enabled: ok, queryFn: () => getPurchasedMaterial({ data: { token, file: false } }),
+    refetchInterval: (qq) => { const d: any = qq.state.data; return back && d?.order?.status === "pending" && qq.state.dataUpdateCount < 40 ? 3000 : false; } });
   const [busy, setBusy] = useState(false);
   const [fileErr, setFileErr] = useState<string | null>(null);
   async function openFile() {
@@ -34,7 +36,7 @@ function Purchased() {
         <Link to="/biblioteka" className="text-[0.72rem] uppercase tracking-[0.14em] text-gold">← Biblioteka</Link>
         {!ok || (d && "error" in d) ? (
           <div className="mt-8 border border-border/60 p-8"><h1 className="font-display text-3xl font-semibold">Brak dostępu</h1><p className="mt-3 text-sm text-foreground/75">{d && "error" in d ? d.error : "Link jest nieprawidłowy."}</p></div>
-        ) : d && "order" in d ? <OrderStatus o={d.order} /> : !d || !("item" in d) ? <p className="mt-8 text-sm text-muted-foreground">Ładowanie materiału…</p> : (
+        ) : d && "order" in d ? <OrderStatus o={d.order} back={back} /> : !d || !("item" in d) ? <p className="mt-8 text-sm text-muted-foreground">Ładowanie materiału…</p> : (
           <article className="mt-8">
             <p className="eyebrow text-gold">Twój zakupiony materiał</p>
             <h1 className="mt-3 break-words font-display text-[2.4rem] font-semibold leading-tight">{d.item?.title}</h1>
@@ -52,14 +54,17 @@ function Purchased() {
 }
 
 const ST: Record<string, [string, string]> = {
-  pending: ["Zamówienie przyjęte — oczekuje na płatność", "Wykonaj przelew według danych poniżej. Materiał wyślemy na Twój e-mail po zaksięgowaniu wpłaty. Zachowaj ten link — tu też otworzysz materiał po opłaceniu."],
+  pending: ["Zamówienie przyjęte — oczekuje na płatność", "Wykonaj przelew według danych poniżej. Dostęp przyznamy po zaksięgowaniu wpłaty. Zachowaj ten link — tu też otworzysz materiał po opłaceniu."],
+  pending_online: ["Oczekujemy na potwierdzenie płatności", "Dostęp przyznamy dopiero, gdy operator płatności potwierdzi transakcję. Zwykle trwa to kilka chwil — ta strona odświeży się sama. Zachowaj ten link."],
+  needs_review: ["Płatność wymaga weryfikacji", "Sprawdzamy Twoją płatność z operatorem. Odezwiemy się na podany adres e-mail. Dostęp przyznamy po pozytywnej weryfikacji."],
   cancelled: ["Zamówienie anulowane", "To zamówienie zostało anulowane. Dostęp do materiału nie został przyznany."],
   refunded: ["Zwrot", "Środki za to zamówienie zostały zwrócone. Dostęp do materiału wygasł."],
-  failed: ["Płatność nieudana", "Płatność nie została zrealizowana."],
+  failed: ["Płatność nieudana", "Płatność nie została zrealizowana i dostęp nie został przyznany. Możesz złożyć zamówienie ponownie na stronie materiału."],
 };
 
-function OrderStatus({ o }: { o: { status: string; number: string; amount: number; email: string; title: string; slug: string } }) {
-  const [t, x] = ST[o.status] ?? ST["pending"]!;
+function OrderStatus({ o, back }: { o: { status: string; number: string; amount: number; email: string; title: string; slug: string; method?: string; provider?: string | null }; back?: boolean }) {
+  const online = o.method === "online";
+  const [t, x] = ST[o.status === "pending" && online ? "pending_online" : o.status] ?? ST["pending"]!;
   const v = (s: string) => s || <span className="italic text-muted-foreground">do uzupełnienia</span>;
   const row = (k: string, val: React.ReactNode) => <div className="flex flex-wrap justify-between gap-2 border-b border-border/40 py-2 text-sm"><span className="text-muted-foreground">{k}</span><span className="break-all text-right">{val}</span></div>;
   return (
@@ -67,8 +72,9 @@ function OrderStatus({ o }: { o: { status: string; number: string; amount: numbe
       <p className="eyebrow text-gold">Zamówienie {o.number}</p>
       <h1 className="mt-3 font-display text-3xl font-semibold">{t}</h1>
       <p className="mt-3 text-[0.95rem] leading-[1.75] text-foreground/85">{x}</p>
-      <div className="mt-6">{row("Materiał", o.title)}{row("Kwota", fmtPrice(o.amount))}{row("E-mail", o.email)}</div>
-      {o.status === "pending" && (
+      <div className="mt-6">{row("Materiał", o.title)}{row("Kwota", fmtPrice(o.amount))}{row("E-mail", o.email)}{row("Metoda płatności", online ? `Online — ${o.provider ?? ""}` : "Przelew tradycyjny")}</div>
+      {back && online && o.status === "pending" && <p className="mt-4 text-sm text-gold" role="status">Wróciłeś z płatności {o.provider ?? ""}. Sam powrót nie potwierdza wpłaty — czekamy na potwierdzenie od operatora.</p>}
+      {o.status === "pending" && !online && (
         <div className="mt-6">
           <p className="eyebrow text-gold">Dane do przelewu</p>
           {!bankConfigured() && <p className="mt-2 text-sm text-destructive">Dane rachunku nie zostały jeszcze uzupełnione. Nie wykonuj przelewu — skontaktuj się z nami przez formularz kontaktowy.</p>}
