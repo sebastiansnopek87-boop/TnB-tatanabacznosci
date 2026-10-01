@@ -20,6 +20,8 @@ export const VARIABLES: VarDef[] = [
   { key: "godzina_spotkania", label: "Godzina spotkania", sample: "19:00" },
   { key: "link_do_spotkania", label: "Link do spotkania", sample: "https://meet.example.com/abc", url: true, sensitive: true },
   { key: "temat_wiadomosci", label: "Temat wiadomości", sample: "Pytanie o spotkania" },
+  { key: "tytul_artykulu", label: "Tytuł artykułu", sample: "Nie każdy, kto milczy, jest silny" },
+  { key: "waznosc_linku", label: "Ważność linku", sample: "48 godzin" },
   { key: "link_do_panelu", label: "Link do panelu", sample: "https://tatanabacznosci.pl/admin", url: true },
 ];
 export const VAR_MAP: Record<string, VarDef> = Object.fromEntries(VARIABLES.map((v) => [v.key, v]));
@@ -130,6 +132,9 @@ const DEFS = [
     { subject: "Nowa odpowiedź na Twój post", heading: "Ktoś odpowiedział", lines: [hi, "Pojawiła się odpowiedź na Twój post w Społeczności."], cta: { label: "Zaloguj się", v: "link_do_logowania" } }),
   E("report_admin_new", "formularze", "Nowe zgłoszenie moderacyjne", "Powiadomienie administratora.", "admin", "pending",
     { subject: "Nowe zgłoszenie w Społeczności", heading: "Nowe zgłoszenie", lines: ["W Społeczności zgłoszono treść do sprawdzenia."], cta: { label: "Otwórz panel", v: "link_do_panelu" } }),
+
+  E("article_comment_confirm", "formularze", "Potwierdzenie komentarza gościa", "Link potwierdzający komentarz dodany bez konta.", "user", "integrated",
+    { subject: "Potwierdź swój komentarz w TATA NA BACZNOŚCI", heading: "Potwierdź swój komentarz", lines: ["Cześć {{imie}},", "otrzymaliśmy Twój komentarz pod artykułem „{{tytul_artykulu}}”.", "Aby potwierdzić, że to Ty przesłałeś komentarz i że chcesz opublikować go na portalu TATA NA BACZNOŚCI, kliknij poniższy przycisk. Link jest jednorazowy i ważny {{waznosc_linku}}.", "Jeśli to nie Ty wysłałeś komentarz, zignoruj tę wiadomość. Komentarz nie zostanie opublikowany.", "Dziękujemy za udział w rozmowie.<br>Zespół TATA NA BACZNOŚCI"], cta: { label: "Potwierdzam komentarz", v: "link_do_potwierdzenia" } }),
 
   E("test_message", "system", "Wiadomość testowa", "Sprawdzenie konfiguracji wysyłki.", "user", "integrated",
     { subject: "Wiadomość testowa — {{nazwa_platformy}}", heading: "Test wysyłki", lines: [hi, "To jest wiadomość testowa z panelu {{nazwa_platformy}}."] }),
