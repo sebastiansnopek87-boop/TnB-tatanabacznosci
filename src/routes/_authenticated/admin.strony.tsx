@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
-import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -14,14 +14,12 @@ import { SectionsEditor } from "@/components/pages/SectionsEditor";
 import {
   adminCheckSlug, adminCreatePageUpload, adminGetPage, adminListPages, adminPageImageUrls, adminSavePage, adminSetPageStatus,
 } from "@/lib/pages.functions";
-import { PAGE_STATUS, SECTION_KINDS, SYSTEM_PAGES, newSection, normalizeSections, pagePath, type PageSection, type SectionKind } from "@/lib/pages";
+import { PAGE_STATUS, SYSTEM_PAGES, normalizeSections, pagePath, type PageSection } from "@/lib/pages";
 
 export const Route = createFileRoute("/_authenticated/admin/strony")({ component: PagesAdmin });
 
 type Draft = { id: string | null; slug: string; system_key: string | null; title: string; intro: string; sections: PageSection[]; seo_title: string; seo_description: string; status: string };
 const EMPTY: Draft = { id: null, slug: "", system_key: null, title: "", intro: "", sections: [], seo_title: "", seo_description: "", status: "draft" };
-const KIND_LABEL = SECTION_KINDS;
-const NO_IMAGE: SectionKind[] = ["values", "columns", "cta"];
 
 function PagesAdmin() {
   const listFn = useServerFn(adminListPages);
@@ -78,7 +76,6 @@ function Editor({ id, onClose }: { id: string | null; onClose: () => void }) {
   const set = (patch: Partial<Draft>) => { setD((o) => ({ ...o, ...patch })); setDirty(true); };
   // Functional updates: async callbacks (image upload) must not overwrite edits made meanwhile.
   const setSec = (i: number, patch: Partial<PageSection>) => { setD((o) => ({ ...o, sections: o.sections.map((s, j) => j === i ? { ...s, ...patch } : s) })); setDirty(true); };
-  const move = (i: number, dir: -1 | 1) => { setD((o) => { const a = [...o.sections]; const j = i + dir; if (j < 0 || j >= a.length) return o; [a[i], a[j]] = [a[j]!, a[i]!]; return { ...o, sections: a }; }); setDirty(true); };
 
   async function save(): Promise<string | null> {
     setBusy(true);
