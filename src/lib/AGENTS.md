@@ -5,6 +5,6 @@
 - Orders: created server-side with DB price, bank transfer only (online_p24 placeholder); only admins mark paid/delivered (orders.server.ts) — client can never set paid.
 - Meetings: public reads with explicit safe columns (online_link hidden); registrations server-only with honeypot, per-email uniqueness, DB capacity trigger.
 - Podcast: admin-only RLS; public reads via safe columns; media returned by getEpisodeMedia (signed 3h) only after access check.
-- 1:1 consults: slots computed server-side (Europe/Warsaw); DB exclusion constraint blocks double booking; reminders cron not yet scheduled.
+- 1:1 consults: slots computed server-side (Europe/Warsaw); DB exclusion constraint blocks double booking; booking + meeting-registration e-mails go through dispatch() (consult.server.ts, meetings-notify.server.ts), meeting links only via token status pages; reminders cron not yet scheduled.
 - CMS: reuse site_pages (JSONB sections) for new content pages; images via /api/public/page-image only when published+referenced.
 - Media panel (/admin/multimedia, media.functions.ts): lists files of existing private buckets via service-role admin_media_objects(); usage computed live from module tables; new uploads go to private bucket 'media'; delete only when no usage. Why: no duplicate storage or file-copy.
