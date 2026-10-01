@@ -95,6 +95,13 @@ function check(body: string, max: number) {
   return t;
 }
 
+// Author signature missing for the chosen display mode (set in Moje TNB).
+function signatureError(e: { message?: string }) {
+  return e.message?.includes("display_name_missing")
+    ? "Uzupełnij w „Moje TNB” nick lub imię i nazwisko — zgodnie z wybranym sposobem podpisu — aby publikować."
+    : null;
+}
+
 // Returns an error if RLS silently matched no row (e.g. someone else's content).
 function one(res: { error: unknown; data: unknown[] | null }, fail: string) {
   if (res.error || !res.data?.length) throw new Error(fail);
@@ -102,7 +109,7 @@ function one(res: { error: unknown; data: unknown[] | null }, fail: string) {
 
 export async function createPost(body: string, visibility: Visibility = "community", sector: Sector = "ogolne") {
   const { error } = await supabase.from("community_posts").insert({ body: check(body, POST_MAX), visibility, sector });
-  if (error) throw new Error("Nie udało się opublikować posta.");
+  if (error) throw new Error(signatureError(error) ?? "Nie udało się opublikować posta.");
 }
 export async function updatePost(id: string, body: string, visibility: Visibility, sector: Sector) {
   one(await supabase.from("community_posts").update({ body: check(body, POST_MAX), visibility, sector }).eq("id", id).select("id"), "Nie udało się zapisać zmian.");
@@ -112,7 +119,7 @@ export async function deletePost(id: string) {
 }
 export async function createComment(postId: string, body: string) {
   const { error } = await supabase.from("community_comments").insert({ post_id: postId, body: check(body, COMMENT_MAX) });
-  if (error) throw new Error("Nie udało się dodać komentarza.");
+  if (error) throw new Error(signatureError(error) ?? "Nie udało się dodać komentarza.");
 }
 export async function updateComment(id: string, body: string) {
   one(await supabase.from("community_comments").update({ body: check(body, COMMENT_MAX) }).eq("id", id).select("id"), "Nie udało się zapisać komentarza.");
