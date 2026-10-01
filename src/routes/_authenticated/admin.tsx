@@ -38,6 +38,7 @@ const GROUPS: Array<{ title: string; items: NavItem[] }> = [
     { to: "/admin/artykuly", label: "Artykuły" },
     { to: "/admin/strony", label: "Strony i edytor treści" },
     { to: "/admin/multimedia", label: "Multimedia" },
+    { to: "/admin/standardy", label: "Standardy redakcyjne" },
     // "Treści strony" (/admin/tresci) hidden until the feature exists; route kept.
   ] },
   { title: "Komunikacja", items: [
