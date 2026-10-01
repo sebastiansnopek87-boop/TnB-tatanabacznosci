@@ -22,6 +22,8 @@ export const Route = createFileRoute("/komentarz/potwierdz")({
   component: Confirm,
 });
 
+// One confirmation request per token per page load, even if the view mounts twice.
+const pending = new Map<string, Promise<R>>();
 type R = Awaited<ReturnType<typeof confirmGuestComment>>;
 const TEXT: Record<R["status"], { title: string; body: string }> = {
   published: { title: "Dziękujemy! Komentarz został opublikowany", body: "Twój adres e-mail został potwierdzony, a komentarz jest już widoczny pod artykułem." },
@@ -42,7 +44,8 @@ function Confirm() {
   useEffect(() => {
     if (ran.current) return; ran.current = true;
     if (!t) { setR({ status: "invalid" }); return; }
-    confirm({ data: { token: t } }).then(setR).catch(() => setR({ status: "invalid" }));
+    if (!pending.has(t)) pending.set(t, confirm({ data: { token: t } }).catch(() => ({ status: "invalid" }) as R));
+    pending.get(t)!.then(setR);
   }, [t, confirm]);
   const txt = r ? TEXT[r.status] : null;
   return (
