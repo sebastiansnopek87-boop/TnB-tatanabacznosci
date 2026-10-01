@@ -68,6 +68,59 @@ export type Database = {
         }
         Relationships: []
       }
+      article_comment_guests: {
+        Row: {
+          comment_id: string
+          confirmed_at: string | null
+          created_at: string
+          email: string
+          first_name: string
+          ip_hash: string | null
+          last_name: string
+          last_sent_at: string
+          sends: number
+          token_expires_at: string | null
+          token_hash: string | null
+          token_used_at: string | null
+        }
+        Insert: {
+          comment_id: string
+          confirmed_at?: string | null
+          created_at?: string
+          email: string
+          first_name: string
+          ip_hash?: string | null
+          last_name: string
+          last_sent_at?: string
+          sends?: number
+          token_expires_at?: string | null
+          token_hash?: string | null
+          token_used_at?: string | null
+        }
+        Update: {
+          comment_id?: string
+          confirmed_at?: string | null
+          created_at?: string
+          email?: string
+          first_name?: string
+          ip_hash?: string | null
+          last_name?: string
+          last_sent_at?: string
+          sends?: number
+          token_expires_at?: string | null
+          token_hash?: string | null
+          token_used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_comment_guests_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: true
+            referencedRelation: "article_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       article_comment_reports: {
         Row: {
           comment_id: string
@@ -106,7 +159,7 @@ export type Database = {
       article_comments: {
         Row: {
           article_id: string
-          author_id: string
+          author_id: string | null
           author_name: string
           body: string
           created_at: string
@@ -116,7 +169,7 @@ export type Database = {
         }
         Insert: {
           article_id: string
-          author_id?: string
+          author_id?: string | null
           author_name?: string
           body: string
           created_at?: string
@@ -126,7 +179,7 @@ export type Database = {
         }
         Update: {
           article_id?: string
-          author_id?: string
+          author_id?: string | null
           author_name?: string
           body?: string
           created_at?: string
