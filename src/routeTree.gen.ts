@@ -22,6 +22,8 @@ import { Route as RegulaminRouteImport } from './routes/regulamin'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedMojeTnbRouteImport } from './routes/_authenticated/moje-tnb'
+import { Route as ArtykulyIndexRouteImport } from './routes/artykuly.index'
+import { Route as ArtykulySlugRouteImport } from './routes/artykuly.$slug'
 import { Route as BibliotekaIndexRouteImport } from './routes/biblioteka.index'
 import { Route as BibliotekaSlugRouteImport } from './routes/biblioteka.$slug'
 import { Route as NewsletterWypiszRouteImport } from './routes/newsletter.wypisz'
@@ -130,6 +132,16 @@ const AuthenticatedMojeTnbRoute = AuthenticatedMojeTnbRouteImport.update({
   id: '/moje-tnb',
   path: '/moje-tnb',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ArtykulyIndexRoute = ArtykulyIndexRouteImport.update({
+  id: '/artykuly/',
+  path: '/artykuly/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ArtykulySlugRoute = ArtykulySlugRouteImport.update({
+  id: '/artykuly/$slug',
+  path: '/artykuly/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const BibliotekaIndexRoute = BibliotekaIndexRouteImport.update({
   id: '/biblioteka/',
@@ -390,6 +402,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/moje-tnb': typeof AuthenticatedMojeTnbRoute
+  '/artykuly/$slug': typeof ArtykulySlugRoute
   '/biblioteka/$slug': typeof BibliotekaSlugRoute
   '/newsletter/wypisz': typeof NewsletterWypiszRoute
   '/podcast/$slug': typeof PodcastSlugRoute
@@ -398,6 +411,7 @@ export interface FileRoutesByFullPath {
   '/spotkania/rozmowa-1-1': typeof SpotkaniaRozmowa11Route
   '/strony/$slug': typeof StronySlugRoute
   '/zakup/$token': typeof ZakupTokenRoute
+  '/artykuly/': typeof ArtykulyIndexRoute
   '/biblioteka/': typeof BibliotekaIndexRoute
   '/podcast/': typeof PodcastIndexRoute
   '/spolecznosc/': typeof SpolecznoscIndexRoute
@@ -447,6 +461,7 @@ export interface FileRoutesByTo {
   '/regulamin': typeof RegulaminRoute
   '/reset-password': typeof ResetPasswordRoute
   '/moje-tnb': typeof AuthenticatedMojeTnbRoute
+  '/artykuly/$slug': typeof ArtykulySlugRoute
   '/biblioteka/$slug': typeof BibliotekaSlugRoute
   '/newsletter/wypisz': typeof NewsletterWypiszRoute
   '/podcast/$slug': typeof PodcastSlugRoute
@@ -455,6 +470,7 @@ export interface FileRoutesByTo {
   '/spotkania/rozmowa-1-1': typeof SpotkaniaRozmowa11Route
   '/strony/$slug': typeof StronySlugRoute
   '/zakup/$token': typeof ZakupTokenRoute
+  '/artykuly': typeof ArtykulyIndexRoute
   '/biblioteka': typeof BibliotekaIndexRoute
   '/podcast': typeof PodcastIndexRoute
   '/spolecznosc': typeof SpolecznoscIndexRoute
@@ -507,6 +523,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/moje-tnb': typeof AuthenticatedMojeTnbRoute
+  '/artykuly/$slug': typeof ArtykulySlugRoute
   '/biblioteka/$slug': typeof BibliotekaSlugRoute
   '/newsletter/wypisz': typeof NewsletterWypiszRoute
   '/podcast/$slug': typeof PodcastSlugRoute
@@ -515,6 +532,7 @@ export interface FileRoutesById {
   '/spotkania/rozmowa-1-1': typeof SpotkaniaRozmowa11Route
   '/strony/$slug': typeof StronySlugRoute
   '/zakup/$token': typeof ZakupTokenRoute
+  '/artykuly/': typeof ArtykulyIndexRoute
   '/biblioteka/': typeof BibliotekaIndexRoute
   '/podcast/': typeof PodcastIndexRoute
   '/spolecznosc/': typeof SpolecznoscIndexRoute
@@ -567,6 +585,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/admin'
     | '/moje-tnb'
+    | '/artykuly/$slug'
     | '/biblioteka/$slug'
     | '/newsletter/wypisz'
     | '/podcast/$slug'
@@ -575,6 +594,7 @@ export interface FileRouteTypes {
     | '/spotkania/rozmowa-1-1'
     | '/strony/$slug'
     | '/zakup/$token'
+    | '/artykuly/'
     | '/biblioteka/'
     | '/podcast/'
     | '/spolecznosc/'
@@ -624,6 +644,7 @@ export interface FileRouteTypes {
     | '/regulamin'
     | '/reset-password'
     | '/moje-tnb'
+    | '/artykuly/$slug'
     | '/biblioteka/$slug'
     | '/newsletter/wypisz'
     | '/podcast/$slug'
@@ -632,6 +653,7 @@ export interface FileRouteTypes {
     | '/spotkania/rozmowa-1-1'
     | '/strony/$slug'
     | '/zakup/$token'
+    | '/artykuly'
     | '/biblioteka'
     | '/podcast'
     | '/spolecznosc'
@@ -683,6 +705,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/admin'
     | '/_authenticated/moje-tnb'
+    | '/artykuly/$slug'
     | '/biblioteka/$slug'
     | '/newsletter/wypisz'
     | '/podcast/$slug'
@@ -691,6 +714,7 @@ export interface FileRouteTypes {
     | '/spotkania/rozmowa-1-1'
     | '/strony/$slug'
     | '/zakup/$token'
+    | '/artykuly/'
     | '/biblioteka/'
     | '/podcast/'
     | '/spolecznosc/'
@@ -741,6 +765,7 @@ export interface RootRouteChildren {
   PolitykaPrywatnosciRoute: typeof PolitykaPrywatnosciRoute
   RegulaminRoute: typeof RegulaminRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ArtykulySlugRoute: typeof ArtykulySlugRoute
   BibliotekaSlugRoute: typeof BibliotekaSlugRoute
   NewsletterWypiszRoute: typeof NewsletterWypiszRoute
   PodcastSlugRoute: typeof PodcastSlugRoute
@@ -749,6 +774,7 @@ export interface RootRouteChildren {
   SpotkaniaRozmowa11Route: typeof SpotkaniaRozmowa11Route
   StronySlugRoute: typeof StronySlugRoute
   ZakupTokenRoute: typeof ZakupTokenRoute
+  ArtykulyIndexRoute: typeof ArtykulyIndexRoute
   BibliotekaIndexRoute: typeof BibliotekaIndexRoute
   PodcastIndexRoute: typeof PodcastIndexRoute
   SpolecznoscIndexRoute: typeof SpolecznoscIndexRoute
@@ -858,6 +884,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/moje-tnb'
       preLoaderRoute: typeof AuthenticatedMojeTnbRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/artykuly/': {
+      id: '/artykuly/'
+      path: '/artykuly'
+      fullPath: '/artykuly/'
+      preLoaderRoute: typeof ArtykulyIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/artykuly/$slug': {
+      id: '/artykuly/$slug'
+      path: '/artykuly/$slug'
+      fullPath: '/artykuly/$slug'
+      preLoaderRoute: typeof ArtykulySlugRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/biblioteka/': {
       id: '/biblioteka/'
@@ -1247,6 +1287,7 @@ const rootRouteChildren: RootRouteChildren = {
   PolitykaPrywatnosciRoute: PolitykaPrywatnosciRoute,
   RegulaminRoute: RegulaminRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ArtykulySlugRoute: ArtykulySlugRoute,
   BibliotekaSlugRoute: BibliotekaSlugRoute,
   NewsletterWypiszRoute: NewsletterWypiszRoute,
   PodcastSlugRoute: PodcastSlugRoute,
@@ -1255,6 +1296,7 @@ const rootRouteChildren: RootRouteChildren = {
   SpotkaniaRozmowa11Route: SpotkaniaRozmowa11Route,
   StronySlugRoute: StronySlugRoute,
   ZakupTokenRoute: ZakupTokenRoute,
+  ArtykulyIndexRoute: ArtykulyIndexRoute,
   BibliotekaIndexRoute: BibliotekaIndexRoute,
   PodcastIndexRoute: PodcastIndexRoute,
   SpolecznoscIndexRoute: SpolecznoscIndexRoute,
