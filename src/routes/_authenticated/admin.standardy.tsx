@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
-import { CHECKLIST, EDITORIAL_VERSION, IDENTITY, LANGUAGE, TEMPLATES, VISUAL, type Block } from "@/config/editorial";
+import { CHECKLIST, EDITORIAL_VERSION, IDENTITY, LANGUAGE, TEMPLATES, VISUAL, WATERMARK, type Block } from "@/config/editorial";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/admin/standardy")({
@@ -33,7 +33,7 @@ function Standards() {
         {TABS.map(([k, l]) => <Button key={k} role="tab" aria-selected={tab === k} variant={tab === k ? "default" : "outline"} size="sm" onClick={() => setTab(k)}>{l}</Button>)}
       </div>
 
-      {tab === "standard" && <><List b={IDENTITY} /><List b={LANGUAGE} /><List b={VISUAL} /></>}
+      {tab === "standard" && <><List b={IDENTITY} /><List b={LANGUAGE} /><List b={VISUAL} /><List b={WATERMARK} /></>}
 
       {tab === "szablony" && TEMPLATES.map((t) => (
         <section key={t.id} className="mt-6 border border-border p-4 sm:p-6">
