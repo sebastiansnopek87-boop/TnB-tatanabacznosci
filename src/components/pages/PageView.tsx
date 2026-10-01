@@ -39,7 +39,7 @@ const H2 = ({ t }: { t: string }) => t
 function Img({ s, src, className, eager }: { s: PageSection; src: string; className: string; eager?: boolean }) {
   return (
     <figure className="min-w-0">
-      <img src={src} alt={s.imageAlt || s.heading || ""} loading={eager ? "eager" : "lazy"} decoding="async" className={`w-full object-cover ${className}`} />
+      <img src={src} alt={s.decorative ? "" : s.imageAlt || s.heading || ""} aria-hidden={s.decorative || undefined} loading={eager ? "eager" : "lazy"} decoding="async" className={`w-full object-cover ${className}`} />
       {s.caption && <figcaption className="mt-3 text-xs tracking-wide text-muted-foreground">{s.caption}</figcaption>}
     </figure>
   );
@@ -116,18 +116,30 @@ function Section({ s, src, first }: { s: PageSection; src?: string | undefined; 
           </div>
         </section>
       );
-    case "image":
+    case "image": {
+      const alt = s.decorative ? "" : s.imageAlt || s.heading || "";
+      const text = (s.heading || s.body || s.buttons.length > 0) && <div className="mt-6"><H2 t={s.heading} />{s.body && <div className="mt-6"><Paragraphs text={s.body} /></div>}<Buttons s={s} /></div>;
+      if (s.display === "inset" || s.display === "featured") {
+        const featured = s.display === "featured";
+        return (
+          <section className="px-5 py-10 lg:px-14 lg:py-14">
+            <figure className={`mx-auto min-w-0 ${featured ? "max-w-4xl border border-gold/40 bg-card/50 p-3 sm:p-5" : "max-w-3xl"}`}>
+              {src && <img src={src} alt={alt} aria-hidden={s.decorative || undefined} loading="lazy" decoding="async" className="aspect-[3/2] w-full object-cover" />}
+              {s.caption && <figcaption className={featured ? "mt-4 border-l-2 border-gold pl-4 font-display text-[1.25rem] italic leading-snug text-foreground/90" : "mt-3 text-xs tracking-wide text-muted-foreground"}>{s.caption}</figcaption>}
+            </figure>
+            {text && <div className="mx-auto max-w-3xl">{text}</div>}
+          </section>
+        );
+      }
       return (
         <section className="border-t border-border/60">
-          {src && <img src={src} alt={s.imageAlt || s.heading || ""} loading="lazy" decoding="async" className="h-[42vh] min-h-[260px] w-full object-cover lg:h-[62vh]" />}
-          {(s.heading || s.body || s.caption || s.buttons.length > 0) && (
-            <div className="mx-auto max-w-3xl px-5 py-12 lg:px-14">
-              {s.caption && <p className="text-xs tracking-wide text-muted-foreground">{s.caption}</p>}
-              <H2 t={s.heading} />{s.body && <div className="mt-6"><Paragraphs text={s.body} /></div>}<Buttons s={s} />
-            </div>
-          )}
+          {src && <figure className="m-0"><img src={src} alt={alt} aria-hidden={s.decorative || undefined} loading="lazy" decoding="async" className="h-[42vh] min-h-[260px] w-full object-cover lg:h-[62vh]" />
+            {s.caption && <figcaption className="mx-auto max-w-3xl px-5 pt-4 text-center font-display text-[1.15rem] italic text-foreground/80 lg:px-0">{s.caption}</figcaption>}</figure>}
+          {text && <div className="mx-auto max-w-3xl px-5 pb-12 lg:px-14">{text}</div>}
+          {!text && <div className="pb-10" />}
         </section>
       );
+    }
     case "cta":
       return (
         <section className="border-t border-border/60 px-5 py-16 lg:px-14 lg:py-24">

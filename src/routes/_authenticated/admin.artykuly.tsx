@@ -149,6 +149,7 @@ function Editor({ id, onClose }: { id: string | null; onClose: () => void }) {
   const [busy, setBusy] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [preview, setPreview] = useState(false);
+  const [device, setDevice] = useState<"desktop" | "phone">("desktop");
   const [slugMsg, setSlugMsg] = useState("");
   const [slugTouched, setSlugTouched] = useState(!!id);
   const [urls, setUrls] = useState<Record<string, string>>({});
@@ -217,8 +218,12 @@ function Editor({ id, onClose }: { id: string | null; onClose: () => void }) {
   const catName = cats.data?.find((c) => c.slug === d.category)?.name ?? null;
   if (preview) return (
     <div>
-      <div className="mb-3"><Button variant="outline" onClick={() => setPreview(false)}>← Wróć do edycji</Button></div>
-      <div className="border border-border/60">
+      <div className="mb-3 flex flex-wrap gap-2">
+        <Button variant="outline" onClick={() => setPreview(false)}>← Wróć do edycji</Button>
+        <Button variant={device === "desktop" ? "default" : "outline"} onClick={() => setDevice("desktop")}>Komputer</Button>
+        <Button variant={device === "phone" ? "default" : "outline"} onClick={() => setDevice("phone")}>Telefon</Button>
+      </div>
+      <div className={`border border-border/60 ${device === "phone" ? "mx-auto max-w-[390px] overflow-hidden" : ""}`}>
         <ArticleView preview title={d.title || "(bez tytułu)"} excerpt={d.excerpt} category={catName} author={d.author_name} publishedAt={d.published_at}
           minutes={readingMinutes(d.excerpt, d.sections)} cover={d.cover ? urls[d.cover] : undefined} coverAlt={d.cover_alt} sections={d.sections} imageSrc={(f) => urls[f]} />
       </div>
