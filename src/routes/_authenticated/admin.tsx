@@ -31,7 +31,8 @@ const GROUPS: Array<{ title: string; items: NavItem[] }> = [
     { to: "/admin/rozmowy", label: "Rozmowy 1:1" },
     { to: "/admin/biblioteka", label: "Biblioteka i materiały premium" },
     { to: "/admin/podcast", label: "Podcast" },
-    { to: "/admin/zamowienia", label: "Zamówienia i sprzedaż" },
+    { to: "/admin/zamowienia", label: "Sprzedaż i zamówienia" },
+    { to: "/admin/platnosci", label: "Operatorzy płatności" },
   ] },
   { title: "Treści i wygląd", items: [
     { to: "/admin/strony", label: "Strony i edytor treści" },
