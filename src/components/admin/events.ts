@@ -70,7 +70,7 @@ export const EVENT_CATEGORIES: Array<{ value: string; label: string }> = [
 
 export const OBJECT_KIND: Record<string, string> = {
   page: "Strona", library: "Materiał", episode: "Odcinek", meeting: "Spotkanie", registration: "Zgłoszenie", booking: "Rozmowa 1:1",
-  order: "Zamówienie", post: "Post", comment: "Komentarz", report: "Zgłoszenie", availability: "Dostępność", user: "Użytkownik", settings: "Ustawienia", media: "Plik", template: "Szablon", rule: "Reguła", notification: "Wiadomość",
+  order: "Zamówienie", post: "Post", comment: "Komentarz", report: "Zgłoszenie", availability: "Dostępność", user: "Użytkownik", settings: "Ustawienia", media: "Plik", template: "Szablon", rule: "Reguła", notification: "Wiadomość", payment: "Płatność",
 };
 export const RESULT: Record<string, string> = { ok: "Wykonano", failed: "Błąd", denied: "Odmowa dostępu" };
 
