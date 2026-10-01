@@ -246,6 +246,13 @@
       "when": 1790869235181,
       "tag": "0034_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1790879193836,
+      "tag": "0035_library_pdf_watermark_and_free_delivery",
+      "breakpoints": true
     }
   ]
 }

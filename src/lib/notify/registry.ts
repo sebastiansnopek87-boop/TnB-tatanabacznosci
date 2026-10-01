@@ -23,6 +23,7 @@ export const VARIABLES: VarDef[] = [
   { key: "tytul_artykulu", label: "Tytuł artykułu", sample: "Nie każdy, kto milczy, jest silny" },
   { key: "waznosc_linku", label: "Ważność linku", sample: "48 godzin" },
   { key: "link_do_panelu", label: "Link do panelu", sample: "https://tatanabacznosci.pl/admin", url: true },
+  { key: "opis_materialu", label: "Krótki opis materiału", sample: "O sile, której nie trzeba udowadniać." },
 ];
 export const VAR_MAP: Record<string, VarDef> = Object.fromEntries(VARIABLES.map((v) => [v.key, v]));
 export const AUTO_VARS = ["nazwa_platformy"];
@@ -80,6 +81,9 @@ const DEFS = [
     { subject: "Problem z płatnością — {{numer_zamowienia}}", heading: "Płatność nieudana", lines: [hi, "Nie udało się zaksięgować płatności {{kwota}} za zamówienie {{numer_zamowienia}}."] }),
   E("library_new_material", "biblioteka", "Nowy materiał dla użytkownika", "Udostępnienie nowego materiału (wymaga włączenia).", "user", "pending",
     { subject: "Nowy materiał: {{tytul_materialu}}", heading: "Nowy materiał", lines: [hi, "Udostępniliśmy Ci „{{tytul_materialu}}”."], cta: { label: "Zobacz", v: "link_do_materialu" } }),
+  E("library_free_material", "biblioteka", "Bezpłatny materiał na e-mail", "Link do pobrania bezpłatnego materiału po wypełnieniu formularza.", "user", "integrated",
+    { subject: "Twój bezpłatny materiał: {{tytul_materialu}}", heading: "Twój materiał jest gotowy", lines: [hi, "dziękujemy za zainteresowanie materiałem „{{tytul_materialu}}”.", "{{opis_materialu}}", "Plik pobierzesz przyciskiem poniżej. Link prowadzi tylko do tego materiału i jest ważny {{waznosc_linku}}.", "Jeśli to nie Ty wypełniłeś formularz, zignoruj tę wiadomość.", "Zespół TATA NA BACZNOŚCI · kontakt@tatanabacznosci.pl"], cta: { label: "Pobierz PDF", v: "link_do_materialu" } }),
+
 
   E("order_created", "zamowienia", "Utworzenie zamówienia", "Potwierdzenie złożenia zamówienia (przelew lub operator płatności).", "user", "integrated",
     { subject: "Zamówienie {{numer_zamowienia}} przyjęte", heading: "Zamówienie przyjęte", lines: [hi, "Przyjęliśmy zamówienie {{numer_zamowienia}} na kwotę {{kwota}}. Dostęp do materiału „{{tytul_materialu}}” otrzymasz po potwierdzeniu płatności."], cta: { label: "Status zamówienia", v: "link_do_materialu" } }),

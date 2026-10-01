@@ -944,27 +944,45 @@ export type Database = {
       library_item_content: {
         Row: {
           body: string
+          body_updated_at: string | null
           external_url: string | null
           file_name: string | null
           file_path: string | null
           item_id: string
+          original_path: string | null
+          pdf_generated_at: string | null
           updated_at: string
+          watermark_error: string | null
+          watermark_source: string | null
+          watermark_status: string
         }
         Insert: {
           body?: string
+          body_updated_at?: string | null
           external_url?: string | null
           file_name?: string | null
           file_path?: string | null
           item_id: string
+          original_path?: string | null
+          pdf_generated_at?: string | null
           updated_at?: string
+          watermark_error?: string | null
+          watermark_source?: string | null
+          watermark_status?: string
         }
         Update: {
           body?: string
+          body_updated_at?: string | null
           external_url?: string | null
           file_name?: string | null
           file_path?: string | null
           item_id?: string
+          original_path?: string | null
+          pdf_generated_at?: string | null
           updated_at?: string
+          watermark_error?: string | null
+          watermark_source?: string | null
+          watermark_status?: string
         }
         Relationships: [
           {
@@ -986,6 +1004,7 @@ export type Database = {
           created_by: string | null
           currency: string
           delivery_method: string
+          free_delivery: string
           id: string
           kind: string
           payment_product_id: string | null
@@ -1007,6 +1026,7 @@ export type Database = {
           created_by?: string | null
           currency?: string
           delivery_method?: string
+          free_delivery?: string
           id?: string
           kind?: string
           payment_product_id?: string | null
@@ -1028,6 +1048,7 @@ export type Database = {
           created_by?: string | null
           currency?: string
           delivery_method?: string
+          free_delivery?: string
           id?: string
           kind?: string
           payment_product_id?: string | null
@@ -1197,6 +1218,89 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "library_orders_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "library_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      library_requests: {
+        Row: {
+          consent_at: string | null
+          consent_text: string | null
+          created_at: string
+          download_count: number
+          downloaded_at: string | null
+          email: string | null
+          first_name: string | null
+          id: string
+          ip_hash: string | null
+          item_id: string
+          item_title: string
+          last_name: string | null
+          mode: string
+          notification_log_id: string | null
+          notification_status: string | null
+          privacy_version: string | null
+          retention_until: string
+          status: string
+          token_expires_at: string | null
+          token_hash: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          consent_at?: string | null
+          consent_text?: string | null
+          created_at?: string
+          download_count?: number
+          downloaded_at?: string | null
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          ip_hash?: string | null
+          item_id: string
+          item_title: string
+          last_name?: string | null
+          mode: string
+          notification_log_id?: string | null
+          notification_status?: string | null
+          privacy_version?: string | null
+          retention_until?: string
+          status: string
+          token_expires_at?: string | null
+          token_hash?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          consent_at?: string | null
+          consent_text?: string | null
+          created_at?: string
+          download_count?: number
+          downloaded_at?: string | null
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          ip_hash?: string | null
+          item_id?: string
+          item_title?: string
+          last_name?: string | null
+          mode?: string
+          notification_log_id?: string | null
+          notification_status?: string | null
+          privacy_version?: string | null
+          retention_until?: string
+          status?: string
+          token_expires_at?: string | null
+          token_hash?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "library_requests_item_id_fkey"
             columns: ["item_id"]
             isOneToOne: false
             referencedRelation: "library_items"

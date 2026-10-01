@@ -6,6 +6,10 @@ export const ACCESS = { public: "Bezpłatny", members: "Dla zalogowanych", premi
 export const ACCESS_FILTER = { public: "Bezpłatne", members: "Dla zalogowanych", premium: "Premium" } as const;
 export const DELIVERY = { email_link: "E-mail z bezpiecznym linkiem", email_attachment: "E-mail z załącznikiem", account_access: "Dostęp na koncie" } as const;
 export type Delivery = keyof typeof DELIVERY;
+export const FREE_DELIVERY = { direct: "Bezpośrednie pobranie", form_download: "Pobranie po podaniu danych", email: "Dostarczenie na e-mail" } as const;
+export type FreeDelivery = keyof typeof FREE_DELIVERY;
+export const PRIVACY_VERSION = "2026-10-01";
+export const FREE_CONSENT_TEXT = "Wyrażam zgodę na przetwarzanie moich danych (imię, nazwisko, adres e-mail) przez TATA NA BACZNOŚCI wyłącznie w celu udostępnienia wybranego bezpłatnego materiału. Dane są przechowywane do 12 miesięcy, potem usuwane. Zapoznałem się z Polityką prywatności.";
 export type Access = keyof typeof ACCESS;
 export const STATUS = { draft: "Szkic", published: "Opublikowany", archived: "Archiwalny" } as const;
 export type Status = keyof typeof STATUS;
@@ -13,11 +17,11 @@ export type Status = keyof typeof STATUS;
 export type LibraryItem = {
   id: string; slug: string; title: string; summary: string; category: string; kind: Kind;
   cover_url: string | null; access: Access; author_name: string; published_at: string | null; updated_at: string;
-  price_amount: number | null; currency: string; delivery_method: Delivery; purchasable: boolean;
+  price_amount: number | null; currency: string; delivery_method: Delivery; purchasable: boolean; free_delivery: FreeDelivery;
 };
 export type LibraryContent = { body: string; file_path: string | null; file_name: string | null; external_url: string | null };
 
-const COLS = "id, slug, title, summary, category, kind, cover_url, access, author_name, published_at, updated_at, price_amount, currency, delivery_method, purchasable";
+const COLS = "id, slug, title, summary, category, kind, cover_url, access, author_name, published_at, updated_at, price_amount, currency, delivery_method, purchasable, free_delivery";
 
 export const coverSrc = (it: { id: string; cover_url: string | null; updated_at: string }) =>
   it.cover_url ? `/api/public/library-cover/${it.id}?v=${encodeURIComponent(it.updated_at)}` : null;

@@ -7,6 +7,7 @@ import { useUid } from "@/lib/community";
 import { KINDS, accessLabel, fmtPrice, coverSrc, fmtDay, getLibraryItem, listCategories } from "@/lib/library";
 import { getLibraryFileUrl } from "@/lib/library.functions";
 import { BuyPanel } from "@/components/library/BuyPanel";
+import { FreeMaterialPanel } from "@/components/library/FreeMaterialPanel";
 
 export const Route = createFileRoute("/biblioteka/$slug")({
   head: () => ({
@@ -88,19 +89,27 @@ function ItemPage() {
                     )}
                   </>)}
                 </div>
-              ) : (
+              ) : (() => {
+                const viaForm = it.access !== "premium" && it.free_delivery !== "direct" && !!content.file_path;
+                return (
                 <div className="mt-10 space-y-6">
                   {it.access === "premium" && <p className="eyebrow text-gold">Otwórz zakupiony materiał — masz do niego dostęp</p>}
-                  {content.body.trim() && (
+                  {!viaForm && content.body.trim() && (
                     <div className="space-y-5 break-words text-[1rem] leading-[1.85] text-foreground/90">
                       {content.body.split(/\n{2,}/).map((p, i) => <p key={i} className="whitespace-pre-line">{p}</p>)}
                     </div>
                   )}
-                  {content.file_path && (
+                  {viaForm && (
+                    <div className="border border-gold/50 bg-surface-deep p-6 sm:p-8">
+                      <p className="eyebrow text-gold">Bezpłatny materiał PDF</p>
+                      <p className="mt-3 text-[0.95rem] leading-[1.75] text-foreground/85">{it.free_delivery === "email" ? "Podaj imię, nazwisko i adres e-mail — wyślemy Ci link do pobrania." : "Podaj imię, nazwisko i adres e-mail, a od razu pobierzesz plik."}</p>
+                      <FreeMaterialPanel slug={it.slug} mode={it.free_delivery as "form_download" | "email"} />
+                    </div>
+                  )}
+                  {!viaForm && content.file_path && (
                     <div className="border border-border/60 bg-card p-5">
-                      <p className="text-sm text-foreground/80">{content.file_name ?? "Plik materiału"}</p>
-                      <button onClick={openFile} disabled={busy} className="mt-3 bg-gold px-5 py-2.5 text-[0.7rem] uppercase tracking-[0.14em] text-primary-foreground hover:bg-gold-bright disabled:opacity-60">
-                        {busy ? "Przygotowywanie…" : it.access === "premium" ? "Otwórz zakupiony materiał" : "Otwórz materiał"}
+                      <button onClick={openFile} disabled={busy} className="bg-gold px-5 py-2.5 text-[0.7rem] uppercase tracking-[0.14em] text-primary-foreground hover:bg-gold-bright disabled:opacity-60">
+                        {busy ? "Przygotowywanie…" : it.access === "premium" ? "Otwórz zakupiony materiał" : "Pobierz PDF"}
                       </button>
                       {fileErr && <p className="mt-2 text-sm text-destructive">{fileErr}</p>}
                     </div>
@@ -111,7 +120,8 @@ function ItemPage() {
                     </a>
                   )}
                 </div>
-              )}
+                );
+              })()}
             </article>
           );
         })()}
