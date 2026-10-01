@@ -80,7 +80,7 @@ function MojeTnb() {
               <Card title="Moje materiały"><MyPurchases /></Card>
               {admin?.isAdmin && (
                 <Card title="Administracja">
-                  <Button asChild variant="outline" className="h-11 w-full uppercase tracking-[0.15em]"><Link to="/admin">Przejdź do panelu administratora</Link></Button>
+                  <Button asChild variant="outline" className="h-auto min-h-11 w-full whitespace-normal py-2 text-center uppercase tracking-[0.15em]"><Link to="/admin">Przejdź do panelu administratora</Link></Button>
                 </Card>
               )}
               <Card title="Sesja">
