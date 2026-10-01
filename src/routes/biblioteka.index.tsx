@@ -123,7 +123,7 @@ function Library() {
               </p>
             </div>
           ) : (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="divide-y divide-border/60 border-y border-border/60">
               {list.data.map((it) => <ItemCard key={it.id} it={it} cat={catName(it.category)} />)}
             </div>
           )}
@@ -133,28 +133,49 @@ function Library() {
   );
 }
 
+// CTA label reflects only data the catalogue actually has (access + free delivery mode).
+function ctaLabel(it: LibraryItem) {
+  if (it.access === "public" && (it.free_delivery === "form_download" || it.free_delivery === "email")) return "Odbierz bezpłatny materiał";
+  return "Zobacz szczegóły";
+}
+
 function ItemCard({ it, cat }: { it: LibraryItem; cat: string }) {
   const img = coverSrc(it);
   return (
-    <article className="flex min-w-0 flex-col border border-border/60 bg-card transition-colors hover:border-gold/50">
-      {img && <img src={img} alt="" loading="lazy" className="aspect-[16/9] w-full object-cover" />}
-      <div className="flex flex-1 flex-col p-5">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.68rem] uppercase tracking-[0.12em]">
-          <span className="text-gold">{cat}</span>
-          <span className="text-muted-foreground">{KINDS[it.kind]}</span>
-        </div>
-        <h2 className="mt-3 break-words font-display text-xl font-semibold leading-tight text-foreground">{it.title}</h2>
-        {it.summary && <p className="mt-3 line-clamp-4 break-words text-sm leading-[1.7] text-foreground/75">{it.summary}</p>}
-        <div className="mt-auto pt-5">
-          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-            <span>{fmtDay(it.published_at)}</span>
-            <span className="inline-flex items-center gap-1">
-              {it.access === "premium" ? <Crown className="h-3.5 w-3.5 text-gold" /> : it.access === "members" ? <Lock className="h-3.5 w-3.5" /> : null}
-              <span className={it.access === "premium" ? "text-gold" : ""}>{accessLabel(it)}</span>
-            </span>
+    <article className="grid min-w-0 gap-6 py-8 sm:grid-cols-[minmax(0,200px)_minmax(0,1fr)] sm:gap-8 lg:grid-cols-[minmax(0,240px)_minmax(0,1fr)] lg:gap-12 lg:py-10">
+      <Link to="/biblioteka/$slug" params={{ slug: it.slug }} aria-hidden tabIndex={-1}
+        className="mx-auto block w-full max-w-[240px] self-start border border-gold/30 bg-surface-deep p-2 transition-colors hover:border-gold/70 sm:mx-0 sm:max-w-none">
+        {img ? (
+          <img src={img} alt="" loading="lazy" className="block h-auto max-h-[360px] w-full object-contain" />
+        ) : (
+          <div className="flex aspect-[3/4] w-full flex-col items-center justify-center gap-3 border border-gold/20 px-4 text-center">
+            <span className="h-px w-10 bg-gold/60" />
+            <span className="font-display text-lg font-semibold uppercase leading-tight tracking-[0.08em] text-gold">Biblioteka<br />TNB</span>
+            <span className="h-px w-10 bg-gold/60" />
+            <span className="eyebrow text-[0.6rem] text-muted-foreground">{KINDS[it.kind]}</span>
           </div>
-          <Link to="/biblioteka/$slug" params={{ slug: it.slug }} className="mt-4 block bg-gold px-4 py-2.5 text-center text-[0.7rem] uppercase tracking-[0.14em] text-primary-foreground hover:bg-gold-bright">
-            Zobacz szczegóły
+        )}
+      </Link>
+      <div className="flex min-w-0 flex-col">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[0.68rem] uppercase tracking-[0.14em]">
+          <span className="text-gold">{cat}</span>
+          <span className="inline-flex items-center gap-1 text-muted-foreground">
+            {it.access === "premium" ? <Crown className="h-3.5 w-3.5 text-gold" /> : it.access === "members" ? <Lock className="h-3.5 w-3.5" /> : null}
+            <span className={it.access === "premium" ? "text-gold" : ""}>{accessLabel(it)}</span>
+          </span>
+        </div>
+        <h2 className="mt-3 break-words font-display text-2xl font-semibold leading-tight text-foreground lg:text-[1.9rem]">{it.title}</h2>
+        <p className="mt-2 text-sm text-foreground/70">
+          {it.author_name && <span>{it.author_name}</span>}
+          {it.author_name && <span className="mx-2 text-gold/60">·</span>}
+          <span>{KINDS[it.kind]}</span>
+        </p>
+        {it.summary && <p className="mt-4 max-w-2xl break-words text-[0.95rem] leading-[1.75] text-foreground/80">{it.summary}</p>}
+        <p className="mt-4 text-xs text-muted-foreground">Opublikowano: {fmtDay(it.published_at)}</p>
+        <div className="mt-6">
+          <Link to="/biblioteka/$slug" params={{ slug: it.slug }}
+            className="block w-full bg-gold px-6 py-3 text-center text-[0.7rem] uppercase tracking-[0.14em] text-primary-foreground hover:bg-gold-bright sm:inline-block sm:w-auto">
+            {ctaLabel(it)}
           </Link>
         </div>
       </div>
