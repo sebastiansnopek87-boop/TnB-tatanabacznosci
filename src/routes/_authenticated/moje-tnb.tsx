@@ -68,7 +68,7 @@ function MojeTnb() {
   return (
     <PageShell>
       <PageHeading eyebrow="Strefa użytkownika" title="Moje TNB" intro="Twój profil, materiały i ustawienia konta." />
-      <div className="mx-auto grid max-w-[1200px] gap-6 px-5 py-12 lg:grid-cols-2 lg:px-14 lg:py-16">
+      <div className="mx-auto grid max-w-[1200px] grid-cols-[minmax(0,1fr)] gap-6 px-5 py-12 lg:grid-cols-2 lg:px-14 lg:py-16">
         {loadError && <div className="lg:col-span-2"><AuthNotice tone="error">Nie udało się wczytać profilu. Odśwież stronę.</AuthNotice></div>}
         {!user && !loadError && <div className="h-40 animate-pulse bg-card/60 lg:col-span-2" />}
         {user && (
@@ -179,7 +179,7 @@ function ProfileCard({ user, onSaved }: { user: User; onSaved: (u: User) => void
   const cls = "h-11 bg-background/60";
   return (
     <Card title="Profil">
-      <dl className="mb-6 grid gap-3 text-sm sm:grid-cols-2">
+      <dl className="mb-6 grid gap-3 [&_dd]:break-all text-sm sm:grid-cols-2">
         <div><dt className="eyebrow text-gold/80">Adres e-mail</dt><dd className="mt-1 break-all text-foreground">{user.email}</dd></div>
         <div><dt className="eyebrow text-gold/80">Data rejestracji</dt><dd className="mt-1 text-foreground">{registered}</dd></div>
         <div className="sm:col-span-2"><dt className="eyebrow text-gold/80">TNB ID</dt><dd className="mt-1 font-mono tracking-wider text-foreground">{ident.data?.tnb_id ?? "…"}</dd><p className="mt-1 text-xs text-muted-foreground">Stały identyfikator Twojego konta. Nie jest hasłem — możesz go podać w kontakcie z obsługą.</p></div>
