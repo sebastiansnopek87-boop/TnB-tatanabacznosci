@@ -7,6 +7,7 @@ import { useUid } from "@/lib/community";
 import { KINDS, accessLabel, fmtPrice, coverSrc, fmtDay, getLibraryItem, listCategories } from "@/lib/library";
 import { getLibraryFileUrl } from "@/lib/library.functions";
 import { BuyPanel } from "@/components/library/BuyPanel";
+import { FreeMaterialPanel } from "@/components/library/FreeMaterialPanel";
 
 export const Route = createFileRoute("/biblioteka/$slug")({
   head: () => ({
@@ -119,7 +120,8 @@ function ItemPage() {
                     </a>
                   )}
                 </div>
-              )}
+                );
+              })()}
             </article>
           );
         })()}
