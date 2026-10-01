@@ -43,45 +43,26 @@ export async function logEvent(bookingId: string, type: string, detail: string |
   await (await db()).from("consult_booking_events").insert({ booking_id: bookingId, type, detail, actor });
 }
 
-const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
-
 type Mail = "confirmation" | "reminder" | "cancelled_user" | "cancelled_admin" | "admin_new" | "admin_cancelled";
 type B = { id: string; booking_number: string; first_name: string; starts_at: string; meeting_link: string | null; access_token: string; user_id: string | null };
 
-export function renderMail(kind: Mail, b: B) {
-  const when = `${fmtDate(b.starts_at)}, godz. ${fmtHm(b.starts_at)}`;
-  const link = b.meeting_link ? `<p>Link do spotkania: <a href="${esc(b.meeting_link)}" style="color:#c9a24a">${esc(b.meeting_link)}</a></p>` : "<p>Link do spotkania prześlemy przed rozmową.</p>";
-  const change = b.user_id ? `<p>Szczegóły i anulowanie znajdziesz w sekcji „Moje TNB”: ${siteOrigin()}/moje-tnb</p>` : `<p>Zmiana lub anulowanie terminu wymaga kontaktu z organizatorem: ${siteOrigin()}/kontakt</p>`;
-  const hi = `<p>Cześć ${esc(b.first_name)},</p>`;
-  const m: Record<Mail, { subject: string; body: string }> = {
-    confirmation: { subject: `Potwierdzenie rezerwacji ${b.booking_number}`, body: `${hi}<p>Twoja bezpłatna rozmowa 1:1 została zarezerwowana.</p><p><b>${when}</b> · 30 minut</p>${link}${change}` },
-    reminder: { subject: `Przypomnienie: rozmowa 1:1 jutro`, body: `${hi}<p>Przypominamy o rozmowie <b>${when}</b> (30 minut).</p>${link}<p>Połącz się kilka minut wcześniej. Nie musisz się przygotowywać.</p>${change}` },
-    cancelled_user: { subject: `Anulowano rezerwację ${b.booking_number}`, body: `${hi}<p>Twoja rezerwacja na <b>${when}</b> została anulowana.</p>` },
-    cancelled_admin: { subject: `Organizator anulował rezerwację ${b.booking_number}`, body: `${hi}<p>Niestety rozmowa zaplanowana na <b>${when}</b> została odwołana przez organizatora. Zapraszamy do wyboru innego terminu: ${siteOrigin()}/spotkania/rozmowa-1-1</p>` },
-    admin_new: { subject: `Nowa rezerwacja 1:1 ${b.booking_number}`, body: `<p>Nowa rezerwacja rozmowy 1:1 na <b>${when}</b>. Szczegóły w panelu administratora.</p>` },
-    admin_cancelled: { subject: `Anulowano rezerwację 1:1 ${b.booking_number}`, body: `<p>Uczestnik anulował rozmowę zaplanowaną na <b>${when}</b>.</p>` },
-  };
-  const x = m[kind];
-  return { subject: x.subject, html: `<!doctype html><html lang="pl"><body style="margin:0;background:#0f0f0f;font-family:Arial,sans-serif;color:#eee"><div style="max-width:560px;margin:0 auto;padding:28px 20px"><p style="color:#c9a24a;letter-spacing:.2em;text-transform:uppercase;font-size:12px">Tata Na Baczności</p>${x.body}</div></body></html>` };
-}
+// Booking mails go through the central notification engine (dispatch). The
+// meeting link is only passed to templates delivered to the booking owner.
+const EVENT: Record<Mail, string | null> = {
+  confirmation: "booking_created", reminder: "booking_reminder", cancelled_user: "booking_cancelled",
+  cancelled_admin: "booking_cancelled", admin_new: "consult_request_admin", admin_cancelled: null, // no admin template for cancellation yet
+};
 
-// Never reports success without a real delivery. Until a sender domain is connected every attempt is logged as skipped.
-async function trySend(_to: string, _mail: { subject: string; html: string }): Promise<{ ok: true } | { ok: false; reason: string }> {
-  const { data: st } = await (await db()).from("email_settings").select("sender_domain").eq("id", 1).maybeSingle();
-  if (!st?.sender_domain) return { ok: false, reason: "sender_domain_not_configured" };
-  return { ok: false, reason: "sender_not_connected" };
-}
-
-export async function sendBookingMail(kind: Mail, b: B & { email: string }) {
-  const s = await db();
-  let to: string | null = b.email;
-  if (kind.startsWith("admin_")) {
-    const { data: st } = await s.from("email_settings").select("notification_recipient").eq("id", 1).maybeSingle();
-    to = st?.notification_recipient ?? null;
-  }
-  const r = to ? await trySend(to, renderMail(kind, b)) : { ok: false as const, reason: "recipient_not_configured" };
-  await s.from("email_notification_log").insert({ kind: `consult_${kind}`, related_id: b.id, status: r.ok ? "sent" : "skipped", reason: r.ok ? null : r.reason, recipient: to });
-  return r;
+export async function sendBookingMail(kind: Mail, b: B & { email: string }): Promise<{ ok: true } | { ok: false; reason: string }> {
+  const event = EVENT[kind];
+  if (!event) return { ok: false, reason: "event_not_integrated" };
+  const { dispatch } = await import("./notifications.server");
+  const base = { imie: b.first_name, data_spotkania: fmtDate(b.starts_at), godzina_spotkania: fmtHm(b.starts_at) };
+  const vars = kind === "admin_new" ? { ...base, email: b.email, link_do_panelu: `${siteOrigin()}/admin/rozmowy` }
+    : kind === "reminder" ? { ...base, link_do_spotkania: b.meeting_link || `${siteOrigin()}/spotkania/rezerwacja/${b.access_token}` }
+    : base;
+  const r = await dispatch({ event, to: b.email, vars, idempotencyKey: `${kind}-${b.id}`, relatedId: b.id });
+  return r.status === "sent" ? { ok: true } : { ok: false, reason: r.status === "simulated" ? "simulated" : r.reason ?? r.status };
 }
 
 const COLS = "id, booking_number, first_name, email, starts_at, meeting_link, access_token, user_id";
