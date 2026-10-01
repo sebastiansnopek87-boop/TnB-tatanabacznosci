@@ -133,6 +133,27 @@ function ProfileCard({ user, onSaved }: { user: User; onSaved: (u: User) => void
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
   const set = (k: keyof Profile) => (e: React.ChangeEvent<HTMLInputElement>) => setP((v) => ({ ...v, [k]: e.target.value }));
+  const qc = useQueryClient();
+  const ident = useQuery({
+    queryKey: ["my-identity", user.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("ensure_my_identity");
+      if (error) throw error;
+      return (data as Array<{ tnb_id: string; display_mode: "nick" | "full_name"; display_name: string | null }>)[0] ?? null;
+    },
+  });
+  const [modeMsg, setModeMsg] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
+  async function chooseMode(mode: "nick" | "full_name") {
+    setModeMsg(null);
+    const { data, error } = await supabase.rpc("set_my_display_mode", { _mode: mode });
+    qc.invalidateQueries({ queryKey: ["my-identity"] });
+    if (error) {
+      return setModeMsg({ tone: "error", text: error.message?.includes("display_name_missing")
+        ? (mode === "nick" ? "Uzupełnij poniżej nick i zapisz zmiany — bez niego nie można publikować w społeczności." : "Uzupełnij poniżej imię i nazwisko i zapisz zmiany — bez nich nie można publikować w społeczności.")
+        : "Nie udało się zapisać ustawienia." });
+    }
+    setModeMsg({ tone: "ok", text: `Będziesz widoczny jako „${data}”.` });
+  }
   const registered = new Date(user.created_at).toLocaleDateString("pl-PL", { day: "numeric", month: "long", year: "numeric" });
 
   async function save(e: FormEvent) {
@@ -146,6 +167,12 @@ function ProfileCard({ user, onSaved }: { user: User; onSaved: (u: User) => void
     if (error || !data.user) return setMsg({ tone: "error", text: "Nie udało się zapisać zmian. Spróbuj ponownie." });
     onSaved(data.user);
     setP(readProfile(data.user));
+    // Keep community signatures in sync with the edited nick / name.
+    const mode = ident.data?.display_mode ?? "nick";
+    const { error: sErr } = await supabase.rpc("set_my_display_mode", { _mode: mode });
+    qc.invalidateQueries({ queryKey: ["my-identity"] });
+    if (sErr?.message?.includes("display_name_missing"))
+      return setMsg({ tone: "error", text: mode === "nick" ? "Zapisano, ale brakuje nicku — uzupełnij go albo wybierz podpis imieniem i nazwiskiem." : "Zapisano, ale brakuje imienia lub nazwiska — uzupełnij je albo wybierz podpis nickiem." });
     setMsg({ tone: "ok", text: "Zmiany zostały zapisane." });
   }
 
@@ -155,7 +182,20 @@ function ProfileCard({ user, onSaved }: { user: User; onSaved: (u: User) => void
       <dl className="mb-6 grid gap-3 text-sm sm:grid-cols-2">
         <div><dt className="eyebrow text-gold/80">Adres e-mail</dt><dd className="mt-1 break-all text-foreground">{user.email}</dd></div>
         <div><dt className="eyebrow text-gold/80">Data rejestracji</dt><dd className="mt-1 text-foreground">{registered}</dd></div>
+        <div className="sm:col-span-2"><dt className="eyebrow text-gold/80">TNB ID</dt><dd className="mt-1 font-mono tracking-wider text-foreground">{ident.data?.tnb_id ?? "…"}</dd><p className="mt-1 text-xs text-muted-foreground">Stały identyfikator Twojego konta. Nie jest hasłem — możesz go podać w kontakcie z obsługą.</p></div>
       </dl>
+      <fieldset className="mb-6 space-y-3 rounded-sm border border-border/60 p-4">
+        <legend className="px-1 text-sm font-medium text-foreground">Jak chcesz być widoczny w społeczności?</legend>
+        <div className="flex flex-wrap gap-2">
+          {([["nick", "Mój nick"], ["full_name", "Moje imię i nazwisko"]] as const).map(([v, l]) => (
+            <Button key={v} type="button" variant={ident.data?.display_mode === v ? "default" : "outline"} aria-pressed={ident.data?.display_mode === v} disabled={!ident.data} onClick={() => chooseMode(v)}>{l}</Button>
+          ))}
+        </div>
+        {ident.data && !modeMsg && (ident.data.display_name
+          ? <p className="text-xs text-muted-foreground">Inni widzą Cię jako „{ident.data.display_name}”.</p>
+          : <AuthNotice tone="error">{ident.data.display_mode === "nick" ? "Nie masz jeszcze nicku — uzupełnij go poniżej, aby publikować w społeczności." : "Brakuje imienia lub nazwiska — uzupełnij je poniżej, aby publikować w społeczności."}</AuthNotice>)}
+        {modeMsg && <AuthNotice tone={modeMsg.tone}>{modeMsg.text}</AuthNotice>}
+      </fieldset>
       <form onSubmit={save} noValidate className="space-y-4">
         <Field id="nick" label="Nick"><Input id="nick" className={cls} value={p.nick} onChange={set("nick")} /></Field>
         <div className="grid gap-4 sm:grid-cols-2">

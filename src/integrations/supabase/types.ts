@@ -1271,6 +1271,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_identities: {
+        Row: {
+          created_at: string
+          display_mode: string
+          tnb_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_mode?: string
+          tnb_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_mode?: string
+          tnb_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1378,6 +1402,15 @@ export type Database = {
           sector: string
         }[]
       }
+      ensure_identities: { Args: { _ids: string[] }; Returns: undefined }
+      ensure_my_identity: {
+        Args: never
+        Returns: {
+          display_mode: string
+          display_name: string
+          tnb_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1386,6 +1419,9 @@ export type Database = {
         Returns: boolean
       }
       library_can_read: { Args: { _item: string }; Returns: boolean }
+      set_my_display_mode: { Args: { _mode: string }; Returns: string }
+      tnb_display_name: { Args: { _uid: string }; Returns: string }
+      tnb_new_id: { Args: never; Returns: string }
     }
     Enums: {
       app_role:

@@ -32,7 +32,7 @@ function UsersPage() {
     <div className="space-y-6">
       <h1 className="font-display text-3xl font-semibold uppercase">Użytkownicy</h1>
       <form className="flex flex-wrap gap-2" onSubmit={(e) => { e.preventDefault(); setPage(0); setApplied(q); }}>
-        <Input className="max-w-xs" placeholder="E-mail, imię, nazwisko, nick" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Szukaj" />
+        <Input className="max-w-xs" placeholder="E-mail, imię, nazwisko, nick, TNB ID" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Szukaj" />
         <select className={sel} value={role} onChange={(e) => { setPage(0); setRole(e.target.value); }} aria-label="Rola">
           <option value="">Wszystkie role</option><option value="none">Użytkownik (bez roli)</option>
           {ROLE_VALUES.map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
@@ -49,7 +49,7 @@ function UsersPage() {
         : <div className="divide-y divide-border/60 border border-border/60">
             {data.rows.map((u) => (
               <button key={u.id} type="button" onClick={() => setOpen(u.id)} className="flex w-full flex-wrap items-center gap-x-4 gap-y-1 p-3 text-left text-sm hover:bg-foreground/5">
-                <span className="min-w-0 flex-1 truncate font-medium">{u.email ?? "—"}{u.name && <span className="ml-2 text-muted-foreground">{u.name}</span>}</span>
+                <span className="min-w-0 flex-1 truncate font-medium">{u.email ?? "—"}{u.name && <span className="ml-2 text-muted-foreground">{u.name}</span>}{u.tnb_id && <span className="ml-2 font-mono text-xs text-gold/80">{u.tnb_id}</span>}</span>
                 <span className="text-xs text-muted-foreground">{fmtDate(u.created_at)}</span>
                 <span className={u.confirmed ? "text-xs text-foreground/70" : "text-xs text-destructive"}>{u.confirmed ? "Potwierdzony" : "Niepotwierdzony"}</span>
                 <span className="text-xs text-gold">{u.roles.length ? u.roles.map((r) => ROLE_LABELS[r] ?? r).join(", ") : "Użytkownik"}</span>
@@ -85,7 +85,7 @@ function UserDetail({ id }: { id: string }) {
   if (error) return <p className="text-sm text-destructive">{errMsg(error)}</p>;
   if (!u) return <p className="text-sm text-muted-foreground">Ładowanie…</p>;
   const rows: Array<[string, string]> = [
-    ["E-mail", u.email ?? "—"], ["Imię i nazwisko", u.name ?? "—"], ["Nick", u.nick ?? "—"],
+    ["TNB ID", u.tnb_id ?? "—"], ["E-mail", u.email ?? "—"], ["Imię i nazwisko", u.name ?? "—"], ["Nick", u.nick ?? "—"],
     ["Rejestracja", fmtDate(u.created_at)], ["Ostatnie logowanie", fmtDate(u.last_sign_in_at)],
     ["E-mail potwierdzony", u.confirmed ? "Tak" : "Nie"], ["Status konta", u.banned ? "Zablokowane" : "Aktywne"],
     ["Sposób logowania", u.providers.map((p) => (p === "email" ? "e-mail i hasło" : p === "google" ? "Google" : p === "apple" ? "Apple" : p)).join(", ") || "—"],

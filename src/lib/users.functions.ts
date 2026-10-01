@@ -10,7 +10,7 @@ const PER = 25;
 type AuthUser = { id: string; email?: string | undefined; created_at: string; email_confirmed_at?: string | undefined | null; last_sign_in_at?: string | undefined | null; banned_until?: string | undefined | null; user_metadata?: Record<string, unknown>; app_metadata?: Record<string, unknown> };
 
 const str = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
-function shape(u: AuthUser, roles: string[]) {
+function shape(u: AuthUser, roles: string[], tnbId: string | null = null) {
   const m = u.user_metadata ?? {};
   const first = str(m["first_name"]), last = str(m["last_name"]);
   return {
@@ -18,7 +18,7 @@ function shape(u: AuthUser, roles: string[]) {
     confirmed: !!u.email_confirmed_at, last_sign_in_at: u.last_sign_in_at ?? null,
     banned: !!(u.banned_until && new Date(u.banned_until) > new Date()),
     name: [first, last].filter(Boolean).join(" ") || str(m["full_name"]) || str(m["name"]),
-    nick: str(m["nick"]), roles,
+    nick: str(m["nick"]), roles, tnb_id: tnbId,
   };
 }
 export type AdminUser = ReturnType<typeof shape>;
@@ -29,6 +29,17 @@ async function rolesFor(ids: string[]) {
   if (!ids.length) return map;
   const { data } = await supabaseAdmin.from("user_roles").select("user_id, role").in("user_id", ids);
   for (const r of data ?? []) map.set(r.user_id, [...(map.get(r.user_id) ?? []), r.role]);
+  return map;
+}
+
+// TNB IDs for accounts; creates missing ones (accounts older than the identity table or never signed in since).
+async function tnbIdsFor(ids: string[]) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const map = new Map<string, string>();
+  if (!ids.length) return map;
+  await supabaseAdmin.rpc("ensure_identities", { _ids: ids });
+  const { data } = await supabaseAdmin.from("user_identities").select("user_id, tnb_id").in("user_id", ids);
+  for (const r of data ?? []) map.set(r.user_id, r.tnb_id);
   return map;
 }
 
@@ -54,8 +65,9 @@ export const listUsers = createServerFn({ method: "POST" })
       const { data: res, error } = await supabaseAdmin.auth.admin.listUsers({ page: data.page + 1, perPage: PER });
       if (error) throw new Error("Nie udało się pobrać użytkowników.");
       const rm = await rolesFor(res.users.map((u) => u.id));
+      const tm = await tnbIdsFor(res.users.map((u) => u.id));
       const total = (res as { total?: number }).total ?? res.users.length;
-      return { rows: res.users.map((u) => shape(u as AuthUser, rm.get(u.id) ?? [])), total, pageSize: PER, canManage: await isSuperadmin(context) };
+      return { rows: res.users.map((u) => shape(u as AuthUser, rm.get(u.id) ?? [], tm.get(u.id) ?? null)), total, pageSize: PER, canManage: await isSuperadmin(context) };
     }
     // Filtering: scan in batches of 1000 (auth service has no server-side search), capped at 20k accounts.
     const q = data.q.toLowerCase();
@@ -64,9 +76,10 @@ export const listUsers = createServerFn({ method: "POST" })
       const { data: res, error } = await supabaseAdmin.auth.admin.listUsers({ page: p, perPage: 1000 });
       if (error) throw new Error("Nie udało się pobrać użytkowników.");
       const rm = await rolesFor(res.users.map((u) => u.id));
+      const tm = await tnbIdsFor(res.users.map((u) => u.id));
       for (const u of res.users) {
-        const s = shape(u as AuthUser, rm.get(u.id) ?? []);
-        if (q && ![s.email, s.name, s.nick].some((v) => v?.toLowerCase().includes(q))) continue;
+        const s = shape(u as AuthUser, rm.get(u.id) ?? [], tm.get(u.id) ?? null);
+        if (q && ![s.email, s.name, s.nick, s.tnb_id].some((v) => v?.toLowerCase().includes(q))) continue;
         if (data.status === "confirmed" && !s.confirmed) continue;
         if (data.status === "unconfirmed" && s.confirmed) continue;
         if (data.role === "none" ? s.roles.length > 0 : data.role && !s.roles.includes(data.role)) continue;
@@ -86,9 +99,10 @@ export const getUserDetail = createServerFn({ method: "POST" })
     const { data: res, error } = await supabaseAdmin.auth.admin.getUserById(data.id);
     if (error || !res.user) throw new Error("Nie znaleziono użytkownika.");
     const rm = await rolesFor([data.id]);
+    const tm = await tnbIdsFor([data.id]);
     const u = res.user as AuthUser;
     const providers = (u.app_metadata?.["providers"] as string[] | undefined) ?? [];
-    return { ...shape(u, rm.get(u.id) ?? []), providers, isSelf: u.id === context.userId, canManage: await isSuperadmin(context) };
+    return { ...shape(u, rm.get(u.id) ?? [], tm.get(u.id) ?? null), providers, isSelf: u.id === context.userId, canManage: await isSuperadmin(context) };
   });
 
 export const setUserRole = createServerFn({ method: "POST" })
