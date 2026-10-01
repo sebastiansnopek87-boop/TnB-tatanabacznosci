@@ -19,3 +19,4 @@
 
 - AI features call Lovable AI Gateway only from *.server.ts helpers (src/lib/ai/), streamed and consumed server-side; why: key stays on server, one place for model/error handling.
 - Test orders are marked with library_orders.is_test; every sales/revenue statistic must filter is_test=false, and is_test never affects access. Why: keep test documentation without skewing revenue.
+- Guest article comments: created only by server fn (src/lib/guest-comments.functions.ts) as pending_email; guest PII + SHA-256 token hash live in server-only article_comment_guests; publish only after a valid single-use token. Why: nothing public before e-mail confirmation, no plaintext tokens.
