@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Search, Lock, Crown } from "lucide-react";
+import { AiRecommender } from "@/components/library/AiRecommender";
 import { PageShell } from "@/components/tnb/PageShell";
 import { ACCESS, KINDS, accessLabel, coverSrc, fmtDay, listCategories, listLibrary, type Access, type LibraryItem } from "@/lib/library";
 

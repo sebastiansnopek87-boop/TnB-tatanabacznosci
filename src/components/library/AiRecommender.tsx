@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Sparkles } from "lucide-react";
 import { recommendLibrary } from "@/lib/recommend.functions";
-import type { Recommendation } from "@/lib/ai/recommend.server";
+type Recommendation = { slug: string; title: string; reason: string };
 
 export function AiRecommender() {
   const run = useServerFn(recommendLibrary);
