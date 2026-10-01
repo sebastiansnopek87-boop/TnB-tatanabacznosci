@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Search, Lock, Crown } from "lucide-react";
+import { AiRecommender } from "@/components/library/AiRecommender";
 import { PageShell } from "@/components/tnb/PageShell";
 import { ACCESS, KINDS, accessLabel, coverSrc, fmtDay, listCategories, listLibrary, type Access, type LibraryItem } from "@/lib/library";
 
@@ -44,6 +45,7 @@ function Library() {
       </section>
 
       <div className="mx-auto max-w-[1200px] px-5 py-10 lg:px-14">
+        <AiRecommender />
         <div className="space-y-5 border border-border/60 bg-surface-deep p-5 sm:p-6">
           <label className="relative block">
             <span className="sr-only">Szukaj materiałów</span>
