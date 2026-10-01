@@ -232,6 +232,13 @@
       "when": 1790867279350,
       "tag": "0032_article_interactions",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1790868093198,
+      "tag": "0033_poll_vote_withdraw",
+      "breakpoints": true
     }
   ]
 }
