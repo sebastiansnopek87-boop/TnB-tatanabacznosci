@@ -39,7 +39,7 @@ function Standards() {
         <section key={t.id} className="mt-6 border border-border p-4 sm:p-6">
           <h2 className="font-display text-xl font-semibold text-gold">{t.name}</h2>
           <p className="mt-1 text-sm text-muted-foreground">{t.purpose}</p>
-          <ol className="mt-3 list-decimal space-y-1 pl-5 text-sm">{t.sections[0].items.map((i) => <li key={i}>{i}</li>)}</ol>
+          <ol className="mt-3 list-decimal space-y-1 pl-5 text-sm">{t.sections.flatMap((s) => s.items).map((i) => <li key={i}>{i}</li>)}</ol>
           <div className="mt-4 flex items-center justify-between gap-2"><span className="text-xs uppercase tracking-widest text-muted-foreground">Szkielet do skopiowania</span><Button size="sm" variant="outline" onClick={() => copy(t.skeleton)}>Kopiuj</Button></div>
           <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-words border border-border bg-muted/30 p-3 text-xs">{t.skeleton}</pre>
         </section>
