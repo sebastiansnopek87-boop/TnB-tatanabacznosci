@@ -739,6 +739,7 @@ export type Database = {
           environment: string
           failed_at: string | null
           id: string
+          is_test: boolean
           item_id: string
           order_number: string
           paid_at: string | null
@@ -775,6 +776,7 @@ export type Database = {
           environment?: string
           failed_at?: string | null
           id?: string
+          is_test?: boolean
           item_id: string
           order_number?: string
           paid_at?: string | null
@@ -811,6 +813,7 @@ export type Database = {
           environment?: string
           failed_at?: string | null
           id?: string
+          is_test?: boolean
           item_id?: string
           order_number?: string
           paid_at?: string | null
