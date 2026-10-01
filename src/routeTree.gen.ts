@@ -49,6 +49,7 @@ import { Route as AuthenticatedAdminPowiadomieniaRouteImport } from './routes/_a
 import { Route as AuthenticatedAdminRozmowyRouteImport } from './routes/_authenticated/admin.rozmowy'
 import { Route as AuthenticatedAdminSpolecznoscRouteImport } from './routes/_authenticated/admin.spolecznosc'
 import { Route as AuthenticatedAdminSpotkaniaRouteImport } from './routes/_authenticated/admin.spotkania'
+import { Route as AuthenticatedAdminStandardyRouteImport } from './routes/_authenticated/admin.standardy'
 import { Route as AuthenticatedAdminStronyRouteImport } from './routes/_authenticated/admin.strony'
 import { Route as AuthenticatedAdminSubskrybenciRouteImport } from './routes/_authenticated/admin.subskrybenci'
 import { Route as AuthenticatedAdminSzablonyRouteImport } from './routes/_authenticated/admin.szablony'
@@ -281,6 +282,12 @@ const AuthenticatedAdminSpotkaniaRoute =
     path: '/spotkania',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminStandardyRoute =
+  AuthenticatedAdminStandardyRouteImport.update({
+    id: '/standardy',
+    path: '/standardy',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminStronyRoute =
   AuthenticatedAdminStronyRouteImport.update({
     id: '/strony',
@@ -441,6 +448,7 @@ export interface FileRoutesByFullPath {
   '/admin/rozmowy': typeof AuthenticatedAdminRozmowyRoute
   '/admin/spolecznosc': typeof AuthenticatedAdminSpolecznoscRoute
   '/admin/spotkania': typeof AuthenticatedAdminSpotkaniaRoute
+  '/admin/standardy': typeof AuthenticatedAdminStandardyRoute
   '/admin/strony': typeof AuthenticatedAdminStronyRoute
   '/admin/subskrybenci': typeof AuthenticatedAdminSubskrybenciRoute
   '/admin/szablony': typeof AuthenticatedAdminSzablonyRoute
@@ -502,6 +510,7 @@ export interface FileRoutesByTo {
   '/admin/rozmowy': typeof AuthenticatedAdminRozmowyRoute
   '/admin/spolecznosc': typeof AuthenticatedAdminSpolecznoscRoute
   '/admin/spotkania': typeof AuthenticatedAdminSpotkaniaRoute
+  '/admin/standardy': typeof AuthenticatedAdminStandardyRoute
   '/admin/strony': typeof AuthenticatedAdminStronyRoute
   '/admin/subskrybenci': typeof AuthenticatedAdminSubskrybenciRoute
   '/admin/szablony': typeof AuthenticatedAdminSzablonyRoute
@@ -566,6 +575,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/rozmowy': typeof AuthenticatedAdminRozmowyRoute
   '/_authenticated/admin/spolecznosc': typeof AuthenticatedAdminSpolecznoscRoute
   '/_authenticated/admin/spotkania': typeof AuthenticatedAdminSpotkaniaRoute
+  '/_authenticated/admin/standardy': typeof AuthenticatedAdminStandardyRoute
   '/_authenticated/admin/strony': typeof AuthenticatedAdminStronyRoute
   '/_authenticated/admin/subskrybenci': typeof AuthenticatedAdminSubskrybenciRoute
   '/_authenticated/admin/szablony': typeof AuthenticatedAdminSzablonyRoute
@@ -630,6 +640,7 @@ export interface FileRouteTypes {
     | '/admin/rozmowy'
     | '/admin/spolecznosc'
     | '/admin/spotkania'
+    | '/admin/standardy'
     | '/admin/strony'
     | '/admin/subskrybenci'
     | '/admin/szablony'
@@ -691,6 +702,7 @@ export interface FileRouteTypes {
     | '/admin/rozmowy'
     | '/admin/spolecznosc'
     | '/admin/spotkania'
+    | '/admin/standardy'
     | '/admin/strony'
     | '/admin/subskrybenci'
     | '/admin/szablony'
@@ -754,6 +766,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/rozmowy'
     | '/_authenticated/admin/spolecznosc'
     | '/_authenticated/admin/spotkania'
+    | '/_authenticated/admin/standardy'
     | '/_authenticated/admin/strony'
     | '/_authenticated/admin/subskrybenci'
     | '/_authenticated/admin/szablony'
@@ -1100,6 +1113,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSpotkaniaRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/standardy': {
+      id: '/_authenticated/admin/standardy'
+      path: '/standardy'
+      fullPath: '/admin/standardy'
+      preLoaderRoute: typeof AuthenticatedAdminStandardyRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/strony': {
       id: '/_authenticated/admin/strony'
       path: '/strony'
@@ -1262,6 +1282,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminRozmowyRoute: typeof AuthenticatedAdminRozmowyRoute
   AuthenticatedAdminSpolecznoscRoute: typeof AuthenticatedAdminSpolecznoscRoute
   AuthenticatedAdminSpotkaniaRoute: typeof AuthenticatedAdminSpotkaniaRoute
+  AuthenticatedAdminStandardyRoute: typeof AuthenticatedAdminStandardyRoute
   AuthenticatedAdminStronyRoute: typeof AuthenticatedAdminStronyRoute
   AuthenticatedAdminSubskrybenciRoute: typeof AuthenticatedAdminSubskrybenciRoute
   AuthenticatedAdminSzablonyRoute: typeof AuthenticatedAdminSzablonyRoute
@@ -1287,6 +1308,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminRozmowyRoute: AuthenticatedAdminRozmowyRoute,
   AuthenticatedAdminSpolecznoscRoute: AuthenticatedAdminSpolecznoscRoute,
   AuthenticatedAdminSpotkaniaRoute: AuthenticatedAdminSpotkaniaRoute,
+  AuthenticatedAdminStandardyRoute: AuthenticatedAdminStandardyRoute,
   AuthenticatedAdminStronyRoute: AuthenticatedAdminStronyRoute,
   AuthenticatedAdminSubskrybenciRoute: AuthenticatedAdminSubskrybenciRoute,
   AuthenticatedAdminSzablonyRoute: AuthenticatedAdminSzablonyRoute,
