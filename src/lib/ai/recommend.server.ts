@@ -46,7 +46,7 @@ Odpowiedz WYŁĄCZNIE obiektem JSON: {"items":[{"slug":"...","reason":"jedno zda
   try {
     const result = streamText({
       model: provider.responses(MODEL),
-      system, prompt: user, abortSignal: signal,
+      system, prompt: user, ...(signal ? { abortSignal: signal } : {}),
       providerOptions: { openai: { forceReasoning: true, reasoningEffort: "low", reasoningSummary: "auto", store: false, include: ["reasoning.encrypted_content"] } },
     });
     text = await result.text;
