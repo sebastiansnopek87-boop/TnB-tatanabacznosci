@@ -16,7 +16,7 @@ const ITEMS: { icon: LucideIcon; title: string; desc: string; href: string }[] =
   { icon: Users, title: "Rozmowy", desc: "Rozmowy członków społeczności", href: "/spolecznosc" },
   { icon: Calendar, title: "Spotkania 1:1", desc: "Rozmowa, mentoring, czas dla Ciebie", href: "/spotkania/rozmowa-1-1" },
   { icon: Compass, title: "Artykuły", desc: "Autorskie teksty o ojcostwie, służbie i wartościach", href: "/artykuly" },
-  { icon: ShoppingBag, title: "Materiały premium", desc: "Wybrane treści, które zostaną z Tobą na dłużej", href: "/materialy-premium" },
+  { icon: ShoppingBag, title: "Premium w Bibliotece", desc: "Płatne materiały Biblioteki TNB, które zostaną z Tobą na dłużej", href: "/materialy-premium" },
   { icon: UserRound, title: "Moje TNB", desc: "Twój profil, postępy, zapisane treści", href: "/moje-tnb" },
 ];
 

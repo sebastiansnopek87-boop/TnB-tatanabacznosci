@@ -1,15 +1,26 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { zodValidator, fallback } from "@tanstack/zod-adapter";
+import { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Search, Lock, Crown } from "lucide-react";
 import { AiRecommender } from "@/components/library/AiRecommender";
 import { PageShell } from "@/components/tnb/PageShell";
-import { ACCESS, KINDS, accessLabel, coverSrc, fmtDay, listCategories, listLibrary, type Access, type LibraryItem } from "@/lib/library";
+import { ACCESS_FILTER, KINDS, accessLabel, coverSrc, fmtDay, listCategories, listLibrary, type Access, type Kind, type LibraryItem } from "@/lib/library";
+
+const searchSchema = z.object({
+  q: fallback(z.string(), "").default(""),
+  kategoria: fallback(z.string(), "").default(""),
+  format: fallback(z.string(), "").default(""),
+  dostep: fallback(z.string(), "").default(""),
+  sort: fallback(z.string(), "").default(""),
+});
 
 const TITLE = "Biblioteka TNB — Tata Na Baczności";
 const DESC = "Miejsce, w którym gromadzimy wiedzę, doświadczenia i materiały, do których warto wracać.";
 
 export const Route = createFileRoute("/biblioteka/")({
+  validateSearch: zodValidator(searchSchema),
   head: () => ({
     meta: [
       { title: TITLE }, { name: "description", content: DESC },
@@ -25,16 +36,24 @@ const chipOn = "border-gold bg-gold/10 text-gold";
 const chipOff = "border-border/60 text-foreground/70 hover:border-gold/60 hover:text-foreground";
 
 function Library() {
-  const [input, setInput] = useState("");
-  const [q, setQ] = useState("");
-  const [category, setCategory] = useState<string | null>(null);
-  const [access, setAccess] = useState<Access | null>(null);
-  useEffect(() => { const t = setTimeout(() => setQ(input), 300); return () => clearTimeout(t); }, [input]);
+  const sp = Route.useSearch();
+  const navigate = useNavigate({ from: "/biblioteka/" });
+  const access = (sp.dostep in ACCESS_FILTER ? sp.dostep : null) as Access | null;
+  const kind = (sp.format in KINDS ? sp.format : null) as Kind | null;
+  const category = sp.kategoria || null;
+  const sort = sp.sort === "az" ? "az" : "newest";
+  const [input, setInput] = useState(sp.q);
+  const q = sp.q.slice(0, 80);
+  type Patch = Partial<{ q: string; kategoria: string; format: string; dostep: string; sort: string }>;
+  const set = (p: Patch) => navigate({ search: (prev) => ({ ...prev, ...p }), replace: true });
+  const setCategory = (v: string | null) => set({ kategoria: v ?? "" });
+  const setAccess = (v: Access | null) => set({ dostep: v ?? "" });
+  useEffect(() => { const t = setTimeout(() => { if (input !== sp.q) set({ q: input }); }, 300); return () => clearTimeout(t); }, [input]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const cats = useQuery({ queryKey: ["library-cats"], queryFn: listCategories });
-  const list = useQuery({ queryKey: ["library", q, category, access], queryFn: () => listLibrary({ q, category, access }) });
+  const list = useQuery({ queryKey: ["library", q, category, access, kind, sort], queryFn: () => listLibrary({ q, category, access, kind, sort }) });
   const catName = (s: string) => cats.data?.find((c) => c.slug === s)?.name ?? s;
-  const filtered = !!(q.trim().length >= 2 || category || access);
+  const filtered = !!(q.trim().length >= 2 || category || access || kind);
 
   return (
     <PageShell>
@@ -65,11 +84,27 @@ function Library() {
           <div>
             <p className="eyebrow mb-2 text-muted-foreground">Dostępność</p>
             <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={() => setAccess(null)} className={`${chip} ${!access ? chipOn : chipOff}`}>Każda</button>
-              {(Object.keys(ACCESS) as Access[]).map((a) => (
-                <button key={a} type="button" onClick={() => setAccess(a)} className={`${chip} ${access === a ? chipOn : chipOff}`}>{ACCESS[a]}</button>
+              <button type="button" onClick={() => setAccess(null)} className={`${chip} ${!access ? chipOn : chipOff}`}>Wszystkie</button>
+              {(Object.keys(ACCESS_FILTER) as Access[]).map((a) => (
+                <button key={a} type="button" onClick={() => setAccess(a)} className={`${chip} ${access === a ? chipOn : chipOff}`}>{ACCESS_FILTER[a]}</button>
               ))}
             </div>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="block">
+              <span className="eyebrow mb-2 block text-muted-foreground">Format</span>
+              <select value={kind ?? ""} onChange={(e) => set({ format: e.target.value })} className="w-full border border-border/60 bg-background px-3 py-2.5 text-sm text-foreground focus:border-gold focus:outline-none">
+                <option value="">Każdy format</option>
+                {(Object.keys(KINDS) as Kind[]).map((k) => <option key={k} value={k}>{KINDS[k]}</option>)}
+              </select>
+            </label>
+            <label className="block">
+              <span className="eyebrow mb-2 block text-muted-foreground">Sortowanie</span>
+              <select value={sort} onChange={(e) => set({ sort: e.target.value === "az" ? "az" : "" })} className="w-full border border-border/60 bg-background px-3 py-2.5 text-sm text-foreground focus:border-gold focus:outline-none">
+                <option value="newest">Najnowsze</option>
+                <option value="az">Alfabetycznie</option>
+              </select>
+            </label>
           </div>
         </div>
 

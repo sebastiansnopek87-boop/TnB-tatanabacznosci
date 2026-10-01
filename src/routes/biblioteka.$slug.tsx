@@ -82,7 +82,7 @@ function ItemPage() {
                     <p className="mt-3 text-[0.95rem] leading-[1.75] text-foreground/85">Ten materiał jest dostępny dla członków społeczności TNB. Zaloguj się lub dołącz do nas, aby uzyskać dostęp.</p>
                     {!uid && (
                       <div className="mt-6 flex flex-wrap gap-3">
-                        <Link to="/auth" search={{ powrot: `/biblioteka/${it.slug}` }} className="bg-gold px-6 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-primary-foreground hover:bg-gold-bright">Zaloguj się</Link>
+                        <Link to="/auth" search={{ powrot: `/biblioteka/${it.slug}` }} className="bg-gold px-6 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-primary-foreground hover:bg-gold-bright">Zaloguj się, aby uzyskać dostęp</Link>
                         <Link to="/auth" search={{ tryb: "rejestracja", powrot: `/biblioteka/${it.slug}` }} className="border border-gold/60 px-6 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-gold hover:bg-gold/10">Dołącz do TNB</Link>
                       </div>
                     )}
@@ -90,6 +90,7 @@ function ItemPage() {
                 </div>
               ) : (
                 <div className="mt-10 space-y-6">
+                  {it.access === "premium" && <p className="eyebrow text-gold">Otwórz zakupiony materiał — masz do niego dostęp</p>}
                   {content.body.trim() && (
                     <div className="space-y-5 break-words text-[1rem] leading-[1.85] text-foreground/90">
                       {content.body.split(/\n{2,}/).map((p, i) => <p key={i} className="whitespace-pre-line">{p}</p>)}
@@ -99,14 +100,14 @@ function ItemPage() {
                     <div className="border border-border/60 bg-card p-5">
                       <p className="text-sm text-foreground/80">{content.file_name ?? "Plik materiału"}</p>
                       <button onClick={openFile} disabled={busy} className="mt-3 bg-gold px-5 py-2.5 text-[0.7rem] uppercase tracking-[0.14em] text-primary-foreground hover:bg-gold-bright disabled:opacity-60">
-                        {busy ? "Przygotowywanie…" : it.kind === "pdf" ? "Pobierz PDF" : "Otwórz plik"}
+                        {busy ? "Przygotowywanie…" : it.access === "premium" ? "Otwórz zakupiony materiał" : "Otwórz materiał"}
                       </button>
                       {fileErr && <p className="mt-2 text-sm text-destructive">{fileErr}</p>}
                     </div>
                   )}
                   {content.external_url && (
                     <a href={content.external_url} target="_blank" rel="noopener noreferrer" className="inline-block border border-gold/60 px-5 py-2.5 text-[0.7rem] uppercase tracking-[0.14em] text-gold hover:bg-gold/10">
-                      Otwórz link zewnętrzny
+                      {it.access === "premium" ? "Otwórz zakupiony materiał" : "Otwórz materiał"}
                     </a>
                   )}
                 </div>

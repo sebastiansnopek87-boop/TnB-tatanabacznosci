@@ -14,7 +14,6 @@ const NAV = [
   { label: "Podcast", to: "/podcast" },
   { label: "Rozmowy", to: "/spolecznosc" },
   { label: "Spotkania", to: "/spotkania" },
-  { label: "Materiały premium", to: "/materialy-premium" },
 ] as const;
 
 const ACTIVE = "nav-link relative pb-1 text-gold after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:bg-gold";

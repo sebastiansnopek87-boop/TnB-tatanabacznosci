@@ -2,7 +2,8 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const KINDS = { article: "Artykuł", guide: "Poradnik", pdf: "PDF do pobrania", video: "Materiał wideo", audio: "Nagranie audio", link: "Link zewnętrzny" } as const;
 export type Kind = keyof typeof KINDS;
-export const ACCESS = { public: "Darmowy", members: "Dostępny po zalogowaniu", premium: "Premium" } as const;
+export const ACCESS = { public: "Bezpłatny", members: "Dla zalogowanych", premium: "Premium" } as const;
+export const ACCESS_FILTER = { public: "Bezpłatne", members: "Dla zalogowanych", premium: "Premium" } as const;
 export const DELIVERY = { email_link: "E-mail z bezpiecznym linkiem", email_attachment: "E-mail z załącznikiem", account_access: "Dostęp na koncie" } as const;
 export type Delivery = keyof typeof DELIVERY;
 export type Access = keyof typeof ACCESS;
@@ -36,8 +37,11 @@ export async function listCategories() {
   return data;
 }
 
-export async function listLibrary(f: { q: string; category: string | null; access: Access | null }) {
-  let q = supabase.from("library_items").select(COLS).eq("status", "published").order("published_at", { ascending: false }).limit(200);
+export async function listLibrary(f: { q: string; category: string | null; access: Access | null; kind?: Kind | null; sort?: "newest" | "az" }) {
+  let q = supabase.from("library_items").select(COLS).eq("status", "published");
+  q = f.sort === "az" ? q.order("title", { ascending: true }).order("id") : q.order("published_at", { ascending: false }).order("id");
+  q = q.limit(200);
+  if (f.kind) q = q.eq("kind", f.kind);
   if (f.category) q = q.eq("category", f.category);
   if (f.access) q = q.eq("access", f.access);
   const s = f.q.trim().replace(/[%,()*\\]/g, " ").slice(0, 80);

@@ -1,9 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { ComingSoon, comingSoonHead } from "@/components/tnb/ComingSoon";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-const DESC = "Materiały edukacyjne, publikacje i zasoby do pobrania dostępne w ramach członkostwa. Oferta jest w przygotowaniu.";
-
+// Former standalone premium page: now the unified library catalogue with the Premium filter on.
 export const Route = createFileRoute("/materialy-premium")({
-  head: () => comingSoonHead("Materiały premium", DESC),
-  component: () => <ComingSoon eyebrow="Zasoby TNB" title="Materiały premium" intro={DESC} />,
+  beforeLoad: () => { throw redirect({ to: "/biblioteka", search: { dostep: "premium" }, statusCode: 301 }); },
 });
