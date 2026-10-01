@@ -2,7 +2,7 @@
 - Newsletter stores consent text/version/time + opt-in method; active only when the opt-in rule is satisfied.
 - Community: guests read only public+published posts via anon RLS/column grants (no author_id); writes authenticated-only.
 - Library: metadata in library_items (anon, published); content in library_item_content gated by library_can_read(); files via signed URLs, covers via /api/public/library-cover/$id. Premium = paid library_orders row, never the premium role.
-- Orders: created server-side with DB price, bank transfer only (online_p24 placeholder); only admins mark paid/delivered (orders.server.ts) — client can never set paid.
+- Orders/payments: orders.server.ts is the single order core for bank transfer and operators (payments/providers.server.ts adapters: P24, Tpay, PayU; config in payment_providers, secrets only in env). "paid" only via signature-verified webhook (/api/public/payments/$op, dedup in payment_webhook_events, amount/currency check → needs_review) or admin confirming a bank_transfer order. Access = paid_at set, access_revoked_at null, status paid/refund_pending/refunded; linked to user_id or confirmed account e-mail.
 - Meetings: public reads with explicit safe columns (online_link hidden); registrations server-only with honeypot, per-email uniqueness, DB capacity trigger.
 - Podcast: admin-only RLS; public reads via safe columns; media returned by getEpisodeMedia (signed 3h) only after access check.
 - 1:1 consults: slots computed server-side (Europe/Warsaw); DB exclusion constraint blocks double booking; booking + meeting-registration e-mails go through dispatch() (consult.server.ts, meetings-notify.server.ts), meeting links only via token status pages; reminders cron not yet scheduled.

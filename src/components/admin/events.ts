@@ -11,7 +11,18 @@ export const EVENT_LABELS: Record<string, string> = {
   maintenance_off: "Wyłączono tryb konserwacji",
   role_granted: "Nadano rolę użytkownikowi",
   role_revoked: "Odebrano rolę użytkownikowi",
-  order_paid: "Oznaczono zamówienie jako opłacone",
+  order_paid: "Potwierdzono przelew za zamówienie",
+  order_refund_start: "Rozpoczęto zwrot zamówienia",
+  order_refund_complete: "Zakończono zwrot zamówienia",
+  order_review_paid: "Weryfikacja: płatność poprawna",
+  order_review_failed: "Weryfikacja: płatność nieudana",
+  order_resend: "Ponowne wysłanie linku do materiału",
+  payment_webhook: "Powiadomienie operatora płatności",
+  payment_webhook_invalid: "Odrzucone powiadomienie płatności (podpis)",
+  payment_config: "Zmiana konfiguracji operatora płatności",
+  payment_live_on: "Włączono produkcję operatora płatności",
+  payment_live_off: "Przełączono operatora na środowisko testowe",
+  payment_test: "Test połączenia z operatorem płatności",
   order_delivered: "Oznaczono zamówienie jako dostarczone",
   order_cancelled: "Anulowano zamówienie",
   order_refunded: "Oznaczono zwrot zamówienia",
@@ -59,7 +70,7 @@ export const EVENT_CATEGORIES: Array<{ value: string; label: string }> = [
 
 export const OBJECT_KIND: Record<string, string> = {
   page: "Strona", library: "Materiał", episode: "Odcinek", meeting: "Spotkanie", registration: "Zgłoszenie", booking: "Rozmowa 1:1",
-  order: "Zamówienie", post: "Post", comment: "Komentarz", report: "Zgłoszenie", availability: "Dostępność", user: "Użytkownik", settings: "Ustawienia", media: "Plik", template: "Szablon", rule: "Reguła", notification: "Wiadomość",
+  order: "Zamówienie", post: "Post", comment: "Komentarz", report: "Zgłoszenie", availability: "Dostępność", user: "Użytkownik", settings: "Ustawienia", media: "Plik", template: "Szablon", rule: "Reguła", notification: "Wiadomość", payment: "Płatność",
 };
 export const RESULT: Record<string, string> = { ok: "Wykonano", failed: "Błąd", denied: "Odmowa dostępu" };
 
