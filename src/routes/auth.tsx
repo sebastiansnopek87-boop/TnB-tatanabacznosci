@@ -26,8 +26,8 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
-// Only same-origin library paths are accepted as a return target (no open redirects).
-function safeReturn(p: string) { return /^\/biblioteka\/[a-z0-9-]{1,120}$/.test(p); }
+// Only same-origin library/article paths are accepted as a return target (no open redirects).
+function safeReturn(p: string) { return /^\/(biblioteka|artykuly)\/[a-z0-9-]{1,120}$/.test(p); }
 const RETURN_KEY = "tnb-return";
 
 type Mode = "login" | "register" | "register-sent" | "reset" | "reset-sent";
