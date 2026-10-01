@@ -9,9 +9,10 @@ import logo from "@/assets/logo.png.asset.json";
 const NAV = [
   { label: "O TNB", to: "/o-tnb" },
   { label: "Moja historia", to: "/moja-historia" },
+  { label: "Artykuły", to: "/artykuly" },
   { label: "Biblioteka", to: "/biblioteka" },
   { label: "Podcast", to: "/podcast" },
-  { label: "Społeczność", to: "/spolecznosc" },
+  { label: "Rozmowy", to: "/spolecznosc" },
   { label: "Spotkania", to: "/spotkania" },
   { label: "Materiały premium", to: "/materialy-premium" },
 ] as const;

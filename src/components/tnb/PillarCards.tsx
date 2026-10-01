@@ -21,7 +21,7 @@ const CARDS = [
     num: "02",
     id: "biblioteka", to: "/biblioteka",
     title: "Biblioteka TNB",
-    desc: "Artykuły, e-booki, podcasty, muzyka, wiersze i rozmowy, które zostają na dłużej.",
+    desc: "E-booki, zeszyty ćwiczeń, dokumenty, nagrania i materiały, które zostają na dłużej.",
     cta: "Przeglądaj materiały",
     image: cardBiblioteka.url,
     alt: "Książki i kubek kawy w ciepłym świetle",
@@ -40,7 +40,7 @@ const CARDS = [
 const TILES = [
   {
     id: "spolecznosc", to: "/spolecznosc",
-    title: "Społeczność",
+    title: "Rozmowy społeczności",
     desc: "Miejsce, w którym możesz czytać, komentować, dzielić się doświadczeniami i być częścią czegoś większego.",
     image: tileSpolecznosc.url,
     alt: "Ludzie przy ognisku",
