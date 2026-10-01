@@ -64,6 +64,7 @@ import { Route as ApiPublicPaymentsP24RouteImport } from './routes/api/public/pa
 import { Route as ApiPublicPaymentsPayuRouteImport } from './routes/api/public/payments/payu'
 import { Route as ApiPublicPaymentsTpayRouteImport } from './routes/api/public/payments/tpay'
 import { Route as ApiPublicPodcastCoverIdRouteImport } from './routes/api/public/podcast-cover.$id'
+import { Route as ApiPublicArticleImageIdNameRouteImport } from './routes/api/public/article-image.$id.$name'
 import { Route as ApiPublicPageImageIdNameRouteImport } from './routes/api/public/page-image.$id.$name'
 
 const IndexRoute = IndexRouteImport.update({
@@ -363,6 +364,12 @@ const ApiPublicPodcastCoverIdRoute = ApiPublicPodcastCoverIdRouteImport.update({
   path: '/api/public/podcast-cover/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicArticleImageIdNameRoute =
+  ApiPublicArticleImageIdNameRouteImport.update({
+    id: '/api/public/article-image/$id/$name',
+    path: '/api/public/article-image/$id/$name',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicPageImageIdNameRoute =
   ApiPublicPageImageIdNameRouteImport.update({
     id: '/api/public/page-image/$id/$name',
@@ -425,6 +432,7 @@ export interface FileRoutesByFullPath {
   '/api/public/payments/payu': typeof ApiPublicPaymentsPayuRoute
   '/api/public/payments/tpay': typeof ApiPublicPaymentsTpayRoute
   '/api/public/podcast-cover/$id': typeof ApiPublicPodcastCoverIdRoute
+  '/api/public/article-image/$id/$name': typeof ApiPublicArticleImageIdNameRoute
   '/api/public/page-image/$id/$name': typeof ApiPublicPageImageIdNameRoute
 }
 export interface FileRoutesByTo {
@@ -481,6 +489,7 @@ export interface FileRoutesByTo {
   '/api/public/payments/payu': typeof ApiPublicPaymentsPayuRoute
   '/api/public/payments/tpay': typeof ApiPublicPaymentsTpayRoute
   '/api/public/podcast-cover/$id': typeof ApiPublicPodcastCoverIdRoute
+  '/api/public/article-image/$id/$name': typeof ApiPublicArticleImageIdNameRoute
   '/api/public/page-image/$id/$name': typeof ApiPublicPageImageIdNameRoute
 }
 export interface FileRoutesById {
@@ -540,6 +549,7 @@ export interface FileRoutesById {
   '/api/public/payments/payu': typeof ApiPublicPaymentsPayuRoute
   '/api/public/payments/tpay': typeof ApiPublicPaymentsTpayRoute
   '/api/public/podcast-cover/$id': typeof ApiPublicPodcastCoverIdRoute
+  '/api/public/article-image/$id/$name': typeof ApiPublicArticleImageIdNameRoute
   '/api/public/page-image/$id/$name': typeof ApiPublicPageImageIdNameRoute
 }
 export interface FileRouteTypes {
@@ -599,6 +609,7 @@ export interface FileRouteTypes {
     | '/api/public/payments/payu'
     | '/api/public/payments/tpay'
     | '/api/public/podcast-cover/$id'
+    | '/api/public/article-image/$id/$name'
     | '/api/public/page-image/$id/$name'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -655,6 +666,7 @@ export interface FileRouteTypes {
     | '/api/public/payments/payu'
     | '/api/public/payments/tpay'
     | '/api/public/podcast-cover/$id'
+    | '/api/public/article-image/$id/$name'
     | '/api/public/page-image/$id/$name'
   id:
     | '__root__'
@@ -713,6 +725,7 @@ export interface FileRouteTypes {
     | '/api/public/payments/payu'
     | '/api/public/payments/tpay'
     | '/api/public/podcast-cover/$id'
+    | '/api/public/article-image/$id/$name'
     | '/api/public/page-image/$id/$name'
   fileRoutesById: FileRoutesById
 }
@@ -749,6 +762,7 @@ export interface RootRouteChildren {
   ApiPublicPaymentsPayuRoute: typeof ApiPublicPaymentsPayuRoute
   ApiPublicPaymentsTpayRoute: typeof ApiPublicPaymentsTpayRoute
   ApiPublicPodcastCoverIdRoute: typeof ApiPublicPodcastCoverIdRoute
+  ApiPublicArticleImageIdNameRoute: typeof ApiPublicArticleImageIdNameRoute
   ApiPublicPageImageIdNameRoute: typeof ApiPublicPageImageIdNameRoute
 }
 
@@ -1139,6 +1153,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPodcastCoverIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/article-image/$id/$name': {
+      id: '/api/public/article-image/$id/$name'
+      path: '/api/public/article-image/$id/$name'
+      fullPath: '/api/public/article-image/$id/$name'
+      preLoaderRoute: typeof ApiPublicArticleImageIdNameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/page-image/$id/$name': {
       id: '/api/public/page-image/$id/$name'
       path: '/api/public/page-image/$id/$name'
@@ -1247,6 +1268,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPaymentsPayuRoute: ApiPublicPaymentsPayuRoute,
   ApiPublicPaymentsTpayRoute: ApiPublicPaymentsTpayRoute,
   ApiPublicPodcastCoverIdRoute: ApiPublicPodcastCoverIdRoute,
+  ApiPublicArticleImageIdNameRoute: ApiPublicArticleImageIdNameRoute,
   ApiPublicPageImageIdNameRoute: ApiPublicPageImageIdNameRoute,
 }
 export const routeTree = rootRouteImport
