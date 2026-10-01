@@ -13,6 +13,7 @@ export type Stats = { reactions: Record<string, number>; poll: Record<number, nu
 export function interactionError(e: any): string {
   const m = String(e?.message ?? "");
   if (m.includes("display_name_missing")) return "Uzupełnij nick albo imię i nazwisko w „Moje TNB”, aby komentować.";
+  if (m.includes("email_unconfirmed")) return "Potwierdź adres e-mail swojego konta (link z wiadomości po rejestracji), aby komentować.";
   if (m.includes("comment_too_fast")) return "Odczekaj chwilę przed dodaniem kolejnego komentarza.";
   if (m.includes("comment_duplicate")) return "Ten komentarz został już dodany.";
   if (m.includes("row-level security") || e?.code === "42501") return "Nie masz uprawnień do tej operacji albo artykuł nie jest dostępny.";
@@ -66,7 +67,7 @@ export async function setSaved(articleId: string, uid: string, saved: boolean) {
 
 export async function listArticleComments(articleId: string, signedIn: boolean): Promise<ArticleComment[]> {
   const cols = "id, author_name, body, status, created_at, updated_at" + (signedIn ? ", author_id" : "");
-  const { data, error } = await supabase.from("article_comments").select(cols).eq("article_id", articleId).order("created_at");
+  const { data, error } = await supabase.from("article_comments").select(cols).eq("article_id", articleId).in("status", ["visible", "hidden"]).order("created_at");
   if (error) throw new Error("Nie udało się pobrać komentarzy.");
   return ((data ?? []) as any[]).map((c) => ({ author_id: "", ...c }));
 }

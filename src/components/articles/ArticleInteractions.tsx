@@ -12,6 +12,7 @@ import {
   myState, relatedArticles, reportComment, setReaction, setSaved, vote, type ReactionType,
 } from "@/lib/article-interactions";
 import { articleCategoriesQuery, type Article } from "@/lib/articles";
+import { GuestCommentForm } from "./GuestCommentForm";
 
 const box = "mx-auto max-w-3xl border-t border-border/60 px-5 py-10 lg:px-0";
 const pct = (n: number, t: number) => (t ? Math.round((n / t) * 100) : 0);
@@ -147,7 +148,7 @@ function Comments({ a, uid, loading, onChange }: { a: Article; uid: string | nul
             <Button onClick={send} disabled={sending || body.trim().length < 2}>{sending ? "Wysyłanie…" : "Dodaj komentarz"}</Button>
           </div>
         </div>
-      ) : !loading && <p className="mt-5 border border-border/60 p-4 text-sm text-foreground/85">Komentarze mogą dodawać zalogowani członkowie TNB. <SignIn slug={a.slug} label="Zaloguj się, aby skomentować" /></p>}
+      ) : !loading && <GuestCommentForm a={a} />}
       <ul className="mt-8 space-y-4">
         {list.isLoading && <li className="text-sm text-muted-foreground">Wczytywanie komentarzy…</li>}
         {!list.isLoading && !items.length && <li className="text-sm text-muted-foreground">Nie ma jeszcze komentarzy. Możesz być pierwszy.</li>}
