@@ -49,7 +49,7 @@ function Standards() {
         <section className="mt-6">
           <p className="text-sm text-muted-foreground">Zaznaczenia nie są zapisywane — to lista robocza przed publikacją. Zaznaczono {done.size} z {CHECKLIST.length}.</p>
           <ul className="mt-4 space-y-3">{CHECKLIST.map((c, i) => (
-            <li key={c}><label className="flex cursor-pointer gap-3 text-sm"><input type="checkbox" className="mt-1 accent-[var(--gold)]" checked={done.has(i)} onChange={() => setDone((s) => { const n = new Set(s); n.has(i) ? n.delete(i) : n.add(i); return n; })} />{c}</label></li>
+            <li key={c}><label className="flex cursor-pointer gap-3 text-sm"><input type="checkbox" className="mt-1 accent-primary" checked={done.has(i)} onChange={() => setDone((s) => { const n = new Set(s); n.has(i) ? n.delete(i) : n.add(i); return n; })} />{c}</label></li>
           ))}</ul>
         </section>
       )}
