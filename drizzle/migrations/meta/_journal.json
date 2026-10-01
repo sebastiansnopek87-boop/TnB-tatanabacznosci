@@ -204,6 +204,13 @@
       "when": 1790858917788,
       "tag": "0028_payments_operators",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1790860688689,
+      "tag": "0029_tnb_identity",
+      "breakpoints": true
     }
   ]
 }
