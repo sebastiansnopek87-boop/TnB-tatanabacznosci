@@ -3,7 +3,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { adminGetLibraryItem, adminListLibrary, adminRemoveLibraryFile, adminSaveLibraryItem, adminSetLibraryStatus, adminUploadLibraryFile } from "@/lib/library.functions";
+import { adminGetLibraryItem, adminListLibrary, adminRemoveLibraryFile, adminSaveLibraryItem, adminSetLibraryStatus, adminUploadLibraryFile, adminRetryWatermark, adminLibraryFileUrl } from "@/lib/library.functions";
+import { adminListLibraryRequests, adminEraseLibraryRequest } from "@/lib/library-delivery.functions";
+import { FREE_DELIVERY, type FreeDelivery } from "@/lib/library";
 import { ACCESS, DELIVERY, KINDS, STATUS, accessLabel, listCategories, slugify, type Access, type Delivery, type Kind, type Status } from "@/lib/library";
 import { errMsg, fmtDate } from "@/components/admin/format";
 import { Button } from "@/components/ui/button";
@@ -15,8 +17,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 export const Route = createFileRoute("/_authenticated/admin/biblioteka")({ component: AdminLibrary });
 
-type Form = { id: string | null; title: string; slug: string; summary: string; category: string; kind: Kind; access: Access; status: Status; author_name: string; body: string; external_url: string; price: string; purchasable: boolean; payment_product_id: string; delivery_method: Delivery };
-const EMPTY: Form = { id: null, title: "", slug: "", summary: "", category: "", kind: "article", access: "members", status: "draft", author_name: "Redakcja TNB", body: "", external_url: "", price: "", purchasable: false, payment_product_id: "", delivery_method: "email_link" };
+type Form = { id: string | null; title: string; slug: string; summary: string; category: string; kind: Kind; access: Access; status: Status; author_name: string; body: string; external_url: string; price: string; purchasable: boolean; payment_product_id: string; delivery_method: Delivery; free_delivery: FreeDelivery };
+const EMPTY: Form = { id: null, title: "", slug: "", summary: "", category: "", kind: "article", access: "members", status: "draft", author_name: "Redakcja TNB", body: "", external_url: "", price: "", purchasable: false, payment_product_id: "", delivery_method: "email_link", free_delivery: "direct" };
 
 function AdminLibrary() {
   const listFn = useServerFn(adminListLibrary);
@@ -27,6 +29,7 @@ function AdminLibrary() {
   const [category, setCategory] = useState<string | null>(null);
   const [access, setAccess] = useState<Access | null>(null);
   const [editing, setEditing] = useState<string | "new" | null>(null);
+  const [tab, setTab] = useState<"items" | "history">("items");
   useEffect(() => { const t = setTimeout(() => setQ(input), 300); return () => clearTimeout(t); }, [input]);
 
   const cats = useQuery({ queryKey: ["library-cats"], queryFn: listCategories });
@@ -38,10 +41,18 @@ function AdminLibrary() {
   });
   const catName = (s: string) => cats.data?.find((c) => c.slug === s)?.name ?? s;
 
+  const tabs = (
+    <div className="mb-6 flex flex-wrap gap-2">
+      <Button size="sm" variant={tab === "items" ? "default" : "outline"} onClick={() => setTab("items")}>Materiały</Button>
+      <Button size="sm" variant={tab === "history" ? "default" : "outline"} onClick={() => setTab("history")}>Historia udostępnień</Button>
+    </div>
+  );
+  if (!editing && tab === "history") return <div className="max-w-5xl">{tabs}<History items={list.data ?? []} /></div>;
   if (editing) return <Editor id={editing === "new" ? null : editing} cats={cats.data ?? []} onClose={() => setEditing(null)} onSaved={(id) => setEditing(id)} />;
 
   return (
     <div className="max-w-5xl">
+      {tabs}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-3xl font-semibold uppercase">Biblioteka</h1>
         <Button onClick={() => setEditing("new")}>+ Nowy materiał</Button>
@@ -98,6 +109,9 @@ function Editor({ id, cats, onClose, onSaved }: { id: string | null; cats: { slu
   const saveFn = useServerFn(adminSaveLibraryItem);
   const upFn = useServerFn(adminUploadLibraryFile);
   const rmFn = useServerFn(adminRemoveLibraryFile);
+  const retryFn = useServerFn(adminRetryWatermark);
+  const urlFn = useServerFn(adminLibraryFileUrl);
+  const [premarked, setPremarked] = useState(false);
   const qc = useQueryClient();
   const [f, setF] = useState<Form>(EMPTY);
   const [slugTouched, setSlugTouched] = useState(false);
@@ -108,7 +122,7 @@ function Editor({ id, cats, onClose, onSaved }: { id: string | null; cats: { slu
   useEffect(() => {
     if (!cur.data) return;
     const { item: i, content: c } = cur.data;
-    setF({ id: i.id, title: i.title, slug: i.slug, summary: i.summary, category: i.category, kind: i.kind as Kind, access: i.access as Access, status: i.status as Status, author_name: i.author_name, body: c.body ?? "", external_url: c.external_url ?? "", price: i.price_amount != null ? String(i.price_amount / 100).replace(".", ",") : "", purchasable: !!i.purchasable, payment_product_id: i.payment_product_id ?? "", delivery_method: (i.delivery_method ?? "email_link") as Delivery });
+    setF({ id: i.id, title: i.title, slug: i.slug, summary: i.summary, category: i.category, kind: i.kind as Kind, access: i.access as Access, status: i.status as Status, author_name: i.author_name, body: c.body ?? "", external_url: c.external_url ?? "", price: i.price_amount != null ? String(i.price_amount / 100).replace(".", ",") : "", purchasable: !!i.purchasable, payment_product_id: i.payment_product_id ?? "", delivery_method: (i.delivery_method ?? "email_link") as Delivery, free_delivery: ((i as any).free_delivery ?? "direct") as FreeDelivery });
     setSlugTouched(true);
   }, [cur.data]);
 
@@ -132,8 +146,9 @@ function Editor({ id, cats, onClose, onSaved }: { id: string | null; cats: { slu
     if (!file || !f.id) return;
     setUploading(target);
     try {
-      await upFn({ data: { id: f.id, target, name: file.name, type: file.type, base64: await toBase64(file) } });
-      toast.success(target === "cover" ? "Okładka zapisana." : "Plik zapisany.");
+      const r = await upFn({ data: { id: f.id, target, name: file.name, type: file.type, base64: await toBase64(file), premarked } });
+      if (r.watermark?.status === "failed") toast.error(`Błąd przetwarzania: ${r.watermark.error}`);
+      else toast.success(target === "cover" ? "Okładka zapisana." : r.watermark ? "PDF oznaczony znakiem wodnym TNB." : "Plik zapisany.");
       qc.invalidateQueries({ queryKey: ["admin-library-item", f.id] }); qc.invalidateQueries({ queryKey: ["admin-library"] });
     } catch (e) { toast.error(errMsg(e)); } finally { setUploading(null); }
   }
@@ -143,9 +158,22 @@ function Editor({ id, cats, onClose, onSaved }: { id: string | null; cats: { slu
     catch (e) { toast.error(errMsg(e)); }
   }
 
+  async function retry() {
+    if (!f.id) return; setUploading("file");
+    try { const r = await retryFn({ data: { id: f.id } }); r.status === "ready" ? toast.success("PDF oznaczony znakiem wodnym TNB.") : toast.error(`Błąd przetwarzania: ${r.error}`); }
+    catch (e) { toast.error(errMsg(e)); } finally { setUploading(null); qc.invalidateQueries({ queryKey: ["admin-library-item", f.id] }); }
+  }
+  async function openUrl(which: "final" | "original", download: boolean) {
+    if (!f.id) return;
+    try { const r = await urlFn({ data: { id: f.id, which, download } }); window.open(r.url, "_blank", "noopener"); } catch (e) { toast.error(errMsg(e)); }
+  }
+
   if (id && cur.isLoading) return <p className="text-sm text-muted-foreground">Ładowanie materiału…</p>;
   if (id && cur.error) return <p className="text-sm text-destructive">{errMsg(cur.error)}</p>;
-  const needsFile = f.kind === "pdf" || f.kind === "audio" || f.kind === "video";
+  const needsFile = f.kind !== "link";
+  const c = cur.data?.content as (Record<string, any> | undefined);
+  const wm = (c?.watermark_status ?? "none") as string;
+  const stale = !!(c?.pdf_generated_at && c?.body_updated_at && new Date(c.body_updated_at) > new Date(c.pdf_generated_at));
   const needsUrl = f.kind === "link" || f.kind === "video" || f.kind === "audio";
 
   return (
@@ -182,8 +210,14 @@ function Editor({ id, cats, onClose, onSaved }: { id: string | null; cats: { slu
             <label className="flex items-center gap-2 self-end text-sm"><input type="checkbox" checked={f.purchasable} onChange={(e) => set("purchasable", e.target.checked)} /> Dostępny do zakupu</label>
           </div>
         )}
+        {f.access !== "premium" && (
+          <div><Label>Sposób udostępnienia</Label>
+            <Select value={f.free_delivery} onValueChange={(v) => set("free_delivery", v as FreeDelivery)}><SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>{(Object.keys(FREE_DELIVERY) as FreeDelivery[]).map((d) => <SelectItem key={d} value={d}>{FREE_DELIVERY[d]}</SelectItem>)}</SelectContent></Select>
+            <p className="mt-1 text-xs text-muted-foreground">{f.free_delivery === "direct" ? "Przycisk „Pobierz PDF” bez podawania danych." : f.free_delivery === "form_download" ? "Formularz: imię, nazwisko, e-mail — potem pobranie od razu." : "Formularz: imię, nazwisko, e-mail — link do pobrania wysyłany e-mailem (w środowisku testowym wysyłka symulowana)."} Dotyczy pliku PDF.</p></div>
+        )}
         <div><Label htmlFor="la">Autor lub redaktor</Label><Input id="la" value={f.author_name} onChange={(e) => set("author_name", e.target.value)} maxLength={80} /></div>
-        <div><Label htmlFor="lb">Treść {f.kind === "article" || f.kind === "guide" ? "" : "(opcjonalna)"}</Label>
+        <div><Label htmlFor="lb">Treść (opcjonalna, gdy dodasz kompletny plik PDF)</Label>
           <Textarea id="lb" rows={14} value={f.body} onChange={(e) => set("body", e.target.value)} maxLength={100000} />
           <p className="mt-1 text-xs text-muted-foreground">Akapity oddziel pustą linią. Treść widzą tylko osoby z odpowiednim dostępem.</p></div>
         {(needsUrl) && (
@@ -203,11 +237,26 @@ function Editor({ id, cats, onClose, onSaved }: { id: string | null; cats: { slu
             {needsFile && (
               <div>
                 <Label>Plik materiału (PDF, MP3, M4A, WAV, MP4, WEBM, maks. 25 MB)</Label>
-                <p className="text-xs text-muted-foreground">{cur.data?.content.file_name ?? "Brak pliku."}</p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  <Input type="file" accept=".pdf,.mp3,.m4a,.wav,.mp4,.webm" disabled={!!uploading} onChange={(e) => upload("file", e.target.files?.[0])} className="max-w-xs" />
-                  {cur.data?.content.file_path && <Button size="sm" variant="outline" onClick={() => remove("file")}>Usuń plik</Button>}
+                <p className="text-xs text-muted-foreground">Nowy PDF jest automatycznie oznaczany znakiem wodnym TNB (małe logo w prawym dolnym rogu każdej strony). Udostępniana jest tylko oznaczona wersja.</p>
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+                  <span className="text-foreground/80">{c?.file_name ?? "Brak pliku."}</span>
+                  {wm !== "none" && <Badge variant={wm === "failed" ? "destructive" : wm === "ready" ? "default" : "outline"}>{WM[wm]}</Badge>}
+                  {wm === "ready" && c?.watermark_source === "premarked" && <Badge variant="outline">Znak dodany przy składzie</Badge>}
                 </div>
+                {wm === "failed" && <p className="mt-1 text-sm text-destructive">{c?.watermark_error} Plik nie jest udostępniany.</p>}
+                {c?.pdf_generated_at && <p className="mt-1 text-xs text-muted-foreground">Wersja PDF z {fmtDate(c.pdf_generated_at)}{c.body_updated_at ? ` · treść zmieniona ${fmtDate(c.body_updated_at)}` : ""}</p>}
+                {stale && <p className="mt-1 text-sm text-destructive">Uwaga: treść edytowalna zmieniła się po wygenerowaniu PDF — plik może być nieaktualny.</p>}
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {c?.file_path && wm === "ready" && <Button size="sm" variant="outline" onClick={() => openUrl("final", false)}>Podgląd PDF</Button>}
+                  {c?.file_path && <Button size="sm" variant="outline" onClick={() => openUrl("final", true)}>Pobierz do kontroli</Button>}
+                  {c?.original_path && <Button size="sm" variant="outline" onClick={() => openUrl("original", true)}>Oryginał</Button>}
+                  {wm === "failed" && c?.original_path && <Button size="sm" disabled={!!uploading} onClick={retry}>Ponów przetwarzanie</Button>}
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Input type="file" accept=".pdf,.mp3,.m4a,.wav,.mp4,.webm" disabled={!!uploading} onChange={(e) => upload("file", e.target.files?.[0])} className="max-w-xs" />
+                  {(c?.file_path || c?.original_path) && <Button size="sm" variant="outline" onClick={() => remove("file")}>Usuń plik</Button>}
+                </div>
+                <label className="mt-2 flex items-start gap-2 text-xs text-muted-foreground"><input type="checkbox" className="mt-0.5" checked={premarked} onChange={(e) => setPremarked(e.target.checked)} />Ten PDF ma już znak wodny TNB dodany przy składzie zgodnie ze standardem — nie dodawaj drugiego (decyzja zapisywana w Dzienniku zdarzeń).</label>
               </div>
             )}
             {uploading && <p className="text-xs text-muted-foreground">Przesyłanie…</p>}
