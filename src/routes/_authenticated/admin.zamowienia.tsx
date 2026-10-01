@@ -16,14 +16,15 @@ const STATUS: Record<string, string> = { pending: "Oczekuje na płatność", pai
 const PROVIDER: Record<string, string> = { manual: "Przelew tradycyjny", p24: "Przelewy24", tpay: "Tpay", payu: "PayU" };
 const REASON: Record<string, string> = { simulated: "Tryb testowy poczty — wiadomość przygotowana jako symulacja, nie wysłano.", not_paid: "Zamówienie nie daje dostępu (nieopłacone lub dostęp cofnięty)." };
 const EVENT: Record<string, string> = { created: "Utworzono", checkout_started: "Rozpoczęto płatność u operatora", checkout_error: "Błąd utworzenia transakcji", paid: "Opłacono", failed: "Płatność nieudana", cancelled: "Anulowano", refund_pending: "Zwrot w toku", refunded: "Zwrócono", delivered: "Dostarczono", delivered_manual: "Oznaczono jako przekazany", delivery_failed: "Wysyłka nieudana", duplicate_ignored: "Powtórzone powiadomienie pominięte", access_granted: "Przyznano dostęp", access_resent: "Ponowne wysłanie linku", needs_review: "Wymaga weryfikacji", webhook_pending: "Operator: płatność w toku", webhook_rejected: "Powiadomienie odrzucone" };
+const TestBadge = () => <span className="ml-2 inline-block border border-destructive px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-destructive">TEST</span>;
 const field = "h-10 border border-border/60 bg-background px-3 text-sm";
 
 function Orders() {
   const list = useServerFn(adminListOrders); const summary = useServerFn(adminSalesSummary);
   const [q, setQ] = useState(""); const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("all"); const [provider, setProvider] = useState("all"); const [from, setFrom] = useState(""); const [to, setTo] = useState("");
+  const [status, setStatus] = useState("all"); const [provider, setProvider] = useState("all"); const [from, setFrom] = useState(""); const [to, setTo] = useState(""); const [kind, setKind] = useState("all");
   const [openId, setOpenId] = useState<string | null>(null);
-  const { data, isLoading, error } = useQuery({ queryKey: ["admin-orders", search, status, provider, from, to], queryFn: () => list({ data: { q: search, status: status as "all", provider: provider as "all", from, to } }) });
+  const { data, isLoading, error } = useQuery({ queryKey: ["admin-orders", search, status, provider, from, to, kind], queryFn: () => list({ data: { q: search, status: status as "all", provider: provider as "all", from, to, kind: kind as "all" } }) });
   const sum = useQuery({ queryKey: ["admin-sales"], queryFn: () => summary() });
   const s = sum.data;
   return (
@@ -37,7 +38,7 @@ function Orders() {
           {[["Opłacone zamówienia", String(s.paidCount)], ["Przychód łącznie", fmtPrice(s.paidAmount)], ["Przychód w tym miesiącu", fmtPrice(s.monthAmount)], ["Zwroty", `${s.refunded} (${fmtPrice(s.refundedAmount)})`], ["Oczekujące", String(s.pending)], ["Wymaga weryfikacji", String(s.review)], ...Object.entries(s.byProvider).map(([k, v]) => [`Opłacone: ${PROVIDER[k] ?? k}`, `${v.count} · ${fmtPrice(v.amount)}`])].map(([k, v]) => (
             <div key={k} className="border border-border/60 bg-card p-4"><p className="text-xs uppercase tracking-wider text-muted-foreground">{k}</p><p className="mt-1 text-xl font-semibold">{v}</p></div>
           ))}
-          <p className="text-xs text-muted-foreground sm:col-span-2 lg:col-span-4">Zestawienie z rzeczywistych zamówień. Transakcje testowe operatorów ({s.testOrders}) nie są wliczane.</p>
+          <p className="text-xs text-muted-foreground sm:col-span-2 lg:col-span-4">Zestawienie z rzeczywistych zamówień. Zamówienia testowe ({s.testOrders}) nie są wliczane.</p>
         </div>
       )}
       <form onSubmit={(e) => { e.preventDefault(); setSearch(q); }} className="flex flex-wrap gap-2">
@@ -48,6 +49,9 @@ function Orders() {
         <select value={provider} onChange={(e) => setProvider(e.target.value)} className={field} aria-label="Operator">
           <option value="all">Wszystkie metody</option>{Object.entries(PROVIDER).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
+        <select value={kind} onChange={(e) => setKind(e.target.value)} className={field} aria-label="Rodzaj zamówień">
+          <option value="all">Rzeczywiste i testowe</option><option value="real">Rzeczywiste</option><option value="test">Testowe</option>
+        </select>
         <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className={field} aria-label="Od" />
         <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className={field} aria-label="Do" />
         <Button type="submit" variant="outline" className="h-10">Szukaj</Button>
@@ -57,7 +61,7 @@ function Orders() {
       ) : (
         <><ul className="space-y-2 md:hidden">{data.map((r: any) => (
           <li key={r.id}><button type="button" onClick={() => setOpenId(r.id)} className={`w-full border p-4 text-left text-sm ${openId === r.id ? "border-gold bg-card" : "border-border/60"}`}>
-            <span className="flex justify-between gap-2"><span className="font-mono text-xs">{r.order_number}</span><span className="text-gold">{STATUS[r.status] ?? r.status}</span></span>
+            <span className="flex justify-between gap-2"><span className="font-mono text-xs">{r.order_number}{r.is_test && <TestBadge />}</span><span className="text-gold">{STATUS[r.status] ?? r.status}</span></span>
             <span className="mt-1 block break-words">{r.library_items?.title}</span>
             <span className="mt-1 block break-all text-xs text-muted-foreground">{r.buyer_email}</span>
             <span className="mt-1 flex justify-between text-xs text-muted-foreground"><span>{fmtDate(r.created_at)} · {PROVIDER[r.provider] ?? r.provider}{r.environment === "sandbox" && r.provider !== "manual" ? " (test)" : ""}</span><span className="text-foreground">{fmtPrice(r.amount)}</span></span>
@@ -68,7 +72,7 @@ function Orders() {
               <th className="p-3">Nr</th><th className="p-3">Data</th><th className="p-3">Materiał</th><th className="p-3">E-mail</th><th className="p-3">Kwota</th><th className="p-3">Metoda</th><th className="p-3">Status</th></tr></thead>
             <tbody>{data.map((r: any) => (
               <tr key={r.id} tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter") setOpenId(r.id); }} onClick={() => setOpenId(r.id)} className={`cursor-pointer border-b border-border/40 hover:bg-card ${openId === r.id ? "bg-card" : ""}`}>
-                <td className="p-3 font-mono text-xs">{r.order_number}</td>
+                <td className="whitespace-nowrap p-3 font-mono text-xs">{r.order_number}{r.is_test && <TestBadge />}</td>
                 <td className="p-3">{fmtDate(r.created_at)}</td><td className="p-3">{r.library_items?.title}</td><td className="p-3">{r.buyer_email}</td>
                 <td className="p-3">{fmtPrice(r.amount)}</td><td className="p-3">{PROVIDER[r.provider] ?? r.provider}{r.environment === "sandbox" && r.provider !== "manual" ? " (test)" : ""}</td>
                 <td className="p-3">{STATUS[r.status] ?? r.status}</td>
@@ -107,7 +111,8 @@ function OrderDetail({ id, onClose }: { id: string; onClose: () => void }) {
   const online = o.payment_method === "online";
   return (
     <section ref={(el) => { if (el && el.dataset["shown"] !== o.id) { el.dataset["shown"] = o.id; el.scrollIntoView({ behavior: "smooth", block: "start" }); } }} className="scroll-mt-4 border border-gold/40 bg-card p-5 text-sm">
-      <div className="flex items-center justify-between"><h2 className="font-display text-2xl font-semibold">Zamówienie {o.order_number}</h2><button onClick={onClose} className="text-gold underline">Zamknij</button></div>
+      <div className="flex items-center justify-between"><h2 className="font-display text-2xl font-semibold">Zamówienie {o.order_number}{o.is_test && <TestBadge />}</h2><button onClick={onClose} className="text-gold underline">Zamknij</button></div>
+      {o.is_test && <p className="mt-2 border border-destructive/60 p-2 text-xs text-destructive">Zamówienie testowe — nie jest wliczane do przychodów ani statystyk sprzedaży. Status, historia i dostęp działają bez zmian.</p>}
       <div className="mt-4 grid gap-x-8 md:grid-cols-2">
         <div>
           {row("Materiał", o.library_items?.title)}{row("Kwota", `${fmtPrice(o.amount)} (${o.currency})`)}{row("Status", STATUS[o.status] ?? o.status)}
