@@ -2,11 +2,15 @@
 export type PageButton = { label: string; href: string };
 export type PageItem = { title: string; body: string };
 export type SectionKind = "hero" | "text" | "values" | "columns" | "quote" | "image" | "cta";
+export type ImageDisplay = "full" | "inset" | "featured";
+export const IMAGE_DISPLAY: Record<ImageDisplay, string> = { full: "Pełna szerokość", inset: "W kolumnie tekstu", featured: "Wyróżniony blok" };
 export type PageSection = {
   id: string;
   kind: SectionKind;
   eyebrow: string;
   layout: "left" | "right"; // image side for hero/text sections
+  display: ImageDisplay; // how an "image" section is shown
+  decorative: boolean; // decorative images get empty alt text
   heading: string;
   body: string;
   image: string | null; // storage file name inside the page folder
@@ -32,11 +36,11 @@ export const PAGE_STATUS: Record<string, string> = { draft: "Szkic", published: 
 
 export const SECTION_KINDS: Record<SectionKind, string> = {
   hero: "Otwarcie strony", text: "Tekst (opcjonalnie ze zdjęciem)", values: "Karty wartości", columns: "Dwie kolumny (listy)",
-  quote: "Cytat", image: "Zdjęcie na całą szerokość", cta: "Wezwanie do działania",
+  quote: "Cytat", image: "Zdjęcie", cta: "Wezwanie do działania",
 };
 
 export const newSection = (kind: SectionKind = "text"): PageSection => ({
-  id: Math.random().toString(36).slice(2, 10), kind, eyebrow: "", layout: "right", heading: "", body: "", image: null, imageAlt: "", caption: "", quoteAuthor: "", buttons: [],
+  id: Math.random().toString(36).slice(2, 10), kind, eyebrow: "", layout: "right", display: "full", decorative: false, heading: "", body: "", image: null, imageAlt: "", caption: "", quoteAuthor: "", buttons: [],
   items: kind === "columns" ? [{ title: "", body: "" }, { title: "", body: "" }] : [],
 });
 
