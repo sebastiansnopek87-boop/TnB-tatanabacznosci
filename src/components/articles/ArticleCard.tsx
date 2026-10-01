@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight, Clock } from "lucide-react";
 import { articleImageUrl, fmtArticleDate, minutesLabel, type ArticleCard as Card } from "@/lib/articles";
 
-export function ArticleCard({ a, category }: { a: Card; category?: string }) {
+export function ArticleCard({ a, category }: { a: Card; category?: string | undefined }) {
   return (
     <article className="group flex min-w-0 flex-col border border-border/60 bg-card/40 transition-colors hover:border-gold/50">
       <Link to="/artykuly/$slug" params={{ slug: a.slug }} className="block aspect-[16/10] overflow-hidden bg-surface-deep" tabIndex={-1} aria-hidden>
