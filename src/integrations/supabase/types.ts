@@ -420,31 +420,64 @@ export type Database = {
       }
       email_notification_log: {
         Row: {
+          attempts: number
           created_at: string
           id: string
+          idempotency_key: string | null
           kind: string
+          mode: string
+          payload: Json | null
+          provider_message_id: string | null
           reason: string | null
           recipient: string | null
           related_id: string | null
+          rendered_html: string | null
+          rendered_subject: string | null
+          rendered_text: string | null
+          retryable: boolean
           status: string
+          template_key: string | null
+          updated_at: string
         }
         Insert: {
+          attempts?: number
           created_at?: string
           id?: string
+          idempotency_key?: string | null
           kind: string
+          mode?: string
+          payload?: Json | null
+          provider_message_id?: string | null
           reason?: string | null
           recipient?: string | null
           related_id?: string | null
+          rendered_html?: string | null
+          rendered_subject?: string | null
+          rendered_text?: string | null
+          retryable?: boolean
           status: string
+          template_key?: string | null
+          updated_at?: string
         }
         Update: {
+          attempts?: number
           created_at?: string
           id?: string
+          idempotency_key?: string | null
           kind?: string
+          mode?: string
+          payload?: Json | null
+          provider_message_id?: string | null
           reason?: string | null
           recipient?: string | null
           related_id?: string | null
+          rendered_html?: string | null
+          rendered_subject?: string | null
+          rendered_text?: string | null
+          retryable?: boolean
           status?: string
+          template_key?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -452,10 +485,13 @@ export type Database = {
         Row: {
           admin_inbox_url: string | null
           contact_notifications_enabled: boolean
+          delivery_mode: string
           id: number
           newsletter_double_opt_in: boolean
           newsletter_notifications_enabled: boolean
           notification_recipient: string | null
+          provider: string
+          reply_to: string | null
           sender_domain: string | null
           sender_local_part: string
           sender_name: string
@@ -464,10 +500,13 @@ export type Database = {
         Insert: {
           admin_inbox_url?: string | null
           contact_notifications_enabled?: boolean
+          delivery_mode?: string
           id?: number
           newsletter_double_opt_in?: boolean
           newsletter_notifications_enabled?: boolean
           notification_recipient?: string | null
+          provider?: string
+          reply_to?: string | null
           sender_domain?: string | null
           sender_local_part?: string
           sender_name?: string
@@ -476,14 +515,44 @@ export type Database = {
         Update: {
           admin_inbox_url?: string | null
           contact_notifications_enabled?: boolean
+          delivery_mode?: string
           id?: number
           newsletter_double_opt_in?: boolean
           newsletter_notifications_enabled?: boolean
           notification_recipient?: string | null
+          provider?: string
+          reply_to?: string | null
           sender_domain?: string | null
           sender_local_part?: string
           sender_name?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      email_templates: {
+        Row: {
+          html: string
+          key: string
+          subject: string
+          text_body: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          html: string
+          key: string
+          subject: string
+          text_body: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          html?: string
+          key?: string
+          subject?: string
+          text_body?: string
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }
@@ -953,6 +1022,27 @@ export type Database = {
           unsubscribed_at?: string | null
           updated_at?: string
           user_agent?: string | null
+        }
+        Relationships: []
+      }
+      notification_rules: {
+        Row: {
+          enabled: boolean
+          event_key: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          enabled: boolean
+          event_key: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          enabled?: boolean
+          event_key?: string
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }

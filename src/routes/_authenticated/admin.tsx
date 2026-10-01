@@ -42,6 +42,8 @@ const GROUPS: Array<{ title: string; items: NavItem[] }> = [
     { to: "/admin/wiadomosci", label: "Wiadomości kontaktowe" },
     { to: "/admin/subskrybenci", label: "Newsletter" },
     { to: "/admin/ustawienia-email", label: "Powiadomienia" },
+    { to: "/admin/szablony", label: "Szablony wiadomości" },
+    { to: "/admin/zdarzenia", label: "Zdarzenia i reguły" },
     { to: "/admin/powiadomienia", label: "Historia wysyłek" },
   ] },
   { title: "System", items: [

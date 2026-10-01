@@ -36,6 +36,12 @@ export const EVENT_LABELS: Record<string, string> = {
   media_upload: "Dodano plik w Multimediach",
   media_delete: "Usunięcie pliku z Multimediów",
   media_rejected: "Odrzucono przesyłany plik",
+  template_update: "Zmieniono szablon wiadomości",
+  template_reset: "Przywrócono domyślny szablon wiadomości",
+  rule_enabled: "Włączono regułę powiadomień",
+  rule_disabled: "Wyłączono regułę powiadomień",
+  email_test: "Wysłano wiadomość testową",
+  email_retry: "Ponowiono wysyłkę wiadomości",
 };
 for (const [prefix, [, noun]] of Object.entries(OBJECT)) {
   for (const [st, verb] of Object.entries(STATUS)) EVENT_LABELS[`${prefix}_${st}`] = `${verb} ${noun}`;
@@ -48,12 +54,12 @@ export const EVENT_CATEGORIES: Array<{ value: string; label: string }> = [
   { value: "meeting", label: "Spotkania" }, { value: "registration", label: "Zgłoszenia na spotkania" }, { value: "booking", label: "Rozmowy 1:1" }, { value: "role", label: "Role użytkowników" },
   { value: "order", label: "Zamówienia" }, { value: "community", label: "Społeczność" }, { value: "report", label: "Zgłoszenia moderacyjne" },
   { value: "access", label: "Dostęp" }, { value: "settings", label: "Ustawienia" }, { value: "maintenance", label: "Tryb konserwacji" },
-  { value: "media", label: "Multimedia" },
+  { value: "media", label: "Multimedia" }, { value: "template", label: "Szablony wiadomości" }, { value: "rule", label: "Reguły powiadomień" }, { value: "email", label: "Wysyłka e-mail" },
 ];
 
 export const OBJECT_KIND: Record<string, string> = {
   page: "Strona", library: "Materiał", episode: "Odcinek", meeting: "Spotkanie", registration: "Zgłoszenie", booking: "Rozmowa 1:1",
-  order: "Zamówienie", post: "Post", comment: "Komentarz", report: "Zgłoszenie", availability: "Dostępność", user: "Użytkownik", settings: "Ustawienia", media: "Plik",
+  order: "Zamówienie", post: "Post", comment: "Komentarz", report: "Zgłoszenie", availability: "Dostępność", user: "Użytkownik", settings: "Ustawienia", media: "Plik", template: "Szablon", rule: "Reguła", notification: "Wiadomość",
 };
 export const RESULT: Record<string, string> = { ok: "Wykonano", failed: "Błąd", denied: "Odmowa dostępu" };
 
