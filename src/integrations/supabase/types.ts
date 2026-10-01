@@ -47,6 +47,119 @@ export type Database = {
         }
         Relationships: []
       }
+      article_categories: {
+        Row: {
+          created_at: string
+          name: string
+          slug: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          name: string
+          slug: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          name?: string
+          slug?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      article_settings: {
+        Row: {
+          home_mode: string
+          id: number
+          updated_at: string
+        }
+        Insert: {
+          home_mode?: string
+          id?: number
+          updated_at?: string
+        }
+        Update: {
+          home_mode?: string
+          id?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      articles: {
+        Row: {
+          author_name: string
+          category: string | null
+          cover: string | null
+          cover_alt: string
+          created_at: string
+          created_by: string | null
+          excerpt: string
+          featured: boolean
+          home_order: number
+          id: string
+          published_at: string | null
+          reading_minutes: number
+          sections: Json
+          seo_description: string
+          seo_title: string
+          slug: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_name?: string
+          category?: string | null
+          cover?: string | null
+          cover_alt?: string
+          created_at?: string
+          created_by?: string | null
+          excerpt?: string
+          featured?: boolean
+          home_order?: number
+          id?: string
+          published_at?: string | null
+          reading_minutes?: number
+          sections?: Json
+          seo_description?: string
+          seo_title?: string
+          slug: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_name?: string
+          category?: string | null
+          cover?: string | null
+          cover_alt?: string
+          created_at?: string
+          created_by?: string | null
+          excerpt?: string
+          featured?: boolean
+          home_order?: number
+          id?: string
+          published_at?: string | null
+          reading_minutes?: number
+          sections?: Json
+          seo_description?: string
+          seo_title?: string
+          slug?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "articles_category_fkey"
+            columns: ["category"]
+            isOneToOne: false
+            referencedRelation: "article_categories"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
       community_comments: {
         Row: {
           author_id: string

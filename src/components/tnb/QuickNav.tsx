@@ -11,11 +11,11 @@ import {
 } from "lucide-react";
 
 const ITEMS: { icon: LucideIcon; title: string; desc: string; href: string }[] = [
-  { icon: BookOpen, title: "Biblioteka", desc: "Artykuły, e-booki, wideo, muzyka, polecajki", href: "/biblioteka" },
+  { icon: BookOpen, title: "Biblioteka", desc: "E-booki, dokumenty, nagrania, materiały do pracy", href: "/biblioteka" },
   { icon: Mic, title: "Podcast", desc: "Rozmowy, historie, wyjątkowi goście", href: "/podcast" },
-  { icon: Users, title: "Społeczność", desc: "Ludzie, doświadczenia, wsparcie", href: "/spolecznosc" },
+  { icon: Users, title: "Rozmowy", desc: "Rozmowy członków społeczności", href: "/spolecznosc" },
   { icon: Calendar, title: "Spotkania 1:1", desc: "Rozmowa, mentoring, czas dla Ciebie", href: "/spotkania/rozmowa-1-1" },
-  { icon: Compass, title: "Rozwój", desc: "Praktyczne materiały, narzędzia, wyzwania", href: "/biblioteka" },
+  { icon: Compass, title: "Artykuły", desc: "Autorskie teksty o ojcostwie, służbie i wartościach", href: "/artykuly" },
   { icon: ShoppingBag, title: "Materiały premium", desc: "Wybrane treści, które zostaną z Tobą na dłużej", href: "/materialy-premium" },
   { icon: UserRound, title: "Moje TNB", desc: "Twój profil, postępy, zapisane treści", href: "/moje-tnb" },
 ];

@@ -168,3 +168,9 @@ export function PageView({ eyebrow, title, intro, sections: raw, imageSrc, previ
     </PageShell>
   );
 }
+
+// Sections only, without the page shell — used inside article pages.
+export function PageSections({ sections: raw, imageSrc }: { sections: PageSection[]; imageSrc: (file: string) => string | undefined }) {
+  const sections = normalizeSections(raw);
+  return <>{sections.map((s, i) => <Section key={s.id} s={s} first={i === 0} src={s.image ? imageSrc(s.image) : undefined} />)}</>;
+}

@@ -35,6 +35,7 @@ const GROUPS: Array<{ title: string; items: NavItem[] }> = [
     { to: "/admin/platnosci", label: "Operatorzy płatności" },
   ] },
   { title: "Treści i wygląd", items: [
+    { to: "/admin/artykuly", label: "Artykuły" },
     { to: "/admin/strony", label: "Strony i edytor treści" },
     { to: "/admin/multimedia", label: "Multimedia" },
     // "Treści strony" (/admin/tresci) hidden until the feature exists; route kept.

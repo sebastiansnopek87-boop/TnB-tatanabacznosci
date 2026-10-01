@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/tnb/SiteHeader";
 import { Hero } from "@/components/tnb/Hero";
+import { HomeArticles, HomeConversations } from "@/components/tnb/HomeSections";
 import { QuickNav } from "@/components/tnb/QuickNav";
 import { PillarCards } from "@/components/tnb/PillarCards";
 import { QuoteNewsletter } from "@/components/tnb/QuoteNewsletter";
@@ -13,9 +14,11 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Przestrzeń prawdziwych historii, rozmów, doświadczeń i wartości. Biblioteka, podcast, społeczność i spotkania 1:1.",
+          "Przestrzeń prawdziwych historii, rozmów, doświadczeń i wartości. Artykuły, rozmowy społeczności, biblioteka, podcast i spotkania 1:1.",
       },
       { property: "og:title", content: "Tata Na Baczności — Ojcostwo to służba" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       {
         property: "og:description",
         content:
@@ -31,6 +34,8 @@ function Index() {
     <main className="min-h-screen bg-background">
       <SiteHeader />
       <Hero />
+      <HomeArticles />
+      <HomeConversations />
       <QuickNav />
       <PillarCards />
       <QuoteNewsletter />

@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { PageHeading, PageShell } from "@/components/tnb/PageShell";
 import { GuestField, JoinDialog } from "@/components/community/JoinDialog";
@@ -15,9 +15,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 export const Route = createFileRoute("/spolecznosc/")({
   head: () => ({
     meta: [
-      { title: "Społeczność — Tata Na Baczności" },
+      { title: "Rozmowy społeczności — Tata Na Baczności" },
       { name: "description", content: "Społeczność Tata Na Baczności: wymiana doświadczeń, rozmowa i wzajemne wsparcie ojców. Przeczytaj publiczne wpisy i dołącz." },
-      { property: "og:title", content: "Społeczność — Tata Na Baczności" },
+      { property: "og:title", content: "Rozmowy społeczności — Tata Na Baczności" },
       { property: "og:description", content: "Miejsce wymiany doświadczeń, rozmowy i wzajemnego wsparcia ojców." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -47,6 +47,12 @@ function Community() {
   const [author, setAuthor] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // "Rozpocznij rozmowę" on the home page links here with #new-post — focus the existing form.
+  useEffect(() => {
+    if (!ready || !signedIn || window.location.hash !== "#new-post") return;
+    const el = document.getElementById("new-post") as HTMLTextAreaElement | null;
+    el?.scrollIntoView({ block: "center" }); el?.focus({ preventScroll: true });
+  }, [ready, signedIn]);
   const feed = useInfiniteQuery({
     queryKey: ["community", signedIn ? tab : "public", uid, sort, filter, author],
     queryFn: ({ pageParam }) => listPosts(pageParam, signedIn && tab === "mine", signedIn, sort, filter, author),
@@ -68,7 +74,8 @@ function Community() {
 
   return (
     <PageShell>
-      <PageHeading eyebrow="Społeczność" title="Przy wspólnym ognisku" intro="Tata Na Baczności to miejsce wymiany doświadczeń, rozmowy i wzajemnego wsparcia ojców. Rozmawiamy z szacunkiem." />
+      <PageHeading eyebrow="Rozmowy społeczności" title="Przy wspólnym ognisku" intro="Tu rozmowy tworzą członkowie społeczności: pytania, doświadczenia i wzajemne wsparcie ojców. Autorskie teksty Sebastiana znajdziesz w dziale Artykuły." />
+      <p className="px-5 pt-4 text-sm lg:px-14"><Link to="/artykuly" className="text-gold underline">Przejdź do Artykułów →</Link></p>
 
       <section className="border-b border-border/60 px-5 py-12 lg:px-14 lg:py-16">
         <div className="mx-auto grid max-w-[1200px] gap-6 sm:grid-cols-2 lg:grid-cols-4">

@@ -9,9 +9,10 @@ import logo from "@/assets/logo.png.asset.json";
 const NAV = [
   { label: "O TNB", to: "/o-tnb" },
   { label: "Moja historia", to: "/moja-historia" },
+  { label: "Artykuły", to: "/artykuly" },
   { label: "Biblioteka", to: "/biblioteka" },
   { label: "Podcast", to: "/podcast" },
-  { label: "Społeczność", to: "/spolecznosc" },
+  { label: "Rozmowy", to: "/spolecznosc" },
   { label: "Spotkania", to: "/spotkania" },
   { label: "Materiały premium", to: "/materialy-premium" },
 ] as const;
@@ -52,7 +53,7 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        <nav className="ml-4 hidden min-w-0 flex-1 flex-nowrap items-center justify-center gap-5 2xl:gap-6 whitespace-nowrap xl:flex">
+        <nav className="ml-4 hidden min-w-0 flex-1 flex-nowrap items-center justify-center gap-4 2xl:gap-6 whitespace-nowrap xl:flex">
           {NAV.map((item) => (
             <Link
               key={item.label}

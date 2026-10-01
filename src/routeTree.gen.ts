@@ -22,6 +22,8 @@ import { Route as RegulaminRouteImport } from './routes/regulamin'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedMojeTnbRouteImport } from './routes/_authenticated/moje-tnb'
+import { Route as ArtykulyIndexRouteImport } from './routes/artykuly.index'
+import { Route as ArtykulySlugRouteImport } from './routes/artykuly.$slug'
 import { Route as BibliotekaIndexRouteImport } from './routes/biblioteka.index'
 import { Route as BibliotekaSlugRouteImport } from './routes/biblioteka.$slug'
 import { Route as NewsletterWypiszRouteImport } from './routes/newsletter.wypisz'
@@ -35,6 +37,7 @@ import { Route as SpotkaniaRozmowa11RouteImport } from './routes/spotkania.rozmo
 import { Route as StronySlugRouteImport } from './routes/strony.$slug'
 import { Route as ZakupTokenRouteImport } from './routes/zakup.$token'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedAdminArtykulyRouteImport } from './routes/_authenticated/admin.artykuly'
 import { Route as AuthenticatedAdminBezpieczenstwoRouteImport } from './routes/_authenticated/admin.bezpieczenstwo'
 import { Route as AuthenticatedAdminBibliotekaRouteImport } from './routes/_authenticated/admin.biblioteka'
 import { Route as AuthenticatedAdminDziennikRouteImport } from './routes/_authenticated/admin.dziennik'
@@ -64,6 +67,7 @@ import { Route as ApiPublicPaymentsP24RouteImport } from './routes/api/public/pa
 import { Route as ApiPublicPaymentsPayuRouteImport } from './routes/api/public/payments/payu'
 import { Route as ApiPublicPaymentsTpayRouteImport } from './routes/api/public/payments/tpay'
 import { Route as ApiPublicPodcastCoverIdRouteImport } from './routes/api/public/podcast-cover.$id'
+import { Route as ApiPublicArticleImageIdNameRouteImport } from './routes/api/public/article-image.$id.$name'
 import { Route as ApiPublicPageImageIdNameRouteImport } from './routes/api/public/page-image.$id.$name'
 
 const IndexRoute = IndexRouteImport.update({
@@ -130,6 +134,16 @@ const AuthenticatedMojeTnbRoute = AuthenticatedMojeTnbRouteImport.update({
   path: '/moje-tnb',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ArtykulyIndexRoute = ArtykulyIndexRouteImport.update({
+  id: '/artykuly/',
+  path: '/artykuly/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ArtykulySlugRoute = ArtykulySlugRouteImport.update({
+  id: '/artykuly/$slug',
+  path: '/artykuly/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BibliotekaIndexRoute = BibliotekaIndexRouteImport.update({
   id: '/biblioteka/',
   path: '/biblioteka/',
@@ -195,6 +209,12 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminArtykulyRoute =
+  AuthenticatedAdminArtykulyRouteImport.update({
+    id: '/artykuly',
+    path: '/artykuly',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminBezpieczenstwoRoute =
   AuthenticatedAdminBezpieczenstwoRouteImport.update({
     id: '/bezpieczenstwo',
@@ -363,6 +383,12 @@ const ApiPublicPodcastCoverIdRoute = ApiPublicPodcastCoverIdRouteImport.update({
   path: '/api/public/podcast-cover/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicArticleImageIdNameRoute =
+  ApiPublicArticleImageIdNameRouteImport.update({
+    id: '/api/public/article-image/$id/$name',
+    path: '/api/public/article-image/$id/$name',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicPageImageIdNameRoute =
   ApiPublicPageImageIdNameRouteImport.update({
     id: '/api/public/page-image/$id/$name',
@@ -383,6 +409,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/moje-tnb': typeof AuthenticatedMojeTnbRoute
+  '/artykuly/$slug': typeof ArtykulySlugRoute
   '/biblioteka/$slug': typeof BibliotekaSlugRoute
   '/newsletter/wypisz': typeof NewsletterWypiszRoute
   '/podcast/$slug': typeof PodcastSlugRoute
@@ -391,10 +418,12 @@ export interface FileRoutesByFullPath {
   '/spotkania/rozmowa-1-1': typeof SpotkaniaRozmowa11Route
   '/strony/$slug': typeof StronySlugRoute
   '/zakup/$token': typeof ZakupTokenRoute
+  '/artykuly/': typeof ArtykulyIndexRoute
   '/biblioteka/': typeof BibliotekaIndexRoute
   '/podcast/': typeof PodcastIndexRoute
   '/spolecznosc/': typeof SpolecznoscIndexRoute
   '/spotkania/': typeof SpotkaniaIndexRoute
+  '/admin/artykuly': typeof AuthenticatedAdminArtykulyRoute
   '/admin/bezpieczenstwo': typeof AuthenticatedAdminBezpieczenstwoRoute
   '/admin/biblioteka': typeof AuthenticatedAdminBibliotekaRoute
   '/admin/dziennik': typeof AuthenticatedAdminDziennikRoute
@@ -425,6 +454,7 @@ export interface FileRoutesByFullPath {
   '/api/public/payments/payu': typeof ApiPublicPaymentsPayuRoute
   '/api/public/payments/tpay': typeof ApiPublicPaymentsTpayRoute
   '/api/public/podcast-cover/$id': typeof ApiPublicPodcastCoverIdRoute
+  '/api/public/article-image/$id/$name': typeof ApiPublicArticleImageIdNameRoute
   '/api/public/page-image/$id/$name': typeof ApiPublicPageImageIdNameRoute
 }
 export interface FileRoutesByTo {
@@ -439,6 +469,7 @@ export interface FileRoutesByTo {
   '/regulamin': typeof RegulaminRoute
   '/reset-password': typeof ResetPasswordRoute
   '/moje-tnb': typeof AuthenticatedMojeTnbRoute
+  '/artykuly/$slug': typeof ArtykulySlugRoute
   '/biblioteka/$slug': typeof BibliotekaSlugRoute
   '/newsletter/wypisz': typeof NewsletterWypiszRoute
   '/podcast/$slug': typeof PodcastSlugRoute
@@ -447,10 +478,12 @@ export interface FileRoutesByTo {
   '/spotkania/rozmowa-1-1': typeof SpotkaniaRozmowa11Route
   '/strony/$slug': typeof StronySlugRoute
   '/zakup/$token': typeof ZakupTokenRoute
+  '/artykuly': typeof ArtykulyIndexRoute
   '/biblioteka': typeof BibliotekaIndexRoute
   '/podcast': typeof PodcastIndexRoute
   '/spolecznosc': typeof SpolecznoscIndexRoute
   '/spotkania': typeof SpotkaniaIndexRoute
+  '/admin/artykuly': typeof AuthenticatedAdminArtykulyRoute
   '/admin/bezpieczenstwo': typeof AuthenticatedAdminBezpieczenstwoRoute
   '/admin/biblioteka': typeof AuthenticatedAdminBibliotekaRoute
   '/admin/dziennik': typeof AuthenticatedAdminDziennikRoute
@@ -481,6 +514,7 @@ export interface FileRoutesByTo {
   '/api/public/payments/payu': typeof ApiPublicPaymentsPayuRoute
   '/api/public/payments/tpay': typeof ApiPublicPaymentsTpayRoute
   '/api/public/podcast-cover/$id': typeof ApiPublicPodcastCoverIdRoute
+  '/api/public/article-image/$id/$name': typeof ApiPublicArticleImageIdNameRoute
   '/api/public/page-image/$id/$name': typeof ApiPublicPageImageIdNameRoute
 }
 export interface FileRoutesById {
@@ -498,6 +532,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/moje-tnb': typeof AuthenticatedMojeTnbRoute
+  '/artykuly/$slug': typeof ArtykulySlugRoute
   '/biblioteka/$slug': typeof BibliotekaSlugRoute
   '/newsletter/wypisz': typeof NewsletterWypiszRoute
   '/podcast/$slug': typeof PodcastSlugRoute
@@ -506,10 +541,12 @@ export interface FileRoutesById {
   '/spotkania/rozmowa-1-1': typeof SpotkaniaRozmowa11Route
   '/strony/$slug': typeof StronySlugRoute
   '/zakup/$token': typeof ZakupTokenRoute
+  '/artykuly/': typeof ArtykulyIndexRoute
   '/biblioteka/': typeof BibliotekaIndexRoute
   '/podcast/': typeof PodcastIndexRoute
   '/spolecznosc/': typeof SpolecznoscIndexRoute
   '/spotkania/': typeof SpotkaniaIndexRoute
+  '/_authenticated/admin/artykuly': typeof AuthenticatedAdminArtykulyRoute
   '/_authenticated/admin/bezpieczenstwo': typeof AuthenticatedAdminBezpieczenstwoRoute
   '/_authenticated/admin/biblioteka': typeof AuthenticatedAdminBibliotekaRoute
   '/_authenticated/admin/dziennik': typeof AuthenticatedAdminDziennikRoute
@@ -540,6 +577,7 @@ export interface FileRoutesById {
   '/api/public/payments/payu': typeof ApiPublicPaymentsPayuRoute
   '/api/public/payments/tpay': typeof ApiPublicPaymentsTpayRoute
   '/api/public/podcast-cover/$id': typeof ApiPublicPodcastCoverIdRoute
+  '/api/public/article-image/$id/$name': typeof ApiPublicArticleImageIdNameRoute
   '/api/public/page-image/$id/$name': typeof ApiPublicPageImageIdNameRoute
 }
 export interface FileRouteTypes {
@@ -557,6 +595,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/admin'
     | '/moje-tnb'
+    | '/artykuly/$slug'
     | '/biblioteka/$slug'
     | '/newsletter/wypisz'
     | '/podcast/$slug'
@@ -565,10 +604,12 @@ export interface FileRouteTypes {
     | '/spotkania/rozmowa-1-1'
     | '/strony/$slug'
     | '/zakup/$token'
+    | '/artykuly/'
     | '/biblioteka/'
     | '/podcast/'
     | '/spolecznosc/'
     | '/spotkania/'
+    | '/admin/artykuly'
     | '/admin/bezpieczenstwo'
     | '/admin/biblioteka'
     | '/admin/dziennik'
@@ -599,6 +640,7 @@ export interface FileRouteTypes {
     | '/api/public/payments/payu'
     | '/api/public/payments/tpay'
     | '/api/public/podcast-cover/$id'
+    | '/api/public/article-image/$id/$name'
     | '/api/public/page-image/$id/$name'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -613,6 +655,7 @@ export interface FileRouteTypes {
     | '/regulamin'
     | '/reset-password'
     | '/moje-tnb'
+    | '/artykuly/$slug'
     | '/biblioteka/$slug'
     | '/newsletter/wypisz'
     | '/podcast/$slug'
@@ -621,10 +664,12 @@ export interface FileRouteTypes {
     | '/spotkania/rozmowa-1-1'
     | '/strony/$slug'
     | '/zakup/$token'
+    | '/artykuly'
     | '/biblioteka'
     | '/podcast'
     | '/spolecznosc'
     | '/spotkania'
+    | '/admin/artykuly'
     | '/admin/bezpieczenstwo'
     | '/admin/biblioteka'
     | '/admin/dziennik'
@@ -655,6 +700,7 @@ export interface FileRouteTypes {
     | '/api/public/payments/payu'
     | '/api/public/payments/tpay'
     | '/api/public/podcast-cover/$id'
+    | '/api/public/article-image/$id/$name'
     | '/api/public/page-image/$id/$name'
   id:
     | '__root__'
@@ -671,6 +717,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/admin'
     | '/_authenticated/moje-tnb'
+    | '/artykuly/$slug'
     | '/biblioteka/$slug'
     | '/newsletter/wypisz'
     | '/podcast/$slug'
@@ -679,10 +726,12 @@ export interface FileRouteTypes {
     | '/spotkania/rozmowa-1-1'
     | '/strony/$slug'
     | '/zakup/$token'
+    | '/artykuly/'
     | '/biblioteka/'
     | '/podcast/'
     | '/spolecznosc/'
     | '/spotkania/'
+    | '/_authenticated/admin/artykuly'
     | '/_authenticated/admin/bezpieczenstwo'
     | '/_authenticated/admin/biblioteka'
     | '/_authenticated/admin/dziennik'
@@ -713,6 +762,7 @@ export interface FileRouteTypes {
     | '/api/public/payments/payu'
     | '/api/public/payments/tpay'
     | '/api/public/podcast-cover/$id'
+    | '/api/public/article-image/$id/$name'
     | '/api/public/page-image/$id/$name'
   fileRoutesById: FileRoutesById
 }
@@ -728,6 +778,7 @@ export interface RootRouteChildren {
   PolitykaPrywatnosciRoute: typeof PolitykaPrywatnosciRoute
   RegulaminRoute: typeof RegulaminRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ArtykulySlugRoute: typeof ArtykulySlugRoute
   BibliotekaSlugRoute: typeof BibliotekaSlugRoute
   NewsletterWypiszRoute: typeof NewsletterWypiszRoute
   PodcastSlugRoute: typeof PodcastSlugRoute
@@ -736,6 +787,7 @@ export interface RootRouteChildren {
   SpotkaniaRozmowa11Route: typeof SpotkaniaRozmowa11Route
   StronySlugRoute: typeof StronySlugRoute
   ZakupTokenRoute: typeof ZakupTokenRoute
+  ArtykulyIndexRoute: typeof ArtykulyIndexRoute
   BibliotekaIndexRoute: typeof BibliotekaIndexRoute
   PodcastIndexRoute: typeof PodcastIndexRoute
   SpolecznoscIndexRoute: typeof SpolecznoscIndexRoute
@@ -749,6 +801,7 @@ export interface RootRouteChildren {
   ApiPublicPaymentsPayuRoute: typeof ApiPublicPaymentsPayuRoute
   ApiPublicPaymentsTpayRoute: typeof ApiPublicPaymentsTpayRoute
   ApiPublicPodcastCoverIdRoute: typeof ApiPublicPodcastCoverIdRoute
+  ApiPublicArticleImageIdNameRoute: typeof ApiPublicArticleImageIdNameRoute
   ApiPublicPageImageIdNameRoute: typeof ApiPublicPageImageIdNameRoute
 }
 
@@ -845,6 +898,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMojeTnbRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/artykuly/': {
+      id: '/artykuly/'
+      path: '/artykuly'
+      fullPath: '/artykuly/'
+      preLoaderRoute: typeof ArtykulyIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/artykuly/$slug': {
+      id: '/artykuly/$slug'
+      path: '/artykuly/$slug'
+      fullPath: '/artykuly/$slug'
+      preLoaderRoute: typeof ArtykulySlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/biblioteka/': {
       id: '/biblioteka/'
       path: '/biblioteka'
@@ -934,6 +1001,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/artykuly': {
+      id: '/_authenticated/admin/artykuly'
+      path: '/artykuly'
+      fullPath: '/admin/artykuly'
+      preLoaderRoute: typeof AuthenticatedAdminArtykulyRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/bezpieczenstwo': {
@@ -1139,6 +1213,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPodcastCoverIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/article-image/$id/$name': {
+      id: '/api/public/article-image/$id/$name'
+      path: '/api/public/article-image/$id/$name'
+      fullPath: '/api/public/article-image/$id/$name'
+      preLoaderRoute: typeof ApiPublicArticleImageIdNameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/page-image/$id/$name': {
       id: '/api/public/page-image/$id/$name'
       path: '/api/public/page-image/$id/$name'
@@ -1150,6 +1231,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminArtykulyRoute: typeof AuthenticatedAdminArtykulyRoute
   AuthenticatedAdminBezpieczenstwoRoute: typeof AuthenticatedAdminBezpieczenstwoRoute
   AuthenticatedAdminBibliotekaRoute: typeof AuthenticatedAdminBibliotekaRoute
   AuthenticatedAdminDziennikRoute: typeof AuthenticatedAdminDziennikRoute
@@ -1174,6 +1256,7 @@ interface AuthenticatedAdminRouteChildren {
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminArtykulyRoute: AuthenticatedAdminArtykulyRoute,
   AuthenticatedAdminBezpieczenstwoRoute: AuthenticatedAdminBezpieczenstwoRoute,
   AuthenticatedAdminBibliotekaRoute: AuthenticatedAdminBibliotekaRoute,
   AuthenticatedAdminDziennikRoute: AuthenticatedAdminDziennikRoute,
@@ -1226,6 +1309,7 @@ const rootRouteChildren: RootRouteChildren = {
   PolitykaPrywatnosciRoute: PolitykaPrywatnosciRoute,
   RegulaminRoute: RegulaminRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ArtykulySlugRoute: ArtykulySlugRoute,
   BibliotekaSlugRoute: BibliotekaSlugRoute,
   NewsletterWypiszRoute: NewsletterWypiszRoute,
   PodcastSlugRoute: PodcastSlugRoute,
@@ -1234,6 +1318,7 @@ const rootRouteChildren: RootRouteChildren = {
   SpotkaniaRozmowa11Route: SpotkaniaRozmowa11Route,
   StronySlugRoute: StronySlugRoute,
   ZakupTokenRoute: ZakupTokenRoute,
+  ArtykulyIndexRoute: ArtykulyIndexRoute,
   BibliotekaIndexRoute: BibliotekaIndexRoute,
   PodcastIndexRoute: PodcastIndexRoute,
   SpolecznoscIndexRoute: SpolecznoscIndexRoute,
@@ -1247,6 +1332,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPaymentsPayuRoute: ApiPublicPaymentsPayuRoute,
   ApiPublicPaymentsTpayRoute: ApiPublicPaymentsTpayRoute,
   ApiPublicPodcastCoverIdRoute: ApiPublicPodcastCoverIdRoute,
+  ApiPublicArticleImageIdNameRoute: ApiPublicArticleImageIdNameRoute,
   ApiPublicPageImageIdNameRoute: ApiPublicPageImageIdNameRoute,
 }
 export const routeTree = rootRouteImport

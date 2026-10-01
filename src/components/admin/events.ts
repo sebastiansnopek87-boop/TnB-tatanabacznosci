@@ -1,10 +1,13 @@
 // Presentation layer for admin_events.type — the stored type stays technical.
 const STATUS: Record<string, string> = { published: "Opublikowano", draft: "Cofnięto do szkicu", archived: "Zarchiwizowano", edit: "Edytowano", create: "Utworzono" };
 const OBJECT: Record<string, [string, string]> = {
-  page: ["page", "stronę"], library: ["library", "materiał Biblioteki"], episode: ["episode", "odcinek podcastu"], meeting: ["meeting", "spotkanie"],
+  page: ["page", "stronę"], library: ["library", "materiał Biblioteki"], episode: ["episode", "odcinek podcastu"], meeting: ["meeting", "spotkanie"], article: ["article", "artykuł"],
 };
 
 export const EVENT_LABELS: Record<string, string> = {
+  article_category_save: "Zapisano kategorię artykułów",
+  article_category_delete: "Usunięto kategorię artykułów",
+  article_home_mode: "Zmieniono artykuły na stronie głównej",
   access_denied: "Odmowa dostępu lub nieuprawniona operacja",
   settings_update: "Zmieniono ustawienia",
   maintenance_on: "Włączono tryb konserwacji",
@@ -61,7 +64,7 @@ for (const [prefix, [, noun]] of Object.entries(OBJECT)) {
 export const eventLabel = (t: string) => EVENT_LABELS[t] ?? `Inne zdarzenie (${t})`;
 
 export const EVENT_CATEGORIES: Array<{ value: string; label: string }> = [
-  { value: "page", label: "Strony" }, { value: "library", label: "Biblioteka" }, { value: "episode", label: "Podcast" },
+  { value: "page", label: "Strony" }, { value: "article", label: "Artykuły" }, { value: "library", label: "Biblioteka" }, { value: "episode", label: "Podcast" },
   { value: "meeting", label: "Spotkania" }, { value: "registration", label: "Zgłoszenia na spotkania" }, { value: "booking", label: "Rozmowy 1:1" }, { value: "role", label: "Role użytkowników" },
   { value: "order", label: "Zamówienia" }, { value: "community", label: "Społeczność" }, { value: "report", label: "Zgłoszenia moderacyjne" },
   { value: "access", label: "Dostęp" }, { value: "settings", label: "Ustawienia" }, { value: "maintenance", label: "Tryb konserwacji" },
@@ -69,7 +72,7 @@ export const EVENT_CATEGORIES: Array<{ value: string; label: string }> = [
 ];
 
 export const OBJECT_KIND: Record<string, string> = {
-  page: "Strona", library: "Materiał", episode: "Odcinek", meeting: "Spotkanie", registration: "Zgłoszenie", booking: "Rozmowa 1:1",
+  page: "Strona", article: "Artykuł", library: "Materiał", episode: "Odcinek", meeting: "Spotkanie", registration: "Zgłoszenie", booking: "Rozmowa 1:1",
   order: "Zamówienie", post: "Post", comment: "Komentarz", report: "Zgłoszenie", availability: "Dostępność", user: "Użytkownik", settings: "Ustawienia", media: "Plik", template: "Szablon", rule: "Reguła", notification: "Wiadomość", payment: "Płatność",
 };
 export const RESULT: Record<string, string> = { ok: "Wykonano", failed: "Błąd", denied: "Odmowa dostępu" };
