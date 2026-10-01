@@ -2,7 +2,7 @@ import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { SECTION_KINDS, newSection, type PageSection, type SectionKind } from "@/lib/pages";
+import { IMAGE_DISPLAY, SECTION_KINDS, newSection, type ImageDisplay, type PageSection, type SectionKind } from "@/lib/pages";
 
 // The one content editor of the CMS — used by Strony and Artykuły, so both share the same blocks.
 const KIND_LABEL = SECTION_KINDS;
@@ -22,7 +22,7 @@ export function SectionsEditor({ sections, urls, busy, onChange, onUpload, kinds
   return (
       <div>
         <h2 className="font-display text-xl font-semibold uppercase">Sekcje</h2>
-        <p className="text-xs text-muted-foreground">Akapity oddzielaj pustą linią. Kolejność zmieniasz strzałkami.</p>
+        <p className="text-xs text-muted-foreground">Akapity oddzielaj pustą linią. Kolejność sekcji i zdjęć zmieniasz strzałkami. Zdjęcie wymienisz przyciskiem „Zmień zdjęcie” — reszta treści zostaje.</p>
         <div className="mt-3 space-y-4">
           {sections.map((s, i) => (
             <div key={s.id} className="space-y-3 border border-border/60 p-4">
@@ -68,9 +68,18 @@ export function SectionsEditor({ sections, urls, busy, onChange, onUpload, kinds
                         <option value="right">Zdjęcie po prawej</option><option value="left">Zdjęcie po lewej</option>
                       </select>
                     )}
+                    {s.image && s.kind === "image" && (
+                      <select aria-label="Sposób wyświetlania" value={s.display ?? "full"} onChange={(e) => setSec(i, { display: e.target.value as ImageDisplay })} className="h-8 border border-border bg-background px-2 text-xs">
+                        {Object.entries(IMAGE_DISPLAY).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                      </select>
+                    )}
                   </div>
                   {s.image && <>
-                    <Input placeholder="Opis zdjęcia dla niewidomych (alt)" value={s.imageAlt} onChange={(e) => setSec(i, { imageAlt: e.target.value })} maxLength={200} />
+                    <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <input type="checkbox" checked={!!s.decorative} onChange={(e) => setSec(i, { decorative: e.target.checked })} />
+                      Zdjęcie dekoracyjne (czytniki ekranu je pominą)
+                    </label>
+                    <Input placeholder="Opis zdjęcia dla niewidomych (alt) — wymagany, chyba że zdjęcie jest dekoracyjne" value={s.imageAlt} disabled={!!s.decorative} onChange={(e) => setSec(i, { imageAlt: e.target.value })} maxLength={200} />
                     <Input placeholder="Podpis pod zdjęciem" value={s.caption} onChange={(e) => setSec(i, { caption: e.target.value })} maxLength={300} />
                   </>}
                 </div>
