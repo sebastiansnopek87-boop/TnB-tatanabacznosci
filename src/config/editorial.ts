@@ -53,6 +53,21 @@ export const VISUAL: Block = {
   ],
 };
 
+export const WATERMARK: Block = {
+  heading: "Znak wodny TNB (obowiązkowy dla PDF)",
+  items: [
+    "Dotyczy wszystkich plików PDF w Bibliotece TNB: e-booków, poradników, zeszytów ćwiczeń, kart pracy, materiałów edukacyjnych i innych.",
+    "Używamy wyłącznie oryginalnego logo TATA NA BACZNOŚCI — bez zmiany kształtu, proporcji, kolorów, napisów i wewnętrznego tła. Logo nie jest generowane ponownie ani zastępowane tekstem.",
+    "Dozwolone jest tylko usunięcie pustych narożników poza okręgiem logo (przezroczystość), żeby nie było czarnego kwadratu na jasnej stronie. Oryginalny plik pozostaje bez zmian.",
+    "Strona tytułowa: logo w pełnych kolorach, wyśrodkowane nad tytułem, ok. 40 mm szerokości (dla A5; dla A4 ok. 55 mm).",
+    "Pozostałe strony: małe logo (ok. 8 mm) w stopce, po prawej stronie, przed numerem strony, poniżej złotej linii — w tym samym miejscu i rozmiarze na każdej stronie.",
+    "Logo nie leży na tekście, numerach stron, ilustracjach ani polach ćwiczeń. Nie stosujemy dużego logo w tle ani na środku strony.",
+    "Logo jest osadzone w pliku PDF (nie jako odnośnik), w rozdzielczości wystarczającej do druku (min. 300 dpi w docelowym rozmiarze).",
+    "Przed publikacją sprawdzamy wszystkie strony: obecność logo, brak kolizji ze stopką i treścią, wygląd na ekranie i w podglądzie wydruku.",
+  ],
+};
+
+
 export const CHECKLIST: string[] = [
   "Zgodność z wartościami TNB: tekst nie poucza, nie obiecuje, zostawia czytelnikowi decyzję.",
   "Autentyczność: brak fikcyjnych doświadczeń autora i zmyślonych wypowiedzi; sceny ilustracyjne są oznaczone.",
