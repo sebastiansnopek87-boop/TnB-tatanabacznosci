@@ -7,6 +7,7 @@ import { PageShell } from "@/components/tnb/PageShell";
 import { useUid } from "@/lib/community";
 import { KINDS, accessLabel, fmtPrice, coverSrc, fmtDay, getLibraryItem, listCategories } from "@/lib/library";
 import { getLibraryFileUrl, adminLibraryCoverUrl } from "@/lib/library.functions";
+import { listMyPurchases } from "@/lib/orders.functions";
 import { BuyPanel } from "@/components/library/BuyPanel";
 import { FreeMaterialPanel } from "@/components/library/FreeMaterialPanel";
 
@@ -35,6 +36,9 @@ function ItemPage() {
   const coverFn = useServerFn(adminLibraryCoverUrl);
   const draftCover = useQuery({ queryKey: ["library-preview-cover", q.data?.item.id], queryFn: () => coverFn({ data: { id: q.data!.item.id } }),
     enabled: preview && !!q.data && q.data.item.status !== "published" && !!q.data.item.cover_url });
+  const purchasesFn = useServerFn(listMyPurchases);
+  const isPremium = q.data?.item.access === "premium" && !!q.data?.content;
+  const mine = useQuery({ queryKey: ["my-purchases", uid], queryFn: () => purchasesFn(), enabled: !!uid && isPremium });
   const [fileErr, setFileErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -59,7 +63,11 @@ function ItemPage() {
             <p className="mt-3 text-sm text-foreground/70">Ten materiał nie istnieje albo nie jest już dostępny.</p>
           </div>
         ) : (() => {
-          const { item: it, content } = q.data;
+          const { item: it } = q.data;
+          // Admins can read premium files by role; they still see the purchase path unless they actually bought it.
+          const bought = !!mine.data?.some((p) => p.slug === it.slug);
+          const adminOnly = it.access === "premium" && !!q.data.content && !!uid && mine.isSuccess && !bought;
+          const content = adminOnly ? null : q.data.content;
           const img = preview && it.status !== "published" ? draftCover.data?.url ?? null : coverSrc(it);
           return (
             <article className="mt-8">
@@ -94,7 +102,8 @@ function ItemPage() {
                   {it.access === "premium" ? (<>
                     <p className="eyebrow text-gold">Materiał premium</p>
                     <p className="mt-3 font-display text-3xl font-semibold text-foreground">{fmtPrice(it.price_amount) ?? "Cena wkrótce"}</p>
-                    <p className="mt-3 text-[0.95rem] leading-[1.75] text-foreground/85">Pełna zawartość jest dostępna po zakupie. Konto nie jest wymagane — materiał otrzymasz na podany adres e-mail.</p>
+                    <p className="mt-3 text-[0.95rem] leading-[1.75] text-foreground/85">Pełna zawartość jest dostępna po zakupie. Konto nie jest wymagane — plik PDF wyślemy na podany adres e-mail po potwierdzeniu płatności.</p>
+                    {adminOnly && <p className="mt-3 text-xs text-muted-foreground">Podgląd administratora: masz wgląd do pliku z racji roli, ale klienci widzą poniższą ścieżkę zakupu.</p>}
                     {!preview && it.purchasable && it.price_amount && it.price_amount >= 100 ? (
                       <BuyPanel slug={it.slug} title={it.title} price={it.price_amount} />
                     ) : (<>
