@@ -15,8 +15,12 @@ export function BuyPanel({ slug, title, price }: { slug: string; title: string; 
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<"form" | "review">("form");
-  const [name, setName] = useState("");
+  const [first, setFirst] = useState("");
+  const [last, setLast] = useState("");
+  const name = `${first.trim()} ${last.trim()}`.trim();
   const [email, setEmail] = useState("");
+  const [email2, setEmail2] = useState("");
+  const [dataOk, setDataOk] = useState(false);
   const [phone, setPhone] = useState("");
   const [method, setMethod] = useState<PaymentMethodId | null>(null);
   const [consent, setConsent] = useState(false);
@@ -30,7 +34,10 @@ export function BuyPanel({ slug, title, price }: { slug: string; title: string; 
     if (!open || !user) return;
     const m = (user.user_metadata ?? {}) as Record<string, string>;
     setEmail((e) => e || user.email || "");
-    setName((n) => n || [m["first_name"], m["last_name"]].filter(Boolean).join(" ") || m["full_name"] || m["name"] || "");
+    setEmail2((e) => e || user.email || "");
+    const full = (m["full_name"] || m["name"] || "").trim().split(/\s+/);
+    setFirst((v) => v || m["first_name"] || full[0] || "");
+    setLast((v) => v || m["last_name"] || full.slice(1).join(" ") || "");
   }, [open, user]);
   useEffect(() => {
     if (method || !opts.data) return;
@@ -39,8 +46,11 @@ export function BuyPanel({ slug, title, price }: { slug: string; title: string; 
 
   function review(e: React.FormEvent) {
     e.preventDefault(); setErr(null);
-    if (name.trim().length < 3) return setErr("Podaj imię i nazwisko.");
+    if (first.trim().length < 2) return setErr("Podaj imię.");
+    if (last.trim().length < 2) return setErr("Podaj nazwisko.");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) return setErr("Podaj poprawny adres e-mail.");
+    if (email.trim().toLowerCase() !== email2.trim().toLowerCase()) return setErr("Adresy e-mail nie są takie same.");
+    if (!dataOk) return setErr("Potwierdź, że dane odbiorcy i adres e-mail są prawidłowe.");
     if (phone.trim() && !/^\+?[0-9 ()-]{7,20}$/.test(phone.trim())) return setErr("Podaj poprawny numer telefonu.");
     if (!method || !methods.some((m) => m.id === method)) return setErr("Wybierz dostępną metodę płatności.");
     if (!consent) return setErr("Zaakceptuj warunki zakupu i politykę prywatności.");
@@ -57,7 +67,7 @@ export function BuyPanel({ slug, title, price }: { slug: string; title: string; 
     } catch (x) { setErr(x instanceof Error ? x.message : "Nie udało się złożyć zamówienia."); setBusy(false); }
   }
 
-  if (!open) return (<><button type="button" onClick={() => setOpen(true)} className={`mt-6 ${btn}`}>Kup materiał</button><Recover /></>);
+  if (!open) return (<><button type="button" onClick={() => setOpen(true)} className={`mt-6 ${btn}`}>Kupuję i przechodzę do płatności</button><Recover /></>);
 
   if (step === "review") {
     const row = (k: string, v: string) => <div className="flex flex-wrap justify-between gap-2 border-b border-border/40 py-2"><span className="text-muted-foreground">{k}</span><span className="break-all text-right text-foreground">{v}</span></div>;
@@ -65,9 +75,10 @@ export function BuyPanel({ slug, title, price }: { slug: string; title: string; 
       <div className="mt-6 space-y-4">
         <p className="eyebrow text-gold">Sprawdź zamówienie</p>
         <div className="border border-border/60 bg-card p-4 text-sm">
-          {row("Materiał", title)}{row("Imię i nazwisko", name.trim())}{row("E-mail", email.trim())}{row("Telefon", phone.trim() || "—")}
+          {row("Materiał", title)}{row("Imię i nazwisko", name)}{row("E-mail", email.trim())}{row("Telefon", phone.trim() || "—")}
           {row("Metoda płatności", label)}
-          <div className="mt-3 flex justify-between font-semibold"><span>Do zapłaty (PLN)</span><span className="text-gold">{fmtPrice(price)}</span></div>
+          {row("Dostarczenie", "PDF na e-mail po potwierdzeniu płatności")}
+          <div className="mt-3 flex justify-between font-semibold"><span>Do zapłaty (brutto)</span><span className="text-gold">{fmtPrice(price)}</span></div>
         </div>
         {err && <p role="alert" className="text-sm text-destructive">{err}</p>}
         <div className="flex flex-wrap gap-3">
@@ -81,11 +92,19 @@ export function BuyPanel({ slug, title, price }: { slug: string; title: string; 
   return (
     <form onSubmit={review} className="mt-6 space-y-4" noValidate>
       <p className="eyebrow text-gold">Zamówienie</p>
-      <label className="block text-sm text-foreground/85">Imię i nazwisko *
-        <input className={`${input} mt-1`} value={name} onChange={(e) => setName(e.target.value)} maxLength={120} autoComplete="name" />
-      </label>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className="block text-sm text-foreground/85">Imię *
+          <input className={`${input} mt-1`} value={first} onChange={(e) => setFirst(e.target.value)} maxLength={60} autoComplete="given-name" />
+        </label>
+        <label className="block text-sm text-foreground/85">Nazwisko *
+          <input className={`${input} mt-1`} value={last} onChange={(e) => setLast(e.target.value)} maxLength={60} autoComplete="family-name" />
+        </label>
+      </div>
       <label className="block text-sm text-foreground/85">Adres e-mail, na który wyślemy dostęp *
         <input className={`${input} mt-1`} type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={254} autoComplete="email" />
+      </label>
+      <label className="block text-sm text-foreground/85">Powtórz adres e-mail *
+        <input className={`${input} mt-1`} type="email" value={email2} onChange={(e) => setEmail2(e.target.value)} maxLength={254} autoComplete="off" onPaste={(e) => e.preventDefault()} />
       </label>
       <label className="block text-sm text-foreground/85">Numer telefonu (opcjonalnie)
         <input className={`${input} mt-1`} type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} maxLength={20} autoComplete="tel" />
@@ -106,6 +125,11 @@ export function BuyPanel({ slug, title, price }: { slug: string; title: string; 
           </div>
         )}
       </fieldset>
+      <p className="text-xs text-muted-foreground">Plik PDF wyślemy na podany adres e-mail dopiero po potwierdzeniu płatności przez operatora albo zaksięgowaniu przelewu.</p>
+      <label className="flex items-start gap-3 text-xs leading-relaxed text-foreground/80">
+        <input type="checkbox" checked={dataOk} onChange={(e) => setDataOk(e.target.checked)} className="mt-0.5 accent-[var(--color-gold)]" />
+        <span>Potwierdzam, że imię, nazwisko i adres e-mail odbiorcy są prawidłowe. Zmiana tych danych dotyczy tylko tego zamówienia, nie mojego konta. *</span>
+      </label>
       <label className="flex items-start gap-3 text-xs leading-relaxed text-foreground/80">
         <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 accent-[var(--color-gold)]" />
         <span>Przeczytałem/am i akceptuję <Link to="/regulamin" className="text-gold underline">Regulamin</Link> oraz <Link to="/polityka-prywatnosci" className="text-gold underline">Politykę prywatności</Link>. Wyrażam zgodę na przetwarzanie moich danych w celu realizacji zamówienia i dostarczenia materiału. *</span>
