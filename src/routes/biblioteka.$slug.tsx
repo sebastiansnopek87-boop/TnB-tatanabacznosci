@@ -6,7 +6,7 @@ import { z } from "zod";
 import { PageShell } from "@/components/tnb/PageShell";
 import { useUid } from "@/lib/community";
 import { KINDS, accessLabel, fmtPrice, coverSrc, fmtDay, getLibraryItem, listCategories } from "@/lib/library";
-import { getLibraryFileUrl } from "@/lib/library.functions";
+import { getLibraryFileUrl, adminLibraryCoverUrl } from "@/lib/library.functions";
 import { BuyPanel } from "@/components/library/BuyPanel";
 import { FreeMaterialPanel } from "@/components/library/FreeMaterialPanel";
 
@@ -32,6 +32,9 @@ function ItemPage() {
   const q = useQuery({ queryKey: ["library-item", slug, uid, preview], queryFn: () => getLibraryItem(slug, preview), enabled: ready });
   const cats = useQuery({ queryKey: ["library-cats"], queryFn: listCategories });
   const fileFn = useServerFn(getLibraryFileUrl);
+  const coverFn = useServerFn(adminLibraryCoverUrl);
+  const draftCover = useQuery({ queryKey: ["library-preview-cover", q.data?.item.id], queryFn: () => coverFn({ data: { id: q.data!.item.id } }),
+    enabled: preview && !!q.data && q.data.item.status !== "published" && !!q.data.item.cover_url });
   const [fileErr, setFileErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -57,7 +60,7 @@ function ItemPage() {
           </div>
         ) : (() => {
           const { item: it, content } = q.data;
-          const img = coverSrc(it);
+          const img = preview && it.status !== "published" ? draftCover.data?.url ?? null : coverSrc(it);
           return (
             <article className="mt-8">
               {preview && (
