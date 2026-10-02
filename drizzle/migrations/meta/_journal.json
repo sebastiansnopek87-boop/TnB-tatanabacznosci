@@ -267,6 +267,13 @@
       "when": 1790883697480,
       "tag": "0037_ai_editor_touch_fix",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1790938163617,
+      "tag": "0038_library_item_descriptions",
+      "breakpoints": true
     }
   ]
 }

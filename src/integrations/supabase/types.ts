@@ -1226,6 +1226,7 @@ export type Database = {
       library_items: {
         Row: {
           access: string
+          audience: string
           author_name: string
           category: string
           cover_url: string | null
@@ -1240,14 +1241,18 @@ export type Database = {
           price_amount: number | null
           published_at: string | null
           purchasable: boolean
+          reader_value: string
+          sales_description: string
           slug: string
           status: string
+          subtitle: string
           summary: string
           title: string
           updated_at: string
         }
         Insert: {
           access?: string
+          audience?: string
           author_name?: string
           category: string
           cover_url?: string | null
@@ -1262,14 +1267,18 @@ export type Database = {
           price_amount?: number | null
           published_at?: string | null
           purchasable?: boolean
+          reader_value?: string
+          sales_description?: string
           slug: string
           status?: string
+          subtitle?: string
           summary?: string
           title: string
           updated_at?: string
         }
         Update: {
           access?: string
+          audience?: string
           author_name?: string
           category?: string
           cover_url?: string | null
@@ -1284,8 +1293,11 @@ export type Database = {
           price_amount?: number | null
           published_at?: string | null
           purchasable?: boolean
+          reader_value?: string
+          sales_description?: string
           slug?: string
           status?: string
+          subtitle?: string
           summary?: string
           title?: string
           updated_at?: string
