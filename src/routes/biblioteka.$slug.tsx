@@ -2,10 +2,11 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
+import { z } from "zod";
 import { PageShell } from "@/components/tnb/PageShell";
 import { useUid } from "@/lib/community";
 import { KINDS, accessLabel, fmtPrice, coverSrc, fmtDay, getLibraryItem, listCategories } from "@/lib/library";
-import { getLibraryFileUrl } from "@/lib/library.functions";
+import { getLibraryFileUrl, adminLibraryCoverUrl } from "@/lib/library.functions";
 import { BuyPanel } from "@/components/library/BuyPanel";
 import { FreeMaterialPanel } from "@/components/library/FreeMaterialPanel";
 
@@ -19,15 +20,21 @@ export const Route = createFileRoute("/biblioteka/$slug")({
       { property: "og:type", content: "article" }, { name: "twitter:card", content: "summary" },
     ],
   }),
+  validateSearch: (s) => z.object({ podglad: z.coerce.number().optional() }).parse(s),
   component: ItemPage,
 });
 
 function ItemPage() {
   const { slug } = Route.useParams();
+  const { podglad } = Route.useSearch();
+  const preview = podglad === 1;
   const { uid, ready } = useUid();
-  const q = useQuery({ queryKey: ["library-item", slug, uid], queryFn: () => getLibraryItem(slug), enabled: ready });
+  const q = useQuery({ queryKey: ["library-item", slug, uid, preview], queryFn: () => getLibraryItem(slug, preview), enabled: ready });
   const cats = useQuery({ queryKey: ["library-cats"], queryFn: listCategories });
   const fileFn = useServerFn(getLibraryFileUrl);
+  const coverFn = useServerFn(adminLibraryCoverUrl);
+  const draftCover = useQuery({ queryKey: ["library-preview-cover", q.data?.item.id], queryFn: () => coverFn({ data: { id: q.data!.item.id } }),
+    enabled: preview && !!q.data && q.data.item.status !== "published" && !!q.data.item.cover_url });
   const [fileErr, setFileErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -53,18 +60,34 @@ function ItemPage() {
           </div>
         ) : (() => {
           const { item: it, content } = q.data;
-          const img = coverSrc(it);
+          const img = preview && it.status !== "published" ? draftCover.data?.url ?? null : coverSrc(it);
           return (
             <article className="mt-8">
+              {preview && (
+                <p className="mb-6 border border-gold/50 bg-surface-deep px-4 py-3 text-xs uppercase tracking-[0.12em] text-gold">
+                  Podgląd administratora · {it.status === "published" ? "opublikowany" : it.status === "archived" ? "archiwalny" : "wersja robocza — niewidoczna dla czytelników"}
+                </p>
+              )}
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-[0.7rem] uppercase tracking-[0.12em]">
                 <span className="text-gold">{cats.data?.find((c) => c.slug === it.category)?.name ?? it.category}</span>
                 <span className="text-muted-foreground">{KINDS[it.kind]}</span>
                 <span className={it.access === "premium" ? "text-gold" : "text-muted-foreground"}>{accessLabel(it)}</span>
               </div>
               <h1 className="mt-4 break-words font-display text-[2.2rem] font-semibold leading-tight text-foreground sm:text-[2.8rem]">{it.title}</h1>
+              {it.subtitle && <p className="mt-3 break-words text-[1.1rem] leading-[1.6] text-foreground/80">{it.subtitle}</p>}
               <p className="mt-3 text-sm text-muted-foreground">{it.author_name} · {fmtDay(it.published_at)} · Format: {KINDS[it.kind]}</p>
-              {img && <img src={img} alt="" className="mt-8 aspect-[16/9] w-full border border-border/60 object-cover" />}
+              {img && (it.kind === "pdf"
+                ? <img src={img} alt={`Okładka: ${it.title}`} className="mx-auto mt-8 w-full max-w-sm border border-border/60 object-contain" />
+                : <img src={img} alt="" className="mt-8 aspect-[16/9] w-full border border-border/60 object-cover" />)}
               {it.summary && <p className="mt-8 break-words text-[1.05rem] leading-[1.8] text-foreground/85">{it.summary}</p>}
+              {([["O książce", it.sales_description], ["Dla kogo", it.audience], ["Co możesz z niej wynieść", it.reader_value]] as const).filter(([, t]) => t?.trim()).map(([h, t]) => (
+                <section key={h} className="mt-8">
+                  <h2 className="eyebrow text-gold">{h}</h2>
+                  <div className="mt-3 space-y-4 break-words text-[1rem] leading-[1.8] text-foreground/85">
+                    {t.split(/\n{2,}/).map((p, i) => <p key={i} className="whitespace-pre-line">{p}</p>)}
+                  </div>
+                </section>
+              ))}
 
               {!content ? (
                 <div className="mt-10 border border-gold/50 bg-surface-deep p-6 sm:p-8">
@@ -72,11 +95,11 @@ function ItemPage() {
                     <p className="eyebrow text-gold">Materiał premium</p>
                     <p className="mt-3 font-display text-3xl font-semibold text-foreground">{fmtPrice(it.price_amount) ?? "Cena wkrótce"}</p>
                     <p className="mt-3 text-[0.95rem] leading-[1.75] text-foreground/85">Pełna zawartość jest dostępna po zakupie. Konto nie jest wymagane — materiał otrzymasz na podany adres e-mail.</p>
-                    {it.purchasable && it.price_amount && it.price_amount >= 100 ? (
+                    {!preview && it.purchasable && it.price_amount && it.price_amount >= 100 ? (
                       <BuyPanel slug={it.slug} title={it.title} price={it.price_amount} />
                     ) : (<>
                       <button type="button" disabled className="mt-6 cursor-not-allowed bg-gold/40 px-6 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-primary-foreground">Kup materiał</button>
-                      <p className="mt-2 text-xs text-muted-foreground">Sprzedaż tego materiału jeszcze nie ruszyła.</p>
+                      <p className="mt-2 text-xs text-muted-foreground">{preview ? "Przycisk zakupu będzie aktywny dopiero po publikacji i zatwierdzeniu ceny." : "Sprzedaż tego materiału jeszcze nie ruszyła."}</p>
                     </>)}
                   </>) : (<>
                     <p className="eyebrow text-gold">Dla członków TNB</p>

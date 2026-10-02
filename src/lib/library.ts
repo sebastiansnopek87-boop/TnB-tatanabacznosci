@@ -18,10 +18,11 @@ export type LibraryItem = {
   id: string; slug: string; title: string; summary: string; category: string; kind: Kind;
   cover_url: string | null; access: Access; author_name: string; published_at: string | null; updated_at: string;
   price_amount: number | null; currency: string; delivery_method: Delivery; purchasable: boolean; free_delivery: FreeDelivery;
+  subtitle: string; sales_description: string; audience: string; reader_value: string; status?: Status;
 };
 export type LibraryContent = { body: string; file_path: string | null; file_name: string | null; external_url: string | null };
 
-const COLS = "id, slug, title, summary, category, kind, cover_url, access, author_name, published_at, updated_at, price_amount, currency, delivery_method, purchasable, free_delivery";
+const COLS = "id, slug, title, summary, category, kind, cover_url, access, author_name, published_at, updated_at, price_amount, currency, delivery_method, purchasable, free_delivery, subtitle, sales_description, audience, reader_value";
 
 export const coverSrc = (it: { id: string; cover_url: string | null; updated_at: string }) =>
   it.cover_url ? `/api/public/library-cover/${it.id}?v=${encodeURIComponent(it.updated_at)}` : null;
@@ -56,10 +57,14 @@ export async function listLibrary(f: { q: string; category: string | null; acces
 }
 
 // Content row is returned only when database rules allow this viewer to read it.
-export async function getLibraryItem(slug: string) {
-  const { data: item, error } = await supabase.from("library_items").select(COLS).eq("slug", slug).eq("status", "published").maybeSingle();
+// preview=true: admin-only draft preview (RLS hides drafts from others); content is never returned.
+export async function getLibraryItem(slug: string, preview = false) {
+  let q = supabase.from("library_items").select(`${COLS}, status`).eq("slug", slug);
+  if (!preview) q = q.eq("status", "published");
+  const { data: item, error } = await q.maybeSingle();
   if (error) throw new Error("Nie udało się pobrać materiału.");
   if (!item) return null;
+  if (preview) return { item: item as LibraryItem, content: null as LibraryContent | null };
   const { data: content } = await supabase.from("library_item_content").select("body, file_path, file_name, external_url").eq("item_id", item.id).maybeSingle();
   return { item: item as LibraryItem, content: (content ?? null) as LibraryContent | null };
 }

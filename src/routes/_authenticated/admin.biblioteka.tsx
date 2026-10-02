@@ -247,6 +247,7 @@ function Editor({ id, cats, onClose, onSaved }: { id: string | null; cats: { slu
                 {c?.pdf_generated_at && <p className="mt-1 text-xs text-muted-foreground">Wersja PDF z {fmtDate(c.pdf_generated_at)}{c.body_updated_at ? ` · treść zmieniona ${fmtDate(c.body_updated_at)}` : ""}</p>}
                 {stale && <p className="mt-1 text-sm text-destructive">Uwaga: treść edytowalna zmieniła się po wygenerowaniu PDF — plik może być nieaktualny.</p>}
                 <div className="mt-2 flex flex-wrap gap-2">
+                  {f.slug && <Button size="sm" variant="outline" asChild><a href={`/biblioteka/${f.slug}?podglad=1`} target="_blank" rel="noopener">Podgląd karty</a></Button>}
                   {c?.file_path && wm === "ready" && <Button size="sm" variant="outline" onClick={() => openUrl("final", false)}>Podgląd PDF</Button>}
                   {c?.file_path && <Button size="sm" variant="outline" onClick={() => openUrl("final", true)}>Pobierz do kontroli</Button>}
                   {c?.original_path && <Button size="sm" variant="outline" onClick={() => openUrl("original", true)}>Oryginał</Button>}

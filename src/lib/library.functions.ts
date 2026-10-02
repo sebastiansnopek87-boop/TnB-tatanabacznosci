@@ -211,3 +211,16 @@ export const getLibraryFileUrl = createServerFn({ method: "POST" })
     await supabaseAdmin.from("library_requests").insert({ item_id: item.id, item_title: item.title, mode: "direct", status: "downloaded", user_id: userId, downloaded_at: now, download_count: 1 } as never);
     return { url: signed.signedUrl };
   });
+
+// Admin-only signed cover URL so draft cards can be previewed (public cover route serves published only).
+export const adminLibraryCoverUrl = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { data: it } = await context.supabase.from("library_items").select("cover_url").eq("id", data.id).maybeSingle();
+    if (!it?.cover_url) return { url: null as string | null };
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: s } = await supabaseAdmin.storage.from(BUCKET).createSignedUrl(it.cover_url, 600);
+    return { url: s?.signedUrl ?? null };
+  });
