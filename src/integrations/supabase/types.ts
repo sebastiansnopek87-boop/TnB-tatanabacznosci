@@ -1613,21 +1613,40 @@ export type Database = {
       }
       meetings: {
         Row: {
+          address: string
+          cancel_reason: string | null
+          cancellation_policy: string
+          cancelled_at: string | null
           capacity: number | null
           created_at: string
           created_by: string | null
           description: string
+          difficulty: string
           ends_at: string | null
+          equipment: string
+          fee_info: string
+          host: string
           id: string
           image_url: string | null
+          is_outdoor: boolean
+          join_open_minutes: number
           kind: string
           location: string
           location_public: boolean
+          map_url: string | null
+          meeting_point: string
           online_link: string | null
+          org_notes: string
+          organizer_contact: string
+          preparation: string
           published_at: string | null
+          recording_access: string
+          recording_url: string | null
           registration_open: boolean
           requires_approval: boolean
           requires_login: boolean
+          route_duration: string
+          route_length: string
           rules: string
           slug: string
           starts_at: string
@@ -1635,23 +1654,44 @@ export type Database = {
           summary: string
           title: string
           updated_at: string
+          user_can_cancel: boolean
+          venue_name: string
         }
         Insert: {
+          address?: string
+          cancel_reason?: string | null
+          cancellation_policy?: string
+          cancelled_at?: string | null
           capacity?: number | null
           created_at?: string
           created_by?: string | null
           description?: string
+          difficulty?: string
           ends_at?: string | null
+          equipment?: string
+          fee_info?: string
+          host?: string
           id?: string
           image_url?: string | null
+          is_outdoor?: boolean
+          join_open_minutes?: number
           kind?: string
           location?: string
           location_public?: boolean
+          map_url?: string | null
+          meeting_point?: string
           online_link?: string | null
+          org_notes?: string
+          organizer_contact?: string
+          preparation?: string
           published_at?: string | null
+          recording_access?: string
+          recording_url?: string | null
           registration_open?: boolean
           requires_approval?: boolean
           requires_login?: boolean
+          route_duration?: string
+          route_length?: string
           rules?: string
           slug: string
           starts_at: string
@@ -1659,23 +1699,44 @@ export type Database = {
           summary?: string
           title: string
           updated_at?: string
+          user_can_cancel?: boolean
+          venue_name?: string
         }
         Update: {
+          address?: string
+          cancel_reason?: string | null
+          cancellation_policy?: string
+          cancelled_at?: string | null
           capacity?: number | null
           created_at?: string
           created_by?: string | null
           description?: string
+          difficulty?: string
           ends_at?: string | null
+          equipment?: string
+          fee_info?: string
+          host?: string
           id?: string
           image_url?: string | null
+          is_outdoor?: boolean
+          join_open_minutes?: number
           kind?: string
           location?: string
           location_public?: boolean
+          map_url?: string | null
+          meeting_point?: string
           online_link?: string | null
+          org_notes?: string
+          organizer_contact?: string
+          preparation?: string
           published_at?: string | null
+          recording_access?: string
+          recording_url?: string | null
           registration_open?: boolean
           requires_approval?: boolean
           requires_login?: boolean
+          route_duration?: string
+          route_length?: string
           rules?: string
           slug?: string
           starts_at?: string
@@ -1683,6 +1744,8 @@ export type Database = {
           summary?: string
           title?: string
           updated_at?: string
+          user_can_cancel?: boolean
+          venue_name?: string
         }
         Relationships: []
       }
