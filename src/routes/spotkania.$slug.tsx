@@ -1,13 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { CalendarDays, MapPin, Users, Mic, Mountain, Wallet } from "lucide-react";
 import { MeetingBadges } from "@/components/meetings/MeetingBadges";
+import { MyRegBox } from "@/components/meetings/MyRegBox";
 import { PageShell } from "@/components/tnb/PageShell";
 import { supabase } from "@/integrations/supabase/client";
-import { cancelMyRegistration, getMeeting, getMyRegistration, registerForMeeting } from "@/lib/meetings.functions";
-import { DIFFICULTY, MEETING_KINDS, REG_STATUS, countdown, endOf, fmtTime, fmtWhen, freeSeats, isPast, meetingImage, regState, type MeetingDetail, type RegStatus } from "@/lib/meetings";
+import { getMeeting, getMyRegistration, registerForMeeting } from "@/lib/meetings.functions";
+import { DIFFICULTY, MEETING_KINDS, fmtTime, fmtWhen, freeSeats, meetingImage, regState, type MeetingDetail } from "@/lib/meetings";
 
 export const Route = createFileRoute("/spotkania/$slug")({
   loader: async ({ params }) => ({ meeting: await getMeeting({ data: { slug: params.slug } }) }),
@@ -132,7 +133,7 @@ function Registration({ m }: { m: MeetingDetail }) {
   const mine = useQuery({ queryKey: ["my-meeting-reg", m.id, userId], queryFn: () => myFn({ data: { meetingId: m.id } }), enabled: !!userId });
 
   const box = "mt-12 border border-gold/40 bg-surface-deep p-6";
-  if (mine.data) return <section className={box}><MyRegBox m={m} reg={mine.data} onChange={() => mine.refetch()} /></section>;
+  if (mine.data && !(mine.data.status === "cancelled" && st.canRegister)) return <section className={box}><MyRegBox m={m} reg={mine.data} onChange={() => mine.refetch()} /></section>;
   if (!st.canRegister) return <section className={box}><p className="font-display text-xl font-semibold uppercase text-foreground">{st.label}</p><p className="mt-2 text-sm text-foreground/70">Zgłoszenia na to spotkanie nie są obecnie przyjmowane.</p></section>;
   if (m.requires_login && userId === null) {
     return (
@@ -180,42 +181,3 @@ function Registration({ m }: { m: MeetingDetail }) {
   );
 }
 
-/** Participant's own status: countdown, join button (only when the server returns a link), recording, private location, withdrawal. */
-export function MyRegBox({ m, reg, onChange }: { m: { kind: string; starts_at: string; ends_at: string | null }; reg: import("@/lib/meetings").MyReg; onChange: () => void }) {
-  const [now, setNow] = useState(Date.now());
-  useEffect(() => { const t = setInterval(() => setNow(Date.now()), 30_000); return () => clearInterval(t); }, []);
-  const opensAt = reg.joinOpensAt ? new Date(reg.joinOpensAt).getTime() : null;
-  useEffect(() => { if (opensAt && now >= opensAt) onChange(); }, [opensAt, now >= (opensAt ?? Infinity)]); // refetch to receive link
-  const cancelFn = useServerFn(cancelMyRegistration);
-  const qc = useQueryClient();
-  const cancel = useMutation({
-    mutationFn: () => cancelFn({ data: { token: reg.token } }),
-    onSuccess: (r) => { if ("error" in r) { alert(r.error); return; } qc.invalidateQueries({ queryKey: ["meetings"] }); qc.invalidateQueries({ queryKey: ["my-meeting-regs"] }); onChange(); },
-  });
-  const ended = endOf(m) < now;
-  const started = new Date(m.starts_at).getTime() <= now;
-  return (
-    <div>
-      <h2 className="font-display text-2xl font-semibold uppercase text-foreground">Twoje zgłoszenie</h2>
-      <p className="mt-3 text-sm text-foreground/80">Status: <span className="text-gold">{ended && reg.status === "approved" ? "Zakończone" : REG_STATUS[reg.status as RegStatus]}</span></p>
-      {reg.status === "pending" && <p className="mt-2 text-sm text-foreground/70">Organizator jeszcze nie zatwierdził Twojego udziału.</p>}
-      {reg.status === "approved" && m.kind === "online" && !ended && (
-        reg.link ? <a href={reg.link} target="_blank" rel="noopener noreferrer" className={`${btn} mt-5 inline-block`}>Dołącz do spotkania</a>
-        : opensAt ? <p className="mt-3 text-sm text-foreground/80">{started ? "Spotkanie trwa." : `Start za ${countdown(new Date(m.starts_at).getTime() - now)}.`} Przycisk „Dołącz do spotkania” pojawi się {fmtTime(new Date(opensAt).toISOString())}.</p>
-        : <p className="mt-3 text-sm text-foreground/70">Organizator nie dodał jeszcze pokoju spotkania. Przycisk dołączenia pojawi się tutaj, gdy link będzie gotowy.</p>
-      )}
-      {reg.status === "approved" && m.kind === "live" && (reg.address || reg.meeting_point) && (
-        <div className="mt-4 text-sm text-foreground/85">
-          {reg.address && <p>Adres: {reg.address}</p>}
-          {reg.meeting_point && <p className="mt-1">Punkt zbiórki: {reg.meeting_point}</p>}
-          {reg.map_url && <a href={reg.map_url} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block text-gold underline">Pokaż na mapie</a>}
-        </div>
-      )}
-      {reg.recording && <a href={reg.recording} target="_blank" rel="noopener noreferrer" className={`${btn} mt-5 inline-block`}>Odtwórz nagranie</a>}
-      {reg.canCancel && (
-        <button type="button" disabled={cancel.isPending} onClick={() => { if (confirm("Czy na pewno chcesz zrezygnować z udziału?")) cancel.mutate(); }}
-          className="mt-5 block text-xs uppercase tracking-[0.14em] text-foreground/60 underline hover:text-destructive">Zrezygnuj z udziału</button>
-      )}
-    </div>
-  );
-}
