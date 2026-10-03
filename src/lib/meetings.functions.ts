@@ -141,24 +141,26 @@ export const registerForMeeting = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<{ token: string; status: string } | { error: string }> => {
     if (data.website || data.elapsedMs < 2500) return { error: "Nie udało się wysłać zgłoszenia. Spróbuj ponownie za chwilę." };
     const s = await admin();
-    const { data: m } = await s.from("meetings").select("id, status, starts_at, ends_at, registration_open, requires_login, requires_approval").eq("id", data.meetingId).maybeSingle();
+    const { data: m } = await s.from("meetings").select("id, status, starts_at, ends_at, registration_open, requires_login, requires_approval, cancelled_at").eq("id", data.meetingId).maybeSingle();
     if (!m || m.status !== "published") return { error: "To spotkanie nie jest dostępne." };
+    if (m.cancelled_at) return { error: "To spotkanie zostało odwołane." };
     if (new Date(m.ends_at ?? m.starts_at).getTime() < Date.now()) return { error: "To spotkanie już się odbyło." };
     if (!m.registration_open) return { error: "Zapisy na to spotkanie są zamknięte." };
     const user = await optionalUser();
     if (m.requires_login && !user) return { error: "Zapisy na to spotkanie wymagają zalogowania." };
-    if (user) {
-      const { count } = await s.from("meeting_registrations").select("id", { count: "exact", head: true }).eq("meeting_id", m.id).eq("user_id", user.id);
-      if (count) return { error: "Z tego konta wysłano już zgłoszenie na to spotkanie." };
-    }
+    // A previously withdrawn registration (same account or e-mail) is reactivated instead of duplicated.
+    const { data: prevRows } = await s.from("meeting_registrations").select("id, status, user_id, email").eq("meeting_id", m.id);
+    const prev = (prevRows ?? []).find((r) => (user && r.user_id === user.id) || r.email.toLowerCase() === data.email);
+    if (prev && prev.status !== "cancelled") return { error: user && prev.user_id === user.id ? "Z tego konta wysłano już zgłoszenie na to spotkanie." : "Na ten adres e-mail wysłano już zgłoszenie na to spotkanie." };
     const { count: recent } = await s.from("meeting_registrations").select("id", { count: "exact", head: true })
       .ilike("email", data.email).gte("created_at", new Date(Date.now() - 3600_000).toISOString());
     if ((recent ?? 0) >= 5) return { error: "Wysłano zbyt wiele zgłoszeń z tego adresu. Spróbuj później." };
     const status = m.requires_approval ? "pending" : "approved";
-    const { data: r, error } = await s.from("meeting_registrations").insert({
-      meeting_id: m.id, user_id: user?.id ?? null, name: data.name, email: data.email, phone: data.phone || null,
-      message: data.message || null, consent_text: CONSENT, status, decided_at: status === "approved" ? new Date().toISOString() : null,
-    }).select("id, access_token").single();
+    const row = { user_id: user?.id ?? null, name: data.name, email: data.email, phone: data.phone || null,
+      message: data.message || null, consent_text: CONSENT, status, decided_at: status === "approved" ? new Date().toISOString() : null, decided_by: null };
+    const { data: r, error } = prev
+      ? await s.from("meeting_registrations").update(row).eq("id", prev.id).eq("status", "cancelled").select("id, access_token").single()
+      : await s.from("meeting_registrations").insert({ ...row, meeting_id: m.id }).select("id, access_token").single();
     if (error) {
       if (error.code === "23505") return { error: "Na ten adres e-mail wysłano już zgłoszenie na to spotkanie." };
       if (/meeting_full/.test(error.message)) return { error: "Brak wolnych miejsc na to spotkanie." };
@@ -174,15 +176,15 @@ export const getRegistrationByToken = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => z.object({ token: z.string().uuid() }).parse(d))
   .handler(async ({ data }) => {
     const s = await admin();
-    const { data: r } = await s.from("meeting_registrations").select("status, name, meeting_id").eq("access_token", data.token).maybeSingle();
+    const { data: r } = await s.from("meeting_registrations").select("status, name, meeting_id, access_token").eq("access_token", data.token).maybeSingle();
     if (!r) return null;
-    const { data: m } = await s.from("meetings").select("title, slug, kind, starts_at, status, online_link, location, location_public").eq("id", r.meeting_id).maybeSingle();
+    const { data: m } = await s.from("meetings").select(ENT_COLS + ", location_public, cancel_reason").eq("id", r.meeting_id).maybeSingle();
     if (!m) return null;
-    const approved = r.status === "approved" && m.status === "published";
+    const e = entitlement(m, r);
     return {
-      status: r.status as string, name: r.name, title: m.title, slug: m.status === "published" ? m.slug : null, kind: m.kind, starts_at: m.starts_at,
-      link: approved && m.kind === "online" ? m.online_link : null,
-      location: m.location_public && m.location ? m.location : null,
+      ...e, name: r.name, title: m.title, slug: m.status === "published" ? m.slug : null, kind: m.kind, starts_at: m.starts_at, ends_at: m.ends_at,
+      meetingCancelled: !!m.cancelled_at, cancel_reason: m.cancel_reason, ended: endOf(m) < Date.now(),
+      location: e.address ?? (m.location_public && m.location ? m.location : null),
     };
   });
 
@@ -198,13 +200,21 @@ const meetingInput = z.object({
   capacity: z.number().int().positive().max(100000).nullable(),
   registration_open: z.boolean(), requires_login: z.boolean(), requires_approval: z.boolean(),
   online_link: z.string().trim().max(500).refine((v) => v === "" || /^https:\/\/\S+$/.test(v), "Link musi zaczynać się od https://"),
+  host: z.string().trim().max(200), venue_name: z.string().trim().max(200), address: z.string().trim().max(400),
+  map_url: z.string().trim().max(500).refine((v) => v === "" || /^https:\/\/\S+$/.test(v), "Link do mapy musi zaczynać się od https://"),
+  equipment: z.string().max(2000), fee_info: z.string().trim().max(500), organizer_contact: z.string().trim().max(300),
+  cancellation_policy: z.string().max(2000), is_outdoor: z.boolean(), route_length: z.string().trim().max(100), route_duration: z.string().trim().max(100),
+  difficulty: z.enum(["", "latwa", "srednia", "trudna"]), meeting_point: z.string().trim().max(400), preparation: z.string().max(2000), org_notes: z.string().max(2000),
+  join_open_minutes: z.number().int().min(0).max(240), user_can_cancel: z.boolean(),
+  recording_url: z.string().trim().max(500).refine((v) => v === "" || /^https:\/\/\S+$/.test(v), "Link do nagrania musi zaczynać się od https://"),
+  recording_access: z.enum(["participants", "public"]),
 });
 
 export const adminListMeetings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context);
-    const { data, error } = await context.supabase.from("meetings").select("id, slug, title, kind, status, starts_at, capacity, registration_open").order("starts_at", { ascending: false });
+    const { data, error } = await context.supabase.from("meetings").select("id, slug, title, kind, status, starts_at, capacity, registration_open, cancelled_at, is_outdoor, online_link").order("starts_at", { ascending: false });
     if (error) throw new Error("Nie udało się wczytać spotkań.");
     const { data: regs } = await context.supabase.from("meeting_registrations").select("meeting_id, status");
     return (data ?? []).map((m: any) => {
@@ -230,19 +240,24 @@ export const adminSaveMeeting = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     if (data.ends_at && new Date(data.ends_at) <= new Date(data.starts_at)) throw new Error("Zakończenie musi być późniejsze niż rozpoczęcie.");
-    const { id, online_link, ...rest } = data;
-    const prev = id ? (await context.supabase.from("meetings").select("starts_at").eq("id", id).maybeSingle()).data : null;
-    const row = { ...rest, online_link: online_link || null };
+    const { id, online_link, map_url, recording_url, ...rest } = data;
+    if (rest.kind === "online") rest.is_outdoor = false;
+    const prev = id ? (await context.supabase.from("meetings").select("starts_at, location, address, meeting_point, cancelled_at").eq("id", id).maybeSingle()).data : null;
+    if (prev?.cancelled_at) throw new Error("Spotkanie jest odwołane — nie można go edytować.");
+    const row = { ...rest, online_link: online_link || null, map_url: map_url || null, recording_url: recording_url || null };
     const q = id ? context.supabase.from("meetings").update(row).eq("id", id).select("id").single()
       : context.supabase.from("meetings").insert(row).select("id").single();
     const { data: saved, error } = await q;
     await LOG(context, id ? "meeting_edit" : "meeting_create", "meeting", saved?.id ?? id ?? undefined, error ? "failed" : "ok", rest.title);
     if (error) throw new Error(error.code === "23505" ? "Spotkanie o takim adresie już istnieje." : "Nie udało się zapisać spotkania.");
-    if (prev && new Date(prev.starts_at).getTime() !== new Date(rest.starts_at).getTime()) {
-      // Date changed: tell everyone with an active registration (once per registration and new date).
+    const dateChanged = prev && new Date(prev.starts_at).getTime() !== new Date(rest.starts_at).getTime();
+    const placeChanged = prev && (prev.location !== rest.location || prev.address !== rest.address || prev.meeting_point !== rest.meeting_point);
+    if (dateChanged || placeChanged) {
+      // Date or place changed: tell everyone with an active registration (once per registration and change).
       const { data: regs } = await (await admin()).from("meeting_registrations").select("id, name, email, access_token").eq("meeting_id", id!).in("status", ["pending", "approved"]);
       const { notifyRegistration } = await import("./meetings-notify.server");
-      for (const r of regs ?? []) await notifyRegistration("meeting_rescheduled", r, rest.starts_at, `-${new Date(rest.starts_at).getTime()}`);
+      const key = `-${new Date(rest.starts_at).getTime()}-${(rest.address + rest.location + rest.meeting_point).length}`;
+      for (const r of regs ?? []) await notifyRegistration(dateChanged ? "meeting_rescheduled" : "meeting_changed", r, rest.starts_at, key);
     }
     return { id: saved.id as string };
   });
@@ -320,4 +335,22 @@ export const adminUpdateRegistration = createServerFn({ method: "POST" })
       if (r && m) await (await import("./meetings-notify.server")).notifyRegistration(data.status === "approved" ? "meeting_approved" : "meeting_rejected", r, m.starts_at);
     }
     return { ok: true };
+  });
+
+// Cancel the whole event: closes registration, marks active registrations as cancelled, notifies (simulated in test mode).
+export const adminCancelMeeting = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), reason: z.string().trim().min(3, "Podaj powód odwołania.").max(500) }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { data: m, error } = await context.supabase.from("meetings").update({ cancelled_at: new Date().toISOString(), cancel_reason: data.reason, registration_open: false })
+      .eq("id", data.id).is("cancelled_at", null).select("id, starts_at").maybeSingle();
+    await LOG(context, "meeting_cancelled", "meeting", data.id, error || !m ? "failed" : "ok", data.reason);
+    if (error || !m) throw new Error("Nie udało się odwołać spotkania (może jest już odwołane).");
+    const s = await admin();
+    const { data: regs } = await s.from("meeting_registrations").update({ status: "cancelled", decided_at: new Date().toISOString(), decided_by: context.userId })
+      .eq("meeting_id", data.id).in("status", ["pending", "approved"]).select("id, name, email, access_token");
+    const { notifyRegistration } = await import("./meetings-notify.server");
+    for (const r of regs ?? []) await notifyRegistration("meeting_cancelled", r, m.starts_at);
+    return { ok: true, affected: regs?.length ?? 0 };
   });
