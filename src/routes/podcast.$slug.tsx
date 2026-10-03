@@ -112,6 +112,7 @@ function Media({ e }: { e: EpisodeDetail }) {
   return (
     <div className="space-y-4">
       {src && <AudioPlayer src={src} title={e.title} />}
+      {src && <p className="text-xs text-muted-foreground">Nagranie przygotowane głosem syntetycznym (AI) na podstawie scenariusza zatwierdzonego przez autora.</p>}
       {!src && external && /\.(mp3|m4a|aac|ogg|wav|webm)(\?|$)/i.test(external) && <AudioPlayer src={external} title={e.title} />}
       {external && (
         <a href={external} target="_blank" rel="noopener noreferrer"
