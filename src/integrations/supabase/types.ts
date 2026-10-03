@@ -1880,13 +1880,16 @@ export type Database = {
           created_by: string | null
           description: string
           duration_seconds: number | null
+          episode_number: number | null
           external_url: string | null
           featured: boolean
           id: string
           published_at: string | null
+          script: string
           slug: string
           sort_order: number
           status: string
+          subtitle: string
           summary: string
           title: string
           updated_at: string
@@ -1901,13 +1904,16 @@ export type Database = {
           created_by?: string | null
           description?: string
           duration_seconds?: number | null
+          episode_number?: number | null
           external_url?: string | null
           featured?: boolean
           id?: string
           published_at?: string | null
+          script?: string
           slug: string
           sort_order?: number
           status?: string
+          subtitle?: string
           summary?: string
           title: string
           updated_at?: string
@@ -1922,13 +1928,16 @@ export type Database = {
           created_by?: string | null
           description?: string
           duration_seconds?: number | null
+          episode_number?: number | null
           external_url?: string | null
           featured?: boolean
           id?: string
           published_at?: string | null
+          script?: string
           slug?: string
           sort_order?: number
           status?: string
+          subtitle?: string
           summary?: string
           title?: string
           updated_at?: string
