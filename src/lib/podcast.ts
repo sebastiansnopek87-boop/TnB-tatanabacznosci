@@ -4,7 +4,7 @@ export const EP_STATUS = { draft: "Szkic", published: "Opublikowany", archived: 
 export type EpStatus = keyof typeof EP_STATUS;
 
 export type PublicEpisode = {
-  id: string; slug: string; title: string; summary: string; category: string; access: EpAccess;
+  id: string; slug: string; title: string; subtitle: string; episode_number: number | null; summary: string; category: string; access: EpAccess;
   has_cover: boolean; has_audio: boolean; has_external: boolean; duration_seconds: number | null;
   featured: boolean; published_at: string | null; updated_at: string;
 };
