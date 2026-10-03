@@ -250,7 +250,8 @@ export const adminSaveMeeting = createServerFn({ method: "POST" })
     const { data: saved, error } = await q;
     await LOG(context, id ? "meeting_edit" : "meeting_create", "meeting", saved?.id ?? id ?? undefined, error ? "failed" : "ok", rest.title);
     if (error) throw new Error(error.code === "23505" ? "Spotkanie o takim adresie już istnieje." : "Nie udało się zapisać spotkania.");
-    const dateChanged = prev && new Date(prev.starts_at).getTime() !== new Date(rest.starts_at).getTime();
+    const minute = (v: string) => Math.floor(new Date(v).getTime() / 60000); // form inputs carry minute precision
+    const dateChanged = prev && minute(prev.starts_at) !== minute(rest.starts_at);
     const placeChanged = prev && (prev.location !== rest.location || prev.address !== rest.address || prev.meeting_point !== rest.meeting_point);
     if (dateChanged || placeChanged) {
       // Date or place changed: tell everyone with an active registration (once per registration and change).
