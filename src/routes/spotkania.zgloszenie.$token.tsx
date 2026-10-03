@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { PageShell } from "@/components/tnb/PageShell";
 import { getRegistrationByToken } from "@/lib/meetings.functions";
 import { fmtWhen } from "@/lib/meetings";
+import { MyRegBox } from "@/components/meetings/MyRegBox";
 
 export const Route = createFileRoute("/spotkania/zgloszenie/$token")({
   head: () => ({ meta: [
@@ -23,7 +24,7 @@ const MSG: Record<string, { h: string; p: string }> = {
 function RegistrationStatus() {
   const { token } = Route.useParams();
   const q = useQuery({ queryKey: ["meeting-reg", token], queryFn: () => getRegistrationByToken({ data: { token } }), retry: false });
-  const r = q.data; const msg = r ? MSG[r.status] ?? MSG["pending"] : null;
+  const r = q.data; const msg = r ? (r.ended && r.status === "approved" ? { h: "Spotkanie zakończone", p: "Dziękujemy za udział." } : MSG[r.status] ?? MSG["pending"]) : null;
   return (
     <PageShell>
       <div className="mx-auto max-w-2xl px-5 py-20">
@@ -37,9 +38,10 @@ function RegistrationStatus() {
               <div className="mt-6 border border-border/60 bg-card p-4 text-sm">
                 <p className="font-medium text-foreground">{r.title}</p>
                 <p className="mt-1 text-foreground/70">{fmtWhen(r.starts_at)}</p>
-                {r.status === "approved" && r.location && <p className="mt-1 text-foreground/70">{r.location}</p>}
+                  {r.status === "approved" && r.kind === "live" && r.location && !r.address && <p className="mt-1 text-foreground/70">{r.location}</p>}
               </div>
-              {r.link && <a href={r.link} target="_blank" rel="noopener noreferrer" className="mt-6 inline-block bg-gold px-6 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-primary-foreground hover:bg-gold-bright">Dołącz do spotkania online</a>}
+              {r.meetingCancelled && <p className="mt-4 text-sm text-foreground/80">Spotkanie zostało odwołane.{r.cancel_reason ? ` ${r.cancel_reason}` : ""}</p>}
+              <div className="mt-6 border-t border-border/60 pt-6"><MyRegBox m={r} reg={r} onChange={() => q.refetch()} /></div>
               <p className="mt-6 text-xs text-muted-foreground">Zachowaj ten adres — pod nim zawsze sprawdzisz aktualny status zgłoszenia.</p>
               {r.slug && <Link to="/spotkania/$slug" params={{ slug: r.slug }} className="mt-4 inline-block text-sm text-gold underline">Wróć do spotkania</Link>}
             </div>
