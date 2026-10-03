@@ -101,7 +101,7 @@ function PodcastPage() {
                   <div className="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
                     {list.map((e) => (
                       <Link key={e.id} to="/podcast/$slug" params={{ slug: e.slug }} className="group flex flex-col border border-border/60 bg-card hover:border-gold/60">
-                        <Cover e={e} className="aspect-[16/10] w-full" />
+                        <Cover e={e} className="aspect-square w-full" />
                         <div className="flex flex-1 flex-col p-5">
                           <Meta e={e} catName={catName} />
                           <h3 className="mt-3 break-words font-display text-xl font-semibold uppercase leading-snug text-foreground group-hover:text-gold">{num(e)}{e.title}</h3>
