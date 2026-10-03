@@ -3,7 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { CalendarDays, MapPin, Video, MessageCircle } from "lucide-react";
 import { PageShell } from "@/components/tnb/PageShell";
 import { listMeetings } from "@/lib/meetings.functions";
-import { MEETING_KINDS, fmtWhen, isPast, meetingImage, regState, type PublicMeeting } from "@/lib/meetings";
+import { MeetingBadges } from "@/components/meetings/MeetingBadges";
+import { fmtWhen, isPast, meetingImage, regState, type PublicMeeting } from "@/lib/meetings";
 
 const TITLE = "Spotkania TNB — Tata Na Baczności";
 const DESC = "Spotkania online, spotkania na żywo i rozmowy 1:1 — miejsce na rozmowę i wspólnie spędzony czas ojców ze społeczności TNB.";
@@ -20,13 +21,14 @@ export const Route = createFileRoute("/spotkania/")({
 });
 
 const CATS = [
-  { icon: Video, title: "Spotkania online", text: "Rozmowy i spotkania przez internet. Link do spotkania otrzymują wyłącznie osoby, których udział został potwierdzony." },
-  { icon: MapPin, title: "Spotkania na żywo", text: "Spotkania stacjonarne i terenowe w konkretnym miejscu. Szczegóły, lokalizację i zasady udziału znajdziesz w opisie wydarzenia." },
+  { icon: Video, title: "Webinary online", text: "Rozmowy z Sebastianem, spotkania tematyczne i dyskusje z gośćmi na żywo przez internet. Do pokoju dołączysz z poziomu platformy — tylko po potwierdzeniu udziału." },
+  { icon: MapPin, title: "Spotkania LIVE", text: "Spotkania w realnych miejscach — przy stole, na sali albo na szlaku. Wymagają osobistej obecności; miejsce, punkt zbiórki i zasady znajdziesz w opisie." },
 ];
 
 function Meetings() {
   const q = useQuery({ queryKey: ["meetings"], queryFn: () => listMeetings() });
-  const upcoming = (q.data ?? []).filter((m) => !isPast(m));
+  const upcoming = (q.data ?? []).filter((m) => !isPast(m) && !m.cancelled);
+  const cancelled = (q.data ?? []).filter((m) => !isPast(m) && m.cancelled);
   const past = (q.data ?? []).filter(isPast).reverse();
 
   return (
@@ -72,6 +74,13 @@ function Meetings() {
           </div>
         </section>
 
+        {cancelled.length > 0 && (
+          <section>
+            <h2 className="font-display text-3xl font-semibold uppercase text-foreground">Odwołane</h2>
+            <div className="mt-6 grid gap-6 opacity-80 sm:grid-cols-2 lg:grid-cols-3">{cancelled.map((m) => <MeetingCard key={m.id} m={m} />)}</div>
+          </section>
+        )}
+
         {past.length > 0 && (
           <section>
             <h2 className="font-display text-3xl font-semibold uppercase text-foreground">Minione spotkania</h2>
@@ -90,14 +99,15 @@ function MeetingCard({ m }: { m: PublicMeeting }) {
     <article className="flex min-w-0 flex-col border border-border/60 bg-card transition-colors hover:border-gold/50">
       {img && <img src={img} alt="" loading="lazy" className="aspect-[16/9] w-full object-cover" />}
       <div className="flex flex-1 flex-col p-5">
-        <p className="text-[0.68rem] uppercase tracking-[0.12em] text-gold">{MEETING_KINDS[m.kind]}</p>
+        <MeetingBadges m={m} />
         <h3 className="mt-3 break-words font-display text-xl font-semibold leading-tight text-foreground">{m.title}</h3>
-        <p className="mt-2 flex items-center gap-2 text-xs text-foreground/70"><CalendarDays className="h-3.5 w-3.5 text-gold" />{fmtWhen(m.starts_at)}</p>
+        <p className="mt-2 flex items-center gap-2 text-xs text-foreground/70"><CalendarDays className="h-3.5 w-3.5 shrink-0 text-gold" />{fmtWhen(m.starts_at)}</p>
+        <p className="mt-1 flex items-center gap-2 text-xs text-foreground/70">{m.kind === "online" ? <><Video className="h-3.5 w-3.5 shrink-0 text-gold" />Online — bez wychodzenia z domu</> : <><MapPin className="h-3.5 w-3.5 shrink-0 text-gold" /><span className="break-words">Obecność osobista{m.venue_name || m.location ? ` · ${m.venue_name || m.location}` : ""}</span></>}</p>
         {m.summary && <p className="mt-3 line-clamp-4 break-words text-sm leading-[1.7] text-foreground/75">{m.summary}</p>}
         <div className="mt-auto pt-5">
           <p className={`text-xs ${st.canRegister ? "text-gold" : "text-muted-foreground"}`}>{st.label}</p>
           <Link to="/spotkania/$slug" params={{ slug: m.slug }} className="mt-4 block bg-gold px-4 py-2.5 text-center text-[0.7rem] uppercase tracking-[0.14em] text-primary-foreground hover:bg-gold-bright">
-            {st.canRegister ? "Zapisz się" : "Szczegóły"}
+            {st.canRegister ? (m.kind === "online" ? "Zapisz się na webinar" : "Zapisz się na spotkanie LIVE") : m.has_recording ? "Szczegóły i nagranie" : "Szczegóły"}
           </Link>
         </div>
       </div>
