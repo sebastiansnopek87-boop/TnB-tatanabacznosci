@@ -323,7 +323,11 @@ export const adminUpdateRegistration = createServerFn({ method: "POST" })
     const patch: { status?: string; decided_at?: string; decided_by?: string; attended?: boolean } = {};
     if (data.status) Object.assign(patch, { status: data.status, decided_at: new Date().toISOString(), decided_by: context.userId });
     if (data.attended !== undefined) patch.attended = data.attended;
-    const { data: before } = await context.supabase.from("meeting_registrations").select("status").eq("id", data.id).maybeSingle();
+    const { data: before } = await context.supabase.from("meeting_registrations").select("status, meeting_id").eq("id", data.id).maybeSingle();
+    if (data.status && data.status !== "cancelled" && before) {
+      const { data: mm } = await context.supabase.from("meetings").select("cancelled_at").eq("id", before.meeting_id).maybeSingle();
+      if (mm?.cancelled_at) throw new Error("Spotkanie jest odwołane — nie można zmieniać zgłoszeń.");
+    }
     const { error } = await context.supabase.from("meeting_registrations").update(patch).eq("id", data.id);
     await LOG(context, data.status ? `registration_${data.status}` : "registration_attendance", "registration", data.id, error ? "failed" : "ok");
     if (error) throw new Error(/meeting_full/.test(error.message) ? "Brak wolnych miejsc — limit uczestników został osiągnięty." : "Nie udało się zaktualizować zgłoszenia.");
