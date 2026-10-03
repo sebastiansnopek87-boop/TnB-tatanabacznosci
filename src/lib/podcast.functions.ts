@@ -20,10 +20,10 @@ async function optionalUser() {
   return data.user ?? null;
 }
 
-const COLS = "id, slug, title, summary, description, category, access, cover_path, audio_path, external_url, duration_seconds, featured, sort_order, published_at, updated_at";
+const COLS = "id, slug, title, subtitle, episode_number, summary, description, category, access, cover_path, audio_path, external_url, duration_seconds, featured, sort_order, published_at, updated_at";
 function toPublic(e: any): EpisodeDetail {
   return {
-    id: e.id, slug: e.slug, title: e.title, summary: e.summary, description: e.description, category: e.category, access: e.access,
+    id: e.id, slug: e.slug, title: e.title, subtitle: e.subtitle ?? "", episode_number: e.episode_number ?? null, summary: e.summary, description: e.description, category: e.category, access: e.access,
     has_cover: !!e.cover_path, has_audio: !!e.audio_path, has_external: !!e.external_url, duration_seconds: e.duration_seconds,
     featured: e.featured, published_at: e.published_at, updated_at: e.updated_at,
   };
@@ -72,7 +72,7 @@ export const getEpisodeMedia = createServerFn({ method: "GET" })
 export const adminListEpisodes = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   await assertAdmin(context);
   const { data, error } = await context.supabase.from("podcast_episodes")
-    .select("id, slug, title, category, access, status, featured, sort_order, published_at, audio_path, external_url, cover_path")
+    .select("id, slug, title, episode_number, category, access, status, featured, sort_order, published_at, audio_path, external_url, cover_path")
     .order("sort_order").order("created_at", { ascending: false });
   if (error) throw new Error("Nie udało się pobrać odcinków.");
   return data as any[];
@@ -91,8 +91,11 @@ const EpisodeInput = z.object({
   id: z.string().uuid().nullable(),
   slug: z.string().regex(/^[a-z0-9-]{1,120}$/, "Adres może zawierać tylko małe litery, cyfry i myślniki."),
   title: z.string().trim().min(3, "Tytuł musi mieć co najmniej 3 znaki.").max(200),
+  subtitle: z.string().trim().max(300),
+  episode_number: z.number().int().positive().max(9999).nullable(),
   summary: z.string().trim().max(600),
   description: z.string().max(20000),
+  script: z.string().max(100000),
   category: z.string().regex(/^[a-z0-9_]{1,40}$/),
   access: z.enum(["public", "members", "premium"]),
   external_url: z.string().trim().max(1000).refine((v) => v === "" || /^https:\/\/\S+$/.test(v), "Adres nagrania musi zaczynać się od https://"),

@@ -7,8 +7,8 @@ import { listEpisodes } from "@/lib/podcast.functions";
 import { listCategories } from "@/lib/library";
 import { EP_ACCESS, coverUrl, fmtDay, fmtDuration, type PublicEpisode } from "@/lib/podcast";
 
-const TITLE = "Podcast TNB — Tata Na Baczności";
-const DESC = "Rozmowy o ojcostwie, służbie, małżeństwie i męskiej odpowiedzialności. Słuchaj odcinków podcastu Tata Na Baczności.";
+const TITLE = "Podcast TATA NA BACZNOŚCI";
+const DESC = "Rozmowy o życiu, które nie zawsze mieści się w schematach. O rodzinie, odpowiedzialności, doświadczeniach i wartościach. Bez udawania, bez gotowych recept.";
 
 export const Route = createFileRoute("/podcast/")({
   head: () => ({
@@ -43,9 +43,9 @@ function PodcastPage() {
     <PageShell>
       <section className="border-b border-border/60 px-5 py-14 lg:px-14 lg:py-20">
         <p className="eyebrow text-gold">Rozmowy TNB</p>
-        <h1 className="mt-4 font-display text-[2.6rem] font-semibold uppercase leading-none tracking-[0.02em] text-foreground sm:text-[3.4rem]">Podcast TNB</h1>
+        <h1 className="mt-4 font-display text-[2.6rem] font-semibold uppercase leading-none tracking-[0.02em] text-foreground sm:text-[3.4rem]">Podcast TATA NA BACZNOŚCI</h1>
         <p className="mt-6 max-w-2xl text-[0.95rem] leading-[1.75] text-foreground/80">
-          Szczere rozmowy o ojcostwie, służbie, małżeństwie i męskiej odpowiedzialności. Bez pozy — o tym, co naprawdę dzieje się w życiu taty.
+          Rozmowy o życiu, które nie zawsze mieści się w schematach. O rodzinie, odpowiedzialności, doświadczeniach, wartościach i drodze, którą każdy z nas przechodzi na swój sposób. Bez udawania. Bez gotowych recept. Z miejsca, w którym jesteśmy.
         </p>
       </section>
 
@@ -67,10 +67,11 @@ function PodcastPage() {
                     <Cover e={latest} className="aspect-square w-full" />
                     <div className="min-w-0">
                       <Meta e={latest} catName={catName} />
-                      <h2 className="mt-3 break-words font-display text-[2rem] font-semibold uppercase leading-tight text-foreground group-hover:text-gold">{latest.title}</h2>
+                      <h2 className="mt-3 break-words font-display text-[2rem] font-semibold uppercase leading-tight text-foreground group-hover:text-gold">{num(latest)}{latest.title}</h2>
+                      {latest.subtitle && <p className="mt-2 text-[1rem] italic text-foreground/75">{latest.subtitle}</p>}
                       {latest.summary && <p className="mt-4 text-[0.95rem] leading-[1.75] text-foreground/80">{latest.summary}</p>}
                       <span className="mt-6 inline-flex items-center gap-2 bg-gold px-6 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-primary-foreground">
-                        <Headphones className="h-4 w-4" /> Posłuchaj odcinka
+                        <Headphones className="h-4 w-4" /> {latest.has_audio || latest.has_external ? "Odtwórz odcinek" : "Oczekuje na nagranie"}
                       </span>
                     </div>
                   </Link>
@@ -103,9 +104,10 @@ function PodcastPage() {
                         <Cover e={e} className="aspect-[16/10] w-full" />
                         <div className="flex flex-1 flex-col p-5">
                           <Meta e={e} catName={catName} />
-                          <h3 className="mt-3 break-words font-display text-xl font-semibold uppercase leading-snug text-foreground group-hover:text-gold">{e.title}</h3>
+                          <h3 className="mt-3 break-words font-display text-xl font-semibold uppercase leading-snug text-foreground group-hover:text-gold">{num(e)}{e.title}</h3>
+                          {e.subtitle && <p className="mt-1 text-sm italic text-foreground/70">{e.subtitle}</p>}
                           {e.summary && <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-foreground/75">{e.summary}</p>}
-                          <span className="mt-auto pt-4 text-xs uppercase tracking-[0.14em] text-gold">Szczegóły →</span>
+                          <span className="mt-auto pt-4 text-xs uppercase tracking-[0.14em] text-gold">{e.has_audio || e.has_external ? "▶ Odtwórz" : "Oczekuje na nagranie"}</span>
                         </div>
                       </Link>
                     ))}
@@ -146,3 +148,5 @@ function Meta({ e, catName }: { e: PublicEpisode; catName: (s: string) => string
     </div>
   );
 }
+
+const num = (e: PublicEpisode) => (e.episode_number ? `${String(e.episode_number).padStart(2, "0")}. ` : "");

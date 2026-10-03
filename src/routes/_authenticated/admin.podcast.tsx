@@ -50,7 +50,7 @@ function List({ onEdit }: { onEdit: (id: string | null) => void }) {
           : list.data.map((e) => (
             <div key={e.id} className="flex flex-col gap-3 border border-border/60 p-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="min-w-0">
-                <p className="break-words font-medium text-foreground">{e.title}</p>
+                <p className="break-words font-medium text-foreground">{e.episode_number ? `${String(e.episode_number).padStart(2, "0")}. ` : ""}{e.title}</p>
                 <p className="mt-1 text-xs text-muted-foreground">/podcast/{e.slug} · kolejność {e.sort_order} · publikacja {fmtDate(e.published_at)}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   <Badge variant={e.status === "published" ? "default" : "outline"}>{EP_STATUS[e.status as EpStatus]}</Badge>
@@ -64,6 +64,7 @@ function List({ onEdit }: { onEdit: (id: string | null) => void }) {
                 <Button size="sm" variant="outline" onClick={() => onEdit(e.id)}>Edytuj</Button>
                 {e.status !== "published" && <Button size="sm" disabled={setSt.isPending} onClick={() => setSt.mutate({ id: e.id, status: "published" })}>Opublikuj</Button>}
                 {e.status === "published" && <Button size="sm" variant="outline" disabled={setSt.isPending} onClick={() => setSt.mutate({ id: e.id, status: "draft" })}>Wycofaj publikację</Button>}
+                <a href={`/podcast/${e.slug}`} target="_blank" rel="noreferrer" className="inline-flex h-8 items-center border border-border px-3 text-xs hover:border-gold">Podgląd</a>
                 {e.status !== "archived" && <Button size="sm" variant="outline" disabled={setSt.isPending} onClick={() => setSt.mutate({ id: e.id, status: "archived" })}>Archiwizuj</Button>}
               </div>
             </div>
@@ -73,8 +74,8 @@ function List({ onEdit }: { onEdit: (id: string | null) => void }) {
   );
 }
 
-type Form = { title: string; slug: string; summary: string; description: string; category: string; access: EpAccess; external_url: string; duration: string; featured: boolean; sort_order: string; published: string };
-const EMPTY: Form = { title: "", slug: "", summary: "", description: "", category: "ojcostwo", access: "public", external_url: "", duration: "", featured: false, sort_order: "0", published: "" };
+type Form = { subtitle: string; number: string; script: string; title: string; slug: string; summary: string; description: string; category: string; access: EpAccess; external_url: string; duration: string; featured: boolean; sort_order: string; published: string };
+const EMPTY: Form = { subtitle: "", number: "", script: "", title: "", slug: "", summary: "", description: "", category: "ojcostwo", access: "public", external_url: "", duration: "", featured: false, sort_order: "0", published: "" };
 const toLocal = (s: string | null) => { if (!s) return ""; const d = new Date(s); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); };
 
 function Editor({ id, onClose, onSaved }: { id: string | null; onClose: () => void; onSaved: (id: string) => void }) {
@@ -88,7 +89,7 @@ function Editor({ id, onClose, onSaved }: { id: string | null; onClose: () => vo
   const preview = useQuery({ queryKey: ["admin-episode-audio", id, cur.data?.audio_path], queryFn: () => prevFn({ data: { id: id! } }), enabled: !!cur.data?.audio_path });
   useEffect(() => {
     const e = cur.data; if (!e) return;
-    setF({ title: e.title, slug: e.slug, summary: e.summary, description: e.description, category: e.category, access: e.access, external_url: e.external_url ?? "",
+    setF({ subtitle: e.subtitle ?? "", number: e.episode_number ? String(e.episode_number) : "", script: e.script ?? "", title: e.title, slug: e.slug, summary: e.summary, description: e.description, category: e.category, access: e.access, external_url: e.external_url ?? "",
       duration: fmtDuration(e.duration_seconds) ?? "", featured: e.featured, sort_order: String(e.sort_order), published: toLocal(e.published_at) });
   }, [cur.data]);
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setF((p) => ({ ...p, [k]: v }));
@@ -101,7 +102,7 @@ function Editor({ id, onClose, onSaved }: { id: string | null; onClose: () => vo
       const order = Number(f.sort_order || 0);
       if (!Number.isInteger(order)) throw new Error("Kolejność musi być liczbą całkowitą.");
       return saveFn({ data: {
-        id, slug: f.slug, title: f.title, summary: f.summary, description: f.description, category: f.category, access: f.access,
+        id, slug: f.slug, title: f.title, subtitle: f.subtitle, episode_number: f.number ? Number(f.number) : null, script: f.script, summary: f.summary, description: f.description, category: f.category, access: f.access,
         external_url: f.external_url, duration_seconds: dur, featured: f.featured, sort_order: order,
         published_at: f.published ? new Date(f.published).toISOString() : null,
       } });
@@ -135,6 +136,10 @@ function Editor({ id, onClose, onSaved }: { id: string | null; onClose: () => vo
       </div>
       {cur.data && <p className="text-xs text-muted-foreground">Status: {EP_STATUS[cur.data.status as EpStatus]} · publikację zmienisz na liście odcinków.</p>}
       <Label className="grid gap-1.5"><span>Tytuł *</span><Input value={f.title} maxLength={200} onChange={(e) => { set("title", e.target.value); if (!slugTouched) set("slug", slugify(e.target.value)); }} /></Label>
+      <div className="grid gap-4 sm:grid-cols-[1fr_120px]">
+        <Label className="grid gap-1.5"><span>Podtytuł</span><Input value={f.subtitle} maxLength={300} onChange={(e) => set("subtitle", e.target.value)} /></Label>
+        <Label className="grid gap-1.5"><span>Numer</span><Input type="number" min={1} value={f.number} onChange={(e) => set("number", e.target.value)} /></Label>
+      </div>
       <Label className="grid gap-1.5"><span>Adres (/podcast/…) *</span><Input value={f.slug} maxLength={120} onChange={(e) => { setSlugTouched(true); set("slug", e.target.value); }} /></Label>
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="grid gap-1.5"><Label>Kategoria</Label>
@@ -147,6 +152,7 @@ function Editor({ id, onClose, onSaved }: { id: string | null; onClose: () => vo
       </div>
       <Label className="grid gap-1.5"><span>Krótki opis</span><Textarea value={f.summary} maxLength={600} onChange={(e) => set("summary", e.target.value)} /></Label>
       <Label className="grid gap-1.5"><span>Pełny opis (akapity oddziel pustą linią)</span><Textarea className="min-h-40" value={f.description} maxLength={20000} onChange={(e) => set("description", e.target.value)} /></Label>
+      <Label className="grid gap-1.5"><span>Scenariusz nagrania (widoczny tylko w panelu{f.script ? ` · ${f.script.trim().split(/\s+/).length} słów` : ""})</span><Textarea className="min-h-60" value={f.script} maxLength={100000} onChange={(e) => set("script", e.target.value)} /></Label>
       <Label className="grid gap-1.5"><span>Zewnętrzny adres nagrania (np. Spotify, YouTube lub bezpośredni plik MP3)</span><Input value={f.external_url} maxLength={1000} placeholder="https://" onChange={(e) => set("external_url", e.target.value)} /></Label>
       <div className="grid gap-4 sm:grid-cols-3">
         <Label className="grid gap-1.5"><span>Czas trwania (mm:ss)</span><Input value={f.duration} placeholder="np. 42:15" onChange={(e) => set("duration", e.target.value)} /></Label>
