@@ -178,7 +178,7 @@ export const getRegistrationByToken = createServerFn({ method: "GET" })
     const s = await admin();
     const { data: r } = await s.from("meeting_registrations").select("status, name, meeting_id, access_token").eq("access_token", data.token).maybeSingle();
     if (!r) return null;
-    const { data: m } = await s.from("meetings").select(ENT_COLS + ", location_public, cancel_reason").eq("id", r.meeting_id).maybeSingle();
+    const { data: m } = await s.from("meetings").select(`${ENT_COLS}, location_public, cancel_reason` as "*").eq("id", r.meeting_id).maybeSingle();
     if (!m) return null;
     const e = entitlement(m, r);
     return {
