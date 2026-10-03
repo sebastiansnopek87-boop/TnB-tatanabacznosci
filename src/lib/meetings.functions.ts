@@ -5,7 +5,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import type { MeetingDetail, PublicMeeting } from "./meetings";
+import { endOf, type MeetingDetail, type MyReg, type PublicMeeting, type RegStatus } from "./meetings";
 
 // Public reads go through the service role with an explicit safe column list:
 // online_link, unpublished locations and participants' data never leave the server.
@@ -19,7 +19,7 @@ async function optionalUser() {
   return data.user ?? null;
 }
 
-const COLS = "id, slug, title, kind, summary, description, rules, starts_at, ends_at, location, location_public, image_url, capacity, registration_open, requires_login, requires_approval";
+const COLS = "id, slug, title, kind, summary, description, rules, starts_at, ends_at, location, location_public, image_url, capacity, registration_open, requires_login, requires_approval, host, venue_name, address, map_url, equipment, fee_info, organizer_contact, cancellation_policy, is_outdoor, route_length, route_duration, difficulty, meeting_point, preparation, org_notes, join_open_minutes, recording_url, recording_access, cancelled_at, cancel_reason, user_can_cancel";
 async function taken(ids: string[]) {
   const map = new Map<string, number>();
   if (!ids.length) return map;
@@ -27,18 +27,53 @@ async function taken(ids: string[]) {
   for (const r of data ?? []) map.set(r.meeting_id, (map.get(r.meeting_id) ?? 0) + 1);
   return map;
 }
-function toPublic(m: any, t: number): MeetingDetail {
+function toPublic(m: any, t: number): MeetingDetail & { recording_public: string | null } {
+  const pub = m.location_public;
+  const past = endOf(m) < Date.now();
   return {
     id: m.id, slug: m.slug, title: m.title, kind: m.kind, summary: m.summary, description: m.description, rules: m.rules,
-    starts_at: m.starts_at, ends_at: m.ends_at, location: m.location_public && m.location ? m.location : null, has_image: !!m.image_url,
+    starts_at: m.starts_at, ends_at: m.ends_at, location: pub && m.location ? m.location : null, has_image: !!m.image_url,
     capacity: m.capacity, taken: t, registration_open: m.registration_open, requires_login: m.requires_login, requires_approval: m.requires_approval,
+    host: m.host, venue_name: m.venue_name, is_outdoor: m.kind === "live" && m.is_outdoor, cancelled: !!m.cancelled_at, cancel_reason: m.cancel_reason,
+    has_recording: !!m.recording_url && past, fee_info: m.fee_info, difficulty: m.difficulty, route_length: m.route_length, route_duration: m.route_duration,
+    equipment: m.equipment, organizer_contact: m.organizer_contact, cancellation_policy: m.cancellation_policy, preparation: m.preparation, org_notes: m.org_notes,
+    address: pub && m.address ? m.address : null, meeting_point: pub && m.meeting_point ? m.meeting_point : null, map_url: pub ? m.map_url : null,
+    user_can_cancel: m.user_can_cancel, join_open_minutes: m.join_open_minutes,
+    recording_public: past && m.recording_access === "public" ? m.recording_url : null,
   };
 }
+
+/** What an owner of a registration may see. Link only for approved webinar participants inside the join window. */
+function entitlement(m: any, r: { status: string; access_token: string }): MyReg {
+  const approved = r.status === "approved" && m.status === "published" && !m.cancelled_at;
+  const start = new Date(m.starts_at).getTime(), end = endOf(m), now = Date.now();
+  const opens = start - m.join_open_minutes * 60000;
+  const hasLink = approved && m.kind === "online" && !!m.online_link;
+  return {
+    status: (m.cancelled_at && (r.status === "pending" || r.status === "approved") ? "cancelled" : r.status) as RegStatus,
+    token: r.access_token,
+    link: hasLink && now >= opens && now <= end ? m.online_link : null,
+    joinOpensAt: hasLink && now < opens ? new Date(opens).toISOString() : null,
+    recording: approved && m.recording_url && now > end ? m.recording_url : null,
+    address: approved && m.kind === "live" ? m.address || m.location || null : null,
+    meeting_point: approved && m.kind === "live" ? m.meeting_point || null : null,
+    map_url: approved && m.kind === "live" ? m.map_url ?? null : null,
+    canCancel: (r.status === "pending" || r.status === "approved") && !m.cancelled_at && m.user_can_cancel && now < start,
+  };
+}
+const ENT_COLS = "id, title, slug, kind, status, starts_at, ends_at, online_link, join_open_minutes, recording_url, address, location, meeting_point, map_url, cancelled_at, user_can_cancel";
 
 export const listMeetings = createServerFn({ method: "GET" }).handler(async (): Promise<PublicMeeting[]> => {
   const { data } = await (await admin()).from("meetings").select(COLS).eq("status", "published").order("starts_at", { ascending: true }).limit(200);
   const t = await taken((data ?? []).map((m) => m.id));
-  return (data ?? []).map((m) => { const { description: _d, rules: _r, ...rest } = toPublic(m, t.get(m.id) ?? 0); return rest; });
+  return (data ?? []).map((m) => {
+    const d = toPublic(m, t.get(m.id) ?? 0);
+    const out: PublicMeeting = { id: d.id, slug: d.slug, title: d.title, kind: d.kind, summary: d.summary, starts_at: d.starts_at, ends_at: d.ends_at, location: d.location,
+      has_image: d.has_image, capacity: d.capacity, taken: d.taken, registration_open: d.registration_open, requires_login: d.requires_login, requires_approval: d.requires_approval,
+      host: d.host, venue_name: d.venue_name, is_outdoor: d.is_outdoor, cancelled: d.cancelled, cancel_reason: d.cancel_reason, has_recording: d.has_recording,
+      fee_info: d.fee_info, difficulty: d.difficulty, route_length: d.route_length, route_duration: d.route_duration };
+    return out;
+  });
 });
 
 export const getMeeting = createServerFn({ method: "GET" })
@@ -49,19 +84,45 @@ export const getMeeting = createServerFn({ method: "GET" })
     return toPublic(m, (await taken([m.id])).get(m.id) ?? 0);
   });
 
-// Logged-in user's own registration for a meeting (+ online link only when approved).
+// Logged-in user's own registration for a meeting (private details only when entitled).
 export const getMyRegistration = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ meetingId: z.string().uuid() }).parse(d))
-  .handler(async ({ data, context }) => {
+  .handler(async ({ data, context }): Promise<MyReg | null> => {
     const { data: r } = await context.supabase.from("meeting_registrations").select("status, access_token").eq("meeting_id", data.meetingId).eq("user_id", context.userId).maybeSingle();
     if (!r) return null;
-    let link: string | null = null;
-    if (r.status === "approved") {
-      const { data: m } = await (await admin()).from("meetings").select("online_link, kind, status").eq("id", data.meetingId).maybeSingle();
-      if (m?.status === "published" && m.kind === "online") link = m.online_link ?? null;
-    }
-    return { status: r.status as string, token: r.access_token as string, link };
+    const { data: m } = await (await admin()).from("meetings").select(ENT_COLS).eq("id", data.meetingId).maybeSingle();
+    if (!m) return null;
+    return entitlement(m, r);
+  });
+
+// All registrations of the signed-in user (Moje TNB).
+export const listMyRegistrations = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: regs } = await context.supabase.from("meeting_registrations").select("meeting_id, status, access_token").eq("user_id", context.userId);
+    if (!regs?.length) return [];
+    const { data: ms } = await (await admin()).from("meetings").select(ENT_COLS).in("id", regs.map((r: any) => r.meeting_id)).neq("status", "draft");
+    return (ms ?? []).map((m: any) => {
+      const r = regs.find((x: any) => x.meeting_id === m.id)!;
+      return { id: m.id, title: m.title, slug: m.status === "published" ? m.slug : null, kind: m.kind, starts_at: m.starts_at, ends_at: m.ends_at,
+        meetingCancelled: !!m.cancelled_at, ended: endOf(m) < Date.now(), ...entitlement(m, r) };
+    }).sort((a: any, b: any) => a.starts_at.localeCompare(b.starts_at));
+  });
+
+// Participant withdraws (by private token — works for guests and account holders).
+export const cancelMyRegistration = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ token: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) => {
+    const s = await admin();
+    const { data: r } = await s.from("meeting_registrations").select("id, status, access_token, meeting_id").eq("access_token", data.token).maybeSingle();
+    if (!r) return { error: "Nie znaleziono zgłoszenia." };
+    const { data: m } = await s.from("meetings").select(ENT_COLS).eq("id", r.meeting_id).maybeSingle();
+    if (!m || !entitlement(m, r).canCancel) return { error: "Rezygnacja z tego zgłoszenia nie jest już możliwa. Skontaktuj się z organizatorem." };
+    const { error } = await s.from("meeting_registrations").update({ status: "cancelled", decided_at: new Date().toISOString() }).eq("id", r.id).in("status", ["pending", "approved"]);
+    await logEvent({ type: "registration_withdrawn", actor: null, objectKind: "registration", objectId: r.id, result: error ? "failed" : "ok" });
+    if (error) return { error: "Nie udało się anulować zgłoszenia." };
+    return { ok: true as const };
   });
 
 const CONSENT = "Wyrażam zgodę na przetwarzanie moich danych (imię i nazwisko, e-mail, opcjonalnie telefon i wiadomość) w celu obsługi zgłoszenia na spotkanie TNB. Akceptuję Regulamin i Politykę prywatności.";
