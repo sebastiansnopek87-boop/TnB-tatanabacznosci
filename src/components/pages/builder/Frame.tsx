@@ -32,7 +32,7 @@ export function Frame({ width, children, onOverflow }: { width: number | null; c
       const bad: number[] = [];
       body.querySelectorAll<HTMLElement>("[data-sec]").forEach((el) => {
         const sec = el.firstElementChild as HTMLElement | null;
-        if (sec && sec.scrollWidth > sec.clientWidth + 1) bad.push(Number(el.dataset.sec));
+        if (sec && sec.scrollWidth > sec.clientWidth + 1) bad.push(Number(el.dataset["sec"]));
       });
       onOverflow(bad);
     }, 1500);

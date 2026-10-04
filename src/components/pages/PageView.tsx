@@ -187,7 +187,7 @@ export function PageView({ eyebrow, title, intro, sections: raw, imageSrc, previ
     if (t.closest("[data-zone]")) return;
     if (!sec) { edit.onSelect(null, !!t.closest("header,footer")); return; }
     e.stopPropagation();
-    edit.onSelect({ i: Number(sec.dataset.sec), el: t.closest<HTMLElement>("[data-el]")?.dataset.el ?? "section" });
+    edit.onSelect({ i: Number(sec.dataset["sec"]), el: t.closest<HTMLElement>("[data-el]")?.dataset["el"] ?? "section" });
   };
   return (
     <div onClickCapture={edit ? onClick : undefined}>

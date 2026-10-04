@@ -172,9 +172,9 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
     const ok = active ? canInsert(active, at) : true;
     return (
       <div data-zone="" className={`group relative flex items-center justify-center transition-all ${active ? "h-14" : "h-3 hover:h-10"}`}
-        onDragOver={(e) => { if (dragKind && canInsert(dragKind, at)) { e.preventDefault(); e.currentTarget.dataset.over = "1"; } }}
-        onDragLeave={(e) => { delete e.currentTarget.dataset.over; }}
-        onDrop={(e) => { e.preventDefault(); delete e.currentTarget.dataset.over; if (dragKind) insert(at, dragKind); dragKind = null; }}>
+        onDragOver={(e) => { if (dragKind && canInsert(dragKind, at)) { e.preventDefault(); e.currentTarget.dataset["over"] = "1"; } }}
+        onDragLeave={(e) => { delete e.currentTarget.dataset["over"]; }}
+        onDrop={(e) => { e.preventDefault(); delete e.currentTarget.dataset["over"]; if (dragKind) insert(at, dragKind); dragKind = null; }}>
         <button type="button" onClick={() => (active ? ok && insert(at, active) : setLeft("elements"))}
           className={`z-10 border px-3 py-1 text-[0.65rem] uppercase tracking-[0.14em] ${active ? (ok ? "border-gold bg-gold text-primary-foreground" : "cursor-not-allowed border-border bg-card text-muted-foreground") : "border-gold/60 bg-background text-gold opacity-0 group-hover:opacity-100"}`}>
           {active ? (ok ? `Wstaw tutaj: ${SECTION_KINDS[active]}` : "Tu nie można wstawić") : "+ Dodaj element"}
