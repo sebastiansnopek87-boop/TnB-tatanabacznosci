@@ -39,8 +39,9 @@ export function Frame({ width, children, onOverflow }: { width: number | null; c
     return () => clearInterval(t);
   }, [body, onOverflow]);
   return (
-    <iframe ref={ref} title="Podgląd strony w edytorze" className="h-full border-0 bg-background shadow-2xl transition-[width]" style={{ width: width ? `${width}px` : "100%" }}>
-      {body && createPortal(children, body)}
-    </iframe>
+    <>
+    <iframe ref={ref} title="Podgląd strony w edytorze" className="h-full border-0 bg-background shadow-2xl transition-[width]" style={{ width: width ? `${width}px` : "100%" }} />
+    {body && createPortal(children, body)}
+    </>
   );
 }
