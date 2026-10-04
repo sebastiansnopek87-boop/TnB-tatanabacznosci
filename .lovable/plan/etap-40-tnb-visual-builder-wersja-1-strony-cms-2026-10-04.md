@@ -25,22 +25,22 @@ Ten sam moduł, ten sam adres (/admin/strony). Przycisk „Edytuj wizualnie” p
 ```
 
 1. **Lewy panel (zwijany):**
-   - Zakładka „Elementy”: 7 obecnych bloków z kategoriami, wyszukiwarką, miniaturą i opisem. Element dodaje się kliknięciem albo przeciągnięciem na stronę.
-   - Zakładka „Struktura”: drzewo sekcji z elementami w środku (nagłówek, tekst, zdjęcie, przyciski, karty). Kliknięcie zaznacza element na podglądzie. Kolejność zmieniasz przeciąganiem. Do tego duplikowanie, ukrywanie i usuwanie z potwierdzeniem.
+  - Zakładka „Elementy”: 7 obecnych bloków z kategoriami, wyszukiwarką, miniaturą i opisem. Element dodaje się kliknięciem albo przeciągnięciem na stronę.
+  - Zakładka „Struktura”: drzewo sekcji z elementami w środku (nagłówek, tekst, zdjęcie, przyciski, karty). Kliknięcie zaznacza element na podglądzie. Kolejność zmieniasz przeciąganiem. Do tego duplikowanie, ukrywanie i usuwanie z potwierdzeniem.
 2. **Środek:** strona w rzeczywistym wyglądzie (ten sam komponent co publicznie). Elementy podświetlają się po najechaniu, zaznaczasz je kliknięciem. Między sekcjami są przyciski „+ dodaj tutaj”. Podgląd można przełączyć na szerokość komputera, tabletu lub telefonu. Elementy wychodzące poza ekran dostają ostrzeżenie.
 3. **Prawy panel (zależy od zaznaczenia):**
-   - Tekst: treść.
-   - Nagłówek / nadtytuł: tekst.
-   - Zdjęcie: wymiana bez utraty reszty treści, opis alt, podpis, oznaczenie jako dekoracyjne, położenie i sposób wyświetlania.
-   - Przycisk: etykieta i adres, sprawdzane tymi samymi regułami co dziś.
-   - Karta lub kolumna: tytuł i opis.
-   - Sekcja: rodzaj, układ, ukrycie, duplikowanie, usunięcie.
-   - Strona: tytuł, wstęp, adres, SEO.
+  - Tekst: treść.
+  - Nagłówek / nadtytuł: tekst.
+  - Zdjęcie: wymiana bez utraty reszty treści, opis alt, podpis, oznaczenie jako dekoracyjne, położenie i sposób wyświetlania.
+  - Przycisk: etykieta i adres, sprawdzane tymi samymi regułami co dziś.
+  - Karta lub kolumna: tytuł i opis.
+  - Sekcja: rodzaj, układ, ukrycie, duplikowanie, usunięcie.
+  - Strona: tytuł, wstęp, adres, SEO.
 4. **Szkic oddzielony od publikacji:**
-   - Zmiany zapisują się automatycznie co kilka sekund do szkicu. Odwiedzający go nie widzą.
-   - „Opublikuj” (z potwierdzeniem) kopiuje szkic do wersji publicznej.
-   - Wyjście bez publikacji zostawia stronę publiczną bez zmian. Po powrocie wczytuje się zapisany szkic.
-   - Przy niezapisanych lub nieopublikowanych zmianach pojawia się ostrzeżenie.
+  - Zmiany zapisują się automatycznie co kilka sekund do szkicu. Odwiedzający go nie widzą.
+  - „Opublikuj” (z potwierdzeniem) kopiuje szkic do wersji publicznej.
+  - Wyjście bez publikacji zostawia stronę publiczną bez zmian. Po powrocie wczytuje się zapisany szkic.
+  - Przy niezapisanych lub nieopublikowanych zmianach pojawia się ostrzeżenie.
 5. **Cofnij / Ponów** w edytorze (także Ctrl+Z / Ctrl+Shift+Z).
 6. **Historia wersji:** każda publikacja i każdy ręczny „Zapisz szkic” tworzy wersję. Możesz zobaczyć listę wersji, prosty podgląd różnic (dodane, usunięte i zmienione sekcje) i przywrócić wersję do szkicu. Nic nie zostaje nadpisane bez możliwości odzyskania.
 7. **Telefon:** na wąskim ekranie panele boczne otwierają się jako wysuwane szuflady, a podgląd zajmuje cały ekran.
@@ -56,6 +56,7 @@ Ten sam moduł, ten sam adres (/admin/strony). Przycisk „Edytuj wizualnie” p
 ## Testy
 
 Testy wyłącznie na nowej stronie testowej „test-builder” (szkic, niepubliczna). Sprawdzę wszystkie 15 kryteriów odbioru na komputerze i telefonie oraz to, że:
+
 - strona publiczna zmienia się dopiero po „Opublikuj”,
 - moderator i gość nie mają dostępu.
 
@@ -80,4 +81,20 @@ Strony „O TNB” i „Moja historia” nie zostaną zmienione. Raport: Test | 
 - Pole `hidden` w sekcji (opcjonalne, domyślnie false). Normalizacja zachowuje stare wiersze. PageView pomija ukryte sekcje publicznie, a w edytorze pokazuje je wyszarzone.
 - PageView dostaje opcjonalne propsy `editable` (zaznaczanie, hover, data-atrybuty ścieżki elementu). Bez nich renderuje się identycznie jak dziś.
 - Przeciąganie: `@dnd-kit` (lista sekcji i drzewo). Podgląd urządzeń: kontener o stałej szerokości 1280/820/390 px w trybie „container queries”. Jeśli breakpointy oparte na viewport tego nie oddadzą, podgląd przełączy się na iframe z tą samą trasą podglądu.
-- Reguła architektoniczna zostanie zapisana w AGENTS.md: jeden Builder, a moduły podłączane przez rejestr „zakresu edytowalności”.
+- Reguła architektoniczna zostanie zapisana w NADRZĘDNA ZASADA ARCHITEKTONICZNA — ROZBUDOWA ISTNIEJĄCEJ PLATFORMY
+  TNB Visual Builder ma bazować wyłącznie na istniejących stronach, modułach, komponentach i danych platformy TATA NA BACZNOŚCI.
+  Nie buduj nowej strony równolegle do istniejącej. Nie twórz duplikatów modułów, formularzy, komponentów ani mechanizmów biznesowych.
+  Twoim zadaniem jest stworzenie wizualnej warstwy edycji, która integruje się z aktualną architekturą aplikacji.
+  Każdy istniejący element powinien być stopniowo podłączany do Buildera poprzez odpowiedni mechanizm edycji, zachowujący jego dotychczasowe działanie.
+  W szczególności:
+  1. Edytor musi wykorzystywać rzeczywiste komponenty renderowane przez istniejącą aplikację, a nie ich uproszczone kopie.
+  2. Zmiana treści lub wyglądu w Builderze musi aktualizować ten sam zasób, z którego korzysta publiczna strona.
+  3. Moduły dynamiczne muszą nadal korzystać ze swoich istniejących źródeł danych.
+  4. Nie wolno dublować logiki biznesowej w edytorze.
+  5. Edycja wizualna nie może omijać walidacji, uprawnień, RLS ani zabezpieczeń serwerowych.
+  6. Istniejące adresy URL, relacje danych i integracje muszą zostać zachowane.
+  7. Każdy komponent musi mieć jasno określony zakres edytowalności.
+  8. Jeżeli element nie jest jeszcze obsługiwany przez Builder, musi pozostać w pełni funkcjonalny i zostać oznaczony jako nieobsługiwany w edycji wizualnej.
+  9. Integracja kolejnych modułów musi odbywać się etapami, bez jednoczesnej przebudowy całej aplikacji.
+  10. Nie wolno uznawać integracji za ukończoną, jeśli zmiany widoczne w edytorze nie są rzeczywiście odzwierciedlane na publicznej stronie.
+  **Priorytetem jest rozszerzenie możliwości zarządzania istniejącą platformą, a nie zastąpienie jej nową implementacją.**AGENTS.md: jeden Builder, a moduły podłączane przez rejestr „zakresu edytowalności”.

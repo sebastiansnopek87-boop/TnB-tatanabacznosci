@@ -19,6 +19,7 @@ export type PageSection = {
   quoteAuthor: string;
   buttons: PageButton[];
   items: PageItem[]; // value cards or the two columns of a comparison
+  hidden?: boolean; // hidden sections stay in the page but are not shown publicly
 };
 export type PublicPage = {
   id: string; slug: string; system_key: string | null; title: string; intro: string;
@@ -40,7 +41,7 @@ export const SECTION_KINDS: Record<SectionKind, string> = {
 };
 
 export const newSection = (kind: SectionKind = "text"): PageSection => ({
-  id: Math.random().toString(36).slice(2, 10), kind, eyebrow: "", layout: "right", display: "full", decorative: false, heading: "", body: "", image: null, imageAlt: "", caption: "", quoteAuthor: "", buttons: [],
+  id: Math.random().toString(36).slice(2, 10), kind, eyebrow: "", layout: "right", display: "full", decorative: false, heading: "", body: "", image: null, imageAlt: "", caption: "", quoteAuthor: "", buttons: [], hidden: false,
   items: kind === "columns" ? [{ title: "", body: "" }, { title: "", body: "" }] : [],
 });
 
@@ -52,3 +53,7 @@ export const pageImageUrl = (pageId: string, file: string) => `/api/public/page-
 
 // Internal links start with "/", external must be https; anything else is rejected.
 export const isSafeHref = (h: string) => /^\/(?!\/)[\w\-/#?=&.%]*$/.test(h) || /^https:\/\/\S+$/.test(h) || /^mailto:\S+$/.test(h);
+
+// Builder draft: the editable copy of a page; publishing copies it to the public columns.
+export type PageDraft = { slug: string; title: string; intro: string; sections: PageSection[]; seo_title: string; seo_description: string };
+export type PageVersion = { id: string; kind: "draft" | "publish" | "restore"; created_at: string; snapshot: PageDraft };

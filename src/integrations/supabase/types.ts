@@ -2007,10 +2007,47 @@ export type Database = {
         }
         Relationships: []
       }
+      site_page_versions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          page_id: string
+          snapshot: Json
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          page_id: string
+          snapshot: Json
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          page_id?: string
+          snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_page_versions_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "site_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       site_pages: {
         Row: {
           created_at: string
           created_by: string | null
+          draft: Json | null
+          draft_updated_at: string | null
           id: string
           intro: string
           published_at: string | null
@@ -2026,6 +2063,8 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
+          draft?: Json | null
+          draft_updated_at?: string | null
           id?: string
           intro?: string
           published_at?: string | null
@@ -2041,6 +2080,8 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
+          draft?: Json | null
+          draft_updated_at?: string | null
           id?: string
           intro?: string
           published_at?: string | null

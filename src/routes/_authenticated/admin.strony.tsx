@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { errMsg } from "@/components/admin/format";
 import { PageView } from "@/components/pages/PageView";
 import { SectionsEditor } from "@/components/pages/SectionsEditor";
+import { VisualBuilder } from "@/components/pages/builder/VisualBuilder";
 import {
   adminCheckSlug, adminCreatePageUpload, adminGetPage, adminListPages, adminPageImageUrls, adminSavePage, adminSetPageStatus,
 } from "@/lib/pages.functions";
@@ -18,14 +19,16 @@ import { PAGE_STATUS, SYSTEM_PAGES, normalizeSections, pagePath, type PageSectio
 
 export const Route = createFileRoute("/_authenticated/admin/strony")({ component: PagesAdmin });
 
-type Draft = { id: string | null; slug: string; system_key: string | null; title: string; intro: string; sections: PageSection[]; seo_title: string; seo_description: string; status: string };
+type Draft = { draft_updated_at?: string | null; id: string | null; slug: string; system_key: string | null; title: string; intro: string; sections: PageSection[]; seo_title: string; seo_description: string; status: string };
 const EMPTY: Draft = { id: null, slug: "", system_key: null, title: "", intro: "", sections: [], seo_title: "", seo_description: "", status: "draft" };
 
 function PagesAdmin() {
   const listFn = useServerFn(adminListPages);
   const list = useQuery({ queryKey: ["admin-pages"], queryFn: () => listFn() });
   const [editing, setEditing] = useState<string | "new" | null>(null);
-  if (editing) return <Editor id={editing === "new" ? null : editing} onClose={() => { setEditing(null); list.refetch(); }} />;
+  const [visual, setVisual] = useState<string | null>(null);
+  if (visual) return <VisualBuilder id={visual} onClose={() => { setVisual(null); list.refetch(); }} onFormView={() => { setEditing(visual); setVisual(null); }} />;
+  if (editing) return <Editor id={editing === "new" ? null : editing} onClose={() => { setEditing(null); list.refetch(); }} onVisual={(pid) => { setEditing(null); setVisual(pid); }} />;
   return (
     <div className="max-w-4xl">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -37,10 +40,14 @@ function PagesAdmin() {
       {list.error && <p className="mt-6 text-sm text-destructive">{errMsg(list.error)}</p>}
       <div className="mt-6 divide-y divide-border/60 border border-border/60">
         {(list.data ?? []).map((p) => (
-          <button key={p.id} onClick={() => setEditing(p.id)} className="flex w-full flex-wrap items-center justify-between gap-2 p-4 text-left hover:bg-muted/30">
+          <div key={p.id} className="flex flex-wrap items-center justify-between gap-2 p-4">
             <span><span className="font-medium">{p.title}</span> <span className="text-xs text-muted-foreground">{pagePath(p)}</span></span>
-            <span className="text-xs uppercase tracking-wide text-gold">{PAGE_STATUS[p.status]}</span>
-          </button>
+            <span className="flex flex-wrap items-center gap-2">
+              <span className="text-xs uppercase tracking-wide text-gold">{PAGE_STATUS[p.status]}{p.draft_updated_at ? " · szkic w edytorze" : ""}</span>
+              <Button size="sm" onClick={() => setVisual(p.id)}>Edytuj wizualnie</Button>
+              <Button size="sm" variant="outline" onClick={() => setEditing(p.id)}>Formularz</Button>
+            </span>
+          </div>
         ))}
         {list.data?.length === 0 && <p className="p-4 text-sm text-muted-foreground">Brak stron.</p>}
       </div>
@@ -48,7 +55,7 @@ function PagesAdmin() {
   );
 }
 
-function Editor({ id, onClose }: { id: string | null; onClose: () => void }) {
+function Editor({ id, onClose, onVisual }: { id: string | null; onClose: () => void; onVisual: (id: string) => void }) {
   const qc = useQueryClient();
   const getFn = useServerFn(adminGetPage); const saveFn = useServerFn(adminSavePage); const statusFn = useServerFn(adminSetPageStatus);
   const slugFn = useServerFn(adminCheckSlug); const upFn = useServerFn(adminCreatePageUpload); const urlsFn = useServerFn(adminPageImageUrls);
@@ -128,6 +135,10 @@ function Editor({ id, onClose }: { id: string | null; onClose: () => void }) {
         <Button variant="outline" onClick={() => { if (!dirty || confirm("Masz niezapisane zmiany. Wyjść?")) onClose(); }}>← Lista stron</Button>
         <span className="text-xs uppercase tracking-wide text-gold">{PAGE_STATUS[d.status]}{dirty ? " · niezapisane zmiany" : ""}</span>
       </div>
+      {pageId && <div className="flex flex-wrap items-center gap-2 border border-gold/40 p-3 text-xs text-muted-foreground">
+        <span className="flex-1">Nowość: edytor wizualny — klikasz element na prawdziwym wyglądzie strony, zmiany trafiają do szkicu i nie są publiczne do czasu publikacji.{d.draft_updated_at ? " Ta strona ma szkic z edytora wizualnego — zapis tego formularza go zastąpi." : ""}</span>
+        <Button size="sm" onClick={() => { if (!dirty || confirm("Masz niezapisane zmiany w formularzu. Przejść?")) onVisual(pageId); }}>Edytuj wizualnie</Button>
+      </div>}
       {d.status === "published" && <p className="border border-gold/40 p-3 text-xs text-muted-foreground">Zapisane zmiany w opublikowanej stronie są od razu widoczne publicznie. Chcesz pracować spokojnie? Najpierw kliknij „Cofnij publikację”.</p>}
 
       <Field label="Tytuł strony"><Input value={d.title} onChange={(e) => set({ title: e.target.value })} maxLength={200} /></Field>
