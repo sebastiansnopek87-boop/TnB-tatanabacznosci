@@ -24,7 +24,7 @@ export const getPublicPage = createServerFn({ method: "GET" })
 // ---------- admin ----------
 export const adminListPages = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   await assertAdmin(context);
-  const { data, error } = await context.supabase.from("site_pages").select("id, slug, system_key, title, status, published_at, updated_at").order("system_key", { nullsFirst: false }).order("title");
+  const { data, error } = await context.supabase.from("site_pages").select("id, slug, system_key, title, status, published_at, updated_at, draft_updated_at").order("system_key", { nullsFirst: false }).order("title");
   if (error) throw new Error("Nie udało się pobrać stron.");
   return data as any[];
 });
@@ -76,7 +76,7 @@ export const adminSavePage = createServerFn({ method: "POST" }).middleware([requ
       if (cur.system_key) row.slug = cur.slug; // fixed URLs of menu pages stay stable
     }
     const q = id
-      ? context.supabase.from("site_pages").update({ ...row, draft: null, draft_updated_at: null }) // form saves go live; the builder then starts from them.eq("id", id).select("id").single()
+      ? context.supabase.from("site_pages").update({ ...row, draft: null, draft_updated_at: null }).eq("id", id) /* form saves go live; the builder then starts from them */.select("id").single()
       : context.supabase.from("site_pages").insert({ ...row, created_by: context.userId }).select("id").single();
     const { data: r, error } = await q;
     if (error) throw new Error(error.code === "23505" ? "Strona o takim adresie już istnieje." : "Nie udało się zapisać strony.");
