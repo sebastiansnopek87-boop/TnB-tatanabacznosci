@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
   ArrowDown, ArrowUp, Copy, Eye, EyeOff, GripVertical, History, Info, Layers, LayoutGrid, Monitor, PanelLeft, PanelRight,
-  Plus, Redo2, Search, Smartphone, Tablet, Trash2, Undo2, X,
+  Redo2, Search, Smartphone, Tablet, Trash2, Undo2, X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -46,6 +46,7 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
   const [modal, setModal] = useState<null | "history" | "coverage" | "publish">(null);
   const [versions, setVersions] = useState<PageVersion[] | null>(null);
   const [preview, setPreview] = useState<PageVersion | null>(null);
+  const onOverflow = useCallback((b: number[]) => setOverflow((o) => (o.join() === b.join() ? o : b)), []);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
@@ -294,7 +295,7 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
               Uwaga: sekcja {overflow.map((x) => x + 1).join(", ")} wychodzi poza ekran w tym widoku.
             </div>
           )}
-          <Frame width={WIDTH[device]} onOverflow={useCallback((b: number[]) => setOverflow((o) => (o.join() === b.join() ? o : b)), [])}>
+          <Frame width={WIDTH[device]} onOverflow={onOverflow}>
             <PageView eyebrow="Tata Na Baczności" title={d.title || "(bez tytułu)"} intro={d.intro} sections={d.sections} imageSrc={(f) => urls[f]}
               edit={{ sel, zone, onSelect: (s, locked) => {
                 if (locked) { toast.message("Nagłówek i stopka nie są jeszcze edytowalne wizualnie — działają normalnie."); return; }
@@ -394,4 +395,3 @@ function elementsOf(s: PageSection): [string, string][] {
   return out;
 }
 
-export { Plus };
