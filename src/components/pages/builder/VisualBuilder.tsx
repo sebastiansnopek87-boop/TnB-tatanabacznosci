@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
-  ArrowDown, ArrowUp, Copy, Eye, EyeOff, GripVertical, History, Info, Layers, LayoutGrid, Monitor, PanelLeft, PanelRight,
+  ArrowDown, ArrowUp, BookmarkPlus, Copy, Eye, EyeOff, GripVertical, History, Info, Layers, LayoutGrid, Monitor, PanelLeft, PanelRight,
   Redo2, Search, Smartphone, Tablet, Trash2, Undo2, X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,11 +15,14 @@ import {
 } from "@/lib/pages.functions";
 import { SECTION_KINDS, SYSTEM_PAGES, newSection, normalizeSections, pagePath, type PageDraft, type PageSection, type PageVersion, type SectionKind } from "@/lib/pages";
 import { Frame } from "./Frame";
+import { SaveTemplateDialog, TemplatesPanel, useTemplates } from "./Templates";
+import { adminInstantiateTemplate, type BuilderTemplate } from "@/lib/templates.functions";
 import { Inspector, PagePanel } from "./Inspector";
 import { BLOCKS, CATEGORIES, COVERAGE, canInsert, diffDrafts, findEmpty } from "./registry";
 
 type Device = "desktop" | "tablet" | "phone";
 const WIDTH: Record<Device, number | null> = { desktop: null, tablet: 820, phone: 390 };
+let dragTpl: BuilderTemplate | null = null; // template being dragged from "Moje szablony"
 let dragKind: SectionKind | null = null; // native DnD across the preview iframe (same JS realm)
 
 const pick = (p: any): PageDraft => ({ slug: p.slug, title: p.title, intro: p.intro, sections: normalizeSections(p.sections), seo_title: p.seo_title ?? "", seo_description: p.seo_description ?? "" });
@@ -40,6 +43,10 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
   const [rightOpen, setRightOpen] = useState(true);
   const [q, setQ] = useState("");
   const [placing, setPlacing] = useState<SectionKind | null>(null);
+  const [placingTpl, setPlacingTpl] = useState<BuilderTemplate | null>(null);
+  const [saveTpl, setSaveTpl] = useState(false);
+  const tpl = useTemplates();
+  const instFn = useServerFn(adminInstantiateTemplate);
   const [saveState, setSaveState] = useState<{ dirty: boolean; at: string | null; err: string | null; busy: boolean }>({ dirty: false, at: null, err: null, busy: false });
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [overflow, setOverflow] = useState<number[]>([]);
@@ -158,6 +165,17 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
     setSections((a) => [...a.slice(0, at), newSection(kind), ...a.slice(at)]);
     setSel({ i: at, el: "section" }); setPlacing(null); if (window.innerWidth >= 1024) setRightOpen(true);
   };
+  // Templates are inserted as independent copies (new ids, own image files) — never linked.
+  const insertTemplate = async (at: number, t: BuilderTemplate) => {
+    setPlacingTpl(null);
+    if (t.sections.some((x, k) => !canInsert(x.kind, at + k))) { toast.error("Ten szablon zaczyna się od otwarcia strony — można go wstawić tylko na samej górze."); return; }
+    try {
+      const { sections } = await instFn({ data: { id: t.id, pageId: id } });
+      setSections((a) => [...a.slice(0, at), ...normalizeSections(sections), ...a.slice(at)]);
+      setSel({ i: at, el: "section" }); if (window.innerWidth >= 1024) setRightOpen(true);
+      toast.success(`Wstawiono szablon „${t.name}” jako zwykłe elementy strony.`);
+    } catch (e) { toast.error(errMsg(e)); }
+  };
   const move = (from: number, to: number) => {
     if (to < 0 || !d || to >= d.sections.length || from === to) return;
     setSections((o) => { const a = [...o]; const [x] = a.splice(from, 1); a.splice(to, 0, x!); return a; });
@@ -169,17 +187,18 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
 
   const zone = (at: number) => {
     const active = placing ?? null;
-    const ok = active ? canInsert(active, at) : true;
+    const ok = placingTpl ? placingTpl.sections.every((x, k) => canInsert(x.kind, at + k)) : active ? canInsert(active, at) : true;
+    const label = placingTpl ? `szablon „${placingTpl.name}”` : active ? SECTION_KINDS[active] : "";
     return (
-      <div data-zone="" className={`group relative flex items-center justify-center transition-all ${active ? "h-14" : "h-3 hover:h-10"}`}
-        onDragOver={(e) => { if (dragKind && canInsert(dragKind, at)) { e.preventDefault(); e.currentTarget.dataset["over"] = "1"; } }}
+      <div data-zone="" className={`group relative flex items-center justify-center transition-all ${active || placingTpl ? "h-14" : "h-3 hover:h-10"}`}
+        onDragOver={(e) => { if ((dragKind && canInsert(dragKind, at)) || (dragTpl && dragTpl.sections.every((x, k) => canInsert(x.kind, at + k)))) { e.preventDefault(); e.currentTarget.dataset["over"] = "1"; } }}
         onDragLeave={(e) => { delete e.currentTarget.dataset["over"]; }}
-        onDrop={(e) => { e.preventDefault(); delete e.currentTarget.dataset["over"]; if (dragKind) insert(at, dragKind); dragKind = null; }}>
-        <button type="button" onClick={() => (active ? ok && insert(at, active) : setLeft("elements"))}
-          className={`z-10 border px-3 py-1 text-[0.65rem] uppercase tracking-[0.14em] ${active ? (ok ? "border-gold bg-gold text-primary-foreground" : "cursor-not-allowed border-border bg-card text-muted-foreground") : "border-gold/60 bg-background text-gold opacity-0 group-hover:opacity-100"}`}>
-          {active ? (ok ? `Wstaw tutaj: ${SECTION_KINDS[active]}` : "Tu nie można wstawić") : "+ Dodaj element"}
+        onDrop={(e) => { e.preventDefault(); delete e.currentTarget.dataset["over"]; if (dragKind) insert(at, dragKind); else if (dragTpl) insertTemplate(at, dragTpl); dragKind = null; dragTpl = null; }}>
+        <button type="button" onClick={() => (placingTpl ? ok && insertTemplate(at, placingTpl) : active ? ok && insert(at, active) : setLeft("elements"))}
+          className={`z-10 border px-3 py-1 text-[0.65rem] uppercase tracking-[0.14em] ${active || placingTpl ? (ok ? "border-gold bg-gold text-primary-foreground" : "cursor-not-allowed border-border bg-card text-muted-foreground") : "border-gold/60 bg-background text-gold opacity-0 group-hover:opacity-100"}`}>
+          {active || placingTpl ? (ok ? `Wstaw tutaj: ${label}` : "Tu nie można wstawić") : "+ Dodaj element"}
         </button>
-        <span aria-hidden className={`absolute inset-x-0 top-1/2 h-px ${active && ok ? "bg-gold" : "bg-gold/30 opacity-0 group-hover:opacity-100"}`} />
+        <span aria-hidden className={`absolute inset-x-0 top-1/2 h-px ${(active || placingTpl) && ok ? "bg-gold" : "bg-gold/30 opacity-0 group-hover:opacity-100"}`} />
       </div>
     );
   };
@@ -244,7 +263,7 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
                         <div className="mt-2 space-y-2">
                           {list.map((b) => (
                             <button key={b.kind} draggable onDragStart={(e) => { dragKind = b.kind; e.dataTransfer.effectAllowed = "copy"; e.dataTransfer.setData("text/plain", b.kind); }} onDragEnd={() => { dragKind = null; }}
-                              onClick={() => { setPlacing(b.kind); if (window.innerWidth < 1024) setLeft(null); }}
+                              onClick={() => { setPlacingTpl(null); setPlacing(b.kind); if (window.innerWidth < 1024) setLeft(null); }}
                               className={`flex w-full gap-3 border p-2 text-left hover:border-gold/60 ${placing === b.kind ? "border-gold" : "border-border/60"}`}>
                               <b.Thumb />
                               <span className="min-w-0"><span className="block text-xs font-medium">{SECTION_KINDS[b.kind]}</span><span className="block text-[0.68rem] leading-snug text-muted-foreground">{b.desc}</span></span>
@@ -254,7 +273,10 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
                       </div>
                     );
                   })}
-                  <div className="mt-5 border border-dashed border-border/60 p-2 text-[0.68rem] text-muted-foreground">Własne zapisane komponenty i szablony — planowane w kolejnym etapie (40.2).</div>
+                  {placingTpl && <div className="mt-2 flex items-center justify-between border border-gold/60 p-2 text-xs text-gold">Wskaż miejsce: {placingTpl.name}<button onClick={() => setPlacingTpl(null)} aria-label="Anuluj"><X className="h-3.5 w-3.5" /></button></div>}
+                  <TemplatesPanel tpl={tpl} placingId={placingTpl?.id ?? null}
+                    onPlace={(t) => { setPlacing(null); setPlacingTpl(t); if (window.innerWidth < 1024) setLeft(null); }}
+                    onDragStart={(t) => { dragTpl = t; }} onDragEnd={() => { dragTpl = null; }} />
                 </>
               ) : (
                 <div className="space-y-1">
@@ -321,6 +343,7 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
                     <Button size="icon" variant="ghost" aria-label="Duplikuj" onClick={() => duplicate(sel.i)}><Copy className="h-4 w-4" /></Button>
                     <Button size="icon" variant="ghost" aria-label={selSection.hidden ? "Pokaż" : "Ukryj"} onClick={() => toggleHidden(sel.i)}>{selSection.hidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</Button>
                     <Button size="icon" variant="ghost" aria-label="Usuń sekcję" onClick={() => remove(sel.i)}><Trash2 className="h-4 w-4" /></Button>
+                    <Button size="sm" variant="outline" onClick={() => setSaveTpl(true)}><BookmarkPlus className="mr-1 h-4 w-4" />Zapisz jako szablon</Button>
                   </div>
                   <Inspector s={selSection} el={sel.el} busy={saveState.busy} imageUrl={selSection.image ? urls[selSection.image] : undefined}
                     onPatch={(patch, key) => setSections((a) => a.map((x, j) => (j === sel.i ? { ...x, ...patch } : x)), key && `${sel.i}:${key}`)}
@@ -334,6 +357,7 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
         )}
       </div>
 
+      {saveTpl && sel && d.sections[sel.i] && <SaveTemplateDialog pageId={id} sections={d.sections} sel={sel} onClose={() => setSaveTpl(false)} onSaved={() => { tpl.reload(); setLeft("elements"); }} />}
       {modal && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-background/80 p-4" onClick={() => setModal(null)}>
           <div className="max-h-[85vh] w-full max-w-2xl overflow-y-auto border border-border/60 bg-card p-5" onClick={(e) => e.stopPropagation()}>

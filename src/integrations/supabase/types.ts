@@ -640,6 +640,42 @@ export type Database = {
           },
         ]
       }
+      builder_templates: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string | null
+          description: string
+          id: string
+          name: string
+          scope: string
+          sections: Json
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          name: string
+          scope?: string
+          sections?: Json
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          name?: string
+          scope?: string
+          sections?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       community_comments: {
         Row: {
           author_id: string

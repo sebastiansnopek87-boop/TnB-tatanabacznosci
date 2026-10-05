@@ -58,7 +58,7 @@ const sectionShape = (btn: z.ZodTypeAny) => z.object({
   imageAlt: z.string().max(200), caption: z.string().max(300), quoteAuthor: z.string().max(120), buttons: z.array(btn).max(4),
 });
 const Section = sectionShape(Btn);
-const DraftSection = sectionShape(BtnDraft);
+export const DraftSection = sectionShape(BtnDraft);
 const PageInput = z.object({
   id: z.string().uuid().nullable(), slug: SLUG,
   title: z.string().trim().min(2, "Tytuł musi mieć co najmniej 2 znaki.").max(200), intro: z.string().max(2000),
