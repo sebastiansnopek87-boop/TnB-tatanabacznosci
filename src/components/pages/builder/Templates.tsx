@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { errMsg } from "@/components/admin/format";
-import { PageView } from "@/components/pages/PageView";
+import { PageSections } from "@/components/pages/PageView";
 import { normalizeSections, type PageSection } from "@/lib/pages";
 import {
   adminCreateTemplate, adminDeleteTemplate, adminDuplicateTemplate, adminListTemplates, adminTemplateImageUrls, adminUpdateTemplate, type BuilderTemplate,
@@ -30,8 +30,8 @@ export function TemplateRender({ t, urls, width, scale, maxH }: { t: BuilderTemp
   const inner = width / scale;
   return (
     <div className="relative overflow-hidden bg-background" style={{ width, maxHeight: maxH }} aria-hidden>
-      <div style={{ width: inner, transform: `scale(${scale})`, transformOrigin: "top left", pointerEvents: "none" }} className="[&_[data-page-heading]]:hidden">
-        <PageView eyebrow="" title="" intro="" sections={normalizeSections(t.sections).map((s) => ({ ...s, hidden: false }))} imageSrc={(f) => urls[`${t.id}/${f}`]} preview />
+      <div style={{ width: inner, transform: `scale(${scale})`, transformOrigin: "top left", pointerEvents: "none" }}>
+        <PageSections sections={normalizeSections(t.sections).map((s) => ({ ...s, hidden: false }))} imageSrc={(f) => urls[`${t.id}/${f}`]} />
       </div>
     </div>
   );
