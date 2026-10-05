@@ -16,7 +16,7 @@ import {
 import { SECTION_KINDS, SYSTEM_PAGES, newSection, normalizeSections, pagePath, type PageDraft, type PageSection, type PageVersion, type SectionKind } from "@/lib/pages";
 import { Frame } from "./Frame";
 import { Inspector, PagePanel } from "./Inspector";
-import { BLOCKS, CATEGORIES, COVERAGE, canInsert, diffDrafts } from "./registry";
+import { BLOCKS, CATEGORIES, COVERAGE, canInsert, diffDrafts, findEmpty } from "./registry";
 
 type Device = "desktop" | "tablet" | "phone";
 const WIDTH: Record<Device, number | null> = { desktop: null, tablet: 820, phone: 390 };
@@ -342,7 +342,14 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
               <div className="mt-4 space-y-3 text-sm">
                 <p className="text-muted-foreground">Szkic zastąpi publiczną wersję strony {pagePath({ slug: d.slug, system_key: meta.system_key })}. Poprzednia wersja zostanie w historii i można ją przywrócić.</p>
                 <ChangeList items={diffDrafts(meta.live, d)} />
-                <div className="flex gap-2"><Button disabled={saveState.busy} onClick={publish}>Tak, opublikuj</Button><Button variant="outline" onClick={() => setModal(null)}>Anuluj</Button></div>
+                {(() => { const issues = findEmpty(d.sections); return issues.length > 0 ? (<>
+                  <div className="border border-gold/60 bg-gold/5 p-3" data-testid="needs-attention">
+                    <p className="font-display text-sm font-semibold uppercase text-gold">Wymaga uwagi</p>
+                    <p className="mb-2 text-xs text-muted-foreground">Te elementy są puste i na stronie publicznej zostawią pustą przestrzeń. Jeśli to zamierzone, zaznacz w sekcji „Opcjonalna treść”.</p>
+                    <ul className="space-y-1">{issues.map((x, k) => <li key={k}><button className="text-left text-xs underline decoration-gold/50 hover:text-gold" onClick={() => { setSel({ i: x.i, el: x.el } as Sel); setRightOpen(true); setModal(null); }}>{x.label}</button></li>)}</ul>
+                  </div>
+                  <div className="flex flex-wrap gap-2"><Button onClick={() => setModal(null)}>Wróć do edycji</Button><Button variant="outline" disabled={saveState.busy} onClick={publish}>Opublikuj mimo ostrzeżenia</Button></div>
+                </>) : <div className="flex gap-2"><Button disabled={saveState.busy} onClick={publish}>Tak, opublikuj</Button><Button variant="outline" onClick={() => setModal(null)}>Anuluj</Button></div>; })()}
               </div>
             )}
             {modal === "coverage" && (
