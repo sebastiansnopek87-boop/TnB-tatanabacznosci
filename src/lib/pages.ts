@@ -20,6 +20,7 @@ export type PageSection = {
   buttons: PageButton[];
   items: PageItem[]; // value cards or the two columns of a comparison
   hidden?: boolean; // hidden sections stay in the page but are not shown publicly
+  optional?: boolean; // "opcjonalna treść": intentionally empty, no pre-publish warning
 };
 export type PublicPage = {
   id: string; slug: string; system_key: string | null; title: string; intro: string;

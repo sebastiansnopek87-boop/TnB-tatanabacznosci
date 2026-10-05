@@ -48,3 +48,21 @@ export function diffDrafts(from: PageDraft, to: PageDraft): string[] {
   }
   return out;
 }
+
+// Pre-publish check: visible sections whose missing content would leave an empty spot on the page.
+export type EmptyIssue = { i: number; el: string; label: string };
+export function findEmpty(sections: PageDraft["sections"]): EmptyIssue[] {
+  const out: EmptyIssue[] = [];
+  const t = (v?: string | null) => !!v && v.trim().length > 0;
+  sections.forEach((s, i) => {
+    if (s.hidden || s.optional) return;
+    const where = `sekcja ${i + 1} (${SECTION_KINDS[s.kind]})`;
+    const any = t(s.heading) || t(s.body) || t(s.eyebrow) || !!s.image || s.buttons.length > 0 || s.items.some((it) => t(it.title) || t(it.body));
+    if (s.kind === "image" ? !s.image : s.kind === "quote" ? !t(s.body) : !any) { out.push({ i, el: "section", label: `Pusta sekcja — ${where}` }); return; }
+    if (s.kind === "values" || s.kind === "columns") s.items.forEach((it, k) => { if (!t(it.title) && !t(it.body)) out.push({ i, el: `item-${k}`, label: `Pusta ${s.kind === "values" ? "karta" : "kolumna"} ${k + 1} — ${where}` }); });
+    if (s.kind === "cta" && !t(s.heading) && !t(s.body)) out.push({ i, el: "section", label: `CTA bez nagłówka i tekstu — ${where}` });
+    if (s.kind === "cta" && s.buttons.length === 0) out.push({ i, el: "section", label: `CTA bez przycisku — ${where}` });
+    if ((s.kind === "hero" || s.kind === "text") && !t(s.heading) && !t(s.body)) out.push({ i, el: "section", label: `Brak nagłówka i tekstu — ${where}` });
+  });
+  return out;
+}

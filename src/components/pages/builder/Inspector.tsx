@@ -80,6 +80,7 @@ export function Inspector({ s, el, busy, imageUrl, onPatch, onSelectEl, onUpload
         {s.buttons.length < 4 && <Button size="sm" variant="outline" onClick={() => { onPatch({ buttons: [...s.buttons, { label: "Nowy przycisk", href: "/" }] }); onSelectEl(`button-${s.buttons.length}`); }}><Plus className="mr-1 h-3 w-3" />Przycisk</Button>}
       </div>
       <label className="flex items-center gap-2 text-xs text-muted-foreground"><input type="checkbox" checked={!!s.hidden} onChange={(e) => onPatch({ hidden: e.target.checked })} />Ukryj sekcję na stronie publicznej</label>
+      <label className="mt-2 flex items-center gap-2 text-xs text-muted-foreground"><input type="checkbox" checked={!!s.optional} onChange={(e) => onPatch({ optional: e.target.checked })} />Opcjonalna treść (nie ostrzegaj o pustych polach przed publikacją)</label>
     </>
   );
 }

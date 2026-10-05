@@ -50,7 +50,7 @@ export const adminCheckSlug = createServerFn({ method: "GET" }).middleware([requ
 const BtnDraft = z.object({ label: z.string().max(60), href: z.string().max(500) });
 const Btn = z.object({ label: z.string().trim().min(1, "Przycisk musi mieć etykietę.").max(60), href: z.string().trim().max(500).refine(isSafeHref, "Adres przycisku musi zaczynać się od / lub https://") });
 const sectionShape = (btn: z.ZodTypeAny) => z.object({
-  hidden: z.boolean().default(false),
+  hidden: z.boolean().default(false), optional: z.boolean().default(false),
   id: z.string().regex(/^[a-z0-9]{1,20}$/), kind: z.enum(["hero", "text", "values", "columns", "quote", "image", "cta"]),
   eyebrow: z.string().max(200).default(""), layout: z.enum(["left", "right"]).default("right"), display: z.enum(["full", "inset", "featured"]).default("full"), decorative: z.boolean().default(false),
   items: z.array(z.object({ title: z.string().max(120), body: z.string().max(3000) })).max(12).default([]),
