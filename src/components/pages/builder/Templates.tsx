@@ -124,7 +124,7 @@ function MetaDialog({ title, initial, extra, onClose, onSubmit }: { title: strin
   const [m, setM] = useState(initial); const [busy, setBusy] = useState(false);
   return (
     <Modal title={title} onClose={onClose}>
-      <form className="space-y-3" onSubmit={async (e) => { e.preventDefault(); if (!m.name.trim()) { toast.error("Podaj nazwę szablonu."); return; } setBusy(true); await onSubmit(m); setBusy(false); }}>
+      <form className="space-y-3" onSubmit={async (e) => { e.preventDefault(); if (!m.name.trim()) toast.error("Podaj nazwę szablonu."); else { setBusy(true); await onSubmit(m); setBusy(false); } }}>
         <label className="block text-xs"><span className="mb-1 block uppercase tracking-wide text-muted-foreground">Nazwa</span><Input aria-label="Nazwa szablonu" value={m.name} maxLength={120} onChange={(e) => setM({ ...m, name: e.target.value })} placeholder="np. Sekcja wartości — TNB" /></label>
         <label className="block text-xs"><span className="mb-1 block uppercase tracking-wide text-muted-foreground">Opis (opcjonalnie)</span><Textarea aria-label="Opis szablonu" rows={2} value={m.description} maxLength={500} onChange={(e) => setM({ ...m, description: e.target.value })} /></label>
         <label className="block text-xs"><span className="mb-1 block uppercase tracking-wide text-muted-foreground">Kategoria</span>
