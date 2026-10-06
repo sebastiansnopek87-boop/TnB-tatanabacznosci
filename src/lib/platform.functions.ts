@@ -7,8 +7,9 @@ export type PublicPlatformSettings = {
   platform_name: string; contact_email: string | null; support_email: string | null;
   notice_enabled: boolean; maintenance_enabled: boolean; maintenance_message: string;
   social_youtube: string | null; social_spotify: string | null; social_tiktok: string | null; social_instagram: string | null;
+  podcast_layout?: string;
 };
-const PUBLIC_COLS = "platform_name, contact_email, support_email, notice_enabled, maintenance_enabled, maintenance_message, social_youtube, social_spotify, social_tiktok, social_instagram";
+const PUBLIC_COLS = "platform_name, contact_email, support_email, notice_enabled, maintenance_enabled, maintenance_message, social_youtube, social_spotify, social_tiktok, social_instagram, podcast_layout";
 
 // Public: only non-sensitive columns, read through the anon SELECT policy.
 export const getPublicPlatformSettings = createServerFn({ method: "GET" }).handler(async () => {
@@ -76,6 +77,27 @@ export const updatePlatformSettings = createServerFn({ method: "POST" })
     if (prev && prev.maintenance_enabled !== data.maintenance_enabled) {
       await logEvent({ type: data.maintenance_enabled ? "maintenance_on" : "maintenance_off", actor: context.userId, objectKind: "settings", objectId: "maintenance" });
     }
+    return { ok: true as const };
+  });
+
+export type PodcastLayout = "list" | "grid";
+
+// Public: layout of the episode list on /podcast.
+export const getPodcastLayout = createServerFn({ method: "GET" }).handler(async () => {
+  const s = await getPublicPlatformSettings();
+  return ((s as any)?.podcast_layout === "grid" ? "grid" : "list") as PodcastLayout;
+});
+
+export const setPodcastLayout = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ layout: z.enum(["list", "grid"]) }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("platform_settings")
+      .update({ podcast_layout: data.layout, updated_at: new Date().toISOString(), updated_by: context.userId }).eq("id", 1);
+    await logEvent({ type: "settings_update", actor: context.userId, objectKind: "settings", objectId: "podcast_layout", result: error ? "failed" : "ok", detail: `Układ odcinków: ${data.layout}` });
+    if (error) throw new Error("Nie udało się zapisać układu.");
     return { ok: true as const };
   });
 

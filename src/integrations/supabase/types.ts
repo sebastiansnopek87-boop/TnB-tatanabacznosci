@@ -1940,6 +1940,7 @@ export type Database = {
           maintenance_message: string
           notice_enabled: boolean
           platform_name: string
+          podcast_layout: string
           social_instagram: string | null
           social_spotify: string | null
           social_tiktok: string | null
@@ -1955,6 +1956,7 @@ export type Database = {
           maintenance_message?: string
           notice_enabled?: boolean
           platform_name?: string
+          podcast_layout?: string
           social_instagram?: string | null
           social_spotify?: string | null
           social_tiktok?: string | null
@@ -1970,6 +1972,7 @@ export type Database = {
           maintenance_message?: string
           notice_enabled?: boolean
           platform_name?: string
+          podcast_layout?: string
           social_instagram?: string | null
           social_spotify?: string | null
           social_tiktok?: string | null
