@@ -62,6 +62,7 @@ import { Route as AuthenticatedAdminUzytkownicyRouteImport } from './routes/_aut
 import { Route as AuthenticatedAdminWiadomosciRouteImport } from './routes/_authenticated/admin.wiadomosci'
 import { Route as AuthenticatedAdminZamowieniaRouteImport } from './routes/_authenticated/admin.zamowienia'
 import { Route as AuthenticatedAdminZdarzeniaRouteImport } from './routes/_authenticated/admin.zdarzenia'
+import { Route as AuthenticatedAdminZgloszeniaGlosRouteImport } from './routes/_authenticated/admin.zgloszenia-glos'
 import { Route as SpotkaniaRezerwacjaTokenRouteImport } from './routes/spotkania.rezerwacja.$token'
 import { Route as SpotkaniaZgloszenieTokenRouteImport } from './routes/spotkania.zgloszenie.$token'
 import { Route as ApiPublicCronConsultRemindersRouteImport } from './routes/api/public/cron/consult-reminders'
@@ -361,6 +362,12 @@ const AuthenticatedAdminZdarzeniaRoute =
     path: '/zdarzenia',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminZgloszeniaGlosRoute =
+  AuthenticatedAdminZgloszeniaGlosRouteImport.update({
+    id: '/zgloszenia-glos',
+    path: '/zgloszenia-glos',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const SpotkaniaRezerwacjaTokenRoute =
   SpotkaniaRezerwacjaTokenRouteImport.update({
     id: '/spotkania/rezerwacja/$token',
@@ -474,6 +481,7 @@ export interface FileRoutesByFullPath {
   '/admin/wiadomosci': typeof AuthenticatedAdminWiadomosciRoute
   '/admin/zamowienia': typeof AuthenticatedAdminZamowieniaRoute
   '/admin/zdarzenia': typeof AuthenticatedAdminZdarzeniaRoute
+  '/admin/zgloszenia-glos': typeof AuthenticatedAdminZgloszeniaGlosRoute
   '/spotkania/rezerwacja/$token': typeof SpotkaniaRezerwacjaTokenRoute
   '/spotkania/zgloszenie/$token': typeof SpotkaniaZgloszenieTokenRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -538,6 +546,7 @@ export interface FileRoutesByTo {
   '/admin/wiadomosci': typeof AuthenticatedAdminWiadomosciRoute
   '/admin/zamowienia': typeof AuthenticatedAdminZamowieniaRoute
   '/admin/zdarzenia': typeof AuthenticatedAdminZdarzeniaRoute
+  '/admin/zgloszenia-glos': typeof AuthenticatedAdminZgloszeniaGlosRoute
   '/spotkania/rezerwacja/$token': typeof SpotkaniaRezerwacjaTokenRoute
   '/spotkania/zgloszenie/$token': typeof SpotkaniaZgloszenieTokenRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -605,6 +614,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/wiadomosci': typeof AuthenticatedAdminWiadomosciRoute
   '/_authenticated/admin/zamowienia': typeof AuthenticatedAdminZamowieniaRoute
   '/_authenticated/admin/zdarzenia': typeof AuthenticatedAdminZdarzeniaRoute
+  '/_authenticated/admin/zgloszenia-glos': typeof AuthenticatedAdminZgloszeniaGlosRoute
   '/spotkania/rezerwacja/$token': typeof SpotkaniaRezerwacjaTokenRoute
   '/spotkania/zgloszenie/$token': typeof SpotkaniaZgloszenieTokenRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -672,6 +682,7 @@ export interface FileRouteTypes {
     | '/admin/wiadomosci'
     | '/admin/zamowienia'
     | '/admin/zdarzenia'
+    | '/admin/zgloszenia-glos'
     | '/spotkania/rezerwacja/$token'
     | '/spotkania/zgloszenie/$token'
     | '/admin/'
@@ -736,6 +747,7 @@ export interface FileRouteTypes {
     | '/admin/wiadomosci'
     | '/admin/zamowienia'
     | '/admin/zdarzenia'
+    | '/admin/zgloszenia-glos'
     | '/spotkania/rezerwacja/$token'
     | '/spotkania/zgloszenie/$token'
     | '/admin'
@@ -802,6 +814,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/wiadomosci'
     | '/_authenticated/admin/zamowienia'
     | '/_authenticated/admin/zdarzenia'
+    | '/_authenticated/admin/zgloszenia-glos'
     | '/spotkania/rezerwacja/$token'
     | '/spotkania/zgloszenie/$token'
     | '/_authenticated/admin/'
@@ -1230,6 +1243,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminZdarzeniaRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/zgloszenia-glos': {
+      id: '/_authenticated/admin/zgloszenia-glos'
+      path: '/zgloszenia-glos'
+      fullPath: '/admin/zgloszenia-glos'
+      preLoaderRoute: typeof AuthenticatedAdminZgloszeniaGlosRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/spotkania/rezerwacja/$token': {
       id: '/spotkania/rezerwacja/$token'
       path: '/spotkania/rezerwacja/$token'
@@ -1334,6 +1354,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminWiadomosciRoute: typeof AuthenticatedAdminWiadomosciRoute
   AuthenticatedAdminZamowieniaRoute: typeof AuthenticatedAdminZamowieniaRoute
   AuthenticatedAdminZdarzeniaRoute: typeof AuthenticatedAdminZdarzeniaRoute
+  AuthenticatedAdminZgloszeniaGlosRoute: typeof AuthenticatedAdminZgloszeniaGlosRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
@@ -1362,6 +1383,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminWiadomosciRoute: AuthenticatedAdminWiadomosciRoute,
   AuthenticatedAdminZamowieniaRoute: AuthenticatedAdminZamowieniaRoute,
   AuthenticatedAdminZdarzeniaRoute: AuthenticatedAdminZdarzeniaRoute,
+  AuthenticatedAdminZgloszeniaGlosRoute: AuthenticatedAdminZgloszeniaGlosRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
