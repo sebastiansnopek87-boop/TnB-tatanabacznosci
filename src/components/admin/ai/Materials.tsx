@@ -9,16 +9,17 @@ import {
   aiEditFragment, aiEditWhole, createMaterial, getMaterial, listMaterials, prepareForPublication, previewCreateMaterial,
   restoreMaterialVersion, saveMaterial, setMaterialStatus,
 } from "@/lib/editor-materials.functions";
-import { CONTRIB, HANDOFF_LABEL, HANDOFF_PATH, MATERIAL_STATUS, VERIFY, handoffTarget, type MaterialSection } from "@/lib/editor-materials";
+import { CONTRIB, HANDOFF_LABEL, HANDOFF_PATH, MATERIAL_STATUS, VERIFY, handoffTarget, type ArticleMeta, type MaterialSection } from "@/lib/editor-materials";
+import { articleCategoriesQuery } from "@/lib/articles";
 
 const box = "border border-border/60 bg-card/40 p-4";
 const input = "mt-1 w-full border border-border bg-background px-3 py-2 text-sm";
 const fmt = (s: string | null) => (s ? new Date(s).toLocaleString("pl-PL", { dateStyle: "short", timeStyle: "short" }) : "—");
 const FORMATS = ["artykuł", "e-book", "poradnik", "podcast", "scenariusz audio/wideo", "zeszyt ćwiczeń", "karty refleksji", "materiał edukacyjny"];
 const FRAG_CMDS = ["Napisz to mocniej.", "Napisz bardziej po ludzku.", "Skróć ten fragment o połowę.", "Rozwiń ten argument.", "Usuń moralizatorski ton.", "Dodaj więcej emocji.",
-  "Zmień ten fragment tak, aby pasował do stylu TNB.", "Napisz ten fragment od nowa.", "Dodaj pytania do refleksji.", "Połącz te dwa fragmenty.", "Usuń powtórzenia.", "Znajdź słaby argument i zaproponuj lepszy."];
+  "Zmień ten fragment tak, aby pasował do stylu TNB.", "Napisz ten fragment od nowa.", "Dodaj pytania do refleksji.", "Połącz te dwa fragmenty.", "Usuń powtórzenia.", "Znajdź słaby argument i zaproponuj lepszy.", "Zmień ton na bardziej naturalny.", "Nie moralizuj.", "Dodaj pytanie, które zmusi czytelnika do refleksji."];
 const WHOLE_CMDS = ["Przeczytaj cały materiał i popraw jego spójność.", "Skróć materiał o około 20%, zachowując najważniejsze treści.", "Zmień strukturę, aby materiał był bardziej angażujący.",
-  "Znajdź wszystkie powtórzenia.", "Przygotuj mocniejszy początek.", "Sprawdź, czy materiał nie brzmi jak tekst wygenerowany przez AI.", "Przeredaguj tekst tak, aby był naturalny i zgodny z charakterem TNB."];
+  "Znajdź wszystkie powtórzenia.", "Przygotuj mocniejszy początek.", "Sprawdź, czy materiał nie brzmi jak tekst wygenerowany przez AI.", "Przeredaguj tekst tak, aby był naturalny i zgodny z charakterem TNB.", "Przeredaguj cały artykuł, zachowując jego sens.", "Usuń powtórzenia w całym tekście."];
 const rid = () => Math.random().toString(36).slice(2, 10);
 const fix = (p: Promise<any>) => p.then((r) => r, (e) => ({ ok: false, error: errMsg(e) }));
 
@@ -26,19 +27,20 @@ const fix = (p: Promise<any>) => p.then((r) => r, (e) => ({ ok: false, error: er
 export function CreateMaterial({ p, aiOn, onCreated }: { p: any; aiOn: boolean; onCreated: (id: string) => void }) {
   const prev = useServerFn(previewCreateMaterial), create = useServerFn(createMaterial);
   const [info, setInfo] = useState<any>(null), [format, setFormat] = useState(""), [dir, setDir] = useState(""), [busy, setBusy] = useState(false);
-  if (!info) return <Button size="sm" disabled={!aiOn || busy} onClick={async () => { setBusy(true); const r: any = await fix(prev({ data: { proposalId: p.id } })); setBusy(false); if (!r.ok) { toast.error(r.error); return; } setInfo(r); setFormat(r.format); }}>{busy ? "Sprawdzam…" : "STWÓRZ MATERIAŁ"}</Button>;
+  const isArt = (p.format ?? "artykuł") === "artykuł";
+  if (!info) return <Button size="sm" disabled={!aiOn || busy} onClick={async () => { setBusy(true); const r: any = await fix(prev({ data: { proposalId: p.id } })); setBusy(false); if (!r.ok) { toast.error(r.error); return; } setInfo(r); setFormat(r.format); }}>{busy ? "Sprawdzam…" : isArt ? "STWÓRZ ARTYKUŁ" : "STWÓRZ MATERIAŁ"}</Button>;
   return (
     <div className="w-full space-y-3 border border-gold/60 p-3">
       <p className="text-xs uppercase text-gold">Przed generowaniem pełnej wersji roboczej</p>
       <ul className="text-sm">
-        <li>Operacja: <b>pełna wersja robocza</b> — zostanie wykonane jedno wywołanie AI (zużywa kredyty).</li>
+        <li>Operacja: <b>{format === "artykuł" ? "pełny artykuł (lead, treść ze śródtytułami, zakończenie, SEO, adres, kategoria, tagi)" : "pełna wersja robocza"}</b> — zostanie wykonane jedno wywołanie AI (zużywa kredyty).</li>
         <li>Wybrane źródła: <b>{info.sources.length}</b> {info.sources.length ? `(${info.sources.map((s: any) => s.title).join("; ")})` : "— AI oznaczy wszystkie fakty jako wymagające weryfikacji"}</li>
         <li>Objętość kontekstu: ok. {info.chars.toLocaleString("pl-PL")} znaków (~{info.tokens.toLocaleString("pl-PL")} tokenów wejścia)</li>
       </ul>
       {info.duplicates.length > 0 && <div className="border-l-2 border-destructive pl-3 text-sm"><p className="font-semibold text-destructive">UWAGA — PODOBNY MATERIAŁ ISTNIEJE</p><ul>{info.duplicates.map((d: any) => <li key={d.id}>{d.kind}: {d.title} ({d.score}% zbieżności tytułu)</li>)}</ul><p className="text-xs text-muted-foreground">Tworzenie nie jest blokowane — decyzja należy do Ciebie.</p></div>}
       <label className="block text-xs">Format<select className={input} value={format} onChange={(e) => setFormat(e.target.value)}>{FORMATS.map((f) => <option key={f}>{f}</option>)}</select></label>
       <label className="block text-xs">Kierunek / wskazówki (opcjonalnie)<textarea className={input} rows={2} value={dir} onChange={(e) => setDir(e.target.value)} maxLength={2000} /></label>
-      <p className="text-xs text-muted-foreground">Trafi do: {HANDOFF_LABEL[handoffTarget(format)]} (dopiero po Twoim zatwierdzeniu, jako szkic).</p>
+      <p className="text-xs text-muted-foreground">Trafi do: {HANDOFF_LABEL[handoffTarget(format)]} (dopiero po Twoim zatwierdzeniu, jako szkic). Teksty nigdy nie trafiają do Biblioteki.</p>
       <div className="flex gap-2">
         <Button size="sm" disabled={busy} onClick={async () => { setBusy(true); const r: any = await fix(create({ data: { proposalId: p.id, format, direction: dir, confirmed: true } })); setBusy(false); if (!r.ok) { toast.error(r.error); return; } toast.success("Wersja robocza gotowa"); onCreated(r.id); }}>{busy ? "AI pisze materiał… (może potrwać kilka minut)" : "ROZPOCZNIJ GENEROWANIE"}</Button>
         <Button size="sm" variant="outline" disabled={busy} onClick={() => setInfo(null)}>Anuluj</Button>
@@ -58,7 +60,7 @@ export function MaterialsTab({ aiOn, openId, setOpenId }: { aiOn: boolean; openI
   const open = (id: string, m: typeof mode) => { setMode(m); setOpenId(id); };
   return (
     <div className="space-y-3">
-      <p className="text-sm text-muted-foreground">Wszystkie materiały przygotowane przez agenta. Nowy materiał tworzysz przyciskiem „STWÓRZ MATERIAŁ” w zakładce Propozycje.</p>
+      <p className="text-sm text-muted-foreground">Wszystkie materiały przygotowane przez agenta. Nowy artykuł tworzysz przyciskiem „STWÓRZ ARTYKUŁ” w zakładce Propozycje; gotowy trafia jako szkic do modułu Artykuły.</p>
       {!rows.length && <p className="text-sm text-muted-foreground">Brak materiałów w pracy.</p>}
       {rows.length > 0 && <div className="overflow-x-auto"><table className="w-full text-left text-sm">
         <thead className="text-xs uppercase text-muted-foreground"><tr><th className="p-2">Materiał</th><th className="p-2">Format</th><th className="p-2">Status</th><th className="p-2">Utworzono</th><th className="p-2">Ostatnia zmiana</th><th className="p-2">Źródła</th><th className="p-2">Autor</th><th className="p-2">Akcje</th></tr></thead>
@@ -87,22 +89,26 @@ function Editor({ id, aiOn, initial, close }: { id: string; aiOn: boolean; initi
   const get = useServerFn(getMaterial), save = useServerFn(saveMaterial), frag = useServerFn(aiEditFragment), whole = useServerFn(aiEditWhole),
     restore = useServerFn(restoreMaterialVersion), setStatus = useServerFn(setMaterialStatus), prepare = useServerFn(prepareForPublication);
   const q = useQuery({ queryKey: ["ai-ed", "material", id], queryFn: () => get({ data: { id } }) });
+  const cats = useQuery(articleCategoriesQuery());
+  const [meta, setMeta] = useState<ArticleMeta>({});
   const [title, setTitle] = useState(""), [subtitle, setSubtitle] = useState(""), [secs, setSecs] = useState<MaterialSection[]>([]), [dirty, setDirty] = useState(false);
   const [sel, setSel] = useState<{ sectionId: string; text: string } | null>(null), [instr, setInstr] = useState(""), [wInstr, setWInstr] = useState(""), [wConfirm, setWConfirm] = useState(false);
   const [busy, setBusy] = useState<string | null>(null), [report, setReport] = useState(""), [view, setView] = useState<string | null>(null), [cmp, setCmp] = useState<string | null>(null);
   const aiRef = useRef<HTMLDivElement>(null), verRef = useRef<HTMLDivElement>(null);
   const m: any = q.data?.material, versions: any[] = q.data?.versions ?? [];
-  useEffect(() => { if (m) { setTitle(m.title); setSubtitle(m.subtitle); setSecs(m.sections ?? []); setDirty(false); } }, [m]);
+  useEffect(() => { if (m) { setTitle(m.title); setSubtitle(m.subtitle); setSecs(m.sections ?? []); setMeta(m.meta ?? {}); setDirty(false); } }, [m]);
   useEffect(() => { if (!q.data) return; (initial === "ai" ? aiRef : initial === "versions" ? verRef : null)?.current?.scrollIntoView({ behavior: "smooth" }); }, [q.data, initial]);
   if (q.isLoading) return <p className="text-muted-foreground">Ładowanie…</p>;
   if (q.error || !m) return <p className="text-destructive">{errMsg(q.error)}</p>;
   const edit = (i: number, patch: Partial<MaterialSection>) => { setSecs((s) => s.map((x, j) => (j === i ? { ...x, ...patch } : x))); setDirty(true); };
   const move = (i: number, d: number) => { setSecs((s) => { const n = [...s]; const t = n[i + d]; if (!t) return s; n[i + d] = n[i]!; n[i] = t; return n; }); setDirty(true); };
   const done = async (r: any, msg: string) => { if (!r.ok) { toast.error(r.error); return false; } toast.success(msg); await q.refetch(); return true; };
-  const doSave = async (note = "") => { setBusy("save"); const r = await fix(save({ data: { id, title, subtitle, sections: secs, note } })); setBusy(null); return done(r, "Zapisano nową wersję"); };
+  const doSave = async (note = "") => { setBusy("save"); const r = await fix(save({ data: { id, title, subtitle, sections: secs, note, ...(isArt ? { meta } : {}) } })); setBusy(null); return done(r, "Zapisano nową wersję"); };
   const pick = (t: HTMLTextAreaElement, sectionId: string) => { const text = t.value.slice(t.selectionStart, t.selectionEnd); if (text || sel?.sectionId !== sectionId) setSel({ sectionId, text }); };
   const markers = secs.filter((s) => s.body.includes(CONTRIB) || s.body.includes(VERIFY));
   const locked = !!m.handoff_id;
+  const isArt = handoffTarget(m.format) === "article";
+  const sm = (patch: Partial<ArticleMeta>) => { setMeta((o) => ({ ...o, ...patch })); setDirty(true); };
   const snap = (vid: string | null) => versions.find((v) => v.id === vid)?.snapshot;
   return (
     <div className="space-y-5">
@@ -122,8 +128,22 @@ function Editor({ id, aiOn, initial, close }: { id: string; aiOn: boolean; initi
 
       <section className={box}>
         <label className="block text-xs">Tytuł<input className={input} value={title} disabled={locked} onChange={(e) => { setTitle(e.target.value); setDirty(true); }} /></label>
-        <label className="mt-2 block text-xs">Podtytuł / lead<textarea className={input} rows={2} value={subtitle} disabled={locked} onChange={(e) => { setSubtitle(e.target.value); setDirty(true); }} /></label>
+        <label className="mt-2 block text-xs">{isArt ? "Podtytuł (opcjonalnie)" : "Podtytuł / lead"}<textarea className={input} rows={2} value={subtitle} disabled={locked} onChange={(e) => { setSubtitle(e.target.value); setDirty(true); }} /></label>
+        {isArt && <label className="mt-2 block text-xs">Lead / wprowadzenie (zajawka artykułu)<textarea className={input} rows={3} maxLength={600} value={meta.lead ?? ""} disabled={locked} onChange={(e) => sm({ lead: e.target.value })} /></label>}
       </section>
+      {isArt && <section className={box}>
+        <h3 className="font-semibold">Dane artykułu (propozycja AI — możesz zmienić)</h3>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <label className="block text-xs">Meta title ({(meta.meta_title ?? "").length}/70)<input className={input} maxLength={70} value={meta.meta_title ?? ""} disabled={locked} onChange={(e) => sm({ meta_title: e.target.value })} /></label>
+          <label className="block text-xs">Adres URL: /artykuly/<input className={input} maxLength={80} value={meta.slug ?? ""} disabled={locked} onChange={(e) => sm({ slug: e.target.value })} /></label>
+          <label className="block text-xs sm:col-span-2">Meta description ({(meta.meta_description ?? "").length}/170)<textarea className={input} rows={2} maxLength={170} value={meta.meta_description ?? ""} disabled={locked} onChange={(e) => sm({ meta_description: e.target.value })} /></label>
+          <label className="block text-xs">Kategoria<select className={input} value={meta.category ?? ""} disabled={locked} onChange={(e) => sm({ category: e.target.value })}><option value="">— bez kategorii —</option>{(cats.data ?? []).map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}</select></label>
+          <label className="block text-xs">Tagi (po przecinku)<input className={input} value={(meta.tags ?? []).join(", ")} disabled={locked} onChange={(e) => sm({ tags: e.target.value.split(",").map((t) => t.trim()).filter(Boolean).slice(0, 12) })} /></label>
+          <label className="block text-xs sm:col-span-2">Pytanie do refleksji<input className={input} maxLength={400} value={meta.reflection_question ?? ""} disabled={locked} onChange={(e) => sm({ reflection_question: e.target.value })} /></label>
+          <label className="block text-xs sm:col-span-2">Propozycja CTA<input className={input} maxLength={400} value={meta.cta ?? ""} disabled={locked} onChange={(e) => sm({ cta: e.target.value })} /></label>
+        </div>
+        <p className="mt-1 text-xs text-muted-foreground">Tagi i CTA zapisują się w informacji o pochodzeniu artykułu (widocznej tylko w panelu) — moduł Artykuły nie ma pól publicznych na tagi.</p>
+      </section>}
 
       {secs.map((s, i) => (
         <section key={s.id} id={`sec-${s.id}`} className={`${box} ${sel?.sectionId === s.id ? "border-gold" : ""}`}>
