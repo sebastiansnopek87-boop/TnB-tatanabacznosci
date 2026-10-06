@@ -26,6 +26,12 @@ async function deliver(_m: { to: string; from: string; replyTo: string | null; s
   return { ok: false, reason: s.reason };
 }
 
+// Effective delivery mode shown to admins before a send ("test" = captured in history, nothing delivered).
+export async function deliveryMode(): Promise<"test" | "live"> {
+  const { data } = await (await db()).from("email_settings").select("delivery_mode").eq("id", 1).maybeSingle();
+  return data?.delivery_mode === "live" && providerStatus().connected ? "live" : "test";
+}
+
 export async function loadTemplate(key: string) {
   const def = DEFAULT_TEMPLATES[key];
   if (!def) return null;

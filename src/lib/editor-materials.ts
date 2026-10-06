@@ -20,7 +20,11 @@ export const MATERIAL_RULES = [
   "Informacje spoza źródeł oznaczaj jako wymagające weryfikacji.",
 ];
 
-export const handoffTarget = (format: string): "article" | "library" | "podcast" =>
-  format === "artykuł" ? "article" : format === "podcast" || format === "scenariusz audio/wideo" ? "podcast" : "library";
+// Text materials always become an ARTICLE draft; only audio scripts go to Głos TNB.
+// The Library is never a hand-off target (it stays a read-only knowledge source).
+export const handoffTarget = (format: string): "article" | "podcast" =>
+  format === "podcast" || format === "scenariusz audio/wideo" ? "podcast" : "article";
+// Article metadata proposed by the AI and edited by Sebastian before hand-off.
+export type ArticleMeta = { lead?: string; meta_title?: string; meta_description?: string; slug?: string; category?: string; tags?: string[]; cta?: string; reflection_question?: string };
 export const HANDOFF_LABEL = { article: "Artykuły", library: "Biblioteka TNB", podcast: "Głos TNB" } as const;
 export const HANDOFF_PATH = { article: "/admin/artykuly", library: "/admin/biblioteka", podcast: "/admin/podcast" } as const;

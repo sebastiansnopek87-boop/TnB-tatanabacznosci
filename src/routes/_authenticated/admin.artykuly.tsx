@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { errMsg } from "@/components/admin/format";
 import { SectionsEditor } from "@/components/pages/SectionsEditor";
 import { ArticleView } from "@/components/articles/ArticleView";
+import { ArticleNewsletter } from "@/components/admin/ArticleNewsletter";
 import {
   adminArticleImageUrls, adminCheckArticleSlug, adminCreateArticleUpload, adminDeleteCategory, adminGetArticle, adminListArticles,
   adminSaveArticle, adminSaveCategory, adminSetArticleStatus, adminSetFeatured, adminSetHomeMode,
@@ -299,6 +300,8 @@ function Editor({ id, onClose }: { id: string | null; onClose: () => void }) {
         <Field label={`Tytuł w wyszukiwarce (${d.seo_title.length}/70)`}><Input value={d.seo_title} maxLength={70} placeholder={`${d.title || "Tytuł"} — Tata Na Baczności`} onChange={(e) => set({ seo_title: e.target.value })} /></Field>
         <Field label={`Opis w wyszukiwarce (${d.seo_description.length}/170)`}><Textarea rows={2} value={d.seo_description} maxLength={170} placeholder="Pusty = początek zajawki" onChange={(e) => set({ seo_description: e.target.value })} /></Field>
       </div>
+
+      {artId && <ArticleNewsletter key={`${artId}-${d.status}`} articleId={artId} dirty={dirty} />}
 
       <div className="sticky bottom-0 flex flex-wrap gap-2 border-t border-border/60 bg-background py-3">
         <Button onClick={save} disabled={busy}>{d.status === "published" ? "Zapisz zmiany" : "Zapisz szkic"}</Button>

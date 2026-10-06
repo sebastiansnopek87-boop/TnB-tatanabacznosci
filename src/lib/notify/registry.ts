@@ -24,6 +24,13 @@ export const VARIABLES: VarDef[] = [
   { key: "waznosc_linku", label: "Ważność linku", sample: "48 godzin" },
   { key: "link_do_panelu", label: "Link do panelu", sample: "https://tatanabacznosci.pl/admin", url: true },
   { key: "opis_materialu", label: "Krótki opis materiału", sample: "O sile, której nie trzeba udowadniać." },
+  { key: "temat_newslettera", label: "Temat newslettera", sample: "Nowy tekst: o milczeniu ojców" },
+  { key: "preheader", label: "Preheader (podgląd w skrzynce)", sample: "Kilka myśli na spokojny wieczór." },
+  { key: "wprowadzenie", label: "Wprowadzenie newslettera", sample: "Dzień dobry," },
+  { key: "zajawka", label: "Zajawka artykułu", sample: "Krótko o tym, czego dotyczy nowy tekst." },
+  { key: "zakonczenie", label: "Zakończenie newslettera", sample: "Do przeczytania — Sebastian" },
+  { key: "link_do_artykulu", label: "Link do artykułu", sample: "https://tatanabacznosci.pl/artykuly/przyklad", url: true },
+  { key: "link_wypisu", label: "Link do wypisania z newslettera", sample: "https://tatanabacznosci.pl/newsletter/wypisz?token=przyklad", url: true, sensitive: true },
 ];
 export const VAR_MAP: Record<string, VarDef> = Object.fromEntries(VARIABLES.map((v) => [v.key, v]));
 export const AUTO_VARS = ["nazwa_platformy"];
@@ -44,8 +51,9 @@ function build(key: string, name: string, s: Spec): TemplateDef {
   return { key, name, subject: s.subject, html, text, required };
 }
 
-export type Module = "konto" | "biblioteka" | "zamowienia" | "spotkania" | "rozmowy" | "formularze" | "system";
+export type Module = "newsletter" | "konto" | "biblioteka" | "zamowienia" | "spotkania" | "rozmowy" | "formularze" | "system";
 export const MODULE_LABEL: Record<Module, string> = {
+  newsletter: "Newsletter",
   konto: "Konto użytkownika", biblioteka: "Biblioteka i podcast", zamowienia: "Materiały premium i zamówienia",
   spotkania: "Spotkania", rozmowy: "Rozmowy 1:1", formularze: "Społeczność i formularze", system: "System",
 };
@@ -59,7 +67,7 @@ const E = (key: string, module: Module, name: string, description: string, recip
   ({ ev: { key, module, name, description, recipient, integration } as EventDef, tpl: build(key, name, spec) });
 
 const hi = "Dzień dobry {{imie}},";
-const DEFS = [
+const DEFS_RAW = [
   E("account_registered", "konto", "Rejestracja", "Nowe konto zostało założone.", "user", "auth",
     { subject: "Witamy w {{nazwa_platformy}}", heading: "Dziękujemy za rejestrację", lines: [hi, "Twoje konto zostało utworzone. Potwierdź adres e-mail, aby z niego korzystać."], cta: { label: "Potwierdź adres e-mail", v: "link_do_potwierdzenia" } }),
   E("account_email_confirm", "konto", "Potwierdzenie adresu e-mail", "Prośba o potwierdzenie adresu.", "user", "auth",
@@ -144,9 +152,17 @@ const DEFS = [
   E("article_comment_confirm", "formularze", "Potwierdzenie komentarza gościa", "Link potwierdzający komentarz dodany bez konta.", "user", "integrated",
     { subject: "Potwierdź swój komentarz w TATA NA BACZNOŚCI", heading: "Potwierdź swój komentarz", lines: ["Cześć {{imie}},", "otrzymaliśmy Twój komentarz pod artykułem „{{tytul_artykulu}}”.", "Aby potwierdzić, że to Ty przesłałeś komentarz i że chcesz opublikować go na portalu TATA NA BACZNOŚCI, kliknij poniższy przycisk. Link jest jednorazowy i ważny {{waznosc_linku}}.", "Jeśli to nie Ty wysłałeś komentarz, zignoruj tę wiadomość. Komentarz nie zostanie opublikowany.", "Dziękujemy za udział w rozmowie.<br>Zespół TATA NA BACZNOŚCI"], cta: { label: "Potwierdzam komentarz", v: "link_do_potwierdzenia" } }),
 
+  E("newsletter_article", "newsletter", "Newsletter z artykułem", "Zapowiedź opublikowanego artykułu — wysyłana tylko po ręcznym zatwierdzeniu w module Artykuły.", "user", "integrated",
+    { subject: "{{temat_newslettera}}", heading: "{{tytul_artykulu}}", lines: ["{{wprowadzenie}}", "{{zajawka}}", "{{zakonczenie}}"], cta: { label: "PRZECZYTAJ ARTYKUŁ", v: "link_do_artykulu" } }),
+
   E("test_message", "system", "Wiadomość testowa", "Sprawdzenie konfiguracji wysyłki.", "user", "integrated",
     { subject: "Wiadomość testowa — {{nazwa_platformy}}", heading: "Test wysyłki", lines: [hi, "To jest wiadomość testowa z panelu {{nazwa_platformy}}."] }),
 ];
+
+// Newsletter: hidden preheader + unsubscribe footer (every subscriber gets a personal link).
+const DEFS = DEFS_RAW.map((d) => d.ev.key !== "newsletter_article" ? d : { ev: d.ev, tpl: { ...d.tpl,
+  html: `<span style="display:none;max-height:0;overflow:hidden;">{{preheader}}</span>\n${d.tpl.html}\n<p>Otrzymujesz tę wiadomość, bo zapisałeś się do newslettera. <a href="{{link_wypisu}}">Wypisz się</a></p>`,
+  text: `${d.tpl.text}\n\nWypisz się z newslettera: {{link_wypisu}}`, required: [...d.tpl.required, "preheader", "link_wypisu"] } });
 
 export const EVENTS: EventDef[] = DEFS.map((d) => d.ev);
 export const EVENT_MAP: Record<string, EventDef> = Object.fromEntries(EVENTS.map((e) => [e.key, e]));
