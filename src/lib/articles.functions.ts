@@ -11,14 +11,52 @@ const BUCKET = "article-images";
 const SLUG = z.string().regex(/^[a-z0-9-]{1,120}$/, "Adres może zawierać tylko małe litery, cyfry i myślniki.");
 const IMG = z.string().regex(/^[a-z0-9-]+\.(jpg|png|webp)$/);
 
+const TRASH_DAYS = 30;
+async function purgeArticle(sb: any, id: string) {
+  // dependent rows first (FKs without cascade are possible)
+  for (const t of ["article_ai_origin", "article_newsletters", "article_reactions", "article_saves", "article_poll_votes", "article_polls"]) await sb.from(t).delete().eq("article_id", id);
+  const { data: cm } = await sb.from("article_comments").select("id").eq("article_id", id);
+  const ids = (cm ?? []).map((c: any) => c.id);
+  if (ids.length) { await sb.from("article_comment_reports").delete().in("comment_id", ids); await sb.from("article_comment_guests").delete().in("comment_id", ids); await sb.from("article_comments").delete().in("id", ids); }
+  await sb.from("ai_materials").update({ handoff_id: null }).eq("handoff_id", id);
+  return sb.from("articles").delete().eq("id", id);
+}
+
 export const adminListArticles = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   await assertAdmin(context);
+  // auto-empty trash after 30 days
+  const sbA = await admin();
+  const cutoff = new Date(Date.now() - TRASH_DAYS * 864e5).toISOString();
+  const { data: old } = await sbA.from("articles").select("id").lt("deleted_at", cutoff);
+  for (const o of old ?? []) { const { error } = await purgeArticle(sbA, o.id); await logEvent({ type: "article_purged_auto", actor: context.userId, objectKind: "article", objectId: o.id, result: error ? "failed" : "ok" }); }
   const { data, error } = await context.supabase.from("articles")
-    .select("id, slug, title, category, status, published_at, featured, home_order, updated_at").order("updated_at", { ascending: false });
+    .select("id, slug, title, category, status, published_at, featured, home_order, updated_at, deleted_at").order("updated_at", { ascending: false });
   if (error) throw new Error("Nie udało się pobrać artykułów.");
   const { data: st } = await context.supabase.from("article_settings").select("home_mode").eq("id", 1).maybeSingle();
   return { items: data as any[], homeMode: (st?.home_mode ?? "latest") as "latest" | "featured" };
 });
+
+export const adminTrashArticle = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), action: z.enum(["trash", "restore", "purge"]) }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const sb = context.supabase;
+    const { data: a } = await sb.from("articles").select("status, deleted_at, deleted_prev_status").eq("id", data.id).maybeSingle();
+    if (!a) throw new Error("Nie znaleziono artykułu.");
+    let error: any = null;
+    if (data.action === "trash") {
+      if (a.deleted_at) throw new Error("Artykuł jest już w koszu.");
+      ({ error } = await sb.from("articles").update({ deleted_at: new Date().toISOString(), deleted_prev_status: a.status, status: "archived", featured: false }).eq("id", data.id));
+    } else if (data.action === "restore") {
+      ({ error } = await sb.from("articles").update({ deleted_at: null, deleted_prev_status: null, status: a.deleted_prev_status === "published" ? "draft" : (a.deleted_prev_status ?? "draft") }).eq("id", data.id));
+    } else {
+      if (!a.deleted_at) throw new Error("Na stałe można usunąć tylko artykuł z kosza.");
+      ({ error } = await purgeArticle(await admin(), data.id));
+    }
+    await logEvent({ type: `article_${data.action}`, actor: context.userId, objectKind: "article", objectId: data.id, result: error ? "failed" : "ok", detail: error?.message });
+    if (error) throw new Error("Nie udało się wykonać operacji.");
+    return { ok: true };
+  });
 
 export const adminGetArticle = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
