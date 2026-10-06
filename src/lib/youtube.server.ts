@@ -37,7 +37,8 @@ export function parseChannelInput(input: string): { id?: string; handle?: string
   return null;
 }
 
-type Thumbs = Record<string, { url: string } | undefined>;
+type T = { url: string } | undefined;
+type Thumbs = { maxres?: T; standard?: T; high?: T; medium?: T; default?: T };
 const bestThumb = (t?: Thumbs) => t?.maxres?.url ?? t?.standard?.url ?? t?.high?.url ?? t?.medium?.url ?? t?.default?.url ?? null;
 
 export async function resolveChannel(input: string) {
