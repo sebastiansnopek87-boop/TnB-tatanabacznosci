@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { YoutubeDiagnostics } from "@/components/admin/YoutubeDiagnostics";
 
 const dt = (s?: string | null) => (s ? new Date(s).toLocaleString("pl-PL", { dateStyle: "medium", timeStyle: "short" }) : "—");
 
@@ -61,6 +62,7 @@ export function VoiceVideos() {
             </div>
             <p className="text-xs text-muted-foreground">Ostatnia synchronizacja: {dt(s.last_sync_at)}{s.last_sync_at && ` (nowe ${s.last_sync_added}, zaktualizowane ${s.last_sync_updated})`}</p>
             {s.last_error && <p className="break-words text-xs text-destructive">{s.last_error}</p>}
+            <YoutubeDiagnostics error={s.status === "error" ? s.last_error : null} keyConfigured={s.keyConfigured} keyCheck={s.keyCheck} />
             {s.channel_url && <a href={s.channel_url} target="_blank" rel="noopener noreferrer" className="text-xs text-gold underline">{s.channel_url}</a>}
           </div>
           <Button onClick={() => sync.mutate()} disabled={sync.isPending || !s.uploads_playlist || !s.keyConfigured}>{sync.isPending ? "Synchronizacja…" : "Synchronizuj teraz"}</Button>
