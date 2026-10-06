@@ -6,16 +6,33 @@ export const STALE_MS = 30 * 60 * 1000;
 
 export class YtError extends Error {}
 
-function key() {
-  const k = process.env["YOUTUBE_API_KEY"];
-  if (!k) throw new YtError("Brak klucza YOUTUBE_API_KEY — synchronizacja z YouTube nie jest skonfigurowana.");
-  return k;
+/** Panel-set key (youtube_secret, service-role only) wins; env YOUTUBE_API_KEY is the fallback. */
+export async function currentKey(): Promise<{ key: string; source: "panel" | "env" | null }> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin.from("youtube_secret").select("api_key").eq("id", 1).maybeSingle();
+  if (data?.api_key) return { key: data.api_key, source: "panel" };
+  const e = process.env["YOUTUBE_API_KEY"] ?? "";
+  return { key: e, source: e ? "env" : null };
 }
 
-async function call(path: string, params: Record<string, string>) {
+export function maskKey(k: string) {
+  const t = k.trim();
+  if (!t) return "";
+  if (t.length <= 8) return "•".repeat(t.length);
+  return `${t.slice(0, 4)}${"•".repeat(Math.max(4, t.length - 8))}${t.slice(-4)}`;
+}
+
+/** Cheapest call (1 unit) to verify a key. Throws YtError with Google's reason. */
+export async function testKey(k: string) {
+  await call("i18nRegions", { part: "snippet", hl: "pl" }, k);
+}
+
+async function call(path: string, params: Record<string, string>, override?: string) {
   const u = new URL(`${API}/${path}`);
   for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v);
-  u.searchParams.set("key", key());
+  const k = override ?? (await currentKey()).key;
+  if (!k) throw new YtError("Brak klucza YouTube API — synchronizacja z YouTube nie jest skonfigurowana.");
+  u.searchParams.set("key", k);
   const r = await fetch(u, { headers: { Accept: "application/json" } });
   const j = (await r.json().catch(() => ({}))) as { error?: { message?: string; errors?: { reason?: string }[]; details?: { reason?: string }[] }; items?: unknown[]; nextPageToken?: string };
   if (!r.ok) {
