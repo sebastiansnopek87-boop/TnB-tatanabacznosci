@@ -1,73 +1,89 @@
-// Głos TNB: extension of the Podcast module — manual YouTube links and guest
+// Głos TNB: extension of the Podcast module — YouTube channel sync (youtube.server.ts) and guest
 // story submissions. Episodes stay in podcast.functions.ts.
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertAdmin, logEvent } from "./admin-auth.server";
-import { SUBMISSION_STATUSES, youtubeId } from "./voice";
+import { SUBMISSION_STATUSES } from "./voice";
 
-export type PublicVideo = { id: string; youtube_id: string; title: string; description: string; published_on: string | null; thumbnail_url: string | null };
-
-function anonDb() {
-  return import("@supabase/supabase-js").then(({ createClient }) => {
-    const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
-    return createClient(process.env["SUPABASE_URL"]!, key, {
-      auth: { persistSession: false, autoRefreshToken: false },
-      global: { fetch: (input, init) => {
-        const h = new Headers(init?.headers);
-        if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization");
-        h.set("apikey", key);
-        return fetch(input, { ...init, headers: h });
-      } },
-    });
-  });
-}
+export type PublicVideo = { id: string; youtube_id: string; title: string; description: string; published_on: string | null; published_at: string | null; thumbnail_url: string | null; duration_seconds: number | null };
 
 export const listVideos = createServerFn({ method: "GET" }).handler(async () => {
+  const { syncIfStale } = await import("./youtube.server");
+  await syncIfStale();
   const db = await anonDb();
   const { data, error } = await db.from("podcast_videos")
-    .select("id, youtube_id, title, description, published_on, thumbnail_url")
-    .eq("status", "published").order("sort_order").order("published_on", { ascending: false, nullsFirst: false });
+    .select("id, youtube_id, title, description, published_on, published_at, thumbnail_url, duration_seconds")
+    .eq("status", "published").order("published_at", { ascending: false, nullsFirst: false }).order("published_on", { ascending: false, nullsFirst: false }).limit(200);
   if (error) throw new Error("Nie udało się pobrać materiałów wideo.");
   return (data ?? []) as PublicVideo[];
 });
 
-// ---------- admin: videos ----------
+/** Public, safe fields only: official channel link for the "Odwiedź kanał" button. */
+export const getPublicChannel = createServerFn({ method: "GET" }).handler(async () => {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin.from("youtube_source").select("channel_url, channel_title").eq("id", 1).maybeSingle();
+  return { url: data?.channel_url ?? null, title: data?.channel_title ?? null };
+});
+
+// ---------- admin: YouTube source ----------
+export const adminGetYoutubeSource = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { data, error } = await context.supabase.from("youtube_source").select("*").eq("id", 1).maybeSingle();
+    if (error) throw new Error("Nie udało się pobrać ustawień YouTube.");
+    return { ...data, keyConfigured: !!process.env["YOUTUBE_API_KEY"] };
+  });
+
+export const adminSaveYoutubeSource = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ input: z.string().trim().min(2, "Podaj kanał").max(300) }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const yt = await import("./youtube.server");
+    if (!yt.parseChannelInput(data.input)) throw new Error("Nie rozpoznano kanału. Podaj adres kanału (https://www.youtube.com/@nazwa), handle (@nazwa) albo Channel ID (UC…).");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    try {
+      const c = await yt.resolveChannel(data.input);
+      await supabaseAdmin.from("youtube_source").update({ ...c, channel_input: data.input, status: "ok", last_error: null, updated_at: new Date().toISOString(), updated_by: context.userId }).eq("id", 1);
+      await logEvent({ type: "youtube_source_save", actor: context.userId, objectKind: "youtube_source", objectId: c.channel_id, detail: c.channel_title });
+      return c;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Błąd";
+      await supabaseAdmin.from("youtube_source").update({ channel_input: data.input, status: "error", last_error: msg.slice(0, 500), updated_at: new Date().toISOString(), updated_by: context.userId }).eq("id", 1);
+      await logEvent({ type: "youtube_source_save", actor: context.userId, objectKind: "youtube_source", result: "failed", detail: msg });
+      throw new Error(msg);
+    }
+  });
+
+export const adminSyncYoutube = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { runSync } = await import("./youtube.server");
+    try { return await runSync(context.userId); }
+    catch (e) { const m = e instanceof Error ? e.message : "Błąd synchronizacji"; await logEvent({ type: "youtube_sync", actor: context.userId, result: "failed", detail: m }); throw new Error(m); }
+  });
+
+/** Called when an admin opens the panel: syncs only if data is older than 30 min. */
+export const adminSyncIfStale = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { syncIfStale } = await import("./youtube.server");
+    await syncIfStale();
+    return { ok: true as const };
+  });
+
+// ---------- admin: videos (visibility only; content comes from YouTube) ----------
 export const adminListVideos = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context);
-    const { data, error } = await context.supabase.from("podcast_videos").select("*").order("sort_order").order("created_at", { ascending: false });
+    const { data, error } = await context.supabase.from("podcast_videos").select("*").order("published_at", { ascending: false, nullsFirst: false }).limit(300);
     if (error) throw new Error("Nie udało się pobrać materiałów wideo.");
-    return data as Array<PublicVideo & { status: "draft" | "published" | "hidden"; sort_order: number; created_at: string }>;
-  });
-
-const videoSchema = z.object({
-  id: z.string().uuid().nullable(),
-  url: z.string().trim().min(1, "Wklej adres filmu YouTube").max(500),
-  title: z.string().trim().min(1, "Podaj tytuł").max(200),
-  description: z.string().trim().max(1000),
-  published_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
-  thumbnail_url: z.union([z.string().trim().url().max(500).refine((v) => v.startsWith("https://"), "Miniatura musi mieć adres https://"), z.literal("")]),
-  sort_order: z.number().int().min(-1000).max(1000),
-});
-
-export const adminSaveVideo = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => videoSchema.parse(d))
-  .handler(async ({ data, context }) => {
-    await assertAdmin(context);
-    const yt = youtubeId(data.url);
-    if (!yt) throw new Error("To nie jest poprawny adres filmu YouTube.");
-    const row = { youtube_id: yt, title: data.title, description: data.description, published_on: data.published_on,
-      thumbnail_url: data.thumbnail_url || null, sort_order: data.sort_order, updated_at: new Date().toISOString() };
-    const q = data.id
-      ? context.supabase.from("podcast_videos").update(row).eq("id", data.id).select("id").single()
-      : context.supabase.from("podcast_videos").insert(row).select("id").single();
-    const { data: r, error } = await q;
-    if (error || !r) throw new Error("Nie udało się zapisać materiału.");
-    await logEvent({ type: data.id ? "voice_video_update" : "voice_video_create", actor: context.userId, objectKind: "podcast_video", objectId: r.id });
-    return { id: r.id as string };
+    return data as Array<PublicVideo & { status: "draft" | "published" | "hidden"; source: "manual" | "youtube"; synced_at: string | null }>;
   });
 
 export const adminSetVideoStatus = createServerFn({ method: "POST" })
@@ -78,17 +94,6 @@ export const adminSetVideoStatus = createServerFn({ method: "POST" })
     const { error } = await context.supabase.from("podcast_videos").update({ status: data.status, updated_at: new Date().toISOString() }).eq("id", data.id);
     if (error) throw new Error("Nie udało się zmienić statusu.");
     await logEvent({ type: "voice_video_status", actor: context.userId, objectKind: "podcast_video", objectId: data.id, detail: data.status });
-    return { ok: true as const };
-  });
-
-export const adminDeleteVideo = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
-  .handler(async ({ data, context }) => {
-    await assertAdmin(context);
-    const { error } = await context.supabase.from("podcast_videos").delete().eq("id", data.id);
-    if (error) throw new Error("Nie udało się usunąć materiału.");
-    await logEvent({ type: "voice_video_delete", actor: context.userId, objectKind: "podcast_video", objectId: data.id });
     return { ok: true as const };
   });
 
