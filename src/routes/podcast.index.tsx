@@ -7,6 +7,7 @@ import { ChannelsSection, ListenSection, StorySection, WatchSection } from "@/co
 import { listEpisodes } from "@/lib/podcast.functions";
 import { listCategories } from "@/lib/library";
 import { EP_ACCESS, coverUrl, fmtDay, fmtDuration, type PublicEpisode } from "@/lib/podcast";
+import { getPodcastLayout } from "@/lib/platform.functions";
 
 const TITLE = "Głos TNB — historie, rozmowy i głosy ludzi w drodze";
 const DESC = "Głos TNB: podcast, rozmowy, materiały wideo i miejsce, w którym możesz zgłosić własną historię. Bez udawania, bez gotowych recept.";
@@ -24,6 +25,7 @@ export const Route = createFileRoute("/podcast/")({
 
 function PodcastPage() {
   const eps = useQuery({ queryKey: ["podcast"], queryFn: () => listEpisodes() });
+  const layout = useQuery({ queryKey: ["podcast-layout"], queryFn: () => getPodcastLayout() });
   const cats = useQuery({ queryKey: ["library-categories"], queryFn: listCategories });
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<string | null>(null);
@@ -69,11 +71,11 @@ function PodcastPage() {
               {latest && !filtering && (
                 <section aria-labelledby="latest">
                   <p id="latest" className="eyebrow text-gold">{latest.featured ? "Wyróżniony odcinek" : "Najnowszy odcinek"}</p>
-                  <Link to="/podcast/$slug" params={{ slug: latest.slug }} className="group mt-4 grid gap-6 border border-border/60 bg-card p-5 hover:border-gold/60 md:grid-cols-[minmax(0,320px)_1fr] lg:p-7">
-                    <Cover e={latest} className="aspect-square w-full" />
+                  <Link to="/podcast/$slug" params={{ slug: latest.slug }} className="group mt-4 grid gap-5 border border-border/60 bg-card p-4 hover:border-gold/60 sm:grid-cols-[160px_1fr] lg:grid-cols-[200px_1fr] lg:p-5">
+                    <Cover e={latest} className="aspect-square w-full max-w-[200px] border" />
                     <div className="min-w-0">
                       <Meta e={latest} catName={catName} />
-                      <h2 className="mt-3 break-words font-display text-[2rem] font-semibold uppercase leading-tight text-foreground group-hover:text-gold">{num(latest)}{latest.title}</h2>
+                      <h2 className="mt-2 break-words font-display text-xl font-semibold uppercase leading-tight text-foreground group-hover:text-gold lg:text-2xl">{num(latest)}{latest.title}</h2>
                       {latest.subtitle && <p className="mt-2 text-[1rem] italic text-foreground/75">{latest.subtitle}</p>}
                       {latest.summary && <p className="mt-4 text-[0.95rem] leading-[1.75] text-foreground/80">{latest.summary}</p>}
                       <span className="mt-6 inline-flex items-center gap-2 bg-gold px-6 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-primary-foreground">
@@ -104,20 +106,35 @@ function PodcastPage() {
                     {filtering ? "Brak odcinków pasujących do wyszukiwania." : "To na razie jedyny opublikowany odcinek."}
                   </p>
                 ) : (
-                  <div className="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-                    {list.map((e) => (
-                      <Link key={e.id} to="/podcast/$slug" params={{ slug: e.slug }} className="group flex flex-col border border-border/60 bg-card hover:border-gold/60">
-                        <Cover e={e} className="aspect-square w-full" />
-                        <div className="flex flex-1 flex-col p-5">
-                          <Meta e={e} catName={catName} />
-                          <h3 className="mt-3 break-words font-display text-xl font-semibold uppercase leading-snug text-foreground group-hover:text-gold">{num(e)}{e.title}</h3>
-                          {e.subtitle && <p className="mt-1 text-sm italic text-foreground/70">{e.subtitle}</p>}
-                          {e.summary && <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-foreground/75">{e.summary}</p>}
-                          <span className="mt-auto pt-4 text-xs uppercase tracking-[0.14em] text-gold">{e.has_audio || e.has_external ? "▶ Odtwórz" : "Oczekuje na nagranie"}</span>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
+                  layout.data === "grid" ? (
+                    <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                      {list.map((e) => (
+                        <Link key={e.id} to="/podcast/$slug" params={{ slug: e.slug }} className="group flex flex-col border border-border/60 bg-card hover:border-gold/60">
+                          <Cover e={e} className="aspect-video w-full" />
+                          <div className="flex flex-1 flex-col p-4">
+                            <Meta e={e} catName={catName} />
+                            <h3 className="mt-2 break-words font-display text-base font-semibold uppercase leading-snug text-foreground group-hover:text-gold">{num(e)}{e.title}</h3>
+                            {e.summary && <p className="mt-2 line-clamp-2 text-[0.82rem] leading-relaxed text-foreground/75">{e.summary}</p>}
+                            <span className="mt-auto pt-3 text-[0.7rem] uppercase tracking-[0.14em] text-gold">{e.has_audio || e.has_external ? "▶ Odtwórz" : "Oczekuje na nagranie"}</span>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="mt-8 flex flex-col gap-3">
+                      {list.map((e) => (
+                        <Link key={e.id} to="/podcast/$slug" params={{ slug: e.slug }} className="group flex items-start gap-4 border border-border/60 bg-card p-3 hover:border-gold/60 sm:items-center sm:p-4">
+                          <Cover e={e} className="aspect-square w-20 shrink-0 border sm:w-28" />
+                          <div className="min-w-0 flex-1">
+                            <Meta e={e} catName={catName} />
+                            <h3 className="mt-1.5 break-words font-display text-base font-semibold uppercase leading-snug text-foreground group-hover:text-gold sm:text-lg">{num(e)}{e.title}</h3>
+                            {e.summary && <p className="mt-1 line-clamp-2 hidden text-[0.85rem] leading-relaxed text-foreground/75 sm:block">{e.summary}</p>}
+                          </div>
+                          <span className="hidden shrink-0 text-[0.7rem] uppercase tracking-[0.14em] text-gold md:inline">{e.has_audio || e.has_external ? "▶ Odtwórz" : "Oczekuje"}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  )
                 )}
               </section>
             </>
