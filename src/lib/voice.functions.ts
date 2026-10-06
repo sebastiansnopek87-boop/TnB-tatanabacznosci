@@ -8,6 +8,21 @@ import { SUBMISSION_STATUSES } from "./voice";
 
 export type PublicVideo = { id: string; youtube_id: string; title: string; description: string; published_on: string | null; published_at: string | null; thumbnail_url: string | null; duration_seconds: number | null };
 
+function anonDb() {
+  return import("@supabase/supabase-js").then(({ createClient }) => {
+    const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
+    return createClient(process.env["SUPABASE_URL"]!, key, {
+      auth: { persistSession: false, autoRefreshToken: false },
+      global: { fetch: (input, init) => {
+        const h = new Headers(init?.headers);
+        if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization");
+        h.set("apikey", key);
+        return fetch(input, { ...init, headers: h });
+      } },
+    });
+  });
+}
+
 export const listVideos = createServerFn({ method: "GET" }).handler(async () => {
   const { syncIfStale } = await import("./youtube.server");
   await syncIfStale();
