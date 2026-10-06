@@ -799,6 +799,8 @@ export type Database = {
           cover_alt: string
           created_at: string
           created_by: string | null
+          deleted_at: string | null
+          deleted_prev_status: string | null
           discussion_question: string
           excerpt: string
           featured: boolean
@@ -822,6 +824,8 @@ export type Database = {
           cover_alt?: string
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
+          deleted_prev_status?: string | null
           discussion_question?: string
           excerpt?: string
           featured?: boolean
@@ -845,6 +849,8 @@ export type Database = {
           cover_alt?: string
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
+          deleted_prev_status?: string | null
           discussion_question?: string
           excerpt?: string
           featured?: boolean

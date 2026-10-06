@@ -14,7 +14,7 @@ import { ArticleView } from "@/components/articles/ArticleView";
 import { ArticleNewsletter } from "@/components/admin/ArticleNewsletter";
 import {
   adminArticleImageUrls, adminCheckArticleSlug, adminCreateArticleUpload, adminDeleteCategory, adminGetArticle, adminListArticles,
-  adminSaveArticle, adminSaveCategory, adminSetArticleStatus, adminSetFeatured, adminSetHomeMode,
+  adminSaveArticle, adminSaveCategory, adminSetArticleStatus, adminSetFeatured, adminSetHomeMode, adminTrashArticle,
   adminArticleInteractions, adminSavePoll, adminDeletePoll, adminListArticleComments, adminModerateArticleComment,
 } from "@/lib/articles.functions";
 import { REACTIONS } from "@/lib/article-interactions";
@@ -71,6 +71,14 @@ function List({ onEdit }: { onEdit: (id: string) => void }) {
   async function feature(id: string, featured: boolean, home_order: number) {
     try { await featFn({ data: { id, featured, home_order } }); list.refetch(); qc.invalidateQueries({ queryKey: ["articles"] }); } catch (e) { toast.error(errMsg(e)); }
   }
+  const trashFn = useServerFn(adminTrashArticle);
+  const active = (list.data?.items ?? []).filter((a) => !a.deleted_at);
+  const bin = (list.data?.items ?? []).filter((a) => a.deleted_at);
+  async function trash(id: string, action: "trash" | "restore" | "purge", title: string) {
+    if (action === "purge" && !confirm(`Usunąć „${title}” na zawsze? Tej operacji nie można cofnąć.`)) return;
+    if (action === "trash" && !confirm(`Przenieść „${title}” do kosza? Zniknie ze strony.`)) return;
+    try { await trashFn({ data: { id, action } }); toast.success(action === "trash" ? "Przeniesiono do kosza." : action === "restore" ? "Przywrócono." : "Usunięto na stałe."); list.refetch(); qc.invalidateQueries({ queryKey: ["articles"] }); } catch (e) { toast.error(errMsg(e)); }
+  }
   return (
     <>
       <div className="mt-6 border border-border/60 p-4">
@@ -87,7 +95,7 @@ function List({ onEdit }: { onEdit: (id: string) => void }) {
       {list.isLoading && <p className="mt-6 text-sm text-muted-foreground">Wczytywanie…</p>}
       {list.error && <p className="mt-6 text-sm text-destructive">{errMsg(list.error)}</p>}
       <div className="mt-6 divide-y divide-border/60 border border-border/60">
-        {(list.data?.items ?? []).map((a) => (
+        {active.map((a) => (
           <div key={a.id} className="flex flex-wrap items-center gap-3 p-4">
             <button onClick={() => onEdit(a.id)} className="min-w-0 flex-1 text-left hover:text-gold">
               <span className="block font-medium">{a.title}</span>
@@ -98,9 +106,27 @@ function List({ onEdit }: { onEdit: (id: string) => void }) {
               <Star className={`h-4 w-4 ${a.featured ? "fill-gold text-gold" : ""}`} />
             </Button>
             {a.featured && <Input aria-label="Kolejność wyróżnienia" type="number" min={0} max={999} defaultValue={a.home_order} className="h-8 w-16" onBlur={(e) => { const n = Math.max(0, Math.min(999, Number(e.target.value) || 0)); if (n !== a.home_order) feature(a.id, true, n); }} />}
+            <Button size="sm" variant="ghost" onClick={() => trash(a.id, "trash", a.title)}><Trash2 className="mr-1 h-4 w-4" />Usuń</Button>
           </div>
         ))}
-        {list.data?.items.length === 0 && <p className="p-4 text-sm text-muted-foreground">Nie ma jeszcze artykułów.</p>}
+        {list.data && active.length === 0 && <p className="p-4 text-sm text-muted-foreground">Nie ma jeszcze artykułów.</p>}
+      </div>
+      <div className="mt-8 border border-border/60">
+        <h2 className="flex items-center gap-2 border-b border-border/60 p-4 text-xs uppercase tracking-wide text-muted-foreground"><Trash2 className="h-4 w-4" />Kosz ({bin.length})</h2>
+        <p className="px-4 pt-3 text-xs text-muted-foreground">Artykuły w koszu nie są widoczne publicznie. Po 30 dniach usuwają się same na stałe. Przywrócony artykuł wraca jako szkic (lub do poprzedniego statusu, jeśli nie był opublikowany).</p>
+        <div className="divide-y divide-border/60">
+          {bin.map((a) => {
+            const left = Math.max(0, 30 - Math.floor((Date.now() - new Date(a.deleted_at).getTime()) / 864e5));
+            return (
+              <div key={a.id} className="flex flex-wrap items-center gap-3 p-4">
+                <div className="min-w-0 flex-1"><span className="block font-medium text-muted-foreground">{a.title}</span><span className="block text-xs text-muted-foreground">Usunięty {fmtArticleDate(a.deleted_at)} · zostało {left} dni</span></div>
+                <Button size="sm" variant="outline" onClick={() => trash(a.id, "restore", a.title)}>Przywróć</Button>
+                <Button size="sm" variant="ghost" className="text-destructive" onClick={() => trash(a.id, "purge", a.title)}>Usuń na zawsze</Button>
+              </div>
+            );
+          })}
+          {bin.length === 0 && <p className="p-4 text-sm text-muted-foreground">Kosz jest pusty.</p>}
+        </div>
       </div>
     </>
   );
