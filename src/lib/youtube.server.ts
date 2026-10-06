@@ -140,8 +140,8 @@ export async function runSync(actor: string | null) {
 
 /** Opportunistic sync when a visitor/admin opens Głos TNB and data is older than STALE_MS. Never throws. */
 export async function syncIfStale() {
-  if (!process.env["YOUTUBE_API_KEY"]) return;
   try {
+    if (!(await currentKey()).key) return;
     const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
     const cutoff = new Date(Date.now() - STALE_MS).toISOString();
     // atomic claim: only one request per window performs the sync
