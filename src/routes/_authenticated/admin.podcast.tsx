@@ -40,7 +40,7 @@ function List({ onEdit }: { onEdit: (id: string | null) => void }) {
   return (
     <div className="max-w-5xl">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-3xl font-semibold uppercase">Podcast</h1>
+        <h1 className="font-display text-3xl font-semibold uppercase">Głos TNB — odcinki podcastu</h1>
         <Button onClick={() => onEdit(null)}>+ Nowy odcinek</Button>
       </div>
       <div className="mt-6 space-y-3">

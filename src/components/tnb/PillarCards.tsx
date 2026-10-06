@@ -29,9 +29,9 @@ const CARDS = [
   {
     num: "03",
     id: "podcast", to: "/podcast",
-    title: "Podcast TNB",
+    title: "Głos TNB",
     desc: "Rozmowy o życiu, wartościach, relacjach, wyzwaniach i powrotach. Prawdziwe historie, bez udawania.",
-    cta: "Słuchaj podcastu",
+    cta: "Posłuchaj Głosu TNB",
     image: cardPodcast.url,
     alt: "Mikrofon studyjny",
   },

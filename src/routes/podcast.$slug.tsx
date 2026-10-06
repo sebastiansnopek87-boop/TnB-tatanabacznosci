@@ -12,8 +12,8 @@ export const Route = createFileRoute("/podcast/$slug")({
   loader: async ({ params }) => ({ episode: await getEpisode({ data: { slug: params.slug } }) }),
   head: ({ loaderData }) => {
     const e = loaderData?.episode;
-    if (!e) return { meta: [{ title: "Odcinek niedostępny — Podcast TNB" }, { name: "robots", content: "noindex" }] };
-    const t = `${e.title} — Podcast TNB`;
+    if (!e) return { meta: [{ title: "Odcinek niedostępny — Głos TNB" }, { name: "robots", content: "noindex" }] };
+    const t = `${e.title} — Głos TNB`;
     const d = e.summary || "Odcinek podcastu Tata Na Baczności.";
     return { meta: [
       { title: t }, { name: "description", content: d }, { property: "og:title", content: t }, { property: "og:description", content: d },
@@ -33,7 +33,7 @@ function EpisodePage() {
       <div className="mx-auto max-w-2xl px-5 py-24 text-center">
         <h1 className="font-display text-3xl font-semibold uppercase text-foreground">Nie znaleziono odcinka</h1>
         <p className="mt-4 text-sm text-foreground/70">Ten odcinek nie istnieje lub nie jest już dostępny.</p>
-        <Link to="/podcast" className="mt-6 inline-block text-gold underline">Wróć do podcastu</Link>
+        <Link to="/podcast" className="mt-6 inline-block text-gold underline">Wróć do Głosu TNB</Link>
       </div>
     </PageShell>
   );
@@ -42,7 +42,7 @@ function EpisodePage() {
   return (
     <PageShell>
       <article className="mx-auto max-w-[900px] px-5 py-12 lg:py-16">
-        <Link to="/podcast" className="text-xs uppercase tracking-[0.14em] text-foreground/60 hover:text-gold">← Wszystkie odcinki</Link>
+        <Link to="/podcast" className="text-xs uppercase tracking-[0.14em] text-foreground/60 hover:text-gold">← Głos TNB</Link>
         <div className="mt-6 grid gap-6 sm:grid-cols-[180px_1fr] sm:items-end">
           {cover ? <img src={cover} alt="" className="aspect-square w-40 border border-border/60 object-cover sm:w-full" />
             : <div className="flex aspect-square w-40 items-center justify-center border border-border/60 bg-surface-deep sm:w-full"><Headphones className="h-10 w-10 text-gold/60" /></div>}

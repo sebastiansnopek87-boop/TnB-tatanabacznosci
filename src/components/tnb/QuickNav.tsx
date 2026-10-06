@@ -12,7 +12,7 @@ import {
 
 const ITEMS: { icon: LucideIcon; title: string; desc: string; href: string }[] = [
   { icon: BookOpen, title: "Biblioteka", desc: "E-booki, dokumenty, nagrania, materiały do pracy", href: "/biblioteka" },
-  { icon: Mic, title: "Podcast", desc: "Rozmowy, historie, wyjątkowi goście", href: "/podcast" },
+  { icon: Mic, title: "Głos TNB", desc: "Historie, rozmowy i głosy ludzi w drodze", href: "/podcast" },
   { icon: Users, title: "Rozmowy", desc: "Rozmowy członków społeczności", href: "/spolecznosc" },
   { icon: Calendar, title: "Spotkania 1:1", desc: "Rozmowa, mentoring, czas dla Ciebie", href: "/spotkania/rozmowa-1-1" },
   { icon: Compass, title: "Artykuły", desc: "Autorskie teksty o ojcostwie, służbie i wartościach", href: "/artykuly" },
