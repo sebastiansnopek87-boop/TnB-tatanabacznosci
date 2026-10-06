@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { YoutubeDiagnostics } from "@/components/admin/YoutubeDiagnostics";
+import { YoutubeKeyField } from "@/components/admin/YoutubeKeyField";
 
 const dt = (s?: string | null) => (s ? new Date(s).toLocaleString("pl-PL", { dateStyle: "medium", timeStyle: "short" }) : "—");
 
@@ -42,6 +43,8 @@ export function VoiceVideos() {
           <p className="mt-1 text-muted-foreground">Wymagany sekret: <code>YOUTUBE_API_KEY</code> (klucz API z Google Cloud z włączonym „YouTube Data API v3”). Dodaje się go w ustawieniach sekretów projektu. Bez niego kanału nie da się sprawdzić ani zsynchronizować.</p>
         </div>
       )}
+
+      <YoutubeKeyField masked={s?.keyMasked} source={s?.keySource} onChanged={refresh} />
 
       <form onSubmit={(e) => { e.preventDefault(); save.mutate(); }} className="mt-6 space-y-2">
         <Label htmlFor="ytc">Kanał YouTube (adres, @handle albo Channel ID)</Label>

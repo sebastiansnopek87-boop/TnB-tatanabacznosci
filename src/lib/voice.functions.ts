@@ -48,14 +48,48 @@ export const adminGetYoutubeSource = createServerFn({ method: "GET" })
     await assertAdmin(context);
     const { data, error } = await context.supabase.from("youtube_source").select("*").eq("id", 1).maybeSingle();
     if (error) throw new Error("Nie udało się pobrać ustawień YouTube.");
-    const k = process.env["YOUTUBE_API_KEY"] ?? "";
+    const yt = await import("./youtube.server");
+    const { key: k, source } = await yt.currentKey();
     const keyCheck = {
       length: k.length,
       hasWhitespace: /\s/.test(k),
       startsAIza: k.trim().startsWith("AIza"),
       lengthOk: k.trim().length === 39,
     };
-    return { ...data, keyConfigured: !!k, keyCheck };
+    // Only a masked preview ever leaves the server.
+    return { ...data, keyConfigured: !!k, keyCheck, keyMasked: yt.maskKey(k), keySource: source };
+  });
+
+/** Replace the YouTube API key: tested against Google first, saved only when valid. */
+export const adminSaveYoutubeKey = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ key: z.string().trim().min(20, "Klucz jest za krótki").max(100).regex(/^[A-Za-z0-9_-]+$/, "Klucz zawiera niedozwolone znaki (spacje, cudzysłowy?)") }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const yt = await import("./youtube.server");
+    try { await yt.testKey(data.key); }
+    catch (e) {
+      const m = e instanceof Error ? e.message : "Błąd";
+      await logEvent({ type: "youtube_key_save", actor: context.userId, objectKind: "youtube_secret", result: "failed", detail: m.slice(0, 300) });
+      return { ok: false as const, error: m };
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("youtube_secret").upsert({ id: 1, api_key: data.key, updated_at: new Date().toISOString(), updated_by: context.userId });
+    if (error) throw new Error("Nie udało się zapisać klucza.");
+    await logEvent({ type: "youtube_key_save", actor: context.userId, objectKind: "youtube_secret", detail: `klucz ${yt.maskKey(data.key)}` });
+    return { ok: true as const, masked: yt.maskKey(data.key) };
+  });
+
+/** Test the currently stored key without changing anything. */
+export const adminTestYoutubeKey = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const yt = await import("./youtube.server");
+    const { key } = await yt.currentKey();
+    if (!key) return { ok: false as const, error: "Brak zapisanego klucza." };
+    try { await yt.testKey(key); return { ok: true as const }; }
+    catch (e) { return { ok: false as const, error: e instanceof Error ? e.message : "Błąd" }; }
   });
 
 export const adminSaveYoutubeSource = createServerFn({ method: "POST" })
