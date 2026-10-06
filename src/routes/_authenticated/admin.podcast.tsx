@@ -13,6 +13,7 @@ import { listCategories, slugify } from "@/lib/library";
 import { errMsg, fmtDate } from "@/components/admin/format";
 import { AudioPlayer } from "@/components/podcast/AudioPlayer";
 import { VoiceVideos } from "@/components/admin/VoiceVideos";
+import { PodcastLayoutPicker } from "@/components/admin/PodcastLayoutPicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -44,6 +45,7 @@ function List({ onEdit }: { onEdit: (id: string | null) => void }) {
         <h1 className="font-display text-3xl font-semibold uppercase">Głos TNB — odcinki podcastu</h1>
         <Button onClick={() => onEdit(null)}>+ Nowy odcinek</Button>
       </div>
+      <PodcastLayoutPicker />
       <div className="mt-6 space-y-3">
         {list.isLoading ? <p className="text-sm text-muted-foreground">Ładowanie…</p>
           : list.error ? <p className="text-sm text-destructive">{errMsg(list.error)}</p>
