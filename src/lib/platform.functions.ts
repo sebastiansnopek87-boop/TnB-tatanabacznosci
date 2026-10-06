@@ -96,7 +96,7 @@ export const setPodcastLayout = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.from("platform_settings")
       .update({ podcast_layout: data.layout, updated_at: new Date().toISOString(), updated_by: context.userId }).eq("id", 1);
-    await logEvent({ type: "settings_update", actor: context.userId, objectKind: "settings", objectId: "podcast_layout", result: error ? "failed" : undefined, detail: `Układ odcinków: ${data.layout}` });
+    await logEvent({ type: "settings_update", actor: context.userId, objectKind: "settings", objectId: "podcast_layout", result: error ? "failed" : "ok", detail: `Układ odcinków: ${data.layout}` });
     if (error) throw new Error("Nie udało się zapisać układu.");
     return { ok: true as const };
   });
