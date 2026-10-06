@@ -2294,6 +2294,27 @@ export type Database = {
         }
         Relationships: []
       }
+      youtube_secret: {
+        Row: {
+          api_key: string | null
+          id: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          api_key?: string | null
+          id?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          api_key?: string | null
+          id?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       youtube_source: {
         Row: {
           channel_id: string | null
