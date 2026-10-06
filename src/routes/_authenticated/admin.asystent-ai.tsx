@@ -281,6 +281,7 @@ function Settings({ d }: { d: Awaited<ReturnType<typeof getEditorDashboard>> }) 
   if (!f) return <p className="text-muted-foreground">Ładowanie…</p>;
   return (
     <div className="space-y-6">
+      <section className={box + " space-y-2 text-sm"}><h2 className="font-semibold">Stałe zasady tworzenia materiałów</h2><p className="text-xs text-muted-foreground">Dołączane do każdego wywołania AI przy tworzeniu i poprawianiu materiałów (niezmienne).</p><ul className="list-disc pl-5">{MATERIAL_RULES.map((r) => <li key={r}>{r}</li>)}</ul></section>
       <section className={box + " space-y-2 text-sm"}>
         <h2 className="font-semibold">Połączenie z modelem AI</h2>
         <p>Dostawca: Lovable AI (bramka platformy), model {d.model}. Klucz jest przechowywany wyłącznie na serwerze. Status: <strong>{d.aiConfigured ? "skonfigurowane" : "brak konfiguracji"}</strong>.</p>
