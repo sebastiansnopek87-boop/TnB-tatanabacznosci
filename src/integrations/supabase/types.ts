@@ -2059,10 +2059,14 @@ export type Database = {
         Row: {
           created_at: string
           description: string
+          duration_seconds: number | null
           id: string
+          published_at: string | null
           published_on: string | null
           sort_order: number
+          source: string
           status: string
+          synced_at: string | null
           thumbnail_url: string | null
           title: string
           updated_at: string
@@ -2071,10 +2075,14 @@ export type Database = {
         Insert: {
           created_at?: string
           description?: string
+          duration_seconds?: number | null
           id?: string
+          published_at?: string | null
           published_on?: string | null
           sort_order?: number
+          source?: string
           status?: string
+          synced_at?: string | null
           thumbnail_url?: string | null
           title: string
           updated_at?: string
@@ -2083,10 +2091,14 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string
+          duration_seconds?: number | null
           id?: string
+          published_at?: string | null
           published_on?: string | null
           sort_order?: number
+          source?: string
           status?: string
+          synced_at?: string | null
           thumbnail_url?: string | null
           title?: string
           updated_at?: string
@@ -2279,6 +2291,63 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
           why?: string
+        }
+        Relationships: []
+      }
+      youtube_source: {
+        Row: {
+          channel_id: string | null
+          channel_input: string | null
+          channel_thumb: string | null
+          channel_title: string | null
+          channel_url: string | null
+          id: number
+          last_attempt_at: string | null
+          last_error: string | null
+          last_sync_added: number
+          last_sync_at: string | null
+          last_sync_updated: number
+          status: string
+          updated_at: string
+          updated_by: string | null
+          uploads_playlist: string | null
+          video_count: number
+        }
+        Insert: {
+          channel_id?: string | null
+          channel_input?: string | null
+          channel_thumb?: string | null
+          channel_title?: string | null
+          channel_url?: string | null
+          id?: number
+          last_attempt_at?: string | null
+          last_error?: string | null
+          last_sync_added?: number
+          last_sync_at?: string | null
+          last_sync_updated?: number
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+          uploads_playlist?: string | null
+          video_count?: number
+        }
+        Update: {
+          channel_id?: string | null
+          channel_input?: string | null
+          channel_thumb?: string | null
+          channel_title?: string | null
+          channel_url?: string | null
+          id?: number
+          last_attempt_at?: string | null
+          last_error?: string | null
+          last_sync_added?: number
+          last_sync_at?: string | null
+          last_sync_updated?: number
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+          uploads_playlist?: string | null
+          video_count?: number
         }
         Relationships: []
       }
