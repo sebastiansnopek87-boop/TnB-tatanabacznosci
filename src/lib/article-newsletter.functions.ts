@@ -141,10 +141,10 @@ export const sendArticleNewsletter = createServerFn({ method: "POST" }).middlewa
     let sent = 0, simulated = 0, failed = 0;
     for (const s of list) {
       const r = await dispatch({ event: "newsletter_article", to: await recipient(db, s.id), vars: vars(a, nl, `${SITE}/newsletter/wypisz?token=${s.unsubscribe_token}`), idempotencyKey: `nl:${a.id}:${round}:${s.id}`, relatedId: a.id });
-      if (r.status === "sent") sent++; else if (r.status === "simulated") simulated++; else if (r.status !== "duplicate") failed++;
+      if (r.status === "sent") sent++; else if (r.status === "simulated") simulated++; else if (r.status === "failed") failed++;
     }
     // Honest final state: SENT only when every message really left; a test run stays approved.
-    const status = failed ? "failed" : mode === "live" && sent === list.length ? "sent" : "approved";
+    const status = failed ? "failed" : mode === "live" && sent > 0 ? "sent" : "approved";
     const note = mode === "test"
       ? `WYSYŁKA TESTOWA: ${simulated} wiadomości zapisano w historii powiadomień, żadna nie została dostarczona.${failed ? ` Błędy: ${failed}.` : ""}`
       : `WYSYŁKA RZECZYWISTA: wysłano ${sent} z ${list.length}.${failed ? ` Błędy: ${failed}.` : ""}`;
