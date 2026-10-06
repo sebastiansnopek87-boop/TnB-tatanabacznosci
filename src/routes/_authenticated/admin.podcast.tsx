@@ -12,6 +12,7 @@ import { EP_ACCESS, EP_STATUS, fmtDuration, parseDuration, type EpAccess, type E
 import { listCategories, slugify } from "@/lib/library";
 import { errMsg, fmtDate } from "@/components/admin/format";
 import { AudioPlayer } from "@/components/podcast/AudioPlayer";
+import { VoiceVideos } from "@/components/admin/VoiceVideos";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -70,6 +71,7 @@ function List({ onEdit }: { onEdit: (id: string | null) => void }) {
             </div>
           ))}
       </div>
+      <VoiceVideos />
     </div>
   );
 }
