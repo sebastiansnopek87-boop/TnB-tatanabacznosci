@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 
 type Result = { ok: true; text: string } | { ok: false; text: string } | null;
 
-export function YoutubeKeyField({ masked, source, onChanged }: { masked?: string; source?: "panel" | "env" | null; onChanged: () => void }) {
+export function YoutubeKeyField({ masked, source, onChanged }: { masked?: string | undefined; source?: "panel" | "env" | null | undefined; onChanged: () => void }) {
   const saveFn = useServerFn(adminSaveYoutubeKey); const testFn = useServerFn(adminTestYoutubeKey);
   const [val, setVal] = useState(""); const [show, setShow] = useState(false); const [res, setRes] = useState<Result>(null);
   const save = useMutation({
