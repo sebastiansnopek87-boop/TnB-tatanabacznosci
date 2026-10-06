@@ -60,7 +60,7 @@ const SETTINGS: SiteSettings = {
           { id: "historia", label: "Moja historia", href: "/moja-historia", order: 1, visible: true },
           { id: "artykuly", label: "Artykuły", href: "/artykuly", order: 2, visible: true },
           { id: "biblioteka", label: "Biblioteka", href: "/biblioteka", order: 2, visible: true },
-          { id: "podcast", label: "Podcast", href: "/podcast", order: 3, visible: true },
+          { id: "podcast", label: "Głos TNB", href: "/podcast", order: 3, visible: true },
           { id: "spolecznosc", label: "Rozmowy społeczności", href: "/spolecznosc", order: 4, visible: true },
           { id: "spotkania", label: "Spotkania", href: "/spotkania", order: 5, visible: true },
           { id: "premium", label: "Premium w Bibliotece", href: "/materialy-premium", order: 6, visible: false },

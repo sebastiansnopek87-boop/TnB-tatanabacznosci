@@ -11,7 +11,7 @@ const NAV = [
   { label: "Moja historia", to: "/moja-historia" },
   { label: "Artykuły", to: "/artykuly" },
   { label: "Biblioteka", to: "/biblioteka" },
-  { label: "Podcast", to: "/podcast" },
+  { label: "Głos TNB", to: "/podcast" },
   { label: "Rozmowy", to: "/spolecznosc" },
   { label: "Spotkania", to: "/spotkania" },
 ] as const;

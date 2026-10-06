@@ -1940,6 +1940,10 @@ export type Database = {
           maintenance_message: string
           notice_enabled: boolean
           platform_name: string
+          social_instagram: string | null
+          social_spotify: string | null
+          social_tiktok: string | null
+          social_youtube: string | null
           support_email: string | null
           updated_at: string
           updated_by: string | null
@@ -1951,6 +1955,10 @@ export type Database = {
           maintenance_message?: string
           notice_enabled?: boolean
           platform_name?: string
+          social_instagram?: string | null
+          social_spotify?: string | null
+          social_tiktok?: string | null
+          social_youtube?: string | null
           support_email?: string | null
           updated_at?: string
           updated_by?: string | null
@@ -1962,6 +1970,10 @@ export type Database = {
           maintenance_message?: string
           notice_enabled?: boolean
           platform_name?: string
+          social_instagram?: string | null
+          social_spotify?: string | null
+          social_tiktok?: string | null
+          social_youtube?: string | null
           support_email?: string | null
           updated_at?: string
           updated_by?: string | null
@@ -2040,6 +2052,45 @@ export type Database = {
           summary?: string
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      podcast_videos: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          published_on: string | null
+          sort_order: number
+          status: string
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          youtube_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          id?: string
+          published_on?: string | null
+          sort_order?: number
+          status?: string
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          youtube_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          published_on?: string | null
+          sort_order?: number
+          status?: string
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          youtube_id?: string
         }
         Relationships: []
       }
@@ -2174,6 +2225,60 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      voice_submissions: {
+        Row: {
+          about: string
+          admin_note: string
+          contact_consent: boolean
+          created_at: string
+          email: string
+          id: string
+          name: string
+          phone: string | null
+          profile_url: string | null
+          status: string
+          story: string
+          topic: string
+          updated_at: string
+          user_id: string | null
+          why: string
+        }
+        Insert: {
+          about?: string
+          admin_note?: string
+          contact_consent: boolean
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          phone?: string | null
+          profile_url?: string | null
+          status?: string
+          story: string
+          topic: string
+          updated_at?: string
+          user_id?: string | null
+          why?: string
+        }
+        Update: {
+          about?: string
+          admin_note?: string
+          contact_consent?: boolean
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          profile_url?: string | null
+          status?: string
+          story?: string
+          topic?: string
+          updated_at?: string
+          user_id?: string | null
+          why?: string
         }
         Relationships: []
       }

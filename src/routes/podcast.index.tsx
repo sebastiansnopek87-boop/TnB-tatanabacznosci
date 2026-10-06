@@ -3,12 +3,13 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { Clock, Headphones, Lock, Search } from "lucide-react";
 import { PageShell } from "@/components/tnb/PageShell";
+import { ChannelsSection, ListenSection, StorySection, WatchSection } from "@/components/voice/VoiceSections";
 import { listEpisodes } from "@/lib/podcast.functions";
 import { listCategories } from "@/lib/library";
 import { EP_ACCESS, coverUrl, fmtDay, fmtDuration, type PublicEpisode } from "@/lib/podcast";
 
-const TITLE = "Podcast TATA NA BACZNOŚCI";
-const DESC = "Rozmowy o życiu, które nie zawsze mieści się w schematach. O rodzinie, odpowiedzialności, doświadczeniach i wartościach. Bez udawania, bez gotowych recept.";
+const TITLE = "Głos TNB — historie, rozmowy i głosy ludzi w drodze";
+const DESC = "Głos TNB: podcast, rozmowy, materiały wideo i miejsce, w którym możesz zgłosić własną historię. Bez udawania, bez gotowych recept.";
 
 export const Route = createFileRoute("/podcast/")({
   head: () => ({
@@ -42,14 +43,16 @@ function PodcastPage() {
   return (
     <PageShell>
       <section className="border-b border-border/60 px-5 py-14 lg:px-14 lg:py-20">
-        <p className="eyebrow text-gold">Rozmowy TNB</p>
-        <h1 className="mt-4 font-display text-[2.6rem] font-semibold uppercase leading-none tracking-[0.02em] text-foreground sm:text-[3.4rem]">Podcast TATA NA BACZNOŚCI</h1>
-        <p className="mt-6 max-w-2xl text-[0.95rem] leading-[1.75] text-foreground/80">
-          Rozmowy o życiu, które nie zawsze mieści się w schematach. O rodzinie, odpowiedzialności, doświadczeniach, wartościach i drodze, którą każdy z nas przechodzi na swój sposób. Bez udawania. Bez gotowych recept. Z miejsca, w którym jesteśmy.
-        </p>
+        <h1 className="font-display text-[2.6rem] font-semibold uppercase leading-none tracking-[0.02em] text-foreground sm:text-[3.4rem]">Głos TNB</h1>
+        <p className="mt-5 max-w-2xl text-[1.1rem] italic text-foreground/85">Historie, rozmowy i głosy ludzi, którzy są w drodze.</p>
       </section>
 
       <div className="px-5 py-12 lg:px-14">
+        <p className="eyebrow text-gold">Podcast</p>
+        <h2 className="mt-2 font-display text-2xl font-semibold uppercase text-foreground sm:text-3xl">Rozmowy</h2>
+        <p className="mb-10 mt-4 max-w-2xl text-[0.95rem] leading-[1.75] text-foreground/80">
+          Rozmowy o życiu, które nie zawsze mieści się w schematach. O rodzinie, odpowiedzialności, doświadczeniach, wartościach i drodze, którą każdy z nas przechodzi na swój sposób. Bez udawania. Bez gotowych recept. Z miejsca, w którym jesteśmy.
+        </p>
         {eps.isLoading ? <p className="text-sm text-muted-foreground">Ładowanie odcinków…</p>
           : eps.error ? <p className="text-sm text-destructive">Nie udało się pobrać odcinków. Odśwież stronę.</p>
           : !all.length ? (
@@ -80,7 +83,7 @@ function PodcastPage() {
 
               <section className={latest && !filtering ? "mt-14" : ""}>
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                  <h2 className="font-display text-2xl font-semibold uppercase text-foreground">{filtering ? "Wyniki" : "Wszystkie odcinki"}</h2>
+                  <h3 className="font-display text-xl font-semibold uppercase text-foreground">{filtering ? "Wyniki" : "Wszystkie odcinki"}</h3>
                   <label className="relative block w-full lg:w-80">
                     <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Szukaj odcinka…" aria-label="Szukaj odcinka"
@@ -117,6 +120,10 @@ function PodcastPage() {
             </>
           )}
       </div>
+      <WatchSection />
+      <ListenSection />
+      <ChannelsSection />
+      <StorySection />
     </PageShell>
   );
 }

@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 export const Route = createFileRoute("/_authenticated/admin/ustawienia")({ component: PlatformSettings });
 
-type Form = { platform_name: string; contact_email: string; support_email: string; notice_enabled: boolean; maintenance_enabled: boolean; maintenance_message: string };
+type Form = { platform_name: string; contact_email: string; support_email: string; notice_enabled: boolean; maintenance_enabled: boolean; maintenance_message: string; social_youtube: string; social_spotify: string; social_tiktok: string; social_instagram: string };
 
 function Section({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
@@ -37,7 +37,8 @@ function PlatformSettings() {
     if (!data) return;
     const s = data.settings;
     setF({ platform_name: s.platform_name, contact_email: s.contact_email ?? "", support_email: s.support_email ?? "",
-      notice_enabled: s.notice_enabled, maintenance_enabled: s.maintenance_enabled, maintenance_message: s.maintenance_message });
+      notice_enabled: s.notice_enabled, maintenance_enabled: s.maintenance_enabled, maintenance_message: s.maintenance_message,
+      social_youtube: s.social_youtube ?? "", social_spotify: s.social_spotify ?? "", social_tiktok: s.social_tiktok ?? "", social_instagram: s.social_instagram ?? "" });
   }, [data]);
 
   async function onSubmit(e: FormEvent) {
@@ -80,6 +81,13 @@ function PlatformSettings() {
           <Input id="ce" type="email" disabled={ro} value={f.contact_email} onChange={(e) => set("contact_email", e.target.value)} placeholder="np. kontakt@twojadomena.pl" /></div>
         <div className="space-y-2"><Label htmlFor="se">Adres e-mail do obsługi użytkowników</Label>
           <Input id="se" type="email" disabled={ro} value={f.support_email} onChange={(e) => set("support_email", e.target.value)} placeholder="np. pomoc@twojadomena.pl" /></div>
+      </Section>
+
+      <Section title="Oficjalne kanały" hint="Używane na stronie Głos TNB. Puste pole = kanał nie jest pokazywany. Wpisz pełny adres https://.">
+        {([["social_youtube", "YouTube"], ["social_spotify", "Spotify"], ["social_tiktok", "TikTok"], ["social_instagram", "Instagram"]] as const).map(([k, l]) => (
+          <div key={k} className="space-y-2"><Label htmlFor={k}>{l}</Label>
+            <Input id={k} type="url" disabled={ro} value={f[k]} maxLength={500} onChange={(e) => set(k, e.target.value)} placeholder="https://…" /></div>
+        ))}
       </Section>
 
       <Section title="Poczta i powiadomienia" hint="Te ustawienia mają własną zakładkę — nie są powielane tutaj.">
