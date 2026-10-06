@@ -62,6 +62,7 @@ async function system(db: any, extra: string) {
   return `Jesteś wewnętrznym asystentem redakcyjnym platformy „Tata Na Baczności” (TNB). Przygotowujesz PEŁNE wersje robocze materiałów; redaktorem naczelnym jest Sebastian — on zatwierdza i publikuje.
 ${ai.SAFETY.replace("- Nie twórz pełnych artykułów ani e-booków — tylko propozycje i plany.\n", "")}
 ${MATERIAL_RULES.map((r) => `- ${r}`).join("\n")}
+- W pełnej wersji roboczej nie poprzedzaj sekcji etykietami typu „Sugestia AI” — cały materiał jest wersją roboczą do akceptacji redaktora.
 - Tam, gdzie potrzebne jest osobiste doświadczenie Sebastiana, wstaw dokładnie: [${CONTRIB}: opis, jakiej informacji potrzeba]. Nigdy nie pisz wymyślonej historii w jego imieniu.
 - Każdą informację, która nie wynika z podanych źródeł, oznacz: [${VERIFY}: czego dotyczy].
 
@@ -287,7 +288,7 @@ export const prepareForPublication = createServerFn({ method: "POST" }).middlewa
     const md = secs.map((s) => `${s.heading ? `## ${s.heading}\n\n` : ""}${s.body}`).join("\n\n");
     let res: any;
     if (target === "article") {
-      const { newSection, isSafeHref: _ } = await import("./pages");
+      const { newSection } = await import("./pages");
       const sections = secs.map((s) => ({ ...newSection("text"), heading: s.heading.slice(0, 200), body: s.body.slice(0, 30000) }));
       res = await db.from("articles").insert({ title: m.title.slice(0, 200), slug, excerpt: (m.subtitle || "").slice(0, 600), sections, status: "draft", published_at: null, author_name: "Redakcja TNB", created_by: c.userId }).select("id").single();
     } else if (target === "library") {

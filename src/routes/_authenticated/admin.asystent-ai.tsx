@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { errMsg } from "@/components/admin/format";
+import { CreateMaterial, MaterialsTab } from "@/components/admin/ai/Materials";
+import { MATERIAL_RULES } from "@/lib/editor-materials";
 import {
   addNoteSource, addWebSource, deleteSource, developProposal, getEditorDashboard, getEditorSettings, listAnalyses, listProposals, listSources,
   previewAnalysisData, runAnalysis, saveEditorSettings, testAiConnection, updateProposal, updateSource,
@@ -15,7 +17,7 @@ export const Route = createFileRoute("/_authenticated/admin/asystent-ai")({
   component: EditorAi,
 });
 
-const TABS = [["pulpit", "Pulpit"], ["zrodla", "Źródła wiedzy"], ["analiza", "Analiza tematów"], ["propozycje", "Propozycje materiałów"], ["historia", "Historia analiz"], ["ustawienia", "Ustawienia agenta"]] as const;
+const TABS = [["pulpit", "Pulpit"], ["zrodla", "Źródła wiedzy"], ["analiza", "Analiza tematów"], ["propozycje", "Propozycje materiałów"], ["materialy", "Materiały w pracy"], ["historia", "Historia analiz"], ["ustawienia", "Ustawienia agenta"]] as const;
 type Tab = (typeof TABS)[number][0];
 const STATUS: Record<string, string> = { new: "Nowa", considering: "Do rozważenia", accepted: "Zaakceptowana", rejected: "Odrzucona", later: "Odłożona na później", in_progress: "W trakcie realizacji", done: "Zrealizowana" };
 const SRC_STATUS: Record<string, string> = { pending: "Do zatwierdzenia", approved: "Zatwierdzone", rejected: "Odrzucone" };
@@ -28,6 +30,7 @@ const input = "w-full border border-border/60 bg-background p-2 text-sm";
 
 function EditorAi() {
   const [tab, setTab] = useState<Tab>("pulpit");
+  const [matId, setMatId] = useState<string | null>(null);
   const dash = useServerFn(getEditorDashboard);
   const q = useQuery({ queryKey: ["ai-ed", "dash"], queryFn: () => dash(), retry: false });
   if (q.isLoading) return <p className="text-muted-foreground">Ładowanie…</p>;
@@ -35,13 +38,14 @@ function EditorAi() {
   return (
     <div className="max-w-5xl">
       <h1 className="font-display text-3xl font-semibold uppercase">Asystent redakcyjny AI</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Analizuje wyłącznie zatwierdzone źródła i proponuje tematy. Model nie jest trenowany na danych TNB — przy każdej analizie dostaje wybrane źródła jako kontekst. Decyzje należą do redakcji.</p>
+      <p className="mt-2 text-sm text-muted-foreground">Na podstawie zatwierdzonych źródeł analizuje tematy, proponuje materiały i tworzy ich pełne wersje robocze — Ty jesteś redaktorem: edytujesz, zlecasz poprawki, zatwierdzasz i publikujesz w istniejących modułach. Model nie jest trenowany na danych TNB — przy każdej analizie dostaje wybrane źródła jako kontekst. Decyzje należą do redakcji.</p>
       <div className="mt-6 flex flex-wrap gap-2" role="tablist">{TABS.map(([k, l]) => <Button key={k} role="tab" aria-selected={tab === k} size="sm" variant={tab === k ? "default" : "outline"} onClick={() => setTab(k)}>{l}</Button>)}</div>
       <div className="mt-6">
         {tab === "pulpit" && <Dashboard d={q.data!} go={setTab} />}
         {tab === "zrodla" && <Sources />}
         {tab === "analiza" && <Analysis aiOn={q.data!.aiConfigured} go={setTab} />}
-        {tab === "propozycje" && <Proposals aiOn={q.data!.aiConfigured} />}
+        {tab === "propozycje" && <Proposals aiOn={q.data!.aiConfigured} onCreated={(id) => { setMatId(id); setTab("materialy"); }} />}
+        {tab === "materialy" && <MaterialsTab aiOn={q.data!.aiConfigured} openId={matId} setOpenId={setMatId} />}
         {tab === "historia" && <History />}
         {tab === "ustawienia" && <Settings d={q.data!} />}
       </div>
@@ -175,7 +179,7 @@ function RefList({ refs }: { refs: Array<{ ref: string; kind: string; title: str
   return <ul className="list-disc pl-5">{refs.map((r, i) => <li key={i}>{r.url ? <a href={r.url} target="_blank" rel="noopener noreferrer nofollow" className="text-gold hover:underline">{r.title}</a> : r.title} <span className="text-muted-foreground">({r.kind})</span></li>)}</ul>;
 }
 
-function Proposals({ aiOn }: { aiOn: boolean }) {
+function Proposals({ aiOn, onCreated }: { aiOn: boolean; onCreated: (id: string) => void }) {
   const qc = useQueryClient();
   const list = useServerFn(listProposals), upd = useServerFn(updateProposal), dev = useServerFn(developProposal);
   const q = useQuery({ queryKey: ["ai-ed", "proposals"], queryFn: () => list() });
@@ -214,6 +218,7 @@ function Proposals({ aiOn }: { aiOn: boolean }) {
               <div><p className="text-xs uppercase text-muted-foreground">Kolejne kroki</p><ul className="list-disc pl-5">{(d.next_steps ?? []).map((t: string, i: number) => <li key={i}>{t}</li>)}</ul></div>
               {p.expansion && <div><p className="text-xs uppercase text-muted-foreground">Rozwinięcie</p><pre className="whitespace-pre-wrap break-words border border-border/60 bg-muted/30 p-3 text-xs">{p.expansion}</pre></div>}
               {p.outline && <div><p className="text-xs uppercase text-muted-foreground">Konspekt</p><pre className="whitespace-pre-wrap break-words border border-border/60 bg-muted/30 p-3 text-xs">{p.outline}</pre></div>}
+              {!["rejected"].includes(p.status) && <CreateMaterial p={p} aiOn={aiOn} onCreated={onCreated} />}
               <div className="flex flex-wrap gap-2">
                 <Button size="sm" onClick={() => act(upd({ data: { id: p.id, status: "accepted" } }), "Zaakceptowano")}>Akceptuj</Button>
                 <Button size="sm" variant="outline" onClick={() => act(upd({ data: { id: p.id, status: "considering" } }), "Do rozważenia")}>Do rozważenia</Button>
@@ -276,6 +281,7 @@ function Settings({ d }: { d: Awaited<ReturnType<typeof getEditorDashboard>> }) 
   if (!f) return <p className="text-muted-foreground">Ładowanie…</p>;
   return (
     <div className="space-y-6">
+      <section className={box + " space-y-2 text-sm"}><h2 className="font-semibold">Stałe zasady tworzenia materiałów</h2><p className="text-xs text-muted-foreground">Dołączane do każdego wywołania AI przy tworzeniu i poprawianiu materiałów (niezmienne).</p><ul className="list-disc pl-5">{MATERIAL_RULES.map((r) => <li key={r}>{r}</li>)}</ul></section>
       <section className={box + " space-y-2 text-sm"}>
         <h2 className="font-semibold">Połączenie z modelem AI</h2>
         <p>Dostawca: Lovable AI (bramka platformy), model {d.model}. Klucz jest przechowywany wyłącznie na serwerze. Status: <strong>{d.aiConfigured ? "skonfigurowane" : "brak konfiguracji"}</strong>.</p>
