@@ -130,6 +130,8 @@ const DEFS = [
 
   E("contact_message", "formularze", "Nowa wiadomość z formularza kontaktowego", "Powiadomienie administratora.", "admin", "integrated",
     { subject: "Nowa wiadomość: {{temat_wiadomosci}}", heading: "Nowa wiadomość z Kontaktu", lines: ["Od: {{imie}} ({{email}})", "Temat: {{temat_wiadomosci}}"], cta: { label: "Otwórz skrzynkę", v: "link_do_panelu" } }),
+  E("voice_submission_admin", "formularze", "Nowe zgłoszenie do Głosu TNB", "Powiadomienie administratora.", "admin", "integrated",
+    { subject: "Głos TNB: nowa historia od {{imie}}", heading: "Nowe zgłoszenie do Głosu TNB", lines: ["Od: {{imie}} ({{email}})", "Temat: {{temat_wiadomosci}}"], cta: { label: "Otwórz zgłoszenia", v: "link_do_panelu" } }),
   E("newsletter_signup", "formularze", "Nowy zapis do newslettera", "Powiadomienie administratora.", "admin", "integrated",
     { subject: "Nowy zapis do newslettera", heading: "Nowy subskrybent", lines: ["Ktoś zapisał się do newslettera {{nazwa_platformy}}."], cta: { label: "Otwórz panel", v: "link_do_panelu" } }),
   E("consult_request_admin", "formularze", "Nowe zgłoszenie do konsultacji", "Powiadomienie administratora.", "admin", "integrated",

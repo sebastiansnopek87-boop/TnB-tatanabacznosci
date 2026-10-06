@@ -6,8 +6,9 @@ import { assertAdmin, assertSuperadmin, logEvent } from "./admin-auth.server";
 export type PublicPlatformSettings = {
   platform_name: string; contact_email: string | null; support_email: string | null;
   notice_enabled: boolean; maintenance_enabled: boolean; maintenance_message: string;
+  social_youtube: string | null; social_spotify: string | null; social_tiktok: string | null; social_instagram: string | null;
 };
-const PUBLIC_COLS = "platform_name, contact_email, support_email, notice_enabled, maintenance_enabled, maintenance_message";
+const PUBLIC_COLS = "platform_name, contact_email, support_email, notice_enabled, maintenance_enabled, maintenance_message, social_youtube, social_spotify, social_tiktok, social_instagram";
 
 // Public: only non-sensitive columns, read through the anon SELECT policy.
 export const getPublicPlatformSettings = createServerFn({ method: "GET" }).handler(async () => {
@@ -43,7 +44,9 @@ export const getPlatformSettings = createServerFn({ method: "GET" })
   });
 
 const optEmail = z.union([z.string().trim().email("Podaj poprawny adres e-mail").max(255), z.literal("")]).transform((v) => (v === "" ? null : v));
+const optUrl = z.union([z.string().trim().url("Podaj pełny adres zaczynający się od https://").max(500).refine((v) => v.startsWith("https://"), "Adres musi zaczynać się od https://"), z.literal("")]).transform((v) => (v === "" ? null : v));
 export const platformSchema = z.object({
+  social_youtube: optUrl, social_spotify: optUrl, social_tiktok: optUrl, social_instagram: optUrl,
   platform_name: z.string().trim().min(1, "Podaj nazwę platformy").max(100),
   contact_email: optEmail,
   support_email: optEmail,
