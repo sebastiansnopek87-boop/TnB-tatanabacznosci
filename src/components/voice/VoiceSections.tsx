@@ -151,7 +151,7 @@ export function StorySection() {
               {field("why", "Dlaczego właśnie ta historia powinna wybrzmieć?", "Co Twoim zdaniem może dać drugiemu człowiekowi?", false, 4)}
               {field("profile_url", "Link do Twojego profilu / strony", "Opcjonalnie — Instagram, Facebook, YouTube, LinkedIn, własna strona itd.")}
               <label className="flex items-start gap-3 text-[0.95rem] text-foreground/85">
-                <input type="checkbox" checked={f.consent} onChange={(e) => set("consent", e.target.checked)} className="mt-1 h-4 w-4 accent-[var(--gold)]" />
+                <input type="checkbox" checked={f.consent} onChange={(e) => set("consent", e.target.checked)} className="mt-1 h-4 w-4 accent-gold" />
                 <span>Tak, proszę o kontakt w sprawie mojego zgłoszenia. * <a href="/polityka-prywatnosci" className="text-gold underline">Polityka prywatności</a></span>
               </label>
               {errs.consent && <p className="text-sm text-destructive">{errs.consent}</p>}
