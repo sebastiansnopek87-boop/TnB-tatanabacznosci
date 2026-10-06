@@ -337,6 +337,13 @@
       "when": 1791312887520,
       "tag": "0047_ai_materials",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1791315598390,
+      "tag": "0048_ai_articles_newsletter",
+      "breakpoints": true
     }
   ]
 }

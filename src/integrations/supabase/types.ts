@@ -171,6 +171,7 @@ export type Database = {
           handoff_kind: string | null
           id: string
           last_author: string
+          meta: Json
           proposal_id: string | null
           sections: Json
           sources: Json
@@ -189,6 +190,7 @@ export type Database = {
           handoff_kind?: string | null
           id?: string
           last_author?: string
+          meta?: Json
           proposal_id?: string | null
           sections?: Json
           sources?: Json
@@ -207,6 +209,7 @@ export type Database = {
           handoff_kind?: string | null
           id?: string
           last_author?: string
+          meta?: Json
           proposal_id?: string | null
           sections?: Json
           sources?: Json
@@ -382,6 +385,54 @@ export type Database = {
         }
         Relationships: []
       }
+      article_ai_origin: {
+        Row: {
+          article_id: string
+          created_by: string | null
+          cta: string
+          handed_off_at: string
+          material_id: string | null
+          sources: Json
+          tags: string[]
+          version_n: number | null
+        }
+        Insert: {
+          article_id: string
+          created_by?: string | null
+          cta?: string
+          handed_off_at?: string
+          material_id?: string | null
+          sources?: Json
+          tags?: string[]
+          version_n?: number | null
+        }
+        Update: {
+          article_id?: string
+          created_by?: string | null
+          cta?: string
+          handed_off_at?: string
+          material_id?: string | null
+          sources?: Json
+          tags?: string[]
+          version_n?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_ai_origin_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: true
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "article_ai_origin_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "ai_materials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       article_categories: {
         Row: {
           created_at: string
@@ -527,6 +578,80 @@ export type Database = {
             foreignKeyName: "article_comments_article_id_fkey"
             columns: ["article_id"]
             isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      article_newsletters: {
+        Row: {
+          approved_by: string | null
+          article_id: string
+          created_at: string
+          failed_count: number
+          intro: string
+          last_note: string | null
+          mode: string | null
+          outro: string
+          preheader: string
+          prepared_by: string | null
+          recipients: number | null
+          round: number
+          sent_at: string | null
+          sent_count: number
+          simulated_count: number
+          status: string
+          subject: string
+          teaser: string
+          updated_at: string
+        }
+        Insert: {
+          approved_by?: string | null
+          article_id: string
+          created_at?: string
+          failed_count?: number
+          intro?: string
+          last_note?: string | null
+          mode?: string | null
+          outro?: string
+          preheader?: string
+          prepared_by?: string | null
+          recipients?: number | null
+          round?: number
+          sent_at?: string | null
+          sent_count?: number
+          simulated_count?: number
+          status?: string
+          subject?: string
+          teaser?: string
+          updated_at?: string
+        }
+        Update: {
+          approved_by?: string | null
+          article_id?: string
+          created_at?: string
+          failed_count?: number
+          intro?: string
+          last_note?: string | null
+          mode?: string | null
+          outro?: string
+          preheader?: string
+          prepared_by?: string | null
+          recipients?: number | null
+          round?: number
+          sent_at?: string | null
+          sent_count?: number
+          simulated_count?: number
+          status?: string
+          subject?: string
+          teaser?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_newsletters_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: true
             referencedRelation: "articles"
             referencedColumns: ["id"]
           },
