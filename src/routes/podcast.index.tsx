@@ -128,7 +128,7 @@ function PodcastPage() {
                           <div className="min-w-0 flex-1">
                             <Meta e={e} catName={catName} />
                             <h3 className="mt-1.5 break-words font-display text-base font-semibold uppercase leading-snug text-foreground group-hover:text-gold sm:text-lg">{num(e)}{e.title}</h3>
-                            {e.summary && <p className="mt-1 line-clamp-2 hidden text-[0.85rem] leading-relaxed text-foreground/75 sm:block">{e.summary}</p>}
+                            {e.summary && <p className="mt-1 hidden text-[0.85rem] leading-relaxed text-foreground/75 sm:line-clamp-2">{e.summary}</p>}
                           </div>
                           <span className="hidden shrink-0 text-[0.7rem] uppercase tracking-[0.14em] text-gold md:inline">{e.has_audio || e.has_external ? "▶ Odtwórz" : "Oczekuje"}</span>
                         </Link>
