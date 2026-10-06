@@ -1,8 +1,8 @@
 import { useRef, useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
-import { listVideos, submitVoiceStory, storySchema } from "@/lib/voice.functions";
-import { ytThumb, ytUrl } from "@/lib/voice";
+import { getPublicChannel, listVideos, submitVoiceStory, storySchema } from "@/lib/voice.functions";
+import { ytThumb } from "@/lib/voice";
 import { fmtDay } from "@/lib/podcast";
 import { usePlatformSettings } from "@/hooks/use-platform-settings";
 
@@ -18,31 +18,75 @@ function Heading({ eyebrow, title }: { eyebrow?: string; title: string }) {
   );
 }
 
+const fmtLen = (sec: number | null) => {
+  if (!sec) return null;
+  const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), x = sec % 60;
+  return h ? `${h}:${String(m).padStart(2, "0")}:${String(x).padStart(2, "0")}` : `${m}:${String(x).padStart(2, "0")}`;
+};
+const PAGE = 12;
+
+function useChannelUrl() {
+  const yt = usePlatformSettings().data?.social_youtube;
+  const ch = useQuery({ queryKey: ["voice-channel"], queryFn: () => getPublicChannel(), staleTime: 300_000 });
+  return yt || ch.data?.url || null;
+}
+
 export function WatchSection() {
   const v = useQuery({ queryKey: ["voice-videos"], queryFn: () => listVideos() });
-  const yt = usePlatformSettings().data?.social_youtube;
-  if (!v.data?.length && !yt) return null;
+  const channel = useChannelUrl();
+  const [sel, setSel] = useState<string | null>(null);
+  const [play, setPlay] = useState(false);
+  const [shown, setShown] = useState(PAGE);
+  const all = v.data ?? [];
+  if (!all.length && !channel) return null;
+  const cur = all.find((x) => x.id === sel) ?? all[0];
   return (
     <section aria-labelledby="ogladaj" className="border-t border-border/60 px-5 py-12 lg:px-14">
-      <div id="ogladaj"><Heading title="Oglądaj" /></div>
-      {v.data?.length ? (
-        <div className="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-          {v.data.map((x) => (
-            <a key={x.id} href={ytUrl(x.youtube_id)} target="_blank" rel="noopener noreferrer" className="group flex flex-col border border-border/60 bg-card hover:border-gold/60">
-              <img src={x.thumbnail_url || ytThumb(x.youtube_id)} alt="" loading="lazy" className="aspect-video w-full border-b border-border/60 object-cover" />
-              <div className="flex flex-1 flex-col p-5">
-                {x.published_on && <p className="text-[0.7rem] uppercase tracking-[0.12em] text-muted-foreground">{fmtDay(x.published_on)}</p>}
-                <h3 className="mt-2 break-words font-display text-xl font-semibold uppercase leading-snug text-foreground group-hover:text-gold">{x.title}</h3>
-                {x.description && <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-foreground/75">{x.description}</p>}
-                <span className="mt-auto pt-4 text-xs uppercase tracking-[0.14em] text-gold">Obejrzyj na YouTube →</span>
-              </div>
-            </a>
-          ))}
+      <div id="ogladaj"><Heading eyebrow="YouTube" title="Oglądaj" /></div>
+      {cur ? (
+        <div className="mt-8 grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_380px]">
+          <div className="min-w-0">
+            <div className="relative aspect-video w-full overflow-hidden border border-border/60 bg-surface-deep">
+              <iframe key={cur.youtube_id + (play ? "1" : "0")} title={cur.title}
+                src={`https://www.youtube-nocookie.com/embed/${cur.youtube_id}?rel=0&modestbranding=1${play ? "&autoplay=1" : ""}`}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin" allowFullScreen className="absolute inset-0 h-full w-full" />
+            </div>
+            <h3 className="mt-5 break-words font-display text-2xl font-semibold uppercase leading-tight text-foreground">{cur.title}</h3>
+            <p className="mt-2 text-[0.7rem] uppercase tracking-[0.12em] text-muted-foreground">{fmtDay(cur.published_at ?? cur.published_on)}{fmtLen(cur.duration_seconds) && ` · ${fmtLen(cur.duration_seconds)}`}</p>
+            {cur.description && <p className="mt-4 line-clamp-6 whitespace-pre-line break-words text-[0.95rem] leading-[1.75] text-foreground/80">{cur.description}</p>}
+          </div>
+          <div className="min-w-0 border border-border/60 bg-card">
+            <p className="border-b border-border/60 px-4 py-3 text-[0.7rem] uppercase tracking-[0.14em] text-gold">Najnowsze materiały</p>
+            <ul className="max-h-[560px] overflow-y-auto" aria-label="Lista materiałów wideo">
+              {all.slice(0, shown).map((x) => {
+                const on = x.id === cur.id;
+                return (
+                  <li key={x.id}>
+                    <button type="button" aria-current={on ? "true" : undefined} onClick={() => { setSel(x.id); setPlay(true); }}
+                      className={`flex w-full gap-3 border-l-2 p-3 text-left transition-colors ${on ? "border-gold bg-foreground/10" : "border-transparent hover:bg-foreground/5"}`}>
+                      <span className="relative w-32 shrink-0">
+                        <img src={x.thumbnail_url || ytThumb(x.youtube_id)} alt="" loading="lazy" className="aspect-video w-full object-cover" />
+                        {fmtLen(x.duration_seconds) && <span className="absolute bottom-1 right-1 bg-surface-deep/90 px-1 text-[0.65rem] text-foreground">{fmtLen(x.duration_seconds)}</span>}
+                      </span>
+                      <span className="min-w-0">
+                        <span className={`line-clamp-2 break-words text-sm leading-snug ${on ? "text-gold" : "text-foreground"}`}>{x.title}</span>
+                        <span className="mt-1 block text-[0.68rem] uppercase tracking-[0.1em] text-muted-foreground">{fmtDay(x.published_at ?? x.published_on)}</span>
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+              {shown < all.length && (
+                <li className="p-3"><button type="button" onClick={() => setShown((n) => n + PAGE)} className={`w-full justify-center ${BTN}`}>Pokaż więcej</button></li>
+              )}
+            </ul>
+          </div>
         </div>
       ) : (
         <p className="mt-4 text-sm text-foreground/75">Materiały wideo znajdziesz na kanale YouTube.</p>
       )}
-      {yt && <a href={yt} target="_blank" rel="noopener noreferrer" className={`mt-8 ${BTN}`}>Kanał YouTube <ArrowRight className="h-4 w-4" /></a>}
+      {channel && <a href={channel} target="_blank" rel="noopener noreferrer" className={`mt-8 ${BTN}`}>Odwiedź kanał na YouTube <ArrowRight className="h-4 w-4" /></a>}
     </section>
   );
 }
@@ -52,8 +96,8 @@ export function ListenSection() {
   if (!sp) return null;
   return (
     <section className="border-t border-border/60 px-5 py-12 lg:px-14">
-      <Heading title="Słuchaj" />
-      <p className="mt-4 text-[0.95rem] text-foreground/80">Słuchaj Głosu TNB również na Spotify.</p>
+      <Heading title="Słuchaj Głosu TNB" />
+      <p className="mt-4 text-[0.95rem] text-foreground/80">Rozmowy i materiały audio znajdziesz również na Spotify.</p>
       <a href={sp} target="_blank" rel="noopener noreferrer" className={`mt-6 ${BTN}`}>Otwórz Spotify →</a>
     </section>
   );
@@ -61,14 +105,15 @@ export function ListenSection() {
 
 export function ChannelsSection() {
   const s = usePlatformSettings().data;
+  const yt = useChannelUrl();
   const items = ([
-    ["YouTube", "Oglądaj", s?.social_youtube], ["Spotify", "Słuchaj", s?.social_spotify],
+    ["YouTube", "Oglądaj", yt], ["Spotify", "Słuchaj", s?.social_spotify],
     ["TikTok", "Zobacz krótkie formy", s?.social_tiktok], ["Instagram", "Zobacz, co u mnie", s?.social_instagram],
   ] as const).filter(([, , url]) => !!url);
   if (!items.length) return null;
   return (
     <section className="border-t border-border/60 px-5 py-12 lg:px-14">
-      <Heading title="Tata Na Baczności — także tutaj" />
+      <Heading title="Tata Na Baczności w sieci" />
       <p className="mt-4 max-w-2xl whitespace-pre-line text-[0.95rem] leading-[1.75] text-foreground/80">
         {"Nie wszystko, co tworzę, powstaje w jednym miejscu.\nZnajdziesz mnie również na YouTube, Spotify, TikToku i Instagramie."}
       </p>

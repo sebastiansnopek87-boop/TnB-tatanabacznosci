@@ -47,7 +47,10 @@ function PodcastPage() {
         <p className="mt-5 max-w-2xl text-[1.1rem] italic text-foreground/85">Historie, rozmowy i głosy ludzi, którzy są w drodze.</p>
       </section>
 
-      <div className="px-5 py-12 lg:px-14">
+      <WatchSection />
+      <ListenSection />
+
+      <div className="border-t border-border/60 px-5 py-12 lg:px-14">
         <p className="eyebrow text-gold">Podcast</p>
         <h2 className="mt-2 font-display text-2xl font-semibold uppercase text-foreground sm:text-3xl">Rozmowy</h2>
         <p className="mb-10 mt-4 max-w-2xl text-[0.95rem] leading-[1.75] text-foreground/80">
@@ -120,8 +123,6 @@ function PodcastPage() {
             </>
           )}
       </div>
-      <WatchSection />
-      <ListenSection />
       <ChannelsSection />
       <StorySection />
     </PageShell>
