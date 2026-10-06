@@ -17,8 +17,11 @@ async function call(path: string, params: Record<string, string>) {
   for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v);
   u.searchParams.set("key", key());
   const r = await fetch(u, { headers: { Accept: "application/json" } });
-  const j = (await r.json().catch(() => ({}))) as { error?: { message?: string }; items?: unknown[]; nextPageToken?: string };
-  if (!r.ok) throw new YtError(`YouTube API (${r.status}): ${j.error?.message ?? "błąd"}`);
+  const j = (await r.json().catch(() => ({}))) as { error?: { message?: string; errors?: { reason?: string }[]; details?: { reason?: string }[] }; items?: unknown[]; nextPageToken?: string };
+  if (!r.ok) {
+    const reason = j.error?.details?.find((d) => d.reason)?.reason ?? j.error?.errors?.find((e) => e.reason)?.reason;
+    throw new YtError(`YouTube API (${r.status}${reason ? `, ${reason}` : ""}): ${j.error?.message ?? "błąd"}`);
+  }
   return j;
 }
 

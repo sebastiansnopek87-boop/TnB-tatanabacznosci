@@ -48,7 +48,14 @@ export const adminGetYoutubeSource = createServerFn({ method: "GET" })
     await assertAdmin(context);
     const { data, error } = await context.supabase.from("youtube_source").select("*").eq("id", 1).maybeSingle();
     if (error) throw new Error("Nie udało się pobrać ustawień YouTube.");
-    return { ...data, keyConfigured: !!process.env["YOUTUBE_API_KEY"] };
+    const k = process.env["YOUTUBE_API_KEY"] ?? "";
+    const keyCheck = {
+      length: k.length,
+      hasWhitespace: /\s/.test(k),
+      startsAIza: k.trim().startsWith("AIza"),
+      lengthOk: k.trim().length === 39,
+    };
+    return { ...data, keyConfigured: !!k, keyCheck };
   });
 
 export const adminSaveYoutubeSource = createServerFn({ method: "POST" })
