@@ -100,6 +100,7 @@ function Editor({ id, aiOn, initial, close }: { id: string; aiOn: boolean; initi
   const move = (i: number, d: number) => { setSecs((s) => { const n = [...s]; const t = n[i + d]; if (!t) return s; n[i + d] = n[i]!; n[i] = t; return n; }); setDirty(true); };
   const done = async (r: any, msg: string) => { if (!r.ok) { toast.error(r.error); return false; } toast.success(msg); await q.refetch(); return true; };
   const doSave = async (note = "") => { setBusy("save"); const r = await fix(save({ data: { id, title, subtitle, sections: secs, note } })); setBusy(null); return done(r, "Zapisano nową wersję"); };
+  const pick = (t: HTMLTextAreaElement, sectionId: string) => { const text = t.value.slice(t.selectionStart, t.selectionEnd); if (text || sel?.sectionId !== sectionId) setSel({ sectionId, text }); };
   const markers = secs.filter((s) => s.body.includes(CONTRIB) || s.body.includes(VERIFY));
   const locked = !!m.handoff_id;
   const snap = (vid: string | null) => versions.find((v) => v.id === vid)?.snapshot;
@@ -134,7 +135,7 @@ function Editor({ id, aiOn, initial, close }: { id: string; aiOn: boolean; initi
           </div>
           <textarea className={`${input} font-[inherit]`} rows={Math.min(24, Math.max(5, Math.ceil(s.body.length / 90)))} value={s.body} disabled={locked}
             onChange={(e) => edit(i, { body: e.target.value })}
-            onSelect={(e) => { const t = e.currentTarget; const text = t.value.slice(t.selectionStart, t.selectionEnd); setSel({ sectionId: s.id, text }); }} />
+            onSelect={(e) => pick(e.currentTarget, s.id)} onMouseUp={(e) => pick(e.currentTarget, s.id)} onKeyUp={(e) => pick(e.currentTarget, s.id)} />
           {(s.body.includes(CONTRIB) || s.body.includes(VERIFY)) && <p className="mt-1 text-xs"><Marked text={s.body.match(new RegExp(`\\[(?:${CONTRIB}|${VERIFY})[^\\]]*\\]`, "g"))?.join("  ") ?? ""} /></p>}
           <p className="mt-1 text-xs text-muted-foreground">Źródła sekcji: {s.refs?.length ? s.refs.join("; ") : "brak przypisanych — treść spoza źródeł powinna być oznaczona do weryfikacji"}</p>
           {!locked && <div className="mt-2 flex flex-wrap gap-2">
