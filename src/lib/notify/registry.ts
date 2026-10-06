@@ -161,7 +161,7 @@ const DEFS_RAW = [
 
 // Newsletter: hidden preheader + unsubscribe footer (every subscriber gets a personal link).
 const DEFS = DEFS_RAW.map((d) => d.ev.key !== "newsletter_article" ? d : { ev: d.ev, tpl: { ...d.tpl,
-  html: `<span style="display:none;max-height:0;overflow:hidden;">{{preheader}}</span>\n${d.tpl.html}\n<p style="font-size:12px;">Otrzymujesz tę wiadomość, bo zapisałeś się do newslettera. <a href="{{link_wypisu}}">Wypisz się</a></p>`,
+  html: `<span style="display:none;max-height:0;overflow:hidden;">{{preheader}}</span>\n${d.tpl.html}\n<p>Otrzymujesz tę wiadomość, bo zapisałeś się do newslettera. <a href="{{link_wypisu}}">Wypisz się</a></p>`,
   text: `${d.tpl.text}\n\nWypisz się z newslettera: {{link_wypisu}}`, required: [...d.tpl.required, "preheader", "link_wypisu"] } });
 
 export const EVENTS: EventDef[] = DEFS.map((d) => d.ev);
