@@ -119,6 +119,112 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_material_versions: {
+        Row: {
+          actor: string | null
+          author: string
+          created_at: string
+          id: string
+          material_id: string
+          n: number
+          note: string
+          snapshot: Json
+        }
+        Insert: {
+          actor?: string | null
+          author: string
+          created_at?: string
+          id?: string
+          material_id: string
+          n: number
+          note?: string
+          snapshot: Json
+        }
+        Update: {
+          actor?: string | null
+          author?: string
+          created_at?: string
+          id?: string
+          material_id?: string
+          n?: number
+          note?: string
+          snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_material_versions_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "ai_materials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_materials: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          duplicates: Json
+          format: string
+          handoff_at: string | null
+          handoff_id: string | null
+          handoff_kind: string | null
+          id: string
+          last_author: string
+          proposal_id: string | null
+          sections: Json
+          sources: Json
+          status: string
+          subtitle: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          duplicates?: Json
+          format: string
+          handoff_at?: string | null
+          handoff_id?: string | null
+          handoff_kind?: string | null
+          id?: string
+          last_author?: string
+          proposal_id?: string | null
+          sections?: Json
+          sources?: Json
+          status?: string
+          subtitle?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          duplicates?: Json
+          format?: string
+          handoff_at?: string | null
+          handoff_id?: string | null
+          handoff_kind?: string | null
+          id?: string
+          last_author?: string
+          proposal_id?: string | null
+          sections?: Json
+          sources?: Json
+          status?: string
+          subtitle?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_materials_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "ai_proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_proposal_events: {
         Row: {
           action: string
