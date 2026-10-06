@@ -26,7 +26,7 @@ const fix = (p: Promise<any>) => p.then((r) => r, (e) => ({ ok: false, error: er
 export function CreateMaterial({ p, aiOn, onCreated }: { p: any; aiOn: boolean; onCreated: (id: string) => void }) {
   const prev = useServerFn(previewCreateMaterial), create = useServerFn(createMaterial);
   const [info, setInfo] = useState<any>(null), [format, setFormat] = useState(""), [dir, setDir] = useState(""), [busy, setBusy] = useState(false);
-  if (!info) return <Button size="sm" disabled={!aiOn || busy} onClick={async () => { setBusy(true); const r: any = await fix(prev({ data: { proposalId: p.id } })); setBusy(false); if (!r.ok) return toast.error(r.error); setInfo(r); setFormat(r.format); }}>{busy ? "Sprawdzam…" : "STWÓRZ MATERIAŁ"}</Button>;
+  if (!info) return <Button size="sm" disabled={!aiOn || busy} onClick={async () => { setBusy(true); const r: any = await fix(prev({ data: { proposalId: p.id } })); setBusy(false); if (!r.ok) { toast.error(r.error); return; } setInfo(r); setFormat(r.format); }}>{busy ? "Sprawdzam…" : "STWÓRZ MATERIAŁ"}</Button>;
   return (
     <div className="w-full space-y-3 border border-gold/60 p-3">
       <p className="text-xs uppercase text-gold">Przed generowaniem pełnej wersji roboczej</p>
@@ -40,7 +40,7 @@ export function CreateMaterial({ p, aiOn, onCreated }: { p: any; aiOn: boolean; 
       <label className="block text-xs">Kierunek / wskazówki (opcjonalnie)<textarea className={input} rows={2} value={dir} onChange={(e) => setDir(e.target.value)} maxLength={2000} /></label>
       <p className="text-xs text-muted-foreground">Trafi do: {HANDOFF_LABEL[handoffTarget(format)]} (dopiero po Twoim zatwierdzeniu, jako szkic).</p>
       <div className="flex gap-2">
-        <Button size="sm" disabled={busy} onClick={async () => { setBusy(true); const r: any = await fix(create({ data: { proposalId: p.id, format, direction: dir, confirmed: true } })); setBusy(false); if (!r.ok) return toast.error(r.error); toast.success("Wersja robocza gotowa"); onCreated(r.id); }}>{busy ? "AI pisze materiał… (może potrwać kilka minut)" : "ROZPOCZNIJ GENEROWANIE"}</Button>
+        <Button size="sm" disabled={busy} onClick={async () => { setBusy(true); const r: any = await fix(create({ data: { proposalId: p.id, format, direction: dir, confirmed: true } })); setBusy(false); if (!r.ok) { toast.error(r.error); return; } toast.success("Wersja robocza gotowa"); onCreated(r.id); }}>{busy ? "AI pisze materiał… (może potrwać kilka minut)" : "ROZPOCZNIJ GENEROWANIE"}</Button>
         <Button size="sm" variant="outline" disabled={busy} onClick={() => setInfo(null)}>Anuluj</Button>
       </div>
     </div>
