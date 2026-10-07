@@ -55,18 +55,33 @@ function EditorAi() {
   );
 }
 
-function Dashboard({ d, go }: { d: Awaited<ReturnType<typeof getEditorDashboard>>; go: (t: Tab) => void }) {
-  const tiles = [["Zatwierdzone źródła", d.approved], ["Artykuły (bez archiwum)", d.articles], ["Materiały Biblioteki", d.library], ["Nowe propozycje", d.fresh], ["Propozycje zaakceptowane", d.accepted], ["Źródła do zatwierdzenia", d.pending]] as const;
+function Dashboard({ d, go, open }: { d: Awaited<ReturnType<typeof getEditorDashboard>>; go: (t: Tab) => void; open: (id: string) => void }) {
+  const list = useServerFn(listMaterials);
+  const mq = useQuery({ queryKey: ["ai-ed", "materials"], queryFn: () => list() });
+  const [creating, setCreating] = useState(false);
+  const rows = (mq.data ?? []) as any[];
+  const active = rows.filter((m) => !m.handoff_id && !["rejected", "archived", "published"].includes(m.status));
+  const attention = active.filter((m) => m.imagesPending || ["draft", "review", "editing"].includes(m.status));
+  const Row = ({ m }: { m: any }) => <li className="flex flex-wrap items-center justify-between gap-2 border-t border-border/40 py-2 text-sm">
+    <span className="min-w-0"><span className="font-medium">{m.title}</span><span className="block text-xs text-muted-foreground">{stageOf(m).label}{m.imagesPending ? ` · obrazy do decyzji: ${m.imagesPending}` : ""}{m.notes ? ` · uwagi redakcyjne: ${m.notes}` : ""} · {fmt(m.updated_at)}</span></span>
+    <Button size="sm" variant="outline" onClick={() => open(m.id)}>Otwórz</Button></li>;
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3">{tiles.map(([l, v]) => <div key={l} className={box}><p className="text-xs uppercase tracking-widest text-muted-foreground">{l}</p><p className="mt-1 text-2xl font-semibold">{v}</p></div>)}</div>
-      <div className={box + " space-y-1 text-sm"}>
-        <p>Ostatnia analiza: <strong>{d.lastAnalysis ? `${fmt(d.lastAnalysis.created_at)} (${d.lastAnalysis.status === "done" ? "zakończona" : d.lastAnalysis.status === "failed" ? "błąd" : "w toku"})` : "jeszcze nie przeprowadzono"}</strong></p>
-        <p>Połączenie z modelem AI: <strong className={d.aiConfigured ? "text-gold" : "text-destructive"}>{d.aiConfigured ? `skonfigurowane (${d.model})` : "nie skonfigurowane — generowanie wyłączone"}</strong></p>
-        <p>Analiza społeczności: <strong>{d.communityEnabled ? "włączona decyzją administratora" : "wyłączona (wymaga decyzji)"}</strong></p>
-        {d.pending > 0 && <p className="text-gold">{d.pending} źródeł czeka na zatwierdzenie — nie są używane w analizach.</p>}
-      </div>
-      {!d.lastAnalysis && <div className={box + " text-sm"}><p className="font-medium">Jak zacząć</p><ol className="mt-2 list-decimal space-y-1 pl-5 text-muted-foreground"><li>Dodaj i zatwierdź źródła w zakładce „Źródła wiedzy” (opcjonalnie — artykuły i Biblioteka są dostępne od razu).</li><li>Przejdź do „Analiza tematów”, wybierz zakres i sprawdź, jakie dane zostaną wysłane.</li><li>Kliknij „Przeprowadź analizę”.</li></ol><Button className="mt-3" size="sm" onClick={() => go("analiza")}>Przejdź do analizy</Button></div>}
+      <section className="border border-gold/60 p-6">
+        <h2 className="font-display text-2xl font-semibold uppercase">Co chcesz stworzyć?</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Wpisz temat — AI dobierze źródła, napisze kompletny artykuł z SEO i obrazami. Ty czytasz, zlecasz poprawki i zatwierdzasz.</p>
+        <div className="mt-4">{creating ? <CreateArticle aiOn={d.aiConfigured} onCreated={open} onCancel={() => setCreating(false)} /> :
+          <div className="flex flex-wrap gap-2"><Button disabled={!d.aiConfigured} onClick={() => setCreating(true)}>+ STWÓRZ NOWY ARTYKUŁ</Button><Button variant="outline" onClick={() => go("propozycje")}>Wybierz z propozycji AI ({d.fresh + d.accepted})</Button><Button variant="outline" onClick={() => go("analiza")}>Znajdź nowe tematy (analiza)</Button></div>}</div>
+        {!d.aiConfigured && <p className="mt-2 text-sm text-destructive">Połączenie z modelem AI nie jest skonfigurowane — tworzenie wyłączone.</p>}
+      </section>
+      <section className={box}><h3 className="text-xs uppercase tracking-widest text-gold">Wymaga Twojej uwagi</h3>
+        {attention.length ? <ul className="mt-2">{attention.map((m) => <Row key={m.id} m={m} />)}</ul> : <p className="mt-2 text-sm text-muted-foreground">Nic nie czeka na Twoją decyzję.</p>}
+        {d.pending > 0 && <p className="mt-2 text-sm text-gold">{d.pending} źródeł czeka na zatwierdzenie — <button className="underline" onClick={() => go("zrodla")}>przejdź do źródeł</button>.</p>}</section>
+      <section className={box}><h3 className="text-xs uppercase tracking-widest text-muted-foreground">Materiały w pracy</h3>
+        {active.length ? <ul className="mt-2">{active.map((m) => <Row key={m.id} m={m} />)}</ul> : <p className="mt-2 text-sm text-muted-foreground">Brak materiałów w pracy.</p>}</section>
+      <section className={box}><h3 className="text-xs uppercase tracking-widest text-muted-foreground">Ostatnio utworzone</h3>
+        {rows.length ? <ul className="mt-2">{[...rows].sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 5).map((m) => <Row key={m.id} m={m} />)}</ul> : <p className="mt-2 text-sm text-muted-foreground">Jeszcze nic nie utworzono.</p>}</section>
+      <p className="text-xs text-muted-foreground">Model: {d.aiConfigured ? d.model : "nie skonfigurowany"} · Zatwierdzone źródła: {d.approved} · Ostatnia analiza: {d.lastAnalysis ? fmt(d.lastAnalysis.created_at) : "brak"} · Analiza społeczności: {d.communityEnabled ? "włączona" : "wyłączona"}</p>
     </div>
   );
 }
