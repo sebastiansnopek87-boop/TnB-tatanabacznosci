@@ -28,7 +28,7 @@ const tok = (u?: { input: number; output: number }) => (u ? `${(u.input + u.outp
 export const ImgKey = (id: string) => ["ai-ed", "img", id];
 
 // ---------- Creation: summary -> explicit start -> real stage-by-stage progress ----------
-type Step = { key: string; label: string; state: "todo" | "doing" | "done" | "error"; note?: string };
+type Step = { key: string; label: string; state: "todo" | "doing" | "done" | "error"; note?: string | undefined };
 export function CreateArticle({ proposal, topic: topic0 = "", aiOn, onCreated, onCancel, compact }: { proposal?: any; topic?: string; aiOn: boolean; onCreated: (id: string) => void; onCancel?: () => void; compact?: boolean }) {
   const prev = useServerFn(previewCreateMaterial), start = useServerFn(startMaterial), write = useServerFn(writeMaterial), gen = useServerFn(generateMaterialImage), finish = useServerFn(finishMaterial);
   const [topic, setTopic] = useState(topic0), [info, setInfo] = useState<any>(null), [format, setFormat] = useState("artykuł"), [dir, setDir] = useState("");
