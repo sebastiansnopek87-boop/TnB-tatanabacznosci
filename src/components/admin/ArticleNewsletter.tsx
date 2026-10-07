@@ -51,12 +51,13 @@ export function ArticleNewsletter({ articleId, dirty }: { articleId: string; dir
           <span className="text-xs uppercase tracking-wide text-gold">{NL_STATUS[status]}{nl?.mode ? ` · ${nl.mode === "live" ? "WYSYŁKA RZECZYWISTA" : "WYSYŁKA TESTOWA"}` : ""}</span>
         </div>
         <p className="text-xs text-muted-foreground">Publikacja artykułu i wysyłka newslettera to dwa osobne działania — nic nie wysyła się samo. Odbiorcy: wyłącznie aktywni subskrybenci z istniejącej listy. Tryb środowiska: <b>{modeLabel}</b>{d.mode === "test" ? " (wiadomości trafiają tylko do historii powiadomień, nikt ich nie otrzyma)" : ""}.</p>
+        {d.mode === "test" && <p className="border border-destructive/60 bg-destructive/10 p-2 text-center text-xs font-semibold uppercase tracking-wide text-destructive">TRYB TESTOWY — WIADOMOŚĆ NIE ZOSTANIE WYSŁANA DO PRAWDZIWYCH ODBIORCÓW</p>}
         {nl?.last_note && <p className="border-l-2 border-gold pl-3 text-sm">{nl.last_note}</p>}
 
-        {!d.published ? <p className="text-sm text-muted-foreground">Opcja „Wyślij w newsletterze” będzie dostępna po opublikowaniu artykułu.</p>
+        {!d.published ? <p className="text-sm text-muted-foreground">Opcja „Dodaj do newslettera” będzie dostępna po opublikowaniu artykułu.</p>
           : status === "none" ? (
             <div className="flex flex-wrap gap-2">
-              <Button disabled={!!busy || dirty} onClick={() => run("prep", () => prep({ data: { articleId, useAi: false } }), () => "Przygotowano newsletter z zajawki")}>WYŚLIJ W NEWSLETTERZE</Button>
+              <Button disabled={!!busy || dirty} onClick={() => run("prep", () => prep({ data: { articleId, useAi: false } }), () => "Przygotowano newsletter z zajawki")}>DODAJ DO NEWSLETTERA</Button>
               <Button variant="outline" disabled={!!busy || dirty} onClick={() => run("prep", () => prep({ data: { articleId, useAi: true } }), () => "AI przygotowało newsletter")}>{busy === "prep" ? "Przygotowuję…" : "Przygotuj treść z AI (1 wywołanie)"}</Button>
             </div>
           ) : c && (
