@@ -5,7 +5,9 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { errMsg } from "@/components/admin/format";
-import { CreateMaterial, MaterialsTab } from "@/components/admin/ai/Materials";
+import { CreateArticle, MaterialsTab } from "@/components/admin/ai/Materials";
+import { listMaterials } from "@/lib/editor-materials.functions";
+import { stageOf } from "@/lib/editor-materials";
 import { MATERIAL_RULES } from "@/lib/editor-materials";
 import {
   addNoteSource, addWebSource, deleteSource, developProposal, getEditorDashboard, getEditorSettings, listAnalyses, listProposals, listSources,
@@ -17,7 +19,7 @@ export const Route = createFileRoute("/_authenticated/admin/asystent-ai")({
   component: EditorAi,
 });
 
-const TABS = [["pulpit", "Pulpit"], ["zrodla", "Źródła wiedzy"], ["analiza", "Analiza tematów"], ["propozycje", "Propozycje materiałów"], ["materialy", "Materiały w pracy"], ["historia", "Historia analiz"], ["ustawienia", "Ustawienia agenta"]] as const;
+const TABS = [["pulpit", "Start"], ["zrodla", "Źródła wiedzy"], ["analiza", "Analiza tematów"], ["propozycje", "Propozycje materiałów"], ["materialy", "Materiały w pracy"], ["historia", "Historia analiz"], ["ustawienia", "Ustawienia agenta"]] as const;
 type Tab = (typeof TABS)[number][0];
 const STATUS: Record<string, string> = { new: "Nowa", considering: "Do rozważenia", accepted: "Zaakceptowana", rejected: "Odrzucona", later: "Odłożona na później", in_progress: "W trakcie realizacji", done: "Zrealizowana" };
 const SRC_STATUS: Record<string, string> = { pending: "Do zatwierdzenia", approved: "Zatwierdzone", rejected: "Odrzucone" };
@@ -41,7 +43,7 @@ function EditorAi() {
       <p className="mt-2 text-sm text-muted-foreground">Na podstawie zatwierdzonych źródeł analizuje tematy, proponuje materiały i tworzy ich pełne wersje robocze — Ty jesteś redaktorem: edytujesz, zlecasz poprawki, zatwierdzasz i publikujesz w istniejących modułach. Model nie jest trenowany na danych TNB — przy każdej analizie dostaje wybrane źródła jako kontekst. Decyzje należą do redakcji.</p>
       <div className="mt-6 flex flex-wrap gap-2" role="tablist">{TABS.map(([k, l]) => <Button key={k} role="tab" aria-selected={tab === k} size="sm" variant={tab === k ? "default" : "outline"} onClick={() => setTab(k)}>{l}</Button>)}</div>
       <div className="mt-6">
-        {tab === "pulpit" && <Dashboard d={q.data!} go={setTab} />}
+        {tab === "pulpit" && <Dashboard d={q.data!} go={setTab} open={(id) => { setMatId(id); setTab("materialy"); }} />}
         {tab === "zrodla" && <Sources />}
         {tab === "analiza" && <Analysis aiOn={q.data!.aiConfigured} go={setTab} />}
         {tab === "propozycje" && <Proposals aiOn={q.data!.aiConfigured} onCreated={(id) => { setMatId(id); setTab("materialy"); }} />}
@@ -202,6 +204,7 @@ function Proposals({ aiOn, onCreated }: { aiOn: boolean; onCreated: (id: string)
               <Button size="sm" variant="outline" onClick={() => setOpen(open === p.id ? null : p.id)}>{open === p.id ? "Zwiń" : "Szczegóły"}</Button>
             </div>
             <p className="mt-2 text-sm">{p.description}</p>
+            {!["rejected", "done"].includes(p.status) && !p.linked_id && <div className="mt-3"><CreateArticle proposal={p} aiOn={aiOn} onCreated={onCreated} compact /></div>}
             {open === p.id && <div className="mt-3 space-y-3 border-t border-border/60 pt-3 text-sm">
               <EditTitle p={p} save={(t, desc) => act(upd({ data: { id: p.id, title: t, description: desc } }), "Zapisano")} />
               <dl className="grid gap-3 sm:grid-cols-2">
@@ -218,17 +221,17 @@ function Proposals({ aiOn, onCreated }: { aiOn: boolean; onCreated: (id: string)
               <div><p className="text-xs uppercase text-muted-foreground">Kolejne kroki</p><ul className="list-disc pl-5">{(d.next_steps ?? []).map((t: string, i: number) => <li key={i}>{t}</li>)}</ul></div>
               {p.expansion && <div><p className="text-xs uppercase text-muted-foreground">Rozwinięcie</p><pre className="whitespace-pre-wrap break-words border border-border/60 bg-muted/30 p-3 text-xs">{p.expansion}</pre></div>}
               {p.outline && <div><p className="text-xs uppercase text-muted-foreground">Konspekt</p><pre className="whitespace-pre-wrap break-words border border-border/60 bg-muted/30 p-3 text-xs">{p.outline}</pre></div>}
-              {!["rejected"].includes(p.status) && <CreateMaterial p={p} aiOn={aiOn} onCreated={onCreated} />}
-              <div className="flex flex-wrap gap-2">
+              <details className="border border-border/60 p-3"><summary className="cursor-pointer text-xs uppercase tracking-widest text-muted-foreground">Więcej — status propozycji i funkcje pomocnicze</summary>
+              <div className="mt-3 flex flex-wrap gap-2">
                 <Button size="sm" onClick={() => act(upd({ data: { id: p.id, status: "accepted" } }), "Zaakceptowano")}>Akceptuj</Button>
                 <Button size="sm" variant="outline" onClick={() => act(upd({ data: { id: p.id, status: "considering" } }), "Do rozważenia")}>Do rozważenia</Button>
                 <Button size="sm" variant="outline" onClick={() => act(upd({ data: { id: p.id, status: "later" } }), "Odłożono")}>Na później</Button>
                 <Button size="sm" variant="outline" onClick={() => act(upd({ data: { id: p.id, status: "in_progress" } }), "W trakcie")}>W trakcie realizacji</Button>
                 <Button size="sm" variant="outline" onClick={() => act(upd({ data: { id: p.id, status: "done" } }), "Zrealizowana")}>Zrealizowana</Button>
                 <Button size="sm" variant="destructive" onClick={() => { const r = prompt("Powód odrzucenia (opcjonalnie):"); if (r !== null) act(upd({ data: { id: p.id, status: "rejected", reason: r } }), "Odrzucono"); }}>Odrzuć</Button>
-                <Button size="sm" variant="outline" disabled={!aiOn || busy === p.id} onClick={async () => { setBusy(p.id); await act(dev({ data: { id: p.id, mode: "expand" } }), "Rozwinięto"); setBusy(null); }}>{busy === p.id ? "AI pracuje…" : "Poproś AI o rozwinięcie"}</Button>
-                <Button size="sm" variant="outline" disabled={!aiOn || busy === p.id} onClick={async () => { setBusy(p.id); await act(dev({ data: { id: p.id, mode: "outline" } }), "Wygenerowano konspekt"); setBusy(null); }}>Wygeneruj konspekt</Button>
-              </div>
+                <Button size="sm" variant="outline" disabled={!aiOn || busy === p.id} onClick={async () => { setBusy(p.id); await act(dev({ data: { id: p.id, mode: "expand" } }), "Rozwinięto"); setBusy(null); }}>{busy === p.id ? "AI pracuje…" : "Rozwiń propozycję (pomocniczo)"}</Button>
+                <Button size="sm" variant="outline" disabled={!aiOn || busy === p.id} onClick={async () => { setBusy(p.id); await act(dev({ data: { id: p.id, mode: "outline" } }), "Wygenerowano konspekt"); setBusy(null); }}>Wygeneruj konspekt (pomocniczo)</Button>
+              </div></details>
               <label className="block text-xs">Powiąż z istniejącym materiałem
                 <select className={input} value={p.linked_id ? `${p.linked_kind}:${p.linked_id}` : ""} onChange={(e) => { const [k, id] = e.target.value.split(":"); act(upd({ data: { id: p.id, link: k && id ? { kind: k as "article" | "library", id } : null } }), "Zapisano powiązanie"); }}>
                   <option value="">— brak —</option>{(q.data?.materials ?? []).map((m: any) => <option key={m.id} value={`${m.kind}:${m.id}`}>{m.kind === "article" ? "Artykuł" : "Biblioteka"}: {m.title}</option>)}
