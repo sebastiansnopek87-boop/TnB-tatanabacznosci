@@ -133,3 +133,98 @@ export const SAFETY = `Zasady bezwzględne:
 - Sygnały ze społeczności to fragmenty dostępnych wpisów, nie reprezentatywne badanie. Nie przypisuj wypowiedzi osobom, nie oceniaj ani nie profiluj użytkowników.
 - Nie twórz pełnych artykułów ani e-booków — tylko propozycje i plany.
 - Pisz po polsku.`;
+
+export type Usage = { input: number; output: number };
+const mapErr = (e: unknown): never => {
+  if (e instanceof EditorAiError) throw e;
+  const s = (e as { statusCode?: number }).statusCode ?? 500;
+  if (s === 429) throw new EditorAiError(429, "Przekroczono limit zapytań AI. Spróbuj ponownie za kilka minut.");
+  if (s === 402) throw new EditorAiError(402, "Brak środków na wywołania AI w obszarze roboczym (Ustawienia → Plany i kredyty).");
+  if (s === 403) throw new EditorAiError(403, "Dostęp do modelu AI jest zablokowany dla tego obszaru roboczego.");
+  if (s === 401) throw new EditorAiError(401, "Klucz AI jest nieprawidłowy — błąd konfiguracji.");
+  throw new EditorAiError(s, "Wywołanie AI nie powiodło się. Spróbuj ponownie.");
+};
+const gw = (apiKey: string) => {
+  const runIdFetch = createLovableAiGatewayRunIdFetch();
+  return { runIdFetch, provider: createOpenAI({ baseURL: GATEWAY, apiKey, headers: { "Lovable-API-Key": apiKey, "X-Lovable-AIG-SDK": "vercel-ai-sdk" }, fetch: runIdFetch.fetch }) };
+};
+const key = () => { const k = process.env["LOVABLE_API_KEY"]; if (!k) throw new EditorAiError(503, "Model AI nie jest skonfigurowany."); return k; };
+
+// Strict structured output: the gateway enforces the JSON schema, zod validates again
+// before anything is saved. Invalid output -> error, nothing stored.
+export async function callModelObject<T>(system: string, prompt: string, schema: import("zod").ZodType<T>, effort: "low" | "medium" = "medium"): Promise<{ value: T; usage: Usage }> {
+  const { provider } = gw(key());
+  const { Output, NoObjectGeneratedError } = await import("ai");
+  try {
+    const result = streamText({
+      model: provider.responses(EDITOR_MODEL), system, prompt, output: Output.object({ schema }),
+      providerOptions: { openai: { forceReasoning: true, reasoningEffort: effort, reasoningSummary: "auto", store: false, include: ["reasoning.encrypted_content"], strictJsonSchema: true } },
+    });
+    let value: unknown;
+    try { value = await result.output; }
+    catch (e) {
+      if (NoObjectGeneratedError.isInstance(e)) throw new EditorAiError(502, "Model zwrócił odpowiedź niezgodną ze schematem — nic nie zapisano. Spróbuj ponownie.");
+      throw e;
+    }
+    const parsed = schema.safeParse(value);
+    if (!parsed.success) throw new EditorAiError(502, "Odpowiedź modelu nie przeszła walidacji — nic nie zapisano. Spróbuj ponownie.");
+    const u = await result.totalUsage;
+    return { value: parsed.data, usage: { input: u.inputTokens ?? 0, output: u.outputTokens ?? 0 } };
+  } catch (e) { return mapErr(e); }
+}
+
+export async function callModelText(system: string, prompt: string, effort: "low" | "medium" = "low"): Promise<{ text: string; usage: Usage }> {
+  const { provider } = gw(key());
+  try {
+    const result = streamText({ model: provider.responses(EDITOR_MODEL), system, prompt,
+      providerOptions: { openai: { forceReasoning: true, reasoningEffort: effort, reasoningSummary: "auto", store: false, include: ["reasoning.encrypted_content"] } } });
+    const text = await result.text;
+    if (!text.trim()) throw new EditorAiError(502, "Model nie zwrócił odpowiedzi.");
+    const u = await result.totalUsage;
+    return { text, usage: { input: u.inputTokens ?? 0, output: u.outputTokens ?? 0 } };
+  } catch (e) { return mapErr(e); }
+}
+
+// ---------- Images (Lovable AI image model, server-side only) ----------
+export const IMAGE_MODEL = "openai/gpt-image-2.5-sunburst";
+export const TNB_IMAGE_STYLE = "Styl: realistyczna fotografia filmowa, naturalne światło, dojrzały, autentyczny i emocjonalny klimat, stonowane ciepłe barwy, bez sztucznego stockowego charakteru, bez pozowania do obiektywu. Bez żadnego tekstu, napisów, liter, znaków wodnych ani logo. Bez rozpoznawalnych osób publicznych.";
+
+// Streams the generation and reads to the end of the body; only a completed event is success.
+export async function generateImagePng(prompt: string): Promise<{ bytes: Uint8Array; usage: Usage }> {
+  const apiKey = key();
+  const { runIdFetch } = gw(apiKey);
+  let r: Response;
+  try {
+    r = await runIdFetch.fetch(`${GATEWAY}/images/generations`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json", "X-Lovable-AIG-SDK": "fetch" },
+      body: JSON.stringify({ model: IMAGE_MODEL, prompt, size: "1536x1024", quality: "medium", stream: true }),
+    });
+  } catch { throw new EditorAiError(502, "Nie udało się połączyć z generatorem obrazów."); }
+  if (!r.ok || !r.body) mapErr({ statusCode: r.status });
+  const reader = r.body!.getReader(); const dec = new TextDecoder();
+  let buf = "", b64 = "", err = "", usage: Usage = { input: 0, output: 0 };
+  const handle = (block: string) => {
+    const data = block.split("\n").filter((l) => l.startsWith("data:")).map((l) => l.slice(5).trim()).join("");
+    if (!data || data === "[DONE]") return;
+    try {
+      const p = JSON.parse(data);
+      if (p.type === "error" || p.error) err = p.error?.message ?? "Błąd generowania obrazu.";
+      else if (p.type === "image_generation.completed" && p.b64_json) { b64 = p.b64_json; usage = { input: p.usage?.input_tokens ?? 0, output: p.usage?.output_tokens ?? 0 }; }
+    } catch { /* ignore non-JSON frames */ }
+  };
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true }).replace(/\r\n/g, "\n");
+    let i; while ((i = buf.indexOf("\n\n")) >= 0) { handle(buf.slice(0, i)); buf = buf.slice(i + 2); }
+  }
+  if (buf.trim()) handle(buf);
+  if (err) throw new EditorAiError(400, /policy|moderation/i.test(err) ? "Model odrzucił polecenie obrazu (zasady treści). Zmień polecenie i spróbuj ponownie." : `Nie udało się wygenerować obrazu: ${err.slice(0, 200)}`);
+  if (!b64) throw new EditorAiError(502, "Generowanie obrazu nie zakończyło się — spróbuj ponownie.");
+  return { bytes: Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)), usage };
+}
+
+// Full plain text of existing TNB resources (used as material sources).
+export const fullArticleText = (a: { excerpt?: string | null; sections?: unknown }) => plain([a.excerpt ?? "", ...flatten(a.sections)].join("\n"));
+export const plainText = plain;
