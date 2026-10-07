@@ -106,7 +106,7 @@ export async function callModel(system: string, prompt: string, effort: "low" | 
     const s = (e as { statusCode?: number }).statusCode ?? 500;
     if (s === 429) throw new EditorAiError(429, "Przekroczono limit zapytań AI. Spróbuj ponownie za kilka minut.");
     if (s === 402) throw new EditorAiError(402, "Brak środków na wywołania AI w obszarze roboczym (Ustawienia → Plany i kredyty).");
-    if (s === 403) throw new EditorAiError(403, "Dostęp do modelu AI jest zablokowany dla tego obszaru roboczego.");
+    if (s === 403) throw new EditorAiError(403, "Wywołania AI są zablokowane — najczęściej osiągnięto miesięczny limit wydatków na AI w obszarze roboczym (podnosi go administrator obszaru roboczego w ustawieniach). Nic nie zapisano.");
     if (s === 401) throw new EditorAiError(401, "Klucz AI jest nieprawidłowy — błąd konfiguracji.");
     throw new EditorAiError(s, "Wywołanie AI nie powiodło się. Spróbuj ponownie później.");
   }
@@ -140,7 +140,7 @@ const mapErr = (e: unknown): never => {
   const s = (e as { statusCode?: number }).statusCode ?? 500;
   if (s === 429) throw new EditorAiError(429, "Przekroczono limit zapytań AI. Spróbuj ponownie za kilka minut.");
   if (s === 402) throw new EditorAiError(402, "Brak środków na wywołania AI w obszarze roboczym (Ustawienia → Plany i kredyty).");
-  if (s === 403) throw new EditorAiError(403, "Dostęp do modelu AI jest zablokowany dla tego obszaru roboczego.");
+  if (s === 403) throw new EditorAiError(403, "Wywołania AI są zablokowane — najczęściej osiągnięto miesięczny limit wydatków na AI w obszarze roboczym (podnosi go administrator obszaru roboczego w ustawieniach). Nic nie zapisano.");
   if (s === 401) throw new EditorAiError(401, "Klucz AI jest nieprawidłowy — błąd konfiguracji.");
   throw new EditorAiError(s, "Wywołanie AI nie powiodło się. Spróbuj ponownie.");
 };
