@@ -205,3 +205,72 @@ export const adminUpdateSubmission = createServerFn({ method: "POST" })
     await logEvent({ type: "voice_submission_update", actor: context.userId, objectKind: "voice_submission", objectId: data.id, detail: `status: ${data.status}` });
     return { ok: true as const };
   });
+
+// ---------- Instagram (official OAuth, see instagram.server.ts) ----------
+export type PublicReel = { id: string; media_type: string; product_type: string | null; thumbnail_url: string | null; permalink: string; caption: string | null; posted_at: string };
+
+/** Public: newest synced media + profile link. Empty when not connected — never placeholders. */
+export const listInstagram = createServerFn({ method: "GET" }).handler(async () => {
+  const ig = await import("./instagram.server");
+  await ig.syncIfStale();
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: s } = await supabaseAdmin.from("instagram_source").select("status, username, profile_url, display_count").eq("id", 1).maybeSingle();
+  const connected = !!s && s.status !== "disconnected" && !!s.username;
+  if (!connected) return { connected: false, username: null, profileUrl: null, items: [] as PublicReel[] };
+  const db = await anonDb();
+  const { data } = await db.from("instagram_media").select("id, media_type, product_type, thumbnail_url, permalink, caption, posted_at")
+    .not("thumbnail_url", "is", null).order("posted_at", { ascending: false }).limit(s.display_count);
+  return { connected, username: s.username, profileUrl: s.profile_url, items: (data ?? []) as PublicReel[] };
+});
+
+export const adminGetInstagram = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { data, error } = await context.supabase.from("instagram_source").select("*").eq("id", 1).maybeSingle();
+    if (error) throw new Error("Nie udało się pobrać ustawień Instagrama.");
+    const ig = await import("./instagram.server");
+    return { ...data, appConfigured: ig.appConfigured(), callbackPath: ig.CALLBACK_PATH };
+  });
+
+export const adminStartInstagramConnect = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ origin: z.string().url().max(200).refine((o) => /^https:\/\//.test(o) || /^http:\/\/localhost(:\d+)?$/.test(o), "Nieprawidłowy adres") }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const ig = await import("./instagram.server");
+    const url = await ig.startOAuth(new URL(data.origin).origin, context.userId);
+    await logEvent({ type: "instagram_connect_start", actor: context.userId, objectKind: "instagram_source" });
+    return { url };
+  });
+
+export const adminSyncInstagram = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const ig = await import("./instagram.server");
+    try { const r = await ig.sync(); await logEvent({ type: "instagram_sync", actor: context.userId, detail: `nowe ${r.added}, razem ${r.total}` }); return r; }
+    catch (e) { const m = e instanceof Error ? e.message : "Błąd synchronizacji"; await logEvent({ type: "instagram_sync", actor: context.userId, result: "failed", detail: m }); throw new Error(m); }
+  });
+
+export const adminDisconnectInstagram = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const ig = await import("./instagram.server");
+    await ig.disconnect();
+    await logEvent({ type: "instagram_disconnect", actor: context.userId, objectKind: "instagram_source" });
+    return { ok: true };
+  });
+
+export const adminSaveInstagramOptions = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ show_reels: z.boolean(), show_posts: z.boolean(), show_carousels: z.boolean(), display_count: z.number().int().min(1).max(12) }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("instagram_source").update({ ...data, updated_at: new Date().toISOString() }).eq("id", 1);
+    if (error) throw new Error("Nie udało się zapisać ustawień.");
+    await logEvent({ type: "instagram_options", actor: context.userId, objectKind: "instagram_source", detail: JSON.stringify(data) });
+    return { ok: true };
+  });
