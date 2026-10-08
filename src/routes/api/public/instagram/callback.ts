@@ -14,7 +14,7 @@ export const Route = createFileRoute("/api/public/instagram/callback")({
         const { logEvent } = await import("@/lib/admin-auth.server");
         try {
           const r = await ig.finishOAuth(state, code);
-          await logEvent({ type: "instagram_connect", actor: r.actor ?? undefined, objectKind: "instagram_source", detail: `@${r.username}` });
+          await logEvent({ type: "instagram_connect", actor: r.actor, objectKind: "instagram_source", detail: `@${r.username}` });
           await ig.sync().catch(() => {});
           return back("polaczono");
         } catch (e) {

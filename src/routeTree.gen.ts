@@ -66,6 +66,7 @@ import { Route as AuthenticatedAdminZgloszeniaGlosRouteImport } from './routes/_
 import { Route as SpotkaniaRezerwacjaTokenRouteImport } from './routes/spotkania.rezerwacja.$token'
 import { Route as SpotkaniaZgloszenieTokenRouteImport } from './routes/spotkania.zgloszenie.$token'
 import { Route as ApiPublicCronConsultRemindersRouteImport } from './routes/api/public/cron/consult-reminders'
+import { Route as ApiPublicInstagramCallbackRouteImport } from './routes/api/public/instagram/callback'
 import { Route as ApiPublicLibraryCoverIdRouteImport } from './routes/api/public/library-cover.$id'
 import { Route as ApiPublicMeetingImageIdRouteImport } from './routes/api/public/meeting-image.$id'
 import { Route as ApiPublicPaymentsP24RouteImport } from './routes/api/public/payments/p24'
@@ -386,6 +387,12 @@ const ApiPublicCronConsultRemindersRoute =
     path: '/api/public/cron/consult-reminders',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicInstagramCallbackRoute =
+  ApiPublicInstagramCallbackRouteImport.update({
+    id: '/api/public/instagram/callback',
+    path: '/api/public/instagram/callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicLibraryCoverIdRoute = ApiPublicLibraryCoverIdRouteImport.update({
   id: '/api/public/library-cover/$id',
   path: '/api/public/library-cover/$id',
@@ -486,6 +493,7 @@ export interface FileRoutesByFullPath {
   '/spotkania/zgloszenie/$token': typeof SpotkaniaZgloszenieTokenRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/cron/consult-reminders': typeof ApiPublicCronConsultRemindersRoute
+  '/api/public/instagram/callback': typeof ApiPublicInstagramCallbackRoute
   '/api/public/library-cover/$id': typeof ApiPublicLibraryCoverIdRoute
   '/api/public/meeting-image/$id': typeof ApiPublicMeetingImageIdRoute
   '/api/public/payments/p24': typeof ApiPublicPaymentsP24Route
@@ -551,6 +559,7 @@ export interface FileRoutesByTo {
   '/spotkania/zgloszenie/$token': typeof SpotkaniaZgloszenieTokenRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/api/public/cron/consult-reminders': typeof ApiPublicCronConsultRemindersRoute
+  '/api/public/instagram/callback': typeof ApiPublicInstagramCallbackRoute
   '/api/public/library-cover/$id': typeof ApiPublicLibraryCoverIdRoute
   '/api/public/meeting-image/$id': typeof ApiPublicMeetingImageIdRoute
   '/api/public/payments/p24': typeof ApiPublicPaymentsP24Route
@@ -619,6 +628,7 @@ export interface FileRoutesById {
   '/spotkania/zgloszenie/$token': typeof SpotkaniaZgloszenieTokenRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/cron/consult-reminders': typeof ApiPublicCronConsultRemindersRoute
+  '/api/public/instagram/callback': typeof ApiPublicInstagramCallbackRoute
   '/api/public/library-cover/$id': typeof ApiPublicLibraryCoverIdRoute
   '/api/public/meeting-image/$id': typeof ApiPublicMeetingImageIdRoute
   '/api/public/payments/p24': typeof ApiPublicPaymentsP24Route
@@ -687,6 +697,7 @@ export interface FileRouteTypes {
     | '/spotkania/zgloszenie/$token'
     | '/admin/'
     | '/api/public/cron/consult-reminders'
+    | '/api/public/instagram/callback'
     | '/api/public/library-cover/$id'
     | '/api/public/meeting-image/$id'
     | '/api/public/payments/p24'
@@ -752,6 +763,7 @@ export interface FileRouteTypes {
     | '/spotkania/zgloszenie/$token'
     | '/admin'
     | '/api/public/cron/consult-reminders'
+    | '/api/public/instagram/callback'
     | '/api/public/library-cover/$id'
     | '/api/public/meeting-image/$id'
     | '/api/public/payments/p24'
@@ -819,6 +831,7 @@ export interface FileRouteTypes {
     | '/spotkania/zgloszenie/$token'
     | '/_authenticated/admin/'
     | '/api/public/cron/consult-reminders'
+    | '/api/public/instagram/callback'
     | '/api/public/library-cover/$id'
     | '/api/public/meeting-image/$id'
     | '/api/public/payments/p24'
@@ -860,6 +873,7 @@ export interface RootRouteChildren {
   SpotkaniaRezerwacjaTokenRoute: typeof SpotkaniaRezerwacjaTokenRoute
   SpotkaniaZgloszenieTokenRoute: typeof SpotkaniaZgloszenieTokenRoute
   ApiPublicCronConsultRemindersRoute: typeof ApiPublicCronConsultRemindersRoute
+  ApiPublicInstagramCallbackRoute: typeof ApiPublicInstagramCallbackRoute
   ApiPublicLibraryCoverIdRoute: typeof ApiPublicLibraryCoverIdRoute
   ApiPublicMeetingImageIdRoute: typeof ApiPublicMeetingImageIdRoute
   ApiPublicPaymentsP24Route: typeof ApiPublicPaymentsP24Route
@@ -1271,6 +1285,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCronConsultRemindersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/instagram/callback': {
+      id: '/api/public/instagram/callback'
+      path: '/api/public/instagram/callback'
+      fullPath: '/api/public/instagram/callback'
+      preLoaderRoute: typeof ApiPublicInstagramCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/library-cover/$id': {
       id: '/api/public/library-cover/$id'
       path: '/api/public/library-cover/$id'
@@ -1434,6 +1455,7 @@ const rootRouteChildren: RootRouteChildren = {
   SpotkaniaRezerwacjaTokenRoute: SpotkaniaRezerwacjaTokenRoute,
   SpotkaniaZgloszenieTokenRoute: SpotkaniaZgloszenieTokenRoute,
   ApiPublicCronConsultRemindersRoute: ApiPublicCronConsultRemindersRoute,
+  ApiPublicInstagramCallbackRoute: ApiPublicInstagramCallbackRoute,
   ApiPublicLibraryCoverIdRoute: ApiPublicLibraryCoverIdRoute,
   ApiPublicMeetingImageIdRoute: ApiPublicMeetingImageIdRoute,
   ApiPublicPaymentsP24Route: ApiPublicPaymentsP24Route,
