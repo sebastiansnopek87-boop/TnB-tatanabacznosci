@@ -13,6 +13,7 @@ import { listCategories, slugify } from "@/lib/library";
 import { errMsg, fmtDate } from "@/components/admin/format";
 import { AudioPlayer } from "@/components/podcast/AudioPlayer";
 import { VoiceVideos } from "@/components/admin/VoiceVideos";
+import { InstagramSource } from "@/components/admin/InstagramSource";
 import { PodcastLayoutPicker } from "@/components/admin/PodcastLayoutPicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -74,6 +75,7 @@ function List({ onEdit }: { onEdit: (id: string | null) => void }) {
           ))}
       </div>
       <VoiceVideos />
+      <InstagramSource />
     </div>
   );
 }
