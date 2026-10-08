@@ -30,7 +30,7 @@ export function InstagramSource() {
   const opt = useMutation({ mutationFn: (v: { show_reels: boolean; show_posts: boolean; show_carousels: boolean; display_count: number }) => optFn({ data: v }), onSuccess: () => { toast.success("Zapisano. Zmiana obejmie kolejną synchronizację."); refresh(); }, onError: (e) => toast.error(errMsg(e)) });
   const s = q.data;
   const connected = !!s && s.status !== "disconnected" && !!s.username;
-  const opts = s ? { show_reels: s.show_reels, show_posts: s.show_posts, show_carousels: s.show_carousels, display_count: s.display_count } : null;
+  const opts = s ? { show_reels: s.show_reels ?? true, show_posts: s.show_posts ?? false, show_carousels: s.show_carousels ?? false, display_count: s.display_count ?? 6 } : null;
 
   return (
     <section id="instagram" className="mt-12 border-t border-border/60 pt-8">

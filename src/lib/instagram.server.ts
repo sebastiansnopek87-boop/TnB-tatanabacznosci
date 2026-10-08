@@ -20,7 +20,7 @@ async function j(r: Response) {
     const m = typeof b.error === "string" ? b.error_message ?? b.error : b.error?.message ?? b.error_message ?? `HTTP ${r.status}`;
     throw new IgError(`Instagram API: ${m}`);
   }
-  return b;
+  return b as { access_token?: string; expires_in?: number; user_id?: string | number; id?: string; username?: string; data?: unknown };
 }
 
 export async function startOAuth(origin: string, actor: string) {
