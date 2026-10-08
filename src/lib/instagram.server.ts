@@ -7,6 +7,25 @@ export const CALLBACK_PATH = "/api/public/instagram/callback";
 export class IgError extends Error {}
 
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin;
+/** Production origin comes only from the SITE_PRODUCTION_URL setting — never invented. */
+export function productionOrigin(): string | null {
+  const v = (process.env["SITE_PRODUCTION_URL"] ?? "").trim();
+  try { const u = new URL(v); return u.protocol === "https:" ? u.origin : null; } catch { return null; }
+}
+/** Honest config check: reports only what the server can verify, never secret values. */
+export async function checkConfig() {
+  const id = (process.env["INSTAGRAM_APP_ID"] ?? "").trim(), secret = (process.env["INSTAGRAM_APP_SECRET"] ?? "").trim();
+  const db = await admin();
+  const { data: row } = await db.from("instagram_secret").select("id").eq("id", 1).maybeSingle();
+  const checks = [
+    { key: "app_id", label: "Instagram App ID zapisany", ok: !!id, hint: id && !/^\d{6,25}$/.test(id) ? "App ID powinien składać się z samych cyfr." : undefined },
+    { key: "app_secret", label: "Instagram App Secret zapisany (tylko na serwerze)", ok: secret.length >= 16 },
+    { key: "server", label: "Konfiguracja serwerowa (magazyn tokenu)", ok: !!row },
+    { key: "callback", label: "Adres zwrotny (callback) przygotowany", ok: true },
+    { key: "prod", label: "Domena produkcyjna ustawiona", ok: !!productionOrigin(), optional: true },
+  ];
+  return { ok: checks.filter((c) => !c.optional).every((c) => c.ok && !c.hint), checks };
+}
 export const appConfigured = () => !!(process.env["INSTAGRAM_APP_ID"] && process.env["INSTAGRAM_APP_SECRET"]);
 const app = () => {
   const id = process.env["INSTAGRAM_APP_ID"], secret = process.env["INSTAGRAM_APP_SECRET"];
