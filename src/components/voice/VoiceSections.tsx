@@ -1,7 +1,7 @@
 import { useRef, useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
-import { getPublicChannel, listVideos, submitVoiceStory, storySchema } from "@/lib/voice.functions";
+import { getPublicChannel, listVideos, listInstagram, submitVoiceStory, storySchema } from "@/lib/voice.functions";
 import { ytThumb } from "@/lib/voice";
 import { fmtDay } from "@/lib/podcast";
 import { usePlatformSettings } from "@/hooks/use-platform-settings";
@@ -103,28 +103,91 @@ export function ListenSection() {
   );
 }
 
+function TikTokGlyph({ className }: { className?: string }) {
+  return (<svg viewBox="0 0 24 24" aria-hidden className={className} fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinejoin="round">
+    <path d="M14 3v11.5a3.5 3.5 0 1 1-3.5-3.5" /><path d="M14 3c.4 2.6 2.2 4.4 5 4.6" />
+  </svg>);
+}
+function SpotifyGlyph({ className }: { className?: string }) {
+  return (<svg viewBox="0 0 24 24" aria-hidden className={className} fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round">
+    <circle cx="12" cy="12" r="9.5" /><path d="M7 9.3c3.4-1 7.2-.7 10 .9" /><path d="M7.6 12.4c2.9-.8 5.9-.5 8.3.8" /><path d="M8.3 15.3c2.3-.6 4.5-.4 6.4.6" />
+  </svg>);
+}
+
+function ChannelCard({ href, name, line, cta, icon, deco }: { href: string; name: string; line: string; cta: string; icon: React.ReactNode; deco: React.ReactNode }) {
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer"
+      className="group relative flex min-h-[260px] flex-col justify-between overflow-hidden border border-border/70 bg-surface-deep p-7 shadow-[0_30px_60px_-30px_oklch(0_0_0/0.8)] transition-all duration-500 hover:-translate-y-0.5 hover:border-gold/60 sm:min-h-[300px] sm:p-10">
+      <span aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_100%_0%,oklch(0.815_0.105_80/0.10),transparent_70%)] opacity-70 transition-opacity duration-500 group-hover:opacity-100" />
+      {deco}
+      <div className="relative flex items-start justify-between gap-4">
+        <span className="flex h-12 w-12 items-center justify-center border border-gold/40 text-gold transition-colors group-hover:border-gold">{icon}</span>
+        <span className="eyebrow text-muted-foreground">Głos TNB</span>
+      </div>
+      <div className="relative">
+        <p className="font-display text-4xl font-semibold uppercase tracking-[0.04em] text-foreground sm:text-5xl">{name}</p>
+        <p className="mt-3 text-[0.78rem] uppercase tracking-[0.22em] text-foreground/75">{line}</p>
+        <span className="mt-7 inline-flex items-center gap-2 border-b border-gold/60 pb-1 text-[0.75rem] uppercase tracking-[0.2em] text-gold">{cta} <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" /></span>
+      </div>
+    </a>
+  );
+}
+
+const EQ = [30, 55, 40, 75, 50, 90, 60, 35, 70, 45, 85, 55, 30, 65, 40];
+
 export function ChannelsSection() {
   const s = usePlatformSettings().data;
-  const yt = useChannelUrl();
-  const items = ([
-    ["YouTube", "Oglądaj", yt], ["Spotify", "Słuchaj", s?.social_spotify],
-    ["TikTok", "Zobacz krótkie formy", s?.social_tiktok], ["Instagram", "Zobacz, co u mnie", s?.social_instagram],
-  ] as const).filter(([, , url]) => !!url);
-  if (!items.length) return null;
+  const tt = s?.social_tiktok, sp = s?.social_spotify;
+  if (!tt && !sp) return null;
   return (
-    <section className="border-t border-border/60 px-5 py-12 lg:px-14">
+    <section className="border-t border-border/60 px-5 py-12 lg:px-14 lg:py-16">
       <Heading title="Tata Na Baczności w sieci" />
-      <p className="mt-4 max-w-2xl whitespace-pre-line text-[0.95rem] leading-[1.75] text-foreground/80">
-        {"Nie wszystko, co tworzę, powstaje w jednym miejscu.\nZnajdziesz mnie również na YouTube, Spotify, TikToku i Instagramie."}
-      </p>
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {items.map(([name, cta, url]) => (
-          <a key={name} href={url!} target="_blank" rel="noopener noreferrer" className="group border border-border/60 bg-card p-5 hover:border-gold/60">
-            <p className="font-display text-xl font-semibold uppercase tracking-[0.06em] text-foreground group-hover:text-gold">{name}</p>
-            <p className="mt-2 text-xs uppercase tracking-[0.14em] text-gold">{cta} →</p>
-          </a>
-        ))}
+      <p className="mt-4 max-w-2xl text-[0.95rem] leading-[1.75] text-foreground/80">Nie wszystko, co tworzę, powstaje w jednym miejscu.</p>
+      <div className={`mt-10 grid gap-5 ${tt && sp ? "md:grid-cols-2" : ""}`}>
+        {tt && <ChannelCard href={tt} name="TikTok" line="Krótkie formy. Mocne myśli." cta="Zobacz" icon={<TikTokGlyph className="h-6 w-6" />}
+          deco={<span aria-hidden className="pointer-events-none absolute -bottom-10 -right-6 font-display text-[11rem] font-semibold leading-none text-foreground/[0.03] transition-transform duration-700 group-hover:-translate-y-2">60″</span>} />}
+        {sp && <ChannelCard href={sp} name="Spotify" line="Posłuchaj. Zatrzymaj się. Pomyśl." cta="Słuchaj" icon={<SpotifyGlyph className="h-6 w-6" />}
+          deco={<span aria-hidden className="pointer-events-none absolute bottom-8 right-8 flex h-24 items-end gap-1.5 opacity-[0.14] transition-opacity duration-500 group-hover:opacity-25">
+            {EQ.map((h, i) => <span key={i} className="w-1 bg-gold" style={{ height: `${h}%` }} />)}
+          </span>} />}
       </div>
+    </section>
+  );
+}
+
+export function InstagramSection() {
+  const q = useQuery({ queryKey: ["voice-instagram"], queryFn: () => listInstagram(), staleTime: 300_000 });
+  const fallback = usePlatformSettings().data?.social_instagram;
+  const d = q.data;
+  const profile = d?.profileUrl || fallback || null;
+  const items = d?.items ?? [];
+  return (
+    <section aria-labelledby="ig-title" className="border-t border-border/60 bg-surface-deep px-5 py-14 lg:px-14 lg:py-20">
+      <div className="flex flex-wrap items-end justify-between gap-6">
+        <div>
+          <p className="eyebrow text-gold">Obserwuj · Instagram</p>
+          <h2 id="ig-title" className="mt-3 font-display text-4xl font-semibold uppercase leading-none tracking-[0.02em] text-foreground sm:text-5xl lg:text-6xl">Tata na baczności</h2>
+        </div>
+        {profile && <a href={profile} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 border-b border-gold/60 pb-1 text-[0.78rem] uppercase tracking-[0.22em] text-gold hover:text-gold-bright">Obserwuj <span aria-hidden>↗</span></a>}
+      </div>
+      {items.length ? (
+        <ul className="mt-10 flex snap-x snap-mandatory gap-2 overflow-x-auto pb-2 sm:grid sm:grid-cols-4 sm:overflow-visible lg:grid-cols-6 [&>li]:w-[calc(50%-4px)] [&>li]:shrink-0 sm:[&>li]:w-auto">
+          {items.map((m, i) => (
+            <li key={m.id} className={`snap-start ${i >= 4 ? "sm:hidden lg:block" : ""}`}>
+              <a href={m.permalink} target="_blank" rel="noopener noreferrer" aria-label={`Otwórz na Instagramie${m.caption ? `: ${m.caption.slice(0, 80)}` : ""}`} className="group relative block aspect-[4/5] overflow-hidden bg-card">
+                <img src={m.thumbnail_url!} alt="" loading="lazy" referrerPolicy="no-referrer" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
+                <span aria-hidden className="absolute inset-0 bg-surface-deep/0 transition-colors duration-500 group-hover:bg-surface-deep/35" />
+                {m.product_type === "REELS" && <span className="absolute left-2 top-2 bg-surface-deep/75 px-1.5 py-0.5 text-[0.6rem] uppercase tracking-[0.2em] text-gold">Reel</span>}
+              </a>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div className="mt-10 border border-border/60 px-6 py-14 text-center">
+          <p className="font-display text-2xl font-semibold uppercase text-foreground">Instagram</p>
+          <p className="mx-auto mt-3 max-w-md whitespace-pre-line text-[0.95rem] leading-[1.75] text-foreground/75">{"Tutaj pojawią się najnowsze materiały\nz profilu TATA NA BACZNOŚCI."}</p>
+        </div>
+      )}
     </section>
   );
 }

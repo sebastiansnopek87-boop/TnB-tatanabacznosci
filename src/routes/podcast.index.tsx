@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { Clock, Headphones, Lock, Search } from "lucide-react";
 import { PageShell } from "@/components/tnb/PageShell";
-import { ChannelsSection, ListenSection, StorySection, WatchSection } from "@/components/voice/VoiceSections";
+import { ChannelsSection, InstagramSection, ListenSection, StorySection, WatchSection } from "@/components/voice/VoiceSections";
 import { listEpisodes } from "@/lib/podcast.functions";
 import { listCategories } from "@/lib/library";
 import { EP_ACCESS, coverUrl, fmtDay, fmtDuration, type PublicEpisode } from "@/lib/podcast";
@@ -141,6 +141,7 @@ function PodcastPage() {
           )}
       </div>
       <ChannelsSection />
+      <InstagramSection />
       <StorySection />
     </PageShell>
   );
