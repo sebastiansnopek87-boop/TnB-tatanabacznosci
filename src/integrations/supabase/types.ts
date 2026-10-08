@@ -1422,6 +1422,132 @@ export type Database = {
         }
         Relationships: []
       }
+      instagram_media: {
+        Row: {
+          caption: string | null
+          id: string
+          ig_id: string
+          media_type: string
+          permalink: string
+          posted_at: string
+          product_type: string | null
+          synced_at: string
+          thumbnail_url: string | null
+        }
+        Insert: {
+          caption?: string | null
+          id?: string
+          ig_id: string
+          media_type: string
+          permalink: string
+          posted_at: string
+          product_type?: string | null
+          synced_at?: string
+          thumbnail_url?: string | null
+        }
+        Update: {
+          caption?: string | null
+          id?: string
+          ig_id?: string
+          media_type?: string
+          permalink?: string
+          posted_at?: string
+          product_type?: string | null
+          synced_at?: string
+          thumbnail_url?: string | null
+        }
+        Relationships: []
+      }
+      instagram_secret: {
+        Row: {
+          access_token: string | null
+          id: number
+          oauth_actor: string | null
+          oauth_redirect: string | null
+          oauth_state: string | null
+          oauth_state_expires_at: string | null
+          token_expires_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_token?: string | null
+          id?: number
+          oauth_actor?: string | null
+          oauth_redirect?: string | null
+          oauth_state?: string | null
+          oauth_state_expires_at?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string | null
+          id?: number
+          oauth_actor?: string | null
+          oauth_redirect?: string | null
+          oauth_state?: string | null
+          oauth_state_expires_at?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      instagram_source: {
+        Row: {
+          connected_at: string | null
+          connected_by: string | null
+          display_count: number
+          id: number
+          ig_user_id: string | null
+          last_error: string | null
+          last_sync_added: number
+          last_sync_at: string | null
+          media_count: number
+          profile_url: string | null
+          show_carousels: boolean
+          show_posts: boolean
+          show_reels: boolean
+          status: string
+          updated_at: string
+          username: string | null
+        }
+        Insert: {
+          connected_at?: string | null
+          connected_by?: string | null
+          display_count?: number
+          id?: number
+          ig_user_id?: string | null
+          last_error?: string | null
+          last_sync_added?: number
+          last_sync_at?: string | null
+          media_count?: number
+          profile_url?: string | null
+          show_carousels?: boolean
+          show_posts?: boolean
+          show_reels?: boolean
+          status?: string
+          updated_at?: string
+          username?: string | null
+        }
+        Update: {
+          connected_at?: string | null
+          connected_by?: string | null
+          display_count?: number
+          id?: number
+          ig_user_id?: string | null
+          last_error?: string | null
+          last_sync_added?: number
+          last_sync_at?: string | null
+          media_count?: number
+          profile_url?: string | null
+          show_carousels?: boolean
+          show_posts?: boolean
+          show_reels?: boolean
+          status?: string
+          updated_at?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
       library_categories: {
         Row: {
           created_at: string
