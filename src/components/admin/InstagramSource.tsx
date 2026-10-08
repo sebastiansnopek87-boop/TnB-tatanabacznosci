@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { adminDisconnectInstagram, adminGetInstagram, adminSaveInstagramOptions, adminStartInstagramConnect, adminSyncInstagram } from "@/lib/voice.functions";
+import { adminCheckInstagramConfig, adminDisconnectInstagram, adminGetInstagram, adminSaveInstagramOptions, adminStartInstagramConnect, adminSyncInstagram } from "@/lib/voice.functions";
 import { errMsg } from "@/components/admin/format";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +13,9 @@ const RESULT: Record<string, string> = { polaczono: "Konto Instagram połączone
 export function InstagramSource() {
   const getFn = useServerFn(adminGetInstagram); const startFn = useServerFn(adminStartInstagramConnect);
   const syncFn = useServerFn(adminSyncInstagram); const discFn = useServerFn(adminDisconnectInstagram);
-  const optFn = useServerFn(adminSaveInstagramOptions);
+  const optFn = useServerFn(adminSaveInstagramOptions); const checkFn = useServerFn(adminCheckInstagramConfig);
+  const check = useMutation({ mutationFn: () => checkFn(), onSuccess: (r) => (r.ok ? toast.success("Konfiguracja kompletna.") : toast.error("Konfiguracja niepełna — zobacz listę poniżej.")), onError: (e) => toast.error(errMsg(e)) });
+  const copy = (v: string) => navigator.clipboard.writeText(v).then(() => toast.success("Skopiowano."), () => toast.error("Nie udało się skopiować."));
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["admin-ig"], queryFn: () => getFn() });
   const refresh = () => ["admin-ig", "voice-instagram"].forEach((k) => qc.invalidateQueries({ queryKey: [k] }));
@@ -37,16 +39,51 @@ export function InstagramSource() {
       <h2 className="font-display text-2xl font-semibold uppercase">Instagram — Głos TNB</h2>
       <p className="mt-1 max-w-3xl text-xs text-muted-foreground">Połączenie przez oficjalną autoryzację Meta (Instagram API z logowaniem Instagram). Hasło do Instagrama nigdy tu nie trafia. Najnowsze materiały pobierają się same, gdy dane są starsze niż 30 minut, oraz przyciskiem „Synchronizuj teraz”. Nie da się ich dodawać ręcznie.</p>
 
-      {s && !s.appConfigured && (
-        <div className="mt-4 border border-destructive/60 p-4 text-sm">
-          <p className="font-semibold text-destructive">Brak konfiguracji aplikacji Meta.</p>
-          <ol className="mt-2 list-decimal space-y-1 pl-5 text-muted-foreground">
-            <li>Konto Instagram musi być kontem profesjonalnym (Twórca lub Firma).</li>
-            <li>W Meta for Developers utwórz aplikację typu „Business” i dodaj produkt „Instagram” → „API setup with Instagram login”.</li>
-            <li>W „Business login settings” dodaj adres przekierowania (OAuth Redirect URI): <code className="break-all text-foreground">{origin}{s.callbackPath}</code> — oraz analogiczny adres dla opublikowanej strony.</li>
-            <li>Skopiuj „Instagram app ID” i „Instagram app secret” i przekaż je jako sekrety <code>INSTAGRAM_APP_ID</code> i <code>INSTAGRAM_APP_SECRET</code>.</li>
-            <li>Dopóki aplikacja jest w trybie deweloperskim, dodaj konto Instagram jako testera (Role aplikacji → Instagram Testers) i zaakceptuj zaproszenie w Instagramie.</li>
-          </ol>
+      {s && (
+        <div className="mt-4 space-y-4 border border-border/60 p-4 text-sm">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Status konfiguracji:</span>
+            <Badge variant={connected ? "default" : s.status === "error" ? "destructive" : s.appConfigured ? "secondary" : "outline"}>
+              {connected ? "Połączono" : s.status === "error" ? "Błąd" : s.appConfigured ? "Skonfigurowano" : "Nie skonfigurowano"}</Badge>
+          </div>
+          <p className="text-xs text-muted-foreground">Instagram App ID i App Secret są zapisane w zaszyfrowanym magazynie sekretów serwera (nie w tej stronie i nie w kodzie). Wartości nigdy nie są tu pokazywane. Aby je wpisać lub zmienić, poproś asystenta o „bezpieczny formularz kluczy Instagram”.</p>
+          {([["Redirect URI — PREVIEW / TEST", origin ? origin + s.callbackPath : ""], ["Redirect URI — PRODUKCJA", s.productionCallback ?? ""]] as const).map(([l, v]) => (
+            <div key={l}>
+              <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">{l}</p>
+              <div className="mt-1 flex gap-2">
+                <input readOnly value={v || "Domena produkcyjna nie jest jeszcze ustawiona — adres pojawi się automatycznie po jej ustawieniu."} className="min-w-0 flex-1 border border-border bg-background px-2 py-1 font-mono text-xs" />
+                <Button size="sm" variant="outline" disabled={!v} onClick={() => copy(v)}>Kopiuj</Button>
+              </div>
+            </div>
+          ))}
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => check.mutate()} disabled={check.isPending}>{check.isPending ? "Sprawdzanie…" : "Sprawdź konfigurację"}</Button>
+          </div>
+          {check.data && (
+            <ul className="space-y-1">
+              {check.data.checks.map((c) => (
+                <li key={c.key} className={c.ok && !c.hint ? "text-foreground" : c.optional ? "text-muted-foreground" : "text-destructive"}>
+                  {c.ok && !c.hint ? "✓" : c.optional ? "○" : "✗"} {c.label}{c.optional && !c.ok ? " (opcjonalne do testów)" : ""}{c.hint ? ` — ${c.hint}` : ""}</li>
+              ))}
+            </ul>
+          )}
+          <details>
+            <summary className="cursor-pointer text-xs uppercase tracking-[0.14em] text-gold">Instrukcja konfiguracji Meta</summary>
+            <ol className="mt-2 list-decimal space-y-1 pl-5 text-muted-foreground">
+              <li>Konto Instagram musi być kontem profesjonalnym (Twórca lub Firma).</li>
+              <li>W developers.facebook.com utwórz aplikację typu „Business”.</li>
+              <li>Dodaj produkt „Instagram” → „API setup with Instagram login”.</li>
+              <li>W „Business login settings” → „OAuth Redirect URIs” dodaj Redirect URI PREVIEW (powyżej).</li>
+              <li>Dodaj tam też Redirect URI PRODUKCJA, gdy pojawi się powyżej.</li>
+              <li>Skopiuj „Instagram app ID”.</li>
+              <li>Skopiuj „Instagram app secret”.</li>
+              <li>Wpisz je w bezpiecznym formularzu kluczy.</li>
+              <li>Kliknij „Sprawdź konfigurację”.</li>
+              <li>Kliknij „Połącz konto Instagram” (w trybie deweloperskim konto musi być dodane jako Instagram Tester i zaproszenie zaakceptowane).</li>
+              <li>Zaloguj się i zaakceptuj autoryzację.</li>
+              <li>Kliknij „Synchronizuj teraz” i sprawdź Reelsy na stronie Głos TNB.</li>
+            </ol>
+          </details>
         </div>
       )}
 

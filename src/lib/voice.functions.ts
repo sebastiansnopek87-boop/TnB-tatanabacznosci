@@ -230,7 +230,18 @@ export const adminGetInstagram = createServerFn({ method: "GET" })
     const { data, error } = await context.supabase.from("instagram_source").select("*").eq("id", 1).maybeSingle();
     if (error) throw new Error("Nie udało się pobrać ustawień Instagrama.");
     const ig = await import("./instagram.server");
-    return { ...data, appConfigured: ig.appConfigured(), callbackPath: ig.CALLBACK_PATH };
+    const prod = ig.productionOrigin();
+    return { ...data, appConfigured: ig.appConfigured(), callbackPath: ig.CALLBACK_PATH, productionCallback: prod ? prod + ig.CALLBACK_PATH : null };
+  });
+
+export const adminCheckInstagramConfig = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const ig = await import("./instagram.server");
+    const r = await ig.checkConfig();
+    await logEvent({ type: "instagram_config_check", actor: context.userId, objectKind: "instagram_source", result: r.ok ? "ok" : "failed", detail: r.checks.filter((c) => !c.ok).map((c) => c.key).join(",") || "komplet" });
+    return r;
   });
 
 export const adminStartInstagramConnect = createServerFn({ method: "POST" })
