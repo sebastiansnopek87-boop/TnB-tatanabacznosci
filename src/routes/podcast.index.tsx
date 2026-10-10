@@ -3,11 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { Clock, Headphones, Lock, Search } from "lucide-react";
 import { PageShell } from "@/components/tnb/PageShell";
-import { ChannelsSection, InstagramSection, ListenSection, StorySection, WatchSection } from "@/components/voice/VoiceSections";
+import { ChannelsSection, InstagramSection, StorySection, WatchSection } from "@/components/voice/VoiceSections";
 import { listEpisodes } from "@/lib/podcast.functions";
-import { listCategories } from "@/lib/library";
-import { EP_ACCESS, coverUrl, fmtDay, fmtDuration, type PublicEpisode } from "@/lib/podcast";
+import { coverUrl, fmtDay, fmtDuration, type PublicEpisode } from "@/lib/podcast";
 import { getPodcastLayout } from "@/lib/platform.functions";
+import { listInstagram, listVideos } from "@/lib/voice.functions";
+import { buildMedia, SOURCE_LABEL, type MediaItem, type MediaSource } from "@/lib/voice-media";
 
 const TITLE = "Głos TNB — historie, rozmowy i głosy ludzi w drodze";
 const DESC = "Głos TNB: podcast, rozmowy, materiały wideo i miejsce, w którym możesz zgłosić własną historię. Bez udawania, bez gotowych recept.";
@@ -23,24 +24,28 @@ export const Route = createFileRoute("/podcast/")({
   component: PodcastPage,
 });
 
+const ORDER: MediaSource[] = ["podcast", "youtube", "manual", "instagram"];
+
 function PodcastPage() {
   const eps = useQuery({ queryKey: ["podcast"], queryFn: () => listEpisodes() });
+  const vids = useQuery({ queryKey: ["voice-videos"], queryFn: () => listVideos() });
+  const ig = useQuery({ queryKey: ["voice-instagram"], queryFn: () => listInstagram(), staleTime: 300_000 });
   const layout = useQuery({ queryKey: ["podcast-layout"], queryFn: () => getPodcastLayout() });
-  const cats = useQuery({ queryKey: ["library-categories"], queryFn: listCategories });
   const [q, setQ] = useState("");
-  const [cat, setCat] = useState<string | null>(null);
-  const catName = (s: string) => cats.data?.find((c) => c.slug === s)?.name ?? s;
+  const [src, setSrc] = useState<MediaSource | null>(null);
+  const [video, setVideo] = useState<{ id: string; n: number } | null>(null);
 
-  const all = eps.data ?? [];
+  const all = useMemo(() => buildMedia(eps.data ?? [], vids.data ?? [], ig.data?.connected ? ig.data.items : []), [eps.data, vids.data, ig.data]);
+  const sources = ORDER.filter((s) => all.some((m) => m.source === s)); // only real, non-empty sources get a filter
   const latest = all[0];
-  const filtering = q.trim().length > 0 || !!cat;
+  const filtering = q.trim().length > 0 || !!src;
   const list = useMemo(() => {
     const s = q.trim().toLowerCase();
-    return all.filter((e) => (filtering || e.id !== latest?.id)
-      && (!cat || e.category === cat)
-      && (!s || e.title.toLowerCase().includes(s) || e.summary.toLowerCase().includes(s)));
-  }, [all, q, cat, filtering, latest?.id]);
-  const usedCats = (cats.data ?? []).filter((c) => all.some((e) => e.category === c.slug));
+    return all.filter((m) => (filtering || m.key !== latest?.key) && (!src || m.source === src)
+      && (!s || m.title.toLowerCase().includes(s) || m.summary.toLowerCase().includes(s)));
+  }, [all, q, src, filtering, latest?.key]);
+  const loading = eps.isLoading || vids.isLoading;
+  const watch = (id: string) => { setVideo((v) => ({ id, n: (v?.n ?? 0) + 1 })); requestAnimationFrame(() => document.getElementById("ogladaj")?.scrollIntoView({ behavior: "smooth", block: "start" })); };
 
   return (
     <PageShell>
@@ -49,99 +54,52 @@ function PodcastPage() {
         <p className="mt-5 max-w-2xl text-[1.1rem] italic text-foreground/85">Historie, rozmowy i głosy ludzi, którzy są w drodze.</p>
       </section>
 
-      <WatchSection />
-      <ListenSection />
-
-      <div className="border-t border-border/60 px-5 py-12 lg:px-14">
-        <p className="eyebrow text-gold">Podcast</p>
-        <h2 className="mt-2 font-display text-2xl font-semibold uppercase text-foreground sm:text-3xl">Rozmowy</h2>
-        <p className="mb-10 mt-4 max-w-2xl text-[0.95rem] leading-[1.75] text-foreground/80">
-          Rozmowy o życiu, które nie zawsze mieści się w schematach. O rodzinie, odpowiedzialności, doświadczeniach, wartościach i drodze, którą każdy z nas przechodzi na swój sposób. Bez udawania. Bez gotowych recept. Z miejsca, w którym jesteśmy.
-        </p>
-        {eps.isLoading ? <p className="text-sm text-muted-foreground">Ładowanie odcinków…</p>
-          : eps.error ? <p className="text-sm text-destructive">Nie udało się pobrać odcinków. Odśwież stronę.</p>
+      <div className="px-5 py-12 lg:px-14">
+        {loading ? <p className="text-sm text-muted-foreground">Ładowanie materiałów…</p>
+          : eps.error && vids.error ? <p className="text-sm text-destructive">Nie udało się pobrać materiałów. Odśwież stronę.</p>
           : !all.length ? (
             <div className="max-w-2xl border border-gold/40 bg-surface-deep p-8">
               <Headphones className="h-6 w-6 text-gold" />
-              <p className="mt-4 font-display text-2xl font-semibold uppercase text-foreground">Brak opublikowanych odcinków</p>
+              <p className="mt-4 font-display text-2xl font-semibold uppercase text-foreground">Brak opublikowanych materiałów</p>
               <p className="mt-3 text-[0.95rem] leading-[1.75] text-foreground/80">Pierwsze nagrania są w przygotowaniu. Zajrzyj tu wkrótce.</p>
             </div>
-          ) : (
-            <>
-              {latest && !filtering && (
-                <section aria-labelledby="latest">
-                  <p id="latest" className="eyebrow text-gold">{latest.featured ? "Wyróżniony odcinek" : "Najnowszy odcinek"}</p>
-                  <Link to="/podcast/$slug" params={{ slug: latest.slug }} className="group mt-4 grid gap-5 border border-border/60 bg-card p-4 hover:border-gold/60 sm:grid-cols-[160px_1fr] lg:grid-cols-[200px_1fr] lg:p-5">
-                    <Cover e={latest} className="aspect-square w-full max-w-[200px] border" />
-                    <div className="min-w-0">
-                      <Meta e={latest} catName={catName} />
-                      <h2 className="mt-2 break-words font-display text-xl font-semibold uppercase leading-tight text-foreground group-hover:text-gold lg:text-2xl">{num(latest)}{latest.title}</h2>
-                      {latest.subtitle && <p className="mt-2 text-[1rem] italic text-foreground/75">{latest.subtitle}</p>}
-                      {latest.summary && <p className="mt-4 text-[0.95rem] leading-[1.75] text-foreground/80">{latest.summary}</p>}
-                      <span className="mt-6 inline-flex items-center gap-2 bg-gold px-6 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-primary-foreground">
-                        <Headphones className="h-4 w-4" /> {latest.has_audio || latest.has_external ? "Odtwórz odcinek" : "Oczekuje na nagranie"}
-                      </span>
-                    </div>
-                  </Link>
-                </section>
-              )}
-
-              <section className={latest && !filtering ? "mt-14" : ""}>
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                  <h3 className="font-display text-xl font-semibold uppercase text-foreground">{filtering ? "Wyniki" : "Wszystkie odcinki"}</h3>
-                  <label className="relative block w-full lg:w-80">
-                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Szukaj odcinka…" aria-label="Szukaj odcinka"
-                      className="w-full border border-border bg-surface-deep py-2.5 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-gold focus:outline-none" />
-                  </label>
-                </div>
-                {usedCats.length > 0 && (
-                  <div className="mt-5 flex flex-wrap gap-2">
-                    <Chip active={!cat} onClick={() => setCat(null)}>Wszystkie</Chip>
-                    {usedCats.map((c) => <Chip key={c.slug} active={cat === c.slug} onClick={() => setCat(c.slug)}>{c.name}</Chip>)}
-                  </div>
-                )}
-                {!list.length ? (
-                  <p className="mt-8 border border-border/60 p-6 text-sm text-muted-foreground">
-                    {filtering ? "Brak odcinków pasujących do wyszukiwania." : "To na razie jedyny opublikowany odcinek."}
-                  </p>
-                ) : (
-                  layout.data === "grid" ? (
-                    <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                      {list.map((e) => (
-                        <Link key={e.id} to="/podcast/$slug" params={{ slug: e.slug }} className="group flex flex-col border border-border/60 bg-card hover:border-gold/60">
-                          <Cover e={e} className="aspect-video w-full" />
-                          <div className="flex flex-1 flex-col p-4">
-                            <Meta e={e} catName={catName} />
-                            <h3 className="mt-2 break-words font-display text-base font-semibold uppercase leading-snug text-foreground group-hover:text-gold">{num(e)}{e.title}</h3>
-                            {e.summary && <p className="mt-2 line-clamp-2 text-[0.82rem] leading-relaxed text-foreground/75">{e.summary}</p>}
-                            <span className="mt-auto pt-3 text-[0.7rem] uppercase tracking-[0.14em] text-gold">{e.has_audio || e.has_external ? "▶ Odtwórz" : "Oczekuje na nagranie"}</span>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="mt-8 flex flex-col gap-3">
-                      {list.map((e) => (
-                        <Link key={e.id} to="/podcast/$slug" params={{ slug: e.slug }} className="group flex items-start gap-4 border border-border/60 bg-card p-3 hover:border-gold/60 sm:items-center sm:p-4">
-                          <Cover e={e} className="aspect-square w-20 shrink-0 border sm:w-28" />
-                          <div className="min-w-0 flex-1">
-                            <Meta e={e} catName={catName} />
-                            <h3 className="mt-1.5 break-words font-display text-base font-semibold uppercase leading-snug text-foreground group-hover:text-gold sm:text-lg">{num(e)}{e.title}</h3>
-                            {e.summary && <p className="mt-1 hidden text-[0.85rem] leading-relaxed text-foreground/75 sm:line-clamp-2">{e.summary}</p>}
-                          </div>
-                          <span className="hidden shrink-0 text-[0.7rem] uppercase tracking-[0.14em] text-gold md:inline">{e.has_audio || e.has_external ? "▶ Odtwórz" : "Oczekuje"}</span>
-                        </Link>
-                      ))}
-                    </div>
-                  )
-                )}
+          ) : (<>
+            {latest && !filtering && (
+              <section aria-labelledby="latest">
+                <p id="latest" className="eyebrow text-gold">Najnowszy materiał</p>
+                <Card m={latest} big onWatch={watch} />
               </section>
-            </>
-          )}
+            )}
+
+            <section className={latest && !filtering ? "mt-14" : ""} aria-labelledby="all-media">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <h2 id="all-media" className="font-display text-2xl font-semibold uppercase text-foreground">{filtering ? "Wyniki" : "Wszystkie materiały"}</h2>
+                <label className="relative block w-full lg:w-80">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Szukaj materiału…" aria-label="Szukaj materiału"
+                    className="w-full border border-border bg-surface-deep py-2.5 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-gold focus:outline-none" />
+                </label>
+              </div>
+              {sources.length > 1 && (
+                <div className="mt-5 flex flex-wrap gap-2" role="group" aria-label="Filtruj według źródła">
+                  <Chip active={!src} onClick={() => setSrc(null)}>Wszystkie</Chip>
+                  {sources.map((s) => <Chip key={s} active={src === s} onClick={() => setSrc(s)}>{SOURCE_LABEL[s]}</Chip>)}
+                </div>
+              )}
+              {!list.length ? (
+                <p className="mt-8 border border-border/60 p-6 text-sm text-muted-foreground">{filtering ? "Brak materiałów pasujących do wyszukiwania." : "To na razie jedyny opublikowany materiał."}</p>
+              ) : layout.data === "grid" ? (
+                <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{list.map((m) => <Card key={m.key} m={m} grid onWatch={watch} />)}</div>
+              ) : (
+                <div className="mt-8 flex flex-col gap-3">{list.map((m) => <Card key={m.key} m={m} onWatch={watch} />)}</div>
+              )}
+            </section>
+          </>)}
       </div>
-      <ChannelsSection />
+
+      <WatchSection selected={video?.id ?? null} autoplay={video?.n} />
       <InstagramSection />
+      <ChannelsSection />
       <StorySection />
     </PageShell>
   );
@@ -156,23 +114,38 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
   );
 }
 
+function Card({ m, big, grid, onWatch }: { m: MediaItem; big?: boolean; grid?: boolean; onWatch: (id: string) => void }) {
+  const d = fmtDuration(m.duration);
+  const thumb = m.thumb
+    ? <img src={m.thumb} alt="" loading="lazy" referrerPolicy="no-referrer" className="h-full w-full object-cover" />
+    : <span className="flex h-full w-full items-center justify-center bg-surface-deep"><Headphones className="h-8 w-8 text-gold/60" /></span>;
+  const body = (
+    <>
+      <span className={`block shrink-0 overflow-hidden border border-border/60 ${big ? "aspect-video w-full sm:w-[320px]" : grid ? "aspect-video w-full border-0 border-b" : "aspect-video w-28 sm:w-44"}`}>{thumb}</span>
+      <span className={`flex min-w-0 flex-1 flex-col ${grid ? "p-4" : ""}`}>
+        <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.7rem] uppercase tracking-[0.12em] text-muted-foreground">
+          <span className="text-gold">{SOURCE_LABEL[m.source]}</span>
+          {m.date && <span>{fmtDay(m.date)}</span>}
+          {d && <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" />{d}</span>}
+          {m.locked && <span className="inline-flex items-center gap-1"><Lock className="h-3 w-3" />Dostęp ograniczony</span>}
+        </span>
+        <span className={`mt-1.5 break-words font-display font-semibold uppercase leading-snug text-foreground group-hover:text-gold ${big ? "text-xl lg:text-2xl" : "text-base"}`}>{m.title}</span>
+        {m.summary && <span className={`mt-1 text-[0.85rem] leading-relaxed text-foreground/75 ${big ? "line-clamp-4" : grid ? "line-clamp-2" : "hidden sm:line-clamp-2"}`}>{m.summary}</span>}
+        <span className={`${grid ? "mt-auto pt-3" : "mt-3"} text-[0.72rem] uppercase tracking-[0.14em] text-gold`}>{m.cta} {m.action.kind === "external" ? "↗" : "→"}</span>
+      </span>
+    </>
+  );
+  const cls = `group flex border border-border/60 bg-card text-left hover:border-gold/60 ${grid ? "flex-col" : big ? "mt-4 flex-col gap-5 p-4 sm:flex-row lg:p-5" : "items-start gap-4 p-3 sm:p-4"}`;
+  if (m.action.kind === "episode") return <Link to="/podcast/$slug" params={{ slug: m.action.slug }} className={cls}>{body}</Link>;
+  if (m.action.kind === "external") return <a href={m.action.href} target="_blank" rel="noopener noreferrer" className={cls}>{body}</a>;
+  const id = m.action.id;
+  return <button type="button" onClick={() => onWatch(id)} className={`${cls} w-full`}>{body}</button>;
+}
+
+// kept for existing importers (episode detail page)
 export function Cover({ e, className }: { e: PublicEpisode; className: string }) {
   const src = coverUrl(e);
   return src
     ? <img src={src} alt="" loading="lazy" className={`${className} border-b border-border/60 object-cover`} />
     : <div className={`${className} flex items-center justify-center border-b border-border/60 bg-surface-deep`}><Headphones className="h-10 w-10 text-gold/60" /></div>;
 }
-
-function Meta({ e, catName }: { e: PublicEpisode; catName: (s: string) => string }) {
-  const d = fmtDuration(e.duration_seconds);
-  return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.7rem] uppercase tracking-[0.12em] text-muted-foreground">
-      <span className="text-gold">{catName(e.category)}</span>
-      <span>{fmtDay(e.published_at)}</span>
-      {d && <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" />{d}</span>}
-      <span className="inline-flex items-center gap-1">{e.access !== "public" && <Lock className="h-3 w-3" />}{EP_ACCESS[e.access]}</span>
-    </div>
-  );
-}
-
-const num = (e: PublicEpisode) => (e.episode_number ? `${String(e.episode_number).padStart(2, "0")}. ` : "");
