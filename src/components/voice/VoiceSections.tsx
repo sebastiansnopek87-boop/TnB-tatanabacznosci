@@ -1,4 +1,4 @@
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { getPublicChannel, listVideos, listInstagram, submitVoiceStory, storySchema } from "@/lib/voice.functions";
@@ -31,12 +31,14 @@ function useChannelUrl() {
   return yt || ch.data?.url || null;
 }
 
-export function WatchSection() {
+export function WatchSection({ selected, autoplay }: { selected?: string | null; autoplay?: number } = {}) {
   const v = useQuery({ queryKey: ["voice-videos"], queryFn: () => listVideos() });
   const channel = useChannelUrl();
   const [sel, setSel] = useState<string | null>(null);
   const [play, setPlay] = useState(false);
   const [shown, setShown] = useState(PAGE);
+  // the unified list ("OBEJRZYJ") drives the one existing player
+  useEffect(() => { if (selected) { setSel(selected); setPlay(true); } }, [selected, autoplay]);
   const all = v.data ?? [];
   if (!all.length && !channel) return null;
   const cur = all.find((x) => x.id === sel) ?? all[0];
