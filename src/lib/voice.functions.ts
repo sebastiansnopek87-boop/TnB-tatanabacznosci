@@ -6,7 +6,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertAdmin, logEvent } from "./admin-auth.server";
 import { SUBMISSION_STATUSES } from "./voice";
 
-export type PublicVideo = { id: string; youtube_id: string; title: string; description: string; published_on: string | null; published_at: string | null; thumbnail_url: string | null; duration_seconds: number | null };
+export type PublicVideo = { id: string; youtube_id: string; title: string; description: string; published_on: string | null; published_at: string | null; thumbnail_url: string | null; duration_seconds: number | null; source: "manual" | "youtube"; category: string | null; featured: boolean };
 
 function anonDb() {
   return import("@supabase/supabase-js").then(({ createClient }) => {
@@ -23,15 +23,18 @@ function anonDb() {
   });
 }
 
+/** Published, non-archived videos (YouTube-synced + admin-added). Custom thumbnail wins over the YouTube one. */
 export const listVideos = createServerFn({ method: "GET" }).handler(async () => {
   const { syncIfStale } = await import("./youtube.server");
   await syncIfStale();
   const db = await anonDb();
   const { data, error } = await db.from("podcast_videos")
-    .select("id, youtube_id, title, description, published_on, published_at, thumbnail_url, duration_seconds")
-    .eq("status", "published").order("published_at", { ascending: false, nullsFirst: false }).order("published_on", { ascending: false, nullsFirst: false }).limit(200);
+    .select("id, youtube_id, title, description, published_on, published_at, thumbnail_url, custom_thumbnail_url, duration_seconds, source, category, featured, sort_order")
+    .eq("status", "published").is("archived_at", null)
+    .order("featured", { ascending: false }).order("sort_order", { ascending: true })
+    .order("published_at", { ascending: false, nullsFirst: false }).order("published_on", { ascending: false, nullsFirst: false }).limit(200);
   if (error) throw new Error("Nie udało się pobrać materiałów wideo.");
-  return (data ?? []) as PublicVideo[];
+  return (data ?? []).map(({ custom_thumbnail_url, sort_order: _s, ...r }) => ({ ...r, thumbnail_url: custom_thumbnail_url || r.thumbnail_url })) as PublicVideo[];
 });
 
 /** Public, safe fields only: official channel link for the "Odwiedź kanał" button. */
