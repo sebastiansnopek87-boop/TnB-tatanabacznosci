@@ -113,7 +113,9 @@ export function VoiceVideos() {
           : !active.length ? <p className="border border-border/60 p-6 text-sm text-muted-foreground">Brak materiałów — skonfiguruj kanał i uruchom synchronizację albo dodaj materiał ręcznie.</p>
           : active.map((v) => (
             <div key={v.id} className="flex flex-col gap-3 border border-border/60 p-3 sm:flex-row sm:items-center">
-              <img src={v.custom_thumbnail_url || v.thumbnail_url || (v.youtube_id ? ytThumb(v.youtube_id) : "")} alt="" className="aspect-video w-full max-w-[160px] bg-surface-deep object-cover" />
+              {(() => { const th = v.custom_thumbnail_url || v.thumbnail_url || (v.youtube_id ? ytThumb(v.youtube_id) : null);
+                return th ? <img src={th} alt="" className="aspect-video w-full max-w-[160px] bg-surface-deep object-cover" />
+                  : <span className="flex aspect-video w-full max-w-[160px] items-center justify-center border border-border/40 bg-surface-deep text-[0.6rem] uppercase tracking-widest text-muted-foreground">brak miniatury</span>; })()}
               <div className="min-w-0 flex-1">
                 <p className="break-words text-sm font-medium">{v.title}</p>
                 <div className="mt-1 flex flex-wrap gap-2">
