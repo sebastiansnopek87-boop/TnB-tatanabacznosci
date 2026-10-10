@@ -97,7 +97,7 @@ function PodcastPage() {
           </>)}
       </div>
 
-      <WatchSection selected={video?.id ?? null} autoplay={video?.n} />
+      <WatchSection selected={video?.id ?? null} {...(video?.n !== undefined ? { autoplay: video.n } : {})} />
       <InstagramSection />
       <ChannelsSection />
       <StorySection />

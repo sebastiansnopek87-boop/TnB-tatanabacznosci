@@ -39,7 +39,7 @@ export function WatchSection({ selected, autoplay }: { selected?: string | null;
   const [shown, setShown] = useState(PAGE);
   // the unified list ("OBEJRZYJ") drives the one existing player
   useEffect(() => { if (selected) { setSel(selected); setPlay(true); } }, [selected, autoplay]);
-  const all = v.data ?? [];
+  const all = (v.data ?? []).filter((x) => !!x.youtube_id); // external-link materials open in a new tab, never embed
   if (!all.length && !channel) return null;
   const cur = all.find((x) => x.id === sel) ?? all[0];
   return (
@@ -49,8 +49,8 @@ export function WatchSection({ selected, autoplay }: { selected?: string | null;
         <div className="mt-8 grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_380px]">
           <div className="min-w-0">
             <div className="relative aspect-video w-full overflow-hidden border border-border/60 bg-surface-deep">
-              <iframe key={cur.youtube_id + (play ? "1" : "0")} title={cur.title}
-                src={`https://www.youtube-nocookie.com/embed/${cur.youtube_id}?rel=0&modestbranding=1${play ? "&autoplay=1" : ""}`}
+              <iframe key={(cur.youtube_id ?? "") + (play ? "1" : "0")} title={cur.title}
+                src={`https://www.youtube-nocookie.com/embed/${cur.youtube_id ?? ""}?rel=0&modestbranding=1${play ? "&autoplay=1" : ""}`}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 referrerPolicy="strict-origin-when-cross-origin" allowFullScreen className="absolute inset-0 h-full w-full" />
             </div>
@@ -68,7 +68,7 @@ export function WatchSection({ selected, autoplay }: { selected?: string | null;
                     <button type="button" aria-current={on ? "true" : undefined} onClick={() => { setSel(x.id); setPlay(true); }}
                       className={`flex w-full gap-3 border-l-2 p-3 text-left transition-colors ${on ? "border-gold bg-foreground/10" : "border-transparent hover:bg-foreground/5"}`}>
                       <span className="relative w-32 shrink-0">
-                        <img src={x.thumbnail_url || ytThumb(x.youtube_id)} alt="" loading="lazy" className="aspect-video w-full object-cover" />
+                        <img src={x.thumbnail_url || (x.youtube_id ? ytThumb(x.youtube_id) : "")} alt="" loading="lazy" className="aspect-video w-full object-cover" />
                         {fmtLen(x.duration_seconds) && <span className="absolute bottom-1 right-1 bg-surface-deep/90 px-1 text-[0.65rem] text-foreground">{fmtLen(x.duration_seconds)}</span>}
                       </span>
                       <span className="min-w-0">

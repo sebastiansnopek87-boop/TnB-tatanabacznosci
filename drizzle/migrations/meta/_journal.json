@@ -365,6 +365,13 @@
       "when": 1791636123925,
       "tag": "0051_glos_tnb_unified_media",
       "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1791637183920,
+      "tag": "0052_glos_tnb_external_materials",
+      "breakpoints": true
     }
   ]
 }

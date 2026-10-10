@@ -6,7 +6,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertAdmin, logEvent } from "./admin-auth.server";
 import { SUBMISSION_STATUSES } from "./voice";
 
-export type PublicVideo = { id: string; youtube_id: string; title: string; description: string; published_on: string | null; published_at: string | null; thumbnail_url: string | null; duration_seconds: number | null; source: "manual" | "youtube"; category: string | null; featured: boolean };
+export type PublicVideo = { id: string; youtube_id: string | null; external_url: string | null; title: string; description: string; published_on: string | null; published_at: string | null; thumbnail_url: string | null; duration_seconds: number | null; source: "manual" | "youtube"; category: string | null; featured: boolean };
 
 function anonDb() {
   return import("@supabase/supabase-js").then(({ createClient }) => {
@@ -29,7 +29,7 @@ export const listVideos = createServerFn({ method: "GET" }).handler(async () => 
   await syncIfStale();
   const db = await anonDb();
   const { data, error } = await db.from("podcast_videos")
-    .select("id, youtube_id, title, description, published_on, published_at, thumbnail_url, custom_thumbnail_url, duration_seconds, source, category, featured, sort_order")
+    .select("id, youtube_id, external_url, title, description, published_on, published_at, thumbnail_url, custom_thumbnail_url, duration_seconds, source, category, featured, sort_order")
     .eq("status", "published").is("archived_at", null)
     .order("featured", { ascending: false }).order("sort_order", { ascending: true })
     .order("published_at", { ascending: false, nullsFirst: false }).order("published_on", { ascending: false, nullsFirst: false }).limit(200);
@@ -137,7 +137,7 @@ export const adminSyncIfStale = createServerFn({ method: "POST" })
 
 // ---------- admin: videos (YouTube-synced + manually added) ----------
 export type AdminVideo = PublicVideo & { status: "draft" | "published" | "hidden"; synced_at: string | null; sort_order: number;
-  is_custom_title: boolean; is_custom_description: boolean; custom_thumbnail_url: string | null; archived_at: string | null; yt_thumbnail_url: string | null };
+  is_custom_title: boolean; is_custom_description: boolean; custom_thumbnail_url: string | null; archived_at: string | null; yt_thumbnail_url: string | null; external_url: string | null };
 
 export const adminListVideos = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -184,13 +184,13 @@ export const adminUpdateVideo = createServerFn({ method: "POST" })
       custom_thumbnail_url: data.custom_thumbnail_url || null, category: data.category || null, featured: data.featured, sort_order: data.sort_order, updated_at: new Date().toISOString(),
     };
     if (yt) {
-      if (data.reset_title) patch.is_custom_title = false;
-      else if (data.title !== cur.title) { patch.title = data.title; patch.is_custom_title = true; }
-      if (data.reset_description) patch.is_custom_description = false;
-      else if (data.description !== cur.description) { patch.description = data.description; patch.is_custom_description = true; }
+      if (data.reset_title) patch["is_custom_title"] = false;
+      else if (data.title !== cur.title) { patch["title"] = data.title; patch["is_custom_title"] = true; }
+      if (data.reset_description) patch["is_custom_description"] = false;
+      else if (data.description !== cur.description) { patch["description"] = data.description; patch["is_custom_description"] = true; }
     } else {
-      patch.title = data.title; patch.description = data.description;
-      if (data.published_on) { patch.published_on = data.published_on; patch.published_at = `${data.published_on}T12:00:00Z`; }
+      patch["title"] = data.title; patch["description"] = data.description;
+      if (data.published_on) { patch["published_on"] = data.published_on; patch["published_at"] = `${data.published_on}T12:00:00Z`; }
     }
     const { error } = await context.supabase.from("podcast_videos").update(patch as never).eq("id", data.id);
     if (error) throw new Error(error.message.includes("check") ? "Nieprawidłowe dane (sprawdź adres miniatury)." : "Nie udało się zapisać zmian.");
@@ -202,7 +202,8 @@ export const adminUpdateVideo = createServerFn({ method: "POST" })
     return { ok: true as const };
   });
 
-/** Admin adds a material manually (a YouTube video, e.g. from a guest's channel). Stored as source=manual. */
+/** Admin adds a material manually: a YouTube video (embeddable, e.g. from a guest's channel) or any https link
+ *  (external material — opened in a new tab, never embedded). Stored as source=manual; sync never touches it. */
 export const adminAddManualVideo = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({
@@ -214,15 +215,25 @@ export const adminAddManualVideo = createServerFn({ method: "POST" })
     await assertAdmin(context);
     const { youtubeId } = await import("./voice");
     const id = youtubeId(data.url);
-    if (!id) throw new Error("To nie jest prawidłowy link do filmu YouTube. Obecnie ręcznie można dodać tylko film z YouTube.");
-    const { data: dup } = await context.supabase.from("podcast_videos").select("id").eq("youtube_id", id).maybeSingle();
-    if (dup) throw new Error("Ten film jest już w Głosie TNB.");
+    let external: string | null = null;
+    if (!id) {
+      try {
+        const u = new URL(data.url);
+        if (u.protocol !== "https:") throw null;
+        external = u.toString();
+      } catch { throw new Error("Podaj prawidłowy link: film YouTube albo adres zaczynający się od https://"); }
+      const { data: dup } = await context.supabase.from("podcast_videos").select("id").eq("external_url", external).maybeSingle();
+      if (dup) throw new Error("Ten materiał jest już w Głosie TNB.");
+    } else {
+      const { data: dup } = await context.supabase.from("podcast_videos").select("id").eq("youtube_id", id).maybeSingle();
+      if (dup) throw new Error("Ten film jest już w Głosie TNB.");
+    }
     const { data: row, error } = await context.supabase.from("podcast_videos").insert({
-      youtube_id: id, title: data.title, description: data.description, custom_thumbnail_url: data.custom_thumbnail_url || null, category: data.category || null,
+      youtube_id: id, external_url: external, title: data.title, description: data.description, custom_thumbnail_url: data.custom_thumbnail_url || null, category: data.category || null,
       published_on: data.published_on, published_at: `${data.published_on}T12:00:00Z`, status: data.status, source: "manual",
     }).select("id").single();
     if (error || !row) throw new Error("Nie udało się dodać materiału.");
-    await logEvent({ type: "voice_video_add", actor: context.userId, objectKind: "podcast_video", objectId: row.id, detail: data.title.slice(0, 120) });
+    await logEvent({ type: "voice_video_add", actor: context.userId, objectKind: "podcast_video", objectId: row.id, detail: `${external ? "link zewnętrzny" : "youtube"}: ${data.title.slice(0, 120)}` });
     return { id: row.id };
   });
 

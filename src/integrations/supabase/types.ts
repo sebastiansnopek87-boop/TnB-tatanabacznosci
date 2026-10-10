@@ -2429,6 +2429,7 @@ export type Database = {
           custom_thumbnail_url: string | null
           description: string
           duration_seconds: number | null
+          external_url: string | null
           featured: boolean
           id: string
           is_custom_description: boolean
@@ -2442,7 +2443,7 @@ export type Database = {
           thumbnail_url: string | null
           title: string
           updated_at: string
-          youtube_id: string
+          youtube_id: string | null
         }
         Insert: {
           archived_at?: string | null
@@ -2451,6 +2452,7 @@ export type Database = {
           custom_thumbnail_url?: string | null
           description?: string
           duration_seconds?: number | null
+          external_url?: string | null
           featured?: boolean
           id?: string
           is_custom_description?: boolean
@@ -2464,7 +2466,7 @@ export type Database = {
           thumbnail_url?: string | null
           title: string
           updated_at?: string
-          youtube_id: string
+          youtube_id?: string | null
         }
         Update: {
           archived_at?: string | null
@@ -2473,6 +2475,7 @@ export type Database = {
           custom_thumbnail_url?: string | null
           description?: string
           duration_seconds?: number | null
+          external_url?: string | null
           featured?: boolean
           id?: string
           is_custom_description?: boolean
@@ -2486,7 +2489,7 @@ export type Database = {
           thumbnail_url?: string | null
           title?: string
           updated_at?: string
-          youtube_id?: string
+          youtube_id?: string | null
         }
         Relationships: []
       }

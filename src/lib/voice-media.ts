@@ -22,10 +22,15 @@ export function buildMedia(eps: PublicEpisode[], vids: PublicVideo[], reels: Pub
     date: e.published_at, duration: e.duration_seconds, summary: e.summary, thumb: coverUrl(e),
     cta: e.has_audio || e.has_external ? "POSŁUCHAJ" : "OTWÓRZ MATERIAŁ", action: { kind: "episode", slug: e.slug }, locked: e.access !== "public",
   });
-  for (const v of vids) out.push({
-    key: `v-${v.id}`, source: v.source === "manual" ? "manual" : "youtube", title: v.title, date: v.published_at ?? v.published_on,
-    duration: v.duration_seconds, summary: v.description, thumb: v.thumbnail_url || ytThumb(v.youtube_id), cta: "OBEJRZYJ", action: { kind: "video", id: v.id },
-  });
+  for (const v of vids) {
+    const external = !v.youtube_id && v.external_url ? v.external_url : null;
+    out.push({
+      key: `v-${v.id}`, source: v.source === "manual" ? "manual" : "youtube", title: v.title, date: v.published_at ?? v.published_on,
+      duration: v.duration_seconds, summary: v.description, thumb: v.thumbnail_url || (v.youtube_id ? ytThumb(v.youtube_id) : null),
+      cta: external ? "OTWÓRZ MATERIAŁ" : "OBEJRZYJ",
+      action: external ? { kind: "external", href: external } : { kind: "video", id: v.id },
+    });
+  }
   for (const r of reels) out.push({
     key: `i-${r.id}`, source: "instagram", title: (r.caption ?? "").split("\n")[0]?.slice(0, 120) || "Instagram", date: r.posted_at,
     duration: null, summary: r.caption ?? "", thumb: r.thumbnail_url, cta: "PRZEJDŹ DO INSTAGRAMA", action: { kind: "external", href: r.permalink },
