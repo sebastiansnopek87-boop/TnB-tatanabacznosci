@@ -129,12 +129,12 @@ export async function runSync(actor: string | null) {
         continue;
       }
       const patch: Record<string, unknown> = {};
-      if (!e.is_custom_title && e.title !== v.title) patch.title = v.title;
-      if (!e.is_custom_description && e.description !== desc) patch.description = desc;
+      if (!e.is_custom_title && e.title !== v.title) patch["title"] = v.title;
+      if (!e.is_custom_description && e.description !== desc) patch["description"] = desc;
       if ((e.is_custom_title && e.title !== v.title) || (e.is_custom_description && e.description !== desc)) kept++;
-      if (e.thumbnail_url !== v.thumbnail_url) patch.thumbnail_url = v.thumbnail_url;
-      if (e.duration_seconds !== v.duration_seconds) patch.duration_seconds = v.duration_seconds;
-      if (!e.published_at || new Date(e.published_at).toISOString() !== new Date(v.published_at).toISOString()) { patch.published_at = v.published_at; patch.published_on = v.published_at.slice(0, 10); }
+      if (e.thumbnail_url !== v.thumbnail_url) patch["thumbnail_url"] = v.thumbnail_url;
+      if (e.duration_seconds !== v.duration_seconds) patch["duration_seconds"] = v.duration_seconds;
+      if (!e.published_at || new Date(e.published_at).toISOString() !== new Date(v.published_at).toISOString()) { patch["published_at"] = v.published_at; patch["published_on"] = v.published_at.slice(0, 10); }
       if (!Object.keys(patch).length) { skipped++; continue; }
       const { error } = await db.from("podcast_videos").update({ ...patch, synced_at: now, updated_at: now } as never).eq("id", e.id);
       if (error) errors.push(`${v.youtube_id}: ${error.message}`); else updated++;
