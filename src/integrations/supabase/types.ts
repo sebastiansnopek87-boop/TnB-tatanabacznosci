@@ -2423,10 +2423,16 @@ export type Database = {
       }
       podcast_videos: {
         Row: {
+          archived_at: string | null
+          category: string | null
           created_at: string
+          custom_thumbnail_url: string | null
           description: string
           duration_seconds: number | null
+          featured: boolean
           id: string
+          is_custom_description: boolean
+          is_custom_title: boolean
           published_at: string | null
           published_on: string | null
           sort_order: number
@@ -2439,10 +2445,16 @@ export type Database = {
           youtube_id: string
         }
         Insert: {
+          archived_at?: string | null
+          category?: string | null
           created_at?: string
+          custom_thumbnail_url?: string | null
           description?: string
           duration_seconds?: number | null
+          featured?: boolean
           id?: string
+          is_custom_description?: boolean
+          is_custom_title?: boolean
           published_at?: string | null
           published_on?: string | null
           sort_order?: number
@@ -2455,10 +2467,16 @@ export type Database = {
           youtube_id: string
         }
         Update: {
+          archived_at?: string | null
+          category?: string | null
           created_at?: string
+          custom_thumbnail_url?: string | null
           description?: string
           duration_seconds?: number | null
+          featured?: boolean
           id?: string
+          is_custom_description?: boolean
+          is_custom_title?: boolean
           published_at?: string | null
           published_on?: string | null
           sort_order?: number
@@ -2693,6 +2711,8 @@ export type Database = {
           last_error: string | null
           last_sync_added: number
           last_sync_at: string | null
+          last_sync_report: Json | null
+          last_sync_skipped: number
           last_sync_updated: number
           status: string
           updated_at: string
@@ -2711,6 +2731,8 @@ export type Database = {
           last_error?: string | null
           last_sync_added?: number
           last_sync_at?: string | null
+          last_sync_report?: Json | null
+          last_sync_skipped?: number
           last_sync_updated?: number
           status?: string
           updated_at?: string
@@ -2729,6 +2751,8 @@ export type Database = {
           last_error?: string | null
           last_sync_added?: number
           last_sync_at?: string | null
+          last_sync_report?: Json | null
+          last_sync_skipped?: number
           last_sync_updated?: number
           status?: string
           updated_at?: string

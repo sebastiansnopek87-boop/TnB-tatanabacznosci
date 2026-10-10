@@ -104,36 +104,51 @@ export async function fetchUploads(playlist: string): Promise<YtVideo[]> {
   return out;
 }
 
-/** Full sync: new videos are inserted as published, existing ones only get public metadata refreshed (admin "hidden" stays). Keyed by videoId → no duplicates. */
+/** Full sync. Rule: YouTube source fields (thumbnail, date, duration) always refresh; title/description refresh
+ *  ONLY when the admin has not marked them custom (is_custom_title / is_custom_description). Admin status,
+ *  featured, sort_order, category and custom_thumbnail_url are never touched. Keyed by videoId → no duplicates. */
 export async function runSync(actor: string | null) {
   const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
   const now = new Date().toISOString();
   const { data: src } = await db.from("youtube_source").select("*").eq("id", 1).single();
   if (!src?.uploads_playlist) throw new YtError("Najpierw zapisz i sprawdź kanał YouTube.");
   await db.from("youtube_source").update({ last_attempt_at: now }).eq("id", 1);
+  const errors: string[] = [];
   try {
     const vids = await fetchUploads(src.uploads_playlist);
-    const { data: existing } = await db.from("podcast_videos").select("youtube_id, title, description, thumbnail_url, published_at, duration_seconds");
+    const { data: existing } = await db.from("podcast_videos").select("id, youtube_id, title, description, thumbnail_url, published_at, duration_seconds, is_custom_title, is_custom_description");
     const ex = new Map((existing ?? []).map((r) => [r.youtube_id, r]));
-    const toInsert = [] as Array<Record<string, unknown>>;
-    const toUpdate = [] as Array<Record<string, unknown>>;
+    let added = 0, updated = 0, skipped = 0, kept = 0;
     for (const v of vids) {
-      const row = { ...v, published_on: v.published_at.slice(0, 10), source: "youtube", synced_at: now, updated_at: now };
+      const desc = v.description.slice(0, 1000); // DB limit
       const e = ex.get(v.youtube_id);
-      if (!e) toInsert.push({ ...row, status: "published" });
-      else if (e.title !== v.title || e.description !== v.description || e.thumbnail_url !== v.thumbnail_url
-        || e.duration_seconds !== v.duration_seconds || (e.published_at && new Date(e.published_at).toISOString()) !== new Date(v.published_at).toISOString()) toUpdate.push(row);
+      if (!e) {
+        const { error } = await db.from("podcast_videos").insert({ youtube_id: v.youtube_id, title: v.title, description: desc, thumbnail_url: v.thumbnail_url,
+          published_at: v.published_at, published_on: v.published_at.slice(0, 10), duration_seconds: v.duration_seconds, source: "youtube", synced_at: now, updated_at: now, status: "published" });
+        if (error) errors.push(`${v.youtube_id}: ${error.message}`); else added++;
+        continue;
+      }
+      const patch: Record<string, unknown> = {};
+      if (!e.is_custom_title && e.title !== v.title) patch.title = v.title;
+      if (!e.is_custom_description && e.description !== desc) patch.description = desc;
+      if ((e.is_custom_title && e.title !== v.title) || (e.is_custom_description && e.description !== desc)) kept++;
+      if (e.thumbnail_url !== v.thumbnail_url) patch.thumbnail_url = v.thumbnail_url;
+      if (e.duration_seconds !== v.duration_seconds) patch.duration_seconds = v.duration_seconds;
+      if (!e.published_at || new Date(e.published_at).toISOString() !== new Date(v.published_at).toISOString()) { patch.published_at = v.published_at; patch.published_on = v.published_at.slice(0, 10); }
+      if (!Object.keys(patch).length) { skipped++; continue; }
+      const { error } = await db.from("podcast_videos").update({ ...patch, synced_at: now, updated_at: now } as never).eq("id", e.id);
+      if (error) errors.push(`${v.youtube_id}: ${error.message}`); else updated++;
     }
-    if (toInsert.length) { const { error } = await db.from("podcast_videos").insert(toInsert as never); if (error) throw new YtError(`Zapis nowych materiałów: ${error.message}`); }
-    if (toUpdate.length) { const { error } = await db.from("podcast_videos").upsert(toUpdate as never, { onConflict: "youtube_id" }); if (error) throw new YtError(`Aktualizacja materiałów: ${error.message}`); }
     const { count } = await db.from("podcast_videos").select("id", { count: "exact", head: true }).eq("source", "youtube");
-    await db.from("youtube_source").update({ status: "ok", last_error: null, last_sync_at: now, last_sync_added: toInsert.length, last_sync_updated: toUpdate.length, video_count: count ?? 0 }).eq("id", 1);
+    const report = { at: now, fetched: vids.length, added, updated, skipped, kept_custom: kept, errors: errors.slice(0, 20) };
+    await db.from("youtube_source").update({ status: errors.length ? "error" : "ok", last_error: errors.length ? `Błędy zapisu: ${errors.length} (szczegóły w raporcie)` : null,
+      last_sync_at: now, last_sync_added: added, last_sync_updated: updated, last_sync_skipped: skipped, last_sync_report: report, video_count: count ?? 0 }).eq("id", 1);
     const { logEvent } = await import("./admin-auth.server");
-    await logEvent({ type: "youtube_sync", actor, objectKind: "youtube_source", objectId: src.channel_id ?? "1", detail: `+${toInsert.length} / ~${toUpdate.length} / razem ${count ?? 0}` });
-    return { added: toInsert.length, updated: toUpdate.length, total: count ?? 0, fetched: vids.length };
+    await logEvent({ type: "youtube_sync", actor, objectKind: "youtube_source", objectId: src.channel_id ?? "1", result: errors.length ? "failed" : "ok", detail: `+${added} / ~${updated} / =${skipped} / błędy ${errors.length}` });
+    return { added, updated, skipped, keptCustom: kept, errors: errors.length, total: count ?? 0, fetched: vids.length };
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Nieznany błąd";
-    await db.from("youtube_source").update({ status: "error", last_error: msg.slice(0, 500) }).eq("id", 1);
+    await db.from("youtube_source").update({ status: "error", last_error: msg.slice(0, 500), last_sync_report: { at: now, fatal: msg.slice(0, 500) } }).eq("id", 1);
     throw e instanceof YtError ? e : new YtError(msg);
   }
 }

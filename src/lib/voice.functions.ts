@@ -6,7 +6,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertAdmin, logEvent } from "./admin-auth.server";
 import { SUBMISSION_STATUSES } from "./voice";
 
-export type PublicVideo = { id: string; youtube_id: string; title: string; description: string; published_on: string | null; published_at: string | null; thumbnail_url: string | null; duration_seconds: number | null };
+export type PublicVideo = { id: string; youtube_id: string; title: string; description: string; published_on: string | null; published_at: string | null; thumbnail_url: string | null; duration_seconds: number | null; source: "manual" | "youtube"; category: string | null; featured: boolean };
 
 function anonDb() {
   return import("@supabase/supabase-js").then(({ createClient }) => {
@@ -23,15 +23,18 @@ function anonDb() {
   });
 }
 
+/** Published, non-archived videos (YouTube-synced + admin-added). Custom thumbnail wins over the YouTube one. */
 export const listVideos = createServerFn({ method: "GET" }).handler(async () => {
   const { syncIfStale } = await import("./youtube.server");
   await syncIfStale();
   const db = await anonDb();
   const { data, error } = await db.from("podcast_videos")
-    .select("id, youtube_id, title, description, published_on, published_at, thumbnail_url, duration_seconds")
-    .eq("status", "published").order("published_at", { ascending: false, nullsFirst: false }).order("published_on", { ascending: false, nullsFirst: false }).limit(200);
+    .select("id, youtube_id, title, description, published_on, published_at, thumbnail_url, custom_thumbnail_url, duration_seconds, source, category, featured, sort_order")
+    .eq("status", "published").is("archived_at", null)
+    .order("featured", { ascending: false }).order("sort_order", { ascending: true })
+    .order("published_at", { ascending: false, nullsFirst: false }).order("published_on", { ascending: false, nullsFirst: false }).limit(200);
   if (error) throw new Error("Nie udało się pobrać materiałów wideo.");
-  return (data ?? []) as PublicVideo[];
+  return (data ?? []).map(({ custom_thumbnail_url, sort_order: _s, ...r }) => ({ ...r, thumbnail_url: custom_thumbnail_url || r.thumbnail_url })) as PublicVideo[];
 });
 
 /** Public, safe fields only: official channel link for the "Odwiedź kanał" button. */
@@ -132,25 +135,95 @@ export const adminSyncIfStale = createServerFn({ method: "POST" })
     return { ok: true as const };
   });
 
-// ---------- admin: videos (visibility only; content comes from YouTube) ----------
+// ---------- admin: videos (YouTube-synced + manually added) ----------
+export type AdminVideo = PublicVideo & { status: "draft" | "published" | "hidden"; synced_at: string | null; sort_order: number;
+  is_custom_title: boolean; is_custom_description: boolean; custom_thumbnail_url: string | null; archived_at: string | null; yt_thumbnail_url: string | null };
+
 export const adminListVideos = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context);
-    const { data, error } = await context.supabase.from("podcast_videos").select("*").order("published_at", { ascending: false, nullsFirst: false }).limit(300);
+    const { data, error } = await context.supabase.from("podcast_videos").select("*")
+      .order("featured", { ascending: false }).order("sort_order", { ascending: true }).order("published_at", { ascending: false, nullsFirst: false }).limit(300);
     if (error) throw new Error("Nie udało się pobrać materiałów wideo.");
-    return data as Array<PublicVideo & { status: "draft" | "published" | "hidden"; source: "manual" | "youtube"; synced_at: string | null }>;
+    return (data ?? []).map((r) => ({ ...r, yt_thumbnail_url: r.thumbnail_url })) as unknown as AdminVideo[];
   });
 
+/** Status change; "archived" = hidden + archived_at (kept, never public, excluded from "najnowszy"). */
 export const adminSetVideoStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), status: z.enum(["draft", "published", "hidden"]) }).parse(d))
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), status: z.enum(["draft", "published", "hidden", "archived"]) }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { error } = await context.supabase.from("podcast_videos").update({ status: data.status, updated_at: new Date().toISOString() }).eq("id", data.id);
+    const now = new Date().toISOString();
+    const patch = data.status === "archived" ? { status: "hidden", archived_at: now, featured: false } : { status: data.status, archived_at: null };
+    const { error } = await context.supabase.from("podcast_videos").update({ ...patch, updated_at: now }).eq("id", data.id);
     if (error) throw new Error("Nie udało się zmienić statusu.");
     await logEvent({ type: "voice_video_status", actor: context.userId, objectKind: "podcast_video", objectId: data.id, detail: data.status });
     return { ok: true as const };
+  });
+
+const httpsOpt = z.string().trim().max(500).refine((v) => !v || /^https:\/\//.test(v), "Adres musi zaczynać się od https://");
+
+/** Edit metadata. Editing a YouTube title/description marks it custom so the next sync keeps it;
+ *  `reset_title`/`reset_description` give the field back to YouTube. */
+export const adminUpdateVideo = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({
+    id: z.string().uuid(), title: z.string().trim().min(1, "Podaj tytuł").max(200), description: z.string().trim().max(1000, "Maksymalnie 1000 znaków"),
+    custom_thumbnail_url: httpsOpt, category: z.string().trim().max(60), featured: z.boolean(), sort_order: z.number().int().min(-9999).max(9999),
+    published_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).or(z.literal("")),
+    reset_title: z.boolean().default(false), reset_description: z.boolean().default(false),
+  }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { data: cur, error: e1 } = await context.supabase.from("podcast_videos").select("source, title, description, is_custom_title, is_custom_description").eq("id", data.id).single();
+    if (e1 || !cur) throw new Error("Nie znaleziono materiału.");
+    const yt = cur.source === "youtube";
+    const patch: Record<string, unknown> = {
+      custom_thumbnail_url: data.custom_thumbnail_url || null, category: data.category || null, featured: data.featured, sort_order: data.sort_order, updated_at: new Date().toISOString(),
+    };
+    if (yt) {
+      if (data.reset_title) patch.is_custom_title = false;
+      else if (data.title !== cur.title) { patch.title = data.title; patch.is_custom_title = true; }
+      if (data.reset_description) patch.is_custom_description = false;
+      else if (data.description !== cur.description) { patch.description = data.description; patch.is_custom_description = true; }
+    } else {
+      patch.title = data.title; patch.description = data.description;
+      if (data.published_on) { patch.published_on = data.published_on; patch.published_at = `${data.published_on}T12:00:00Z`; }
+    }
+    const { error } = await context.supabase.from("podcast_videos").update(patch as never).eq("id", data.id);
+    if (error) throw new Error(error.message.includes("check") ? "Nieprawidłowe dane (sprawdź adres miniatury)." : "Nie udało się zapisać zmian.");
+    await logEvent({ type: "voice_video_edit", actor: context.userId, objectKind: "podcast_video", objectId: data.id, detail: Object.keys(patch).filter((k) => k !== "updated_at").join(",") });
+    if (yt && (data.reset_title || data.reset_description)) {
+      const { runSync } = await import("./youtube.server");
+      await runSync(context.userId).catch(() => {});
+    }
+    return { ok: true as const };
+  });
+
+/** Admin adds a material manually (a YouTube video, e.g. from a guest's channel). Stored as source=manual. */
+export const adminAddManualVideo = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({
+    url: z.string().trim().min(5).max(300), title: z.string().trim().min(1, "Podaj tytuł").max(200), description: z.string().trim().max(1000),
+    custom_thumbnail_url: httpsOpt, category: z.string().trim().max(60), published_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Podaj datę"),
+    status: z.enum(["draft", "published"]),
+  }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { youtubeId } = await import("./voice");
+    const id = youtubeId(data.url);
+    if (!id) throw new Error("To nie jest prawidłowy link do filmu YouTube. Obecnie ręcznie można dodać tylko film z YouTube.");
+    const { data: dup } = await context.supabase.from("podcast_videos").select("id").eq("youtube_id", id).maybeSingle();
+    if (dup) throw new Error("Ten film jest już w Głosie TNB.");
+    const { data: row, error } = await context.supabase.from("podcast_videos").insert({
+      youtube_id: id, title: data.title, description: data.description, custom_thumbnail_url: data.custom_thumbnail_url || null, category: data.category || null,
+      published_on: data.published_on, published_at: `${data.published_on}T12:00:00Z`, status: data.status, source: "manual",
+    }).select("id").single();
+    if (error || !row) throw new Error("Nie udało się dodać materiału.");
+    await logEvent({ type: "voice_video_add", actor: context.userId, objectKind: "podcast_video", objectId: row.id, detail: data.title.slice(0, 120) });
+    return { id: row.id };
   });
 
 // ---------- public: story submission ----------
