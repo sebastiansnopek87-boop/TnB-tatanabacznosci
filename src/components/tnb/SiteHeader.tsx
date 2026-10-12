@@ -42,7 +42,7 @@ export function SiteHeader() {
           <img
             src={logo.url}
             alt="Tata Na Baczności"
-            className="h-[74px] w-[74px] rounded-full object-cover lg:h-[92px] lg:w-[92px] lg:-mb-6"
+            className="h-[74px] w-[74px] shrink-0 object-contain lg:h-[92px] lg:w-[92px] lg:-mb-6"
           />
           <span className="block [@media(min-width:1280px)_and_(max-width:1599px)]:hidden">
             <span className="block truncate font-display text-[1.05rem] font-semibold uppercase tracking-[0.1em] text-foreground sm:text-[1.45rem] sm:tracking-[0.12em]">

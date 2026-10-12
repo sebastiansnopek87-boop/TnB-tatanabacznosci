@@ -36,7 +36,7 @@ export function SiteFooter() {
       <div className="grid gap-12 px-5 py-14 sm:grid-cols-2 lg:grid-cols-4 lg:gap-10 lg:px-14 lg:py-20">
         <div>
           <Link to="/" className="flex items-center gap-3">
-            <img src={logo.url} alt="Tata Na Baczności" className="h-14 w-14 rounded-full object-cover" />
+            <img src={logo.url} alt="Tata Na Baczności" className="h-14 w-14 shrink-0 object-contain" />
             <span>
               <span className="block font-display text-[1.15rem] font-semibold uppercase tracking-[0.1em] text-foreground">
                 Tata Na Baczności
