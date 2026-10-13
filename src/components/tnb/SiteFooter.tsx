@@ -4,6 +4,7 @@ import logo from "@/assets/logo.png.asset.json";
 import { byOrder, getSiteSettings, visibleSocial } from "@/config/site-settings";
 import { SocialIcon } from "./SocialIcon";
 import { usePlatformSettings } from "@/hooks/use-platform-settings";
+import { useModuleVisibility } from "@/hooks/use-module-visibility";
 
 function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
   const cls = "text-[0.85rem] text-muted-foreground transition-colors hover:text-gold";
@@ -22,6 +23,7 @@ function FooterLink({ href, children }: { href: string; children: React.ReactNod
 }
 
 export function SiteFooter() {
+  const { visiblePath } = useModuleVisibility();
   const s = getSiteSettings();
   const social = visibleSocial(s);
   const { data: ps } = usePlatformSettings();
@@ -49,7 +51,7 @@ export function SiteFooter() {
               {s.footer.brandDescription}
             </p>
           )}
-          {s.footer.aboutLink.visible && (
+          {s.footer.aboutLink.visible && visiblePath(s.footer.aboutLink.href, "menu") && (
             <a
               href={s.footer.aboutLink.href}
               className="mt-5 inline-flex items-center gap-3 text-[0.75rem] uppercase tracking-[0.16em] text-gold transition-colors hover:text-gold-bright"
@@ -64,7 +66,7 @@ export function SiteFooter() {
           <div key={col.id}>
             <h3 className="eyebrow text-gold">{col.title}</h3>
             <ul className="mt-6 flex flex-col gap-3">
-              {byOrder(col.links).map((l) => (
+              {byOrder(col.links).filter(l => visiblePath(l.href, "menu")).map((l) => (
                 <li key={l.id}>
                   <FooterLink href={l.href}>{l.label}</FooterLink>
                 </li>

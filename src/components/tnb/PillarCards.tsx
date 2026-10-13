@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useModuleVisibility } from "@/hooks/use-module-visibility";
 import { ArrowRight, ChevronRight } from "lucide-react";
 import cardHistoria from "@/assets/card-historia.jpg.asset.json";
 import cardBiblioteka from "@/assets/card-biblioteka.jpg.asset.json";
@@ -62,10 +63,11 @@ const TILES = [
 ];
 
 export function PillarCards() {
+  const { visiblePath } = useModuleVisibility();
   return (
     <section className="bg-background px-3 pt-10 pb-16 sm:px-5 lg:px-10 lg:pt-20 lg:pb-28"><div className="mx-auto max-w-[1440px] space-y-4 lg:space-y-6">
       <div className="grid gap-4 lg:grid-cols-3 lg:gap-6">
-        {CARDS.map((card) => (
+        {CARDS.filter(card => visiblePath(card.to)).map((card) => (
           <article
             key={card.num}
             id={card.id}
@@ -104,7 +106,7 @@ export function PillarCards() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3 lg:gap-6">
-        {TILES.map((tile) => (
+        {TILES.filter(tile => visiblePath(tile.to)).map((tile) => (
           <Link
             key={tile.id}
             id={tile.id}

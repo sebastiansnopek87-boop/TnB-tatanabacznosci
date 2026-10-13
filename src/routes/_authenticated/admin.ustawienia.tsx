@@ -10,8 +10,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { ModuleVisibilitySettings } from "@/components/admin/ModuleVisibility";
 
-export const Route = createFileRoute("/_authenticated/admin/ustawienia")({ component: PlatformSettings });
+export const Route = createFileRoute("/_authenticated/admin/ustawienia")({
+  head: () => ({ meta: [
+    { title: "Ustawienia platformy — Tata Na Baczności" },
+    { name: "description", content: "Ustawienia i widoczność modułów Tata Na Baczności." },
+    { property: "og:title", content: "Ustawienia platformy — Tata Na Baczności" },
+    { property: "og:description", content: "Ustawienia i widoczność modułów TNB." },
+    { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
+  ] }), component: PlatformSettings });
 
 type Form = { platform_name: string; contact_email: string; support_email: string; notice_enabled: boolean; maintenance_enabled: boolean; maintenance_message: string; social_youtube: string; social_spotify: string; social_tiktok: string; social_instagram: string };
 
@@ -69,6 +77,7 @@ function PlatformSettings() {
     <form onSubmit={onSubmit} className="max-w-2xl space-y-6">
       <h1 className="font-display text-3xl font-semibold uppercase">Ustawienia platformy</h1>
       {ro && <p className="border border-gold/50 p-3 text-sm">Tryb podglądu. Zmieniać ustawienia może tylko superadministrator.</p>}
+      <ModuleVisibilitySettings value={data.settings.module_visibility} canEdit={!ro} />
 
       <Section title="Podstawowe informacje" hint="Nazwa pojawia się w stopce strony i na ekranie przerwy technicznej.">
         <div className="space-y-2"><Label htmlFor="pn">Nazwa platformy</Label>

@@ -2,14 +2,16 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertAdmin, assertSuperadmin, logEvent } from "./admin-auth.server";
+import { MODULES, type ModuleVisibility } from "@/config/modules";
 
 export type PublicPlatformSettings = {
   platform_name: string; contact_email: string | null; support_email: string | null;
   notice_enabled: boolean; maintenance_enabled: boolean; maintenance_message: string;
   social_youtube: string | null; social_spotify: string | null; social_tiktok: string | null; social_instagram: string | null;
   podcast_layout?: string;
+  module_visibility?: ModuleVisibility;
 };
-const PUBLIC_COLS = "platform_name, contact_email, support_email, notice_enabled, maintenance_enabled, maintenance_message, social_youtube, social_spotify, social_tiktok, social_instagram, podcast_layout";
+const PUBLIC_COLS = "platform_name, contact_email, support_email, notice_enabled, maintenance_enabled, maintenance_message, social_youtube, social_spotify, social_tiktok, social_instagram, podcast_layout, module_visibility";
 
 // Public: only non-sensitive columns, read through the anon SELECT policy.
 export const getPublicPlatformSettings = createServerFn({ method: "GET" }).handler(async () => {
@@ -81,6 +83,19 @@ export const updatePlatformSettings = createServerFn({ method: "POST" })
   });
 
 export type PodcastLayout = "list" | "grid";
+
+export const setModuleVisibility = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ visibility: z.record(z.string(), z.object({ menu: z.boolean(), page: z.boolean() }).strict()) }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertSuperadmin(context, "module_visibility");
+    if (Object.keys(data.visibility).some(key => !MODULES.some(m => m.id === key))) throw new Error("Nieznany moduł.");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("platform_settings").update({ module_visibility: data.visibility, updated_at: new Date().toISOString(), updated_by: context.userId }).eq("id", 1);
+    await logEvent({ type: "settings_update", actor: context.userId, objectKind: "settings", objectId: "module_visibility", result: error ? "failed" : "ok", detail: `Widoczność modułów: ${Object.keys(data.visibility).join(", ")}` });
+    if (error) throw new Error("Nie udało się zapisać widoczności modułów.");
+    return { ok: true as const };
+  });
 
 // Public: layout of the episode list on /podcast.
 export const getPodcastLayout = createServerFn({ method: "GET" }).handler(async () => {
