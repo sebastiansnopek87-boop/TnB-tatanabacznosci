@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Ustawienia marki jak na nagraniu: logo, favicon, obraz udostępniania, podgląd i przesyłanie plików — zakres i ewentualna migracja wymagają akceptacji właściciela
+
 - [x] Podmiana logo TNB: strona, logowanie, favicon i znak wodny nowych PDF
 - [x] Przełączniki widoczności modułów w menu i na stronie — zapis, odczyt po odświeżeniu, ukrycie i przywrócenie Głosu TNB w E2E; mobile bez przepełnienia
 
