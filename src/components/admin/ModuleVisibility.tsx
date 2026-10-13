@@ -7,7 +7,7 @@ import { setModuleVisibility } from "@/lib/platform.functions";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 
-export function ModuleVisibilitySettings({ value, canEdit }: { value?: ModuleVisibility; canEdit: boolean }) {
+export function ModuleVisibilitySettings({ value, canEdit }: { value: ModuleVisibility | undefined; canEdit: boolean }) {
   const [draft, setDraft] = useState<ModuleVisibility>(value ?? {});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
