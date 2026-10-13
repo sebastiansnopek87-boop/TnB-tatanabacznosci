@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import logo from "@/assets/logo.png.asset.json";
+import { useModuleVisibility } from "@/hooks/use-module-visibility";
 
 const NAV = [
   { label: "O TNB", to: "/o-tnb" },
@@ -19,6 +20,7 @@ const NAV = [
 const ACTIVE = "nav-link relative pb-1 text-gold after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:bg-gold";
 
 export function SiteHeader() {
+  const { visiblePath } = useModuleVisibility();
   const [open, setOpen] = useState(false);
   const path = useRouterState({ select: (st) => st.location.pathname });
   const isActive = (to: string) => to !== "/" && (path === to || path.startsWith(to + "/"));
@@ -53,7 +55,7 @@ export function SiteHeader() {
         </Link>
 
         <nav className="ml-4 hidden min-w-0 flex-1 flex-nowrap items-center justify-center gap-4 2xl:gap-6 whitespace-nowrap xl:flex">
-          {NAV.map((item) => (
+          {NAV.filter(item => visiblePath(item.to, "menu")).map((item) => (
             <Link
               key={item.label}
               to={item.to}
@@ -100,7 +102,7 @@ export function SiteHeader() {
       {open && (
         <div className="border-t border-border bg-surface-deep px-5 pb-6 xl:hidden">
           <nav className="flex flex-col">
-            {NAV.map((item) => (
+            {NAV.filter(item => visiblePath(item.to, "menu")).map((item) => (
               <Link
                 key={item.label}
                 to={item.to}

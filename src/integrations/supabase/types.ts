@@ -2301,6 +2301,7 @@ export type Database = {
           id: number
           maintenance_enabled: boolean
           maintenance_message: string
+          module_visibility: Json
           notice_enabled: boolean
           platform_name: string
           podcast_layout: string
@@ -2317,6 +2318,7 @@ export type Database = {
           id?: number
           maintenance_enabled?: boolean
           maintenance_message?: string
+          module_visibility?: Json
           notice_enabled?: boolean
           platform_name?: string
           podcast_layout?: string
@@ -2333,6 +2335,7 @@ export type Database = {
           id?: number
           maintenance_enabled?: boolean
           maintenance_message?: string
+          module_visibility?: Json
           notice_enabled?: boolean
           platform_name?: string
           podcast_layout?: string

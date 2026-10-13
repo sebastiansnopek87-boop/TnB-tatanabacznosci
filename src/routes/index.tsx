@@ -6,6 +6,7 @@ import { QuickNav } from "@/components/tnb/QuickNav";
 import { PillarCards } from "@/components/tnb/PillarCards";
 import { QuoteNewsletter } from "@/components/tnb/QuoteNewsletter";
 import { SiteFooter } from "@/components/tnb/SiteFooter";
+import { useModuleVisibility } from "@/hooks/use-module-visibility";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -30,12 +31,13 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
+  const { visible } = useModuleVisibility();
   return (
     <main className="min-h-screen bg-background">
       <SiteHeader />
       <Hero />
-      <HomeArticles />
-      <HomeConversations />
+      {visible("articles") && <HomeArticles />}
+      {visible("community") && <HomeConversations />}
       <QuickNav />
       <PillarCards />
       <QuoteNewsletter />

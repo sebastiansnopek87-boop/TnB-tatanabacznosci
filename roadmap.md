@@ -1,7 +1,7 @@
 # Roadmap
 
 - [x] Podmiana logo TNB: strona, logowanie, favicon i znak wodny nowych PDF
-- [ ] Przełączniki widoczności modułów w menu i na stronie — oczekuje na zgodę na migrację ustawień
+- [x] Przełączniki widoczności modułów w menu i na stronie — zapis, odczyt po odświeżeniu, ukrycie i przywrócenie Głosu TNB w E2E; mobile bez przepełnienia
 
 - [x] Głos TNB: trwałe ręczne metadane YouTube + raport synchronizacji
 - [x] Głos TNB: zunifikowana lista materiałów, najnowszy materiał, filtry tylko dla realnych źródeł

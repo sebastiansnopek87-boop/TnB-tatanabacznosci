@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useModuleVisibility } from "@/hooks/use-module-visibility";
 import {
   BookOpen,
   Calendar,
@@ -21,10 +22,11 @@ const ITEMS: { icon: LucideIcon; title: string; desc: string; href: string }[] =
 ];
 
 export function QuickNav() {
+  const { visiblePath } = useModuleVisibility();
   return (
     <section className="bg-surface-deep" id="o-tnb">
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7">
-        {ITEMS.map(({ icon: Icon, title, desc, href }, i) => (
+        {ITEMS.filter(item => visiblePath(item.href)).map(({ icon: Icon, title, desc, href }, i) => (
           <Link
             key={title}
             to={href}

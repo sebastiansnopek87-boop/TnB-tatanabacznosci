@@ -1,5 +1,6 @@
 import { ArrowRight } from "lucide-react";
 import hero from "@/assets/hero.jpg.asset.json";
+import { useModuleVisibility } from "@/hooks/use-module-visibility";
 
 const PILLARS = [
   "Sobą",
@@ -12,6 +13,7 @@ const PILLARS = [
 ];
 
 export function Hero() {
+  const { visible } = useModuleVisibility();
   return (
     <section id="start" className="relative isolate overflow-hidden">
       <img
@@ -56,7 +58,7 @@ export function Hero() {
             siebie.
           </p>
 
-          <div className="mt-8 flex flex-wrap items-center gap-4">
+          {visible("about") && <div className="mt-8 flex flex-wrap items-center gap-4">
             <a
               href="/o-tnb"
               className="inline-flex items-center gap-8 bg-gold px-7 py-4 text-[0.75rem] uppercase tracking-[0.16em] text-primary-foreground transition-colors hover:bg-gold-bright"
@@ -64,7 +66,7 @@ export function Hero() {
               Poznaj TNB
               <ArrowRight className="h-4 w-4" strokeWidth={2} />
             </a>
-          </div>
+          </div>}
         </div>
 
         <div className="mt-12 lg:absolute lg:right-14 lg:top-1/2 lg:mt-0 lg:-translate-y-1/2">
@@ -78,7 +80,7 @@ export function Hero() {
               </li>
             ))}
           </ul>
-          <div className="mt-10 border-l-2 border-gold pl-5">
+          {visible("community") && <div className="mt-10 border-l-2 border-gold pl-5">
             <p className="text-[0.8rem] uppercase tracking-[0.14em] text-gold">
               Nie musisz być sam
             </p>
@@ -89,7 +91,7 @@ export function Hero() {
               Dołącz do społeczności
               <ArrowRight className="h-4 w-4 text-gold" strokeWidth={1.75} />
             </a>
-          </div>
+          </div>}
         </div>
       </div>
     </section>

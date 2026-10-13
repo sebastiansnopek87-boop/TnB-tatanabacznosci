@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowRight, Loader2, Lock, Mail } from "lucide-react";
 import banner from "@/assets/banner.jpg.asset.json";
+import { useModuleVisibility } from "@/hooks/use-module-visibility";
 import { NEWSLETTER_CONSENT_TEXT, newsletterSchema, subscribeNewsletter } from "@/lib/newsletter.functions";
 
 const MESSAGES = {
@@ -13,6 +14,7 @@ const MESSAGES = {
 } as const;
 
 export function QuoteNewsletter() {
+  const { visible } = useModuleVisibility();
   const send = useServerFn(subscribeNewsletter);
   const [email, setEmail] = useState("");
   const [consent, setConsent] = useState(false);
@@ -44,7 +46,7 @@ export function QuoteNewsletter() {
   }
 
   return (
-    <section className="grid gap-px bg-border/40 lg:grid-cols-[1.55fr_1fr]">
+    <section className={`grid gap-px bg-border/40 ${visible("newsletter") ? "lg:grid-cols-[1.55fr_1fr]" : ""}`}>
       <div className="relative isolate flex items-center overflow-hidden px-5 py-16 sm:py-20 lg:px-14 lg:py-28">
         <img src={banner.url} alt="Panorama gór o zachodzie słońca" className="absolute inset-0 -z-20 h-full w-full object-cover" />
         <div
@@ -64,7 +66,7 @@ export function QuoteNewsletter() {
         </div>
       </div>
 
-      <div className="flex items-center gap-6 bg-surface-deep px-5 py-14 lg:px-14 lg:py-28">
+      {visible("newsletter") && <div className="flex items-center gap-6 bg-surface-deep px-5 py-14 lg:px-14 lg:py-28">
         <Mail className="hidden h-10 w-10 shrink-0 text-foreground/80 sm:block" strokeWidth={1} />
         <div className="w-full">
           <h2 className="text-[0.82rem] uppercase tracking-[0.16em] text-gold">Bądź na bieżąco</h2>
@@ -113,7 +115,7 @@ export function QuoteNewsletter() {
             <Link to="/newsletter/wypisz" className="underline-offset-4 hover:text-gold hover:underline">Wypisz się</Link>
           </p>
         </div>
-      </div>
+      </div>}
     </section>
   );
 }
