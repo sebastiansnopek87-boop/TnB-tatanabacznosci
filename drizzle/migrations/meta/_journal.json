@@ -379,6 +379,13 @@
       "when": 1791898712368,
       "tag": "0053_platform_module_visibility",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1791999911978,
+      "tag": "0054_brand_settings",
+      "breakpoints": true
     }
   ]
 }

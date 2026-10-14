@@ -2297,6 +2297,7 @@ export type Database = {
       }
       platform_settings: {
         Row: {
+          brand_settings: Json
           contact_email: string | null
           id: number
           maintenance_enabled: boolean
@@ -2314,6 +2315,7 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          brand_settings?: Json
           contact_email?: string | null
           id?: number
           maintenance_enabled?: boolean
@@ -2331,6 +2333,7 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          brand_settings?: Json
           contact_email?: string | null
           id?: number
           maintenance_enabled?: boolean
@@ -2796,6 +2799,7 @@ export type Database = {
           n: number
         }[]
       }
+      brand_settings_are_public: { Args: { _value: Json }; Returns: boolean }
       community_feed: {
         Args: {
           _limit: number
