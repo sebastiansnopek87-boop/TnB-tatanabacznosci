@@ -17,25 +17,24 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { MaintenanceGate } from "@/components/tnb/MaintenanceGate";
 import { ModuleGate } from "@/components/tnb/ModuleGate";
-import { usePlatformSettings } from "@/hooks/use-platform-settings";
+import { useBrand } from "@/hooks/use-brand-settings";
 
 // Applies admin-set branding (favicon, share image, homepage SEO) to the document head.
 // Favicon and og:image point to /api/public/brand/<file>, which serves the image only
 // when platform_settings.brand_settings references it.
 function BrandHead() {
-  const { data } = usePlatformSettings();
-  const bs = data?.brand_settings as Record<string, string> | undefined;
+  const brand = useBrand();
   const path = useRouterState({ select: (s) => s.location.pathname });
   useEffect(() => {
-    if (!bs || typeof bs !== "object") return;
+    if (!brand) return;
     const src = (v: string) => `/api/public/brand/${v.replace(/^brand\//, "")}`;
-    if (bs.favicon) {
+    if (brand.favicon) {
       let link = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
       if (!link) { link = document.createElement("link"); link.rel = "icon"; document.head.appendChild(link); }
-      link.href = src(bs.favicon);
+      link.href = src(brand.favicon);
     }
-    if (bs.og_image) {
-      const abs = new URL(src(bs.og_image), window.location.origin).href;
+    if (brand.og_image) {
+      const abs = new URL(src(brand.og_image), window.location.origin).href;
       if (!document.querySelector('meta[property="og:image"]')) {
         const add = (attr: string, key: string, content: string) => {
           const m = document.createElement("meta");
@@ -48,16 +47,16 @@ function BrandHead() {
       }
     }
     if (path === "/") {
-      if (bs.public_title) {
-        document.title = bs.public_title;
-        document.querySelector('meta[property="og:title"]')?.setAttribute("content", bs.public_title);
+      if (brand.public_title) {
+        document.title = brand.public_title;
+        document.querySelector('meta[property="og:title"]')?.setAttribute("content", brand.public_title);
       }
-      if (bs.public_description) {
-        document.querySelector('meta[name="description"]')?.setAttribute("content", bs.public_description);
-        document.querySelector('meta[property="og:description"]')?.setAttribute("content", bs.public_description);
+      if (brand.public_description) {
+        document.querySelector('meta[name="description"]')?.setAttribute("content", brand.public_description);
+        document.querySelector('meta[property="og:description"]')?.setAttribute("content", brand.public_description);
       }
     }
-  }, [bs, path]);
+  }, [brand, path]);
   return null;
 }
 
