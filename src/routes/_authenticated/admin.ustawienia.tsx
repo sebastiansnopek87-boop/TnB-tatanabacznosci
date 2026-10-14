@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { ModuleVisibilitySettings } from "@/components/admin/ModuleVisibility";
+import { BrandSettings } from "@/components/admin/BrandSettings";
 
 export const Route = createFileRoute("/_authenticated/admin/ustawienia")({
   head: () => ({ meta: [
@@ -77,6 +78,8 @@ function PlatformSettings() {
     <form onSubmit={onSubmit} className="max-w-2xl space-y-6">
       <h1 className="font-display text-3xl font-semibold uppercase">Ustawienia platformy</h1>
       {ro && <p className="border border-gold/50 p-3 text-sm">Tryb podglądu. Zmieniać ustawienia może tylko superadministrator.</p>}
+      <BrandSettings canEdit={!ro} />
+
       <ModuleVisibilitySettings value={data.settings.module_visibility} canEdit={!ro} />
 
       <Section title="Podstawowe informacje" hint="Nazwa pojawia się w stopce strony i na ekranie przerwy technicznej.">
