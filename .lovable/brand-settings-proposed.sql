@@ -1,4 +1,4 @@
-CREATE FUNCTION public.brand_settings_are_public(_value jsonb)
+CREATE OR REPLACE FUNCTION public.brand_settings_are_public(_value jsonb)
 RETURNS boolean
 LANGUAGE sql
 IMMUTABLE
@@ -38,8 +38,13 @@ GRANT EXECUTE ON FUNCTION public.brand_settings_are_public(jsonb)
   TO anon, authenticated, service_role;
 
 ALTER TABLE public.platform_settings
-  ADD COLUMN brand_settings jsonb NOT NULL DEFAULT '{}'::jsonb
-  CONSTRAINT platform_settings_brand_public_only
+  ADD COLUMN IF NOT EXISTS brand_settings jsonb NOT NULL DEFAULT '{}'::jsonb;
+
+-- Constraint applied separately so a partial run never errors on an existing constraint
+ALTER TABLE public.platform_settings
+  DROP CONSTRAINT IF EXISTS platform_settings_brand_public_only;
+ALTER TABLE public.platform_settings
+  ADD CONSTRAINT platform_settings_brand_public_only
   CHECK (public.brand_settings_are_public(brand_settings));
 
 GRANT SELECT (brand_settings) ON public.platform_settings
