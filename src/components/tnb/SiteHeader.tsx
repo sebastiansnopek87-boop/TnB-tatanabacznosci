@@ -14,7 +14,7 @@ const HEADER_SIZES: Record<string, string> = {
   large: "h-[92px] w-[92px] shrink-0 object-contain lg:h-[112px] lg:w-[112px] lg:-mb-8",
   very_large: "h-[110px] w-[110px] shrink-0 object-contain lg:h-[132px] lg:w-[132px] lg:-mb-10",
 };
-const DEFAULT_HEADER = HEADER_SIZES.medium;
+const DEFAULT_HEADER = HEADER_SIZES["medium"];
 
 const NAV = [
   { label: "O TNB", to: "/o-tnb" },

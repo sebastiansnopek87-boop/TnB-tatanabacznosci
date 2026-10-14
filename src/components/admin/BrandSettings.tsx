@@ -12,7 +12,11 @@ import { Textarea } from "@/components/ui/textarea";
 
 // Branding = public data only: logo, favicon, og_image, header_image, header_size,
 // site_name, public_title, public_description, site_url. Secrets stay in the secure store.
-type Form = Record<string, string>;
+type Form = {
+  logo: string; favicon: string; og_image: string; header_image: string;
+  header_size: string; site_name: string; public_title: string; public_description: string; site_url: string;
+};
+const FORM_KEYS = ["logo", "favicon", "og_image", "header_image", "header_size", "site_name", "public_title", "public_description", "site_url"] as const;
 
 function putFile(bucket: string, path: string, token: string, file: File) {
   const url = `${import.meta.env["VITE_SUPABASE_URL"]}/storage/v1/object/upload/sign/${bucket}/${path.split("/").map(encodeURIComponent).join("/")}?token=${encodeURIComponent(token)}`;
@@ -63,13 +67,13 @@ export function BrandSettings({ canEdit }: { canEdit: boolean }) {
 
   if (error) return <p className="text-sm text-destructive">{errMsg(error)}</p>;
   if (data && !f) {
-    const s: Form = {};
-    for (const k of ["logo", "favicon", "og_image", "header_image", "header_size", "site_name", "public_title", "public_description", "site_url"]) s[k] = data.settings[k] ?? "";
+    const s = {} as Form;
+    for (const k of FORM_KEYS) s[k] = data.settings[k] ?? "";
     setF(s);
   }
   if (!data || !f) return <p className="text-sm text-muted-foreground">Ładowanie…</p>;
 
-  const set = (k: string, v: string) => setF({ ...f, [k]: v });
+  const set = (k: keyof Form, v: string) => setF({ ...f, [k]: v });
 
   async function upload(key: string, file: File) {
     setBusy(true);
@@ -77,7 +81,7 @@ export function BrandSettings({ canEdit }: { canEdit: boolean }) {
       const t = await start({ data: { name: file.name, type: file.type, size: file.size } });
       await putFile(t.bucket, t.path, t.token, file);
       await fin({ data: { path: t.path } });
-      setF((p) => ({ ...p!, [key]: t.path }));
+      setF((p) => ({ ...p!, [key]: t.path } as Form));
       setPreviews((p) => ({ ...p, [key]: URL.createObjectURL(file) }));
       toast.success("Plik gotowy. Zapisz zmiany, aby zastosować.");
     } catch (e) { toast.error(errMsg(e)); }
