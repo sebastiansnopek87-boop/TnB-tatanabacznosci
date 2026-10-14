@@ -5,6 +5,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -16,6 +17,49 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { MaintenanceGate } from "@/components/tnb/MaintenanceGate";
 import { ModuleGate } from "@/components/tnb/ModuleGate";
+import { usePlatformSettings } from "@/hooks/use-platform-settings";
+
+// Applies admin-set branding (favicon, share image, homepage SEO) to the document head.
+// Favicon and og:image point to /api/public/brand/<file>, which serves the image only
+// when platform_settings.brand_settings references it.
+function BrandHead() {
+  const { data } = usePlatformSettings();
+  const bs = data?.brand_settings as Record<string, string> | undefined;
+  const path = useRouterState({ select: (s) => s.location.pathname });
+  useEffect(() => {
+    if (!bs || typeof bs !== "object") return;
+    const src = (v: string) => `/api/public/brand/${v.replace(/^brand\//, "")}`;
+    if (bs.favicon) {
+      let link = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+      if (!link) { link = document.createElement("link"); link.rel = "icon"; document.head.appendChild(link); }
+      link.href = src(bs.favicon);
+    }
+    if (bs.og_image) {
+      const abs = new URL(src(bs.og_image), window.location.origin).href;
+      if (!document.querySelector('meta[property="og:image"]')) {
+        const add = (attr: string, key: string, content: string) => {
+          const m = document.createElement("meta");
+          m.setAttribute(attr, key);
+          m.setAttribute("content", content);
+          document.head.appendChild(m);
+        };
+        add("property", "og:image", abs);
+        add("name", "twitter:image", abs);
+      }
+    }
+    if (path === "/") {
+      if (bs.public_title) {
+        document.title = bs.public_title;
+        document.querySelector('meta[property="og:title"]')?.setAttribute("content", bs.public_title);
+      }
+      if (bs.public_description) {
+        document.querySelector('meta[name="description"]')?.setAttribute("content", bs.public_description);
+        document.querySelector('meta[property="og:description"]')?.setAttribute("content", bs.public_description);
+      }
+    }
+  }, [bs, path]);
+  return null;
+}
 
 function NotFoundComponent() {
   return (
@@ -141,6 +185,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <BrandHead />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <MaintenanceGate><ModuleGate><Outlet /></ModuleGate></MaintenanceGate>
       <Toaster position="bottom-right" />
