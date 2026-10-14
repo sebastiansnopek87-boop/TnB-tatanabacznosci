@@ -6,6 +6,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import logo from "@/assets/logo.png.asset.json";
 import { useModuleVisibility } from "@/hooks/use-module-visibility";
+import { brandSrc, useBrand } from "@/hooks/use-brand-settings";
+
+const HEADER_SIZES: Record<string, string> = {
+  small: "h-12 w-12 shrink-0 object-contain",
+  medium: "h-[74px] w-[74px] shrink-0 object-contain lg:h-[92px] lg:w-[92px] lg:-mb-6",
+  large: "h-[92px] w-[92px] shrink-0 object-contain lg:h-[112px] lg:w-[112px] lg:-mb-8",
+  very_large: "h-[110px] w-[110px] shrink-0 object-contain lg:h-[132px] lg:w-[132px] lg:-mb-10",
+};
+const DEFAULT_HEADER = HEADER_SIZES.medium;
 
 const NAV = [
   { label: "O TNB", to: "/o-tnb" },
@@ -21,12 +30,15 @@ const ACTIVE = "nav-link relative pb-1 text-gold after:absolute after:inset-x-0 
 
 export function SiteHeader() {
   const { visiblePath } = useModuleVisibility();
+  const brand = useBrand();
   const [open, setOpen] = useState(false);
   const path = useRouterState({ select: (st) => st.location.pathname });
   const isActive = (to: string) => to !== "/" && (path === to || path.startsWith(to + "/"));
   const auth = useAuth();
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const imgSrc = (brand?.header_image && brandSrc(brand.header_image)) || (brand?.logo && brandSrc(brand.logo)) || logo.url;
+  const imgCls = brand?.header_size ? HEADER_SIZES[brand.header_size] ?? DEFAULT_HEADER : DEFAULT_HEADER;
   async function signOut() {
     setOpen(false);
     await qc.cancelQueries();
@@ -42,9 +54,9 @@ export function SiteHeader() {
       <div className="flex h-[86px] items-center gap-6 px-5 lg:px-10">
         <Link to="/" aria-label="Tata Na Baczności — strona główna" className="flex min-w-0 items-center gap-3 lg:gap-4">
           <img
-            src={logo.url}
+            src={imgSrc}
             alt="Tata Na Baczności"
-            className="h-[74px] w-[74px] shrink-0 object-contain lg:h-[92px] lg:w-[92px] lg:-mb-6"
+            className={imgCls}
           />
           <span className="block [@media(min-width:1280px)_and_(max-width:1599px)]:hidden">
             <span className="block truncate font-display text-[1.05rem] font-semibold uppercase tracking-[0.1em] text-foreground sm:text-[1.45rem] sm:tracking-[0.12em]">
