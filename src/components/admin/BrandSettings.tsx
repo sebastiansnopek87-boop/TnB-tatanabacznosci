@@ -105,7 +105,7 @@ export function BrandSettings({ canEdit }: { canEdit: boolean }) {
   }
 
   const ro = !canEdit || busy || saving;
-  const dirty = (k: string) => f[k] !== (data.settings[k] ?? "");
+  const dirty = (k: keyof Form) => f[k] !== (data.settings[k] ?? "");
 
   return (
     <section className="space-y-6 border border-border/60 p-4 sm:p-5">
@@ -116,16 +116,16 @@ export function BrandSettings({ canEdit }: { canEdit: boolean }) {
 
       <div className="grid gap-6 sm:grid-cols-2">
         <ImageField label="Logo strony" hint="Pokazywane w nagłówku, stopce i na ekranie logowania. PNG, JPG, WEBP, maks. 2 MB."
-          accept=".png,.jpg,.jpeg,.webp" value={f.logo} preview={previews.logo ?? null} busy={busy} canEdit={canEdit}
+          accept=".png,.jpg,.jpeg,.webp" value={f.logo} preview={previews["logo"] ?? null} busy={busy} canEdit={canEdit}
           onPick={(file) => void upload("logo", file)} onClear={() => set("logo", "")} />
         <ImageField label="Ikona przeglądarki (favicon)" hint="Mały znak na karcie przeglądarki. Najlepiej kwadrat 64×64 lub 512×512. PNG albo ICO."
-          accept=".png,.ico" value={f.favicon} preview={previews.favicon ?? null} busy={busy} canEdit={canEdit}
+          accept=".png,.ico" value={f.favicon} preview={previews["favicon"] ?? null} busy={busy} canEdit={canEdit}
           onPick={(file) => void upload("favicon", file)} onClear={() => set("favicon", "")} />
         <ImageField label="Obraz udostępowania" hint="Pokazywany przy udostępnianiu linku w mediach społecznościowych. Zalecane proporcje 1200×630. PNG, JPG, WEBP."
-          accept=".png,.jpg,.jpeg,.webp" value={f.og_image} preview={previews.og_image ?? null} busy={busy} canEdit={canEdit}
+          accept=".png,.jpg,.jpeg,.webp" value={f.og_image} preview={previews["og_image"] ?? null} busy={busy} canEdit={canEdit}
           onPick={(file) => void upload("og_image", file)} onClear={() => set("og_image", "")} />
         <ImageField label="Obraz w nagłówku" hint="Opcjonalny znak w nagłówku zamiast logo. Rozmiar wybierasz poniżej."
-          accept=".png,.jpg,.jpeg,.webp" value={f.header_image} preview={previews.header_image ?? null} busy={busy} canEdit={canEdit}
+          accept=".png,.jpg,.jpeg,.webp" value={f.header_image} preview={previews["header_image"] ?? null} busy={busy} canEdit={canEdit}
           onPick={(file) => void upload("header_image", file)} onClear={() => set("header_image", "")} />
       </div>
 
