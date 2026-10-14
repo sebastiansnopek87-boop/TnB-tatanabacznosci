@@ -1,6 +1,7 @@
 # Roadmap
 
-- [ ] Ustawienia marki jak na nagraniu: logo, favicon, obraz udostępniania, podgląd i przesyłanie plików — zakres i ewentualna migracja wymagają akceptacji właściciela
+- [ ] Finalny SQL jednej migracji brand_settings: wyłącznie publiczne pola, ścisła walidacja; wykonanie czeka na zatwierdzenie SQL przez właściciela
+- [ ] Ustawienia marki jak na nagraniu: logo, favicon, obraz udostępniania, podgląd i przesyłanie plików — wdrożenie po zatwierdzeniu finalnego SQL
 
 - [x] Podmiana logo TNB: strona, logowanie, favicon i znak wodny nowych PDF
 - [x] Przełączniki widoczności modułów w menu i na stronie — zapis, odczyt po odświeżeniu, ukrycie i przywrócenie Głosu TNB w E2E; mobile bez przepełnienia
