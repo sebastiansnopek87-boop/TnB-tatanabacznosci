@@ -10,8 +10,9 @@ export type PublicPlatformSettings = {
   social_youtube: string | null; social_spotify: string | null; social_tiktok: string | null; social_instagram: string | null;
   podcast_layout?: string;
   module_visibility?: ModuleVisibility;
+  brand_settings?: Record<string, string>;
 };
-const PUBLIC_COLS = "platform_name, contact_email, support_email, notice_enabled, maintenance_enabled, maintenance_message, social_youtube, social_spotify, social_tiktok, social_instagram, podcast_layout, module_visibility";
+const PUBLIC_COLS = "platform_name, contact_email, support_email, notice_enabled, maintenance_enabled, maintenance_message, social_youtube, social_spotify, social_tiktok, social_instagram, podcast_layout, module_visibility, brand_settings";
 
 // Public: only non-sensitive columns, read through the anon SELECT policy.
 export const getPublicPlatformSettings = createServerFn({ method: "GET" }).handler(async () => {

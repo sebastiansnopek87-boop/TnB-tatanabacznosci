@@ -65,6 +65,7 @@ import { Route as AuthenticatedAdminZdarzeniaRouteImport } from './routes/_authe
 import { Route as AuthenticatedAdminZgloszeniaGlosRouteImport } from './routes/_authenticated/admin.zgloszenia-glos'
 import { Route as SpotkaniaRezerwacjaTokenRouteImport } from './routes/spotkania.rezerwacja.$token'
 import { Route as SpotkaniaZgloszenieTokenRouteImport } from './routes/spotkania.zgloszenie.$token'
+import { Route as ApiPublicBrandFileRouteImport } from './routes/api/public/brand.$file'
 import { Route as ApiPublicCronConsultRemindersRouteImport } from './routes/api/public/cron/consult-reminders'
 import { Route as ApiPublicCronInstagramSyncRouteImport } from './routes/api/public/cron/instagram-sync'
 import { Route as ApiPublicInstagramCallbackRouteImport } from './routes/api/public/instagram/callback'
@@ -382,6 +383,11 @@ const SpotkaniaZgloszenieTokenRoute =
     path: '/spotkania/zgloszenie/$token',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicBrandFileRoute = ApiPublicBrandFileRouteImport.update({
+  id: '/api/public/brand/$file',
+  path: '/api/public/brand/$file',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicCronConsultRemindersRoute =
   ApiPublicCronConsultRemindersRouteImport.update({
     id: '/api/public/cron/consult-reminders',
@@ -499,6 +505,7 @@ export interface FileRoutesByFullPath {
   '/spotkania/rezerwacja/$token': typeof SpotkaniaRezerwacjaTokenRoute
   '/spotkania/zgloszenie/$token': typeof SpotkaniaZgloszenieTokenRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/api/public/brand/$file': typeof ApiPublicBrandFileRoute
   '/api/public/cron/consult-reminders': typeof ApiPublicCronConsultRemindersRoute
   '/api/public/cron/instagram-sync': typeof ApiPublicCronInstagramSyncRoute
   '/api/public/instagram/callback': typeof ApiPublicInstagramCallbackRoute
@@ -566,6 +573,7 @@ export interface FileRoutesByTo {
   '/spotkania/rezerwacja/$token': typeof SpotkaniaRezerwacjaTokenRoute
   '/spotkania/zgloszenie/$token': typeof SpotkaniaZgloszenieTokenRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/api/public/brand/$file': typeof ApiPublicBrandFileRoute
   '/api/public/cron/consult-reminders': typeof ApiPublicCronConsultRemindersRoute
   '/api/public/cron/instagram-sync': typeof ApiPublicCronInstagramSyncRoute
   '/api/public/instagram/callback': typeof ApiPublicInstagramCallbackRoute
@@ -636,6 +644,7 @@ export interface FileRoutesById {
   '/spotkania/rezerwacja/$token': typeof SpotkaniaRezerwacjaTokenRoute
   '/spotkania/zgloszenie/$token': typeof SpotkaniaZgloszenieTokenRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/api/public/brand/$file': typeof ApiPublicBrandFileRoute
   '/api/public/cron/consult-reminders': typeof ApiPublicCronConsultRemindersRoute
   '/api/public/cron/instagram-sync': typeof ApiPublicCronInstagramSyncRoute
   '/api/public/instagram/callback': typeof ApiPublicInstagramCallbackRoute
@@ -706,6 +715,7 @@ export interface FileRouteTypes {
     | '/spotkania/rezerwacja/$token'
     | '/spotkania/zgloszenie/$token'
     | '/admin/'
+    | '/api/public/brand/$file'
     | '/api/public/cron/consult-reminders'
     | '/api/public/cron/instagram-sync'
     | '/api/public/instagram/callback'
@@ -773,6 +783,7 @@ export interface FileRouteTypes {
     | '/spotkania/rezerwacja/$token'
     | '/spotkania/zgloszenie/$token'
     | '/admin'
+    | '/api/public/brand/$file'
     | '/api/public/cron/consult-reminders'
     | '/api/public/cron/instagram-sync'
     | '/api/public/instagram/callback'
@@ -842,6 +853,7 @@ export interface FileRouteTypes {
     | '/spotkania/rezerwacja/$token'
     | '/spotkania/zgloszenie/$token'
     | '/_authenticated/admin/'
+    | '/api/public/brand/$file'
     | '/api/public/cron/consult-reminders'
     | '/api/public/cron/instagram-sync'
     | '/api/public/instagram/callback'
@@ -885,6 +897,7 @@ export interface RootRouteChildren {
   SpotkaniaIndexRoute: typeof SpotkaniaIndexRoute
   SpotkaniaRezerwacjaTokenRoute: typeof SpotkaniaRezerwacjaTokenRoute
   SpotkaniaZgloszenieTokenRoute: typeof SpotkaniaZgloszenieTokenRoute
+  ApiPublicBrandFileRoute: typeof ApiPublicBrandFileRoute
   ApiPublicCronConsultRemindersRoute: typeof ApiPublicCronConsultRemindersRoute
   ApiPublicCronInstagramSyncRoute: typeof ApiPublicCronInstagramSyncRoute
   ApiPublicInstagramCallbackRoute: typeof ApiPublicInstagramCallbackRoute
@@ -1292,6 +1305,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SpotkaniaZgloszenieTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/brand/$file': {
+      id: '/api/public/brand/$file'
+      path: '/api/public/brand/$file'
+      fullPath: '/api/public/brand/$file'
+      preLoaderRoute: typeof ApiPublicBrandFileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/cron/consult-reminders': {
       id: '/api/public/cron/consult-reminders'
       path: '/api/public/cron/consult-reminders'
@@ -1475,6 +1495,7 @@ const rootRouteChildren: RootRouteChildren = {
   SpotkaniaIndexRoute: SpotkaniaIndexRoute,
   SpotkaniaRezerwacjaTokenRoute: SpotkaniaRezerwacjaTokenRoute,
   SpotkaniaZgloszenieTokenRoute: SpotkaniaZgloszenieTokenRoute,
+  ApiPublicBrandFileRoute: ApiPublicBrandFileRoute,
   ApiPublicCronConsultRemindersRoute: ApiPublicCronConsultRemindersRoute,
   ApiPublicCronInstagramSyncRoute: ApiPublicCronInstagramSyncRoute,
   ApiPublicInstagramCallbackRoute: ApiPublicInstagramCallbackRoute,
