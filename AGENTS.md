@@ -17,7 +17,7 @@
 - Module presentation flags live in platform_settings.module_visibility and use src/config/modules.ts for path matching; public menu/home sections and ModuleGate consume the same flags, never admin navigation or purchase delivery. Why: one visibility source without changing entitlements or deleting content.
 - Brand images use the shared logo asset pointer; the favicon and embedded PDF watermark are resized exports of the same owner-supplied source. Why: preserve one consistent logo without runtime PDF asset downloads.
 - Client sign-in state: only via useAuth() (src/hooks/use-auth.ts, one onAuthStateChange store); no per-component getUser/getSession copies for UI state. Why: header/pages stay consistent.
-- Public header search reuses existing published-content reads and module visibility in HeaderSearch; no separate catalogue or write endpoints. Why: consistent access rules and no duplicated content.
+- HeaderSearch reuses published reads and visibility; why: one catalogue. Main NAV uses a native modal dialog portaled to body with unchanged NAV/useAuth/visibility; why: top-layer isolation and focus containment.
 - E-mail notifications: every send goes through dispatch() in src/lib/notifications.server.ts (registry src/lib/notify/, overrides in email_templates/notification_rules, history in email_notification_log with idempotency_key); live delivery only via the deliver() adapter. Why: one engine, test mode and retries without touching templates.
 
 - AI features call Lovable AI Gateway only from *.server.ts helpers (src/lib/ai/), streamed and consumed server-side; why: key stays on server, one place for model/error handling.
