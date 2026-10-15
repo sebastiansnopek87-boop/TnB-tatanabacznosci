@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Menu, Search, UserRound, X } from "lucide-react";
+import { ArrowUpRight, Menu, Search, UserRound, X } from "lucide-react";
+import { createPortal } from "react-dom";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,8 +29,6 @@ const NAV = [
   { label: "Spotkania", to: "/spotkania" },
 ] as const;
 
-const ACTIVE = "nav-link relative pb-1 text-gold after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:bg-gold";
-
 export function SiteHeader() {
   const { visiblePath } = useModuleVisibility();
   const brand = useBrand();
@@ -37,6 +36,25 @@ export function SiteHeader() {
   const [searchOpen, setSearchOpen] = useState(false);
   const menuRef = useRef<HTMLButtonElement>(null);
   const searchRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    if (!open || !mounted) return;
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const bodyOverflow = document.body.style.overflow;
+    const htmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+    dialog.showModal();
+    return () => {
+      dialog.close();
+      document.body.style.overflow = bodyOverflow;
+      document.documentElement.style.overflow = htmlOverflow;
+      menuRef.current?.focus({ preventScroll: true });
+    };
+  }, [open, mounted]);
   const path = useRouterState({ select: (st) => st.location.pathname });
   useEffect(() => { setOpen(false); setSearchOpen(false); }, [path]);
   useEffect(() => {
@@ -118,32 +136,51 @@ export function SiteHeader() {
         </div>
       </div>
 
-      {open && (
-        <div id="tnb-header-menu" className="max-h-[calc(100dvh-86px)] overflow-y-auto border-t border-border bg-surface-deep/95 px-5 pb-6">
-          <nav aria-label="Menu główne" className="ml-auto flex max-w-xl flex-col">
-            {NAV.filter(item => visiblePath(item.to, "menu")).map((item) => (
-              <Link
-                key={item.label}
-                to={item.to}
-                
-                onClick={() => setOpen(false)}
-                className={`nav-link border-b border-border/60 py-4 ${isActive(item.to) ? "text-gold" : ""}`}
-              >
-                {item.label}
+      {mounted && open && createPortal(
+        <dialog ref={dialogRef} id="tnb-header-menu" aria-labelledby="tnb-menu-title"
+          onCancel={(event) => { event.preventDefault(); setOpen(false); }}
+          className="tnb-menu fixed inset-0 m-0 h-dvh max-h-none w-full max-w-none overflow-y-auto border-0 bg-menu-background p-0 text-foreground">
+          <div className="mx-auto flex min-h-full max-w-[1440px] flex-col px-5 sm:px-10 lg:px-16">
+            <div className="grid min-h-[100px] grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b border-menu-gold/20 sm:min-h-[120px]">
+              <Link to="/" onClick={() => setOpen(false)} aria-label="Tata Na Baczności — strona główna" className="flex min-w-0 items-center gap-3">
+                <img src={imgSrc} alt="Tata Na Baczności" className="h-16 w-16 shrink-0 object-contain sm:h-20 sm:w-20" />
+                <span className="text-copper min-w-0 break-words font-display text-base font-bold uppercase leading-tight sm:text-2xl">{brand?.site_name || "Tata Na Baczności"}</span>
               </Link>
-            ))}
-          </nav>
-          <div className="ml-auto mt-5 flex max-w-xl gap-3 lg:hidden">
-            {auth.status === "signed-out" && (<>
-              <Link to="/auth" onClick={() => setOpen(false)} className={`flex-1 py-3 text-center ${outline}`}>Zaloguj się</Link>
-              <Link to="/auth" search={{ tryb: "rejestracja" }} onClick={() => setOpen(false)} className={`flex-1 py-3 text-center ${solid}`}>Dołącz</Link>
-            </>)}
-            {auth.status === "signed-in" && (<>
-              <Button variant="ghost" type="button" onClick={signOut} className={`h-auto flex-1 rounded-none py-3 text-center ${outline}`}>Wyloguj</Button>
-              <Link to="/moje-tnb" onClick={() => setOpen(false)} className={`flex-1 py-3 text-center ${solid}`}>Moje TNB</Link>
-            </>)}
+              <Button autoFocus variant="ghost" size="icon" aria-label="Zamknij menu" title="Zamknij menu" onClick={() => setOpen(false)} className="size-11 shrink-0 text-menu-gold hover:text-foreground focus-visible:ring-menu-gold"><X className="size-6" strokeWidth={1.5} /></Button>
+            </div>
+            <div className="flex flex-1 flex-col justify-center py-8 sm:py-12 lg:py-16">
+              <p id="tnb-menu-title" className="mb-5 text-xs uppercase text-menu-gold sm:mb-8">Odkryj TNB</p>
+              <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_260px] lg:gap-16">
+                <nav aria-label="Menu główne" className="grid min-w-0 content-start gap-x-10 sm:grid-cols-2">
+                  {NAV.filter(item => visiblePath(item.to, "menu")).map((item, index) => (
+                    <Link key={item.label} to={item.to} onClick={() => setOpen(false)} aria-current={isActive(item.to) ? "page" : undefined}
+                      className={`group grid min-h-[70px] min-w-0 grid-cols-[24px_minmax(0,1fr)_20px] items-center gap-3 border-b border-menu-gold/20 py-4 transition-colors hover:bg-menu-gold/5 hover:text-menu-gold focus-visible:bg-menu-gold/5 focus-visible:outline-2 focus-visible:outline-menu-gold focus-visible:outline-offset-4 sm:min-h-[100px] ${isActive(item.to) ? "text-menu-gold" : "text-foreground"}`}>
+                      <span aria-hidden="true" className="font-sans text-[11px] text-menu-gold/70">{String(index + 1).padStart(2, "0")}</span>
+                      <span className="min-w-0 break-words font-display text-[1.65rem] font-medium leading-tight sm:text-[2rem] xl:text-[2.4rem]">{item.label}</span>
+                      <ArrowUpRight aria-hidden="true" className="size-4 shrink-0 text-menu-gold/50 transition-colors group-hover:text-menu-gold group-focus-visible:text-menu-gold" strokeWidth={1.25} />
+                    </Link>
+                  ))}
+                </nav>
+                <section aria-labelledby="tnb-account-title" className="min-w-0 border-t border-menu-gold/20 pt-6 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-4">
+                  <UserRound aria-hidden="true" className="mb-4 size-5 text-menu-gold" strokeWidth={1.25} />
+                  <h2 id="tnb-account-title" className="mb-6 font-display text-3xl">Moje TNB</h2>
+                  <div className="flex flex-col items-stretch gap-3">
+                    {auth.status === "loading" && <p role="status" className="text-sm text-muted-foreground">Ładowanie…</p>}
+                    {auth.status === "signed-out" && (<>
+                      <Link to="/auth" onClick={() => setOpen(false)} className="border-b border-menu-gold/30 py-3 text-sm transition-colors hover:text-menu-gold focus-visible:outline-2 focus-visible:outline-menu-gold">Zaloguj się <ArrowUpRight aria-hidden="true" className="float-right size-4 text-menu-gold" /></Link>
+                      <Link to="/auth" search={{ tryb: "rejestracja" }} onClick={() => setOpen(false)} className="border-b border-menu-gold/30 py-3 text-sm text-menu-gold transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-menu-gold">Dołącz <ArrowUpRight aria-hidden="true" className="float-right size-4" /></Link>
+                    </>)}
+                    {auth.status === "signed-in" && (<>
+                      <Link to="/moje-tnb" onClick={() => setOpen(false)} className="border-b border-menu-gold/30 py-3 text-sm text-menu-gold transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-menu-gold">Moje TNB <ArrowUpRight aria-hidden="true" className="float-right size-4" /></Link>
+                      <Button variant="ghost" type="button" onClick={signOut} className="h-auto justify-start rounded-none px-0 py-3 text-sm text-muted-foreground hover:bg-transparent hover:text-menu-gold">Wyloguj</Button>
+                    </>)}
+                  </div>
+                </section>
+              </div>
+            </div>
+            <div className="border-t border-menu-gold/20 py-6 text-[11px] uppercase text-menu-gold/60">Ojcostwo to służba</div>
           </div>
-        </div>
+        </dialog>, document.body
       )}
       {searchOpen && <div id="tnb-header-search" className="max-h-[calc(100dvh-86px)] overflow-y-auto border-t border-border bg-surface-deep/95"><HeaderSearch onClose={() => setSearchOpen(false)} /></div>}
     </header>
