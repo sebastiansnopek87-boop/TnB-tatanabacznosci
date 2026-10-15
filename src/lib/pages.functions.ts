@@ -3,6 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { isSafeHref, type PageDraft, type PageVersion, type PublicPage } from "./pages";
+import { TextFormatsSchema } from "./rich-text";
 
 // Generic CMS for content pages. Public reads: service role, published rows only, safe columns.
 // Admin writes: requireSupabaseAuth + assertAdmin + admin-only RLS on site_pages.
@@ -50,6 +51,7 @@ export const adminCheckSlug = createServerFn({ method: "GET" }).middleware([requ
 const BtnDraft = z.object({ label: z.string().max(60), href: z.string().max(500) });
 const Btn = z.object({ label: z.string().trim().min(1, "Przycisk musi mieć etykietę.").max(60), href: z.string().trim().max(500).refine(isSafeHref, "Adres przycisku musi zaczynać się od / lub https://") });
 const sectionShape = (btn: z.ZodTypeAny) => z.object({
+  textFormats: TextFormatsSchema,
   hidden: z.boolean().default(false), optional: z.boolean().default(false),
   id: z.string().regex(/^[a-z0-9]{1,20}$/), kind: z.enum(["hero", "text", "values", "columns", "quote", "image", "cta"]),
   eyebrow: z.string().max(200).default(""), layout: z.enum(["left", "right"]).default("right"), display: z.enum(["full", "inset", "featured"]).default("full"), decorative: z.boolean().default(false),

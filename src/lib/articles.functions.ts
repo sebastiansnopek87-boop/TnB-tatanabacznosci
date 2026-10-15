@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { isSafeHref, normalizeSections } from "./pages";
 import { readingMinutes } from "./articles";
+import { TextFormatsSchema } from "./rich-text";
 
 // Editorial articles. Writes: requireSupabaseAuth + assertAdmin + admin-only RLS on articles (defense in depth).
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin;
@@ -78,6 +79,7 @@ export const adminCheckArticleSlug = createServerFn({ method: "GET" }).middlewar
 
 const Btn = z.object({ label: z.string().trim().min(1, "Przycisk musi mieć etykietę.").max(60), href: z.string().trim().max(500).refine(isSafeHref, "Adres przycisku musi zaczynać się od / lub https://") });
 const Section = z.object({
+  textFormats: TextFormatsSchema,
   id: z.string().regex(/^[a-z0-9]{1,20}$/), kind: z.enum(["hero", "text", "values", "columns", "quote", "image", "cta"]),
   eyebrow: z.string().max(200).default(""), layout: z.enum(["left", "right"]).default("right"), display: z.enum(["full", "inset", "featured"]).default("full"), decorative: z.boolean().default(false),
   items: z.array(z.object({ title: z.string().max(120), body: z.string().max(3000) })).max(12).default([]),
