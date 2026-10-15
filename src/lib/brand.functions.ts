@@ -24,7 +24,7 @@ async function admin() {
   return (await import("@/integrations/supabase/client.server")).supabaseAdmin;
 }
 
-export type BrandSettings = Record<string, string>;
+export type BrandSettings = Record<string, string | boolean>;
 
 export const getBrandSettings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -93,6 +93,8 @@ export const brandSchema = z.object({
   header_image: optFile,
   header_size: optSize,
   site_name: optText(200),
+  slogan: z.string().trim().max(200).optional(),
+  show_slogan: z.boolean().optional(),
   public_title: optText(200),
   public_description: optText(2000),
   site_url: optUrl,
@@ -109,7 +111,7 @@ export const saveBrandSettings = createServerFn({ method: "POST" })
     const next: BrandSettings = { ...previous };
     for (const [k, v] of Object.entries(data)) {
       if (v === undefined) delete next[k];
-      else next[k] = v as string;
+      else next[k] = v;
     }
     const serialized = JSON.stringify(next);
     if (serialized.length > 12000) throw new Error("Ustawienia marki są za duże — usuń niektóre wartości.");
@@ -123,12 +125,12 @@ export const saveBrandSettings = createServerFn({ method: "POST" })
     // Remove replaced branding files that are no longer referenced anywhere.
     for (const k of IMAGE_KEYS) {
       const before = previous[k];
-      if (before && before !== next[k] && !Object.values(next).includes(before)) {
+      if (typeof before === "string" && before && before !== next[k] && !Object.values(next).includes(before)) {
         const r = await db.storage.from(BUCKET).remove([before]);
         await logEvent({ type: "brand_upload", actor: context.userId, objectKind: "brand", objectId: `${BUCKET}/${before}`, result: r.error ? "failed" : "ok", detail: "Usunięto zastąpiony plik marki" });
       }
     }
-    const changed = (Object.keys(data) as Array<keyof typeof data>).filter((k) => previous[k] !== (data[k] as string | undefined));
+    const changed = (Object.keys(data) as Array<keyof typeof data>).filter((k) => previous[k] !== data[k]);
     await logEvent({ type: "settings_update", actor: context.userId, objectKind: "settings", objectId: "brand", detail: changed.length ? `Zmienione pola: ${changed.join(", ")}` : "Bez zmian" });
     return { ok: true as const };
   });

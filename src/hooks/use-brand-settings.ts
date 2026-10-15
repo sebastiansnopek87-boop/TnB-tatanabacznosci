@@ -7,6 +7,8 @@ export type Brand = {
   header_image?: string;
   header_size?: string;
   site_name?: string;
+  slogan?: string;
+  show_slogan?: boolean;
   public_title?: string;
   public_description?: string;
   site_url?: string;
@@ -14,6 +16,11 @@ export type Brand = {
 
 export function brandSrc(value?: string) {
   return value ? `/api/public/brand/${value.replace(/^brand\//, "")}` : null;
+}
+
+export function getBrandSlogan(brand: Brand | null): string | null {
+  if (!brand || brand.show_slogan === false) return null;
+  return (brand.slogan ?? "Ojcostwo to służba").trim() || null;
 }
 
 export function useBrand(): Brand | null {

@@ -5,7 +5,7 @@ import { byOrder, getSiteSettings, visibleSocial } from "@/config/site-settings"
 import { SocialIcon } from "./SocialIcon";
 import { usePlatformSettings } from "@/hooks/use-platform-settings";
 import { useModuleVisibility } from "@/hooks/use-module-visibility";
-import { brandSrc, useBrand } from "@/hooks/use-brand-settings";
+import { brandSrc, getBrandSlogan, useBrand } from "@/hooks/use-brand-settings";
 
 function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
   const cls = "text-[0.85rem] text-muted-foreground transition-colors hover:text-gold";
@@ -26,6 +26,7 @@ function FooterLink({ href, children }: { href: string; children: React.ReactNod
 export function SiteFooter() {
   const { visiblePath } = useModuleVisibility();
   const brand = useBrand();
+  const slogan = getBrandSlogan(brand);
   const s = getSiteSettings();
   const social = visibleSocial(s);
   const { data: ps } = usePlatformSettings();
@@ -45,7 +46,7 @@ export function SiteFooter() {
               <span className="block font-display text-[1.15rem] font-semibold uppercase tracking-[0.1em] text-foreground">
                 Tata Na Baczności
               </span>
-              <span className="eyebrow mt-1 block text-gold/80">Ojcostwo to służba</span>
+              {slogan && <span data-brand-slogan className="mt-1 block max-w-[40ch] break-words text-xs uppercase leading-relaxed text-gold/80">{slogan}</span>}
             </span>
           </Link>
           {s.footer.brandDescription && (

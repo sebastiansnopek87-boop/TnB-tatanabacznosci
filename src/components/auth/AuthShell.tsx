@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import logo from "@/assets/logo.png.asset.json";
-import { brandSrc, useBrand } from "@/hooks/use-brand-settings";
+import { brandSrc, getBrandSlogan, useBrand } from "@/hooks/use-brand-settings";
 
 /** Shared frame for every authentication screen: logo above a centred card. */
 export function AuthShell({ step, title, lead, children, footer }: {
@@ -13,11 +13,13 @@ export function AuthShell({ step, title, lead, children, footer }: {
 }) {
   const brand = useBrand();
   const logoSrc = brandSrc(brand?.logo) || logo.url;
+  const slogan = getBrandSlogan(brand);
   return (
     <div className="auth-backdrop relative flex min-h-screen flex-col items-center justify-center overflow-x-hidden px-5 py-12 sm:py-16">
       <Link to="/" aria-label="Tata Na Baczności — strona główna" className="animate-in fade-in duration-700">
         <img src={logoSrc} alt="Tata Na Baczności" className="h-auto w-28 object-contain sm:w-36" />
       </Link>
+      {slogan && <p data-brand-slogan className="mt-3 w-full max-w-md break-words text-center text-xs uppercase leading-relaxed text-gold/80">{slogan}</p>}
       <div className="mt-8 w-full max-w-md animate-in fade-in slide-in-from-bottom-2 duration-500">
         <div className="relative border border-border/70 bg-card/80 p-7 shadow-2xl backdrop-blur-sm sm:p-10">
           <span aria-hidden className="absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent" />

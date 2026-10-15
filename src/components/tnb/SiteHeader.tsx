@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import logo from "@/assets/logo.png.asset.json";
 import { useModuleVisibility } from "@/hooks/use-module-visibility";
-import { brandSrc, useBrand } from "@/hooks/use-brand-settings";
+import { brandSrc, getBrandSlogan, useBrand } from "@/hooks/use-brand-settings";
 import { Button } from "@/components/ui/button";
 import { HeaderSearch } from "./HeaderSearch";
 
@@ -32,6 +32,7 @@ const NAV = [
 export function SiteHeader() {
   const { visiblePath } = useModuleVisibility();
   const brand = useBrand();
+  const slogan = getBrandSlogan(brand);
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const menuRef = useRef<HTMLButtonElement>(null);
@@ -97,7 +98,7 @@ export function SiteHeader() {
             <span className="text-copper block break-words font-display text-sm font-bold uppercase leading-tight sm:text-[1.45rem]">
               {brand?.site_name || "Tata Na Baczności"}
             </span>
-            <span className="mt-1 block text-[0.6rem] uppercase text-gold/70 sm:eyebrow">Ojcostwo to służba</span>
+            {slogan && <span data-brand-slogan className="mt-1 block max-w-[40ch] break-words text-[0.6rem] uppercase leading-tight text-gold/70 sm:text-xs">{slogan}</span>}
           </span>
         </Link>
 
@@ -178,7 +179,7 @@ export function SiteHeader() {
                 </section>
               </div>
             </div>
-            <div className="border-t border-menu-gold/20 py-4 text-[11px] uppercase text-menu-gold/60">Ojcostwo to służba</div>
+            {slogan && <div data-brand-slogan className="break-words border-t border-menu-gold/20 py-4 text-[11px] uppercase text-menu-gold/60">{slogan}</div>}
           </div>
         </dialog>, document.body
       )}
