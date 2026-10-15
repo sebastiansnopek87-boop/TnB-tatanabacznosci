@@ -1,4 +1,6 @@
 # Roadmap
+- [ ] Edytor tekstu w istniejącym CMS: formatowanie, czcionki, wyrównanie, położenie, bez migracji
+- [ ] Weryfikacja zapisu formatowania i podglądu desktop/mobile
 
 - [ ] Finalny SQL jednej migracji brand_settings: wyłącznie publiczne pola, ścisła walidacja; wykonanie czeka na zatwierdzenie SQL przez właściciela
 - [ ] Ustawienia marki jak na nagraniu: logo, favicon, obraz udostępniania, podgląd i przesyłanie plików — wdrożenie po zatwierdzeniu finalnego SQL
