@@ -1,5 +1,5 @@
 # Roadmap
-- [ ] Nagłówek: zawsze widoczna nazwa i menu pod trzema kreskami, przezroczysty pasek podczas przewijania, działająca lupa; testy desktop/mobile
+- [x] Nagłówek: nazwa widoczna, menu pod trzema kreskami, przezroczysty stały pasek i lupa; E2E 1440/1920/390 px, wyszukanie i otwarcie artykułu, zalogowane menu, bez przepełnienia i błędów
 - [x] Edytor tekstu w istniejącym CMS: formatowanie, czcionki, wyrównanie, położenie, bez migracji
 - [x] E2E: czcionka Arial, 24 px, pogrubienie, justowanie, szerokość 80%, położenie centralne; zapis szkicu, odczyt po przeładowaniu, wyczyszczenie próbnego formatowania; mobile 390 px bez przepełnienia
 
