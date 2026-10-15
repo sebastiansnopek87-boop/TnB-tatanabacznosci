@@ -76,6 +76,8 @@ export function PillarCards() {
             <img
               src={card.image}
               alt={card.alt}
+              loading="lazy"
+              decoding="async"
               className="absolute inset-0 -z-20 h-full w-full object-cover object-right transition-transform duration-700 group-hover:scale-[1.04]"
             />
             <div
@@ -116,6 +118,8 @@ export function PillarCards() {
             <img
               src={tile.image}
               alt={tile.alt}
+              loading="lazy"
+              decoding="async"
               className="h-[120px] lg:h-[136px] w-[38%] shrink-0 object-cover sm:w-[32%]"
             />
             <div className="flex flex-1 items-center gap-4 px-5 py-4">

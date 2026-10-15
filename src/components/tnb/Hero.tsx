@@ -9,6 +9,8 @@ export function Hero() {
     <section id="start" className="relative isolate overflow-hidden">
       <img
         src={hero.url}
+        fetchPriority="high"
+        decoding="async"
         alt="Ojciec z synem patrzący na zachód słońca w górach"
         className="absolute inset-0 -z-20 h-full w-full object-cover object-center"
       />

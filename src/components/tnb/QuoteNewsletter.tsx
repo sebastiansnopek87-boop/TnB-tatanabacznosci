@@ -48,7 +48,7 @@ export function QuoteNewsletter() {
   return (
     <section className={`grid gap-px bg-border/40 ${visible("newsletter") ? "lg:grid-cols-[1.55fr_1fr]" : ""}`}>
       <div className="relative isolate flex items-center overflow-hidden px-5 py-16 sm:py-20 lg:px-14 lg:py-28">
-        <img src={banner.url} alt="Panorama gór o zachodzie słońca" className="absolute inset-0 -z-20 h-full w-full object-cover" />
+        <img src={banner.url} loading="lazy" decoding="async" alt="Panorama gór o zachodzie słońca" className="absolute inset-0 -z-20 h-full w-full object-cover" />
         <div
           className="absolute inset-0 -z-10"
           style={{
