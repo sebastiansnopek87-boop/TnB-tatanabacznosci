@@ -23,7 +23,17 @@ function validAttrs(node: RichNode, depth = 0, count = { n: 0 }): boolean {
   return check(node.attrs) && (node.marks ?? []).every(m => check(m.attrs)) && (node.content ?? []).every(n => validAttrs(n, depth + 1, count));
 }
 export const TextFormatSchema = z.object({
-  doc: NodeSchema.refine(n => n.type === "doc" && JSON.stringify(n).length <= 150000 && validAttrs(n), "Formatowanie tekstu zawiera niedozwolone ustawienia."),
+  doc: z.unknown().superRefine((value, ctx) => {
+    let count = 0;
+    const walk = (v: unknown, depth: number): boolean => {
+      if (depth > 30 || ++count > 20000) return false;
+      if (typeof v === "string") return v.length <= 150000;
+      if (Array.isArray(v)) return v.length <= 1000 && v.every(x => walk(x, depth + 1));
+      if (v && typeof v === "object") return Object.values(v).every(x => walk(x, depth + 1));
+      return true;
+    };
+    if (!walk(value, 0)) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Tekst jest zbyt złożony lub zbyt długi." });
+  }).pipe(NodeSchema).refine(n => n.type === "doc" && JSON.stringify(n).length <= 150000 && validAttrs(n), "Formatowanie tekstu zawiera niedozwolone ustawienia."),
   position: z.enum(["left", "center", "right"]).optional(), width: z.number().min(25).max(100).optional(),
   indent: z.number().min(0).max(120).optional(), spaceBefore: z.number().min(0).max(160).optional(), spaceAfter: z.number().min(0).max(160).optional(), lineHeight: z.number().min(1).max(3).optional(),
 }).strict();

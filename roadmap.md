@@ -1,9 +1,9 @@
 # Roadmap
-- [ ] Edytor tekstu w istniejącym CMS: formatowanie, czcionki, wyrównanie, położenie, bez migracji
-- [ ] Weryfikacja zapisu formatowania i podglądu desktop/mobile
+- [x] Edytor tekstu w istniejącym CMS: formatowanie, czcionki, wyrównanie, położenie, bez migracji
+- [x] E2E: czcionka Arial, 24 px, pogrubienie, justowanie, szerokość 80%, położenie centralne; zapis szkicu, odczyt po przeładowaniu, wyczyszczenie próbnego formatowania; mobile 390 px bez przepełnienia
 
-- [ ] Finalny SQL jednej migracji brand_settings: wyłącznie publiczne pola, ścisła walidacja; wykonanie czeka na zatwierdzenie SQL przez właściciela
-- [ ] Ustawienia marki jak na nagraniu: logo, favicon, obraz udostępniania, podgląd i przesyłanie plików — wdrożenie po zatwierdzeniu finalnego SQL
+- [x] Finalny SQL jednej migracji brand_settings — zatwierdzony i wykonany (0054)
+- [x] Ustawienia marki jak na nagraniu — zakończone, bez dalszej rozbudowy
 
 - [x] Podmiana logo TNB: strona, logowanie, favicon i znak wodny nowych PDF
 - [x] Przełączniki widoczności modułów w menu i na stronie — zapis, odczyt po odświeżeniu, ukrycie i przywrócenie Głosu TNB w E2E; mobile bez przepełnienia
