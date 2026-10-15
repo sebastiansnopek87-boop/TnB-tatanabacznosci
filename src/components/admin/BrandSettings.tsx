@@ -9,13 +9,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import logo from "@/assets/logo.png.asset.json";
 
 // Branding = public data only: logo, favicon, og_image, header_image, header_size,
-// site_name, public_title, public_description, site_url. Secrets stay in the secure store.
+// site_name, slogan, show_slogan, public_title, public_description, site_url. Secrets stay in the secure store.
 type Form = {
   logo: string; favicon: string; og_image: string; header_image: string;
   header_size: string; site_name: string; public_title: string; public_description: string; site_url: string;
+  slogan: string; show_slogan: boolean;
 };
 const FORM_KEYS = ["logo", "favicon", "og_image", "header_image", "header_size", "site_name", "public_title", "public_description", "site_url"] as const;
 
@@ -68,13 +70,16 @@ export function BrandSettings({ canEdit }: { canEdit: boolean }) {
 
   if (error) return <p className="text-sm text-destructive">{errMsg(error)}</p>;
   if (data && !f) {
-    const s = {} as Form;
-    for (const k of FORM_KEYS) s[k] = data.settings[k] ?? "";
+    const s = { slogan: typeof data.settings["slogan"] === "string" ? data.settings["slogan"] : "Ojcostwo to służba", show_slogan: data.settings["show_slogan"] !== false } as Form;
+    for (const k of FORM_KEYS) {
+      const value = data.settings[k];
+      s[k] = typeof value === "string" ? value : "";
+    }
     setF(s);
   }
   if (!data || !f) return <p className="text-sm text-muted-foreground">Ładowanie…</p>;
 
-  const set = (k: keyof Form, v: string) => setF({ ...f, [k]: v });
+  const set = <K extends keyof Form>(k: K, v: Form[K]) => setF({ ...f, [k]: v });
 
   async function upload(key: string, file: File) {
     setBusy(true);
@@ -82,7 +87,7 @@ export function BrandSettings({ canEdit }: { canEdit: boolean }) {
       const t = await start({ data: { name: file.name, type: file.type, size: file.size } });
       await putFile(t.bucket, t.path, t.token, file);
       await fin({ data: { path: t.path } });
-      setF((p) => ({ ...p!, [key]: t.path } as Form));
+      setF((p) => p ? { ...p, [key]: t.path } : p);
       setPreviews((p) => ({ ...p, [key]: URL.createObjectURL(file) }));
       toast.success("Plik gotowy. Zapisz zmiany, aby zastosować.");
     } catch (e) { toast.error(errMsg(e)); }
@@ -106,7 +111,6 @@ export function BrandSettings({ canEdit }: { canEdit: boolean }) {
   }
 
   const ro = !canEdit || busy || saving;
-  const dirty = (k: keyof Form) => f[k] !== (data.settings[k] ?? "");
 
   return (
     <section className="space-y-6 border border-border/60 p-4 sm:p-5">
@@ -140,6 +144,17 @@ export function BrandSettings({ canEdit }: { canEdit: boolean }) {
           <option value="large">Duży</option>
           <option value="very_large">Bardzo duży</option>
         </select>
+      </div>
+
+      <div className="space-y-3">
+        <div className="space-y-2">
+          <Label htmlFor="bs-slogan">Slogan marki</Label>
+          <Input id="bs-slogan" disabled={ro} value={f.slogan} maxLength={200} onChange={(e) => set("slogan", e.target.value)} />
+        </div>
+        <div className="flex items-center justify-between gap-4">
+          <Label htmlFor="bs-show-slogan">Pokaż slogan</Label>
+          <Switch id="bs-show-slogan" disabled={ro} checked={f.show_slogan} onCheckedChange={(v) => set("show_slogan", v)} />
+        </div>
       </div>
 
       <div className="space-y-2">
