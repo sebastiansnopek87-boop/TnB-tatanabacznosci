@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import logo from "@/assets/logo.png.asset.json";
+import { brandSrc, useBrand } from "@/hooks/use-brand-settings";
 
 /** Shared frame for every authentication screen: logo above a centred card. */
 export function AuthShell({ step, title, lead, children, footer }: {
@@ -10,10 +11,12 @@ export function AuthShell({ step, title, lead, children, footer }: {
   children: ReactNode;
   footer?: ReactNode;
 }) {
+  const brand = useBrand();
+  const logoSrc = brandSrc(brand?.logo) || logo.url;
   return (
     <div className="auth-backdrop relative flex min-h-screen flex-col items-center justify-center overflow-x-hidden px-5 py-12 sm:py-16">
       <Link to="/" aria-label="Tata Na Baczności — strona główna" className="animate-in fade-in duration-700">
-        <img src={logo.url} alt="Tata Na Baczności" className="h-auto w-28 sm:w-36" />
+        <img src={logoSrc} alt="Tata Na Baczności" className="h-auto w-28 object-contain sm:w-36" />
       </Link>
       <div className="mt-8 w-full max-w-md animate-in fade-in slide-in-from-bottom-2 duration-500">
         <div className="relative border border-border/70 bg-card/80 p-7 shadow-2xl backdrop-blur-sm sm:p-10">

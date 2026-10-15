@@ -16,6 +16,8 @@ export const Route = createFileRoute("/auth")({
       { name: "description", content: "Logowanie i rejestracja w Tata Na Baczności." },
       { property: "og:title", content: "Logowanie — Tata Na Baczności" },
       { property: "og:description", content: "Logowanie i rejestracja w Tata Na Baczności." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
