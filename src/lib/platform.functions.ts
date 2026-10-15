@@ -11,8 +11,9 @@ export type PublicPlatformSettings = {
   podcast_layout?: string;
   module_visibility?: ModuleVisibility;
   brand_settings?: Record<string, string | boolean>;
+  visual_effects?: VisualEffects;
 };
-const PUBLIC_COLS = "platform_name, contact_email, support_email, notice_enabled, maintenance_enabled, maintenance_message, social_youtube, social_spotify, social_tiktok, social_instagram, podcast_layout, module_visibility, brand_settings";
+const PUBLIC_COLS = "platform_name, contact_email, support_email, notice_enabled, maintenance_enabled, maintenance_message, social_youtube, social_spotify, social_tiktok, social_instagram, podcast_layout, module_visibility, brand_settings, visual_effects";
 
 // Public: only non-sensitive columns, read through the anon SELECT policy.
 export const getPublicPlatformSettings = createServerFn({ method: "GET" }).handler(async () => {
@@ -84,6 +85,23 @@ export const updatePlatformSettings = createServerFn({ method: "POST" })
   });
 
 export type PodcastLayout = "list" | "grid";
+
+export type VisualEffects = { enabled: boolean; intensity: "subtle" | "standard" | "off"; speed: "fast" | "standard" | "calm"; reveal: boolean; interactive: boolean; panels: boolean };
+export const VISUAL_EFFECTS_DEFAULT: VisualEffects = { enabled: true, intensity: "subtle", speed: "standard", reveal: true, interactive: true, panels: true };
+const VisualEffectsSchema = z.object({ enabled: z.boolean(), intensity: z.enum(["subtle", "standard", "off"]), speed: z.enum(["fast", "standard", "calm"]), reveal: z.boolean(), interactive: z.boolean(), panels: z.boolean() }).strict();
+
+export const setVisualEffects = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ effects: VisualEffectsSchema }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertSuperadmin(context, "visual_effects");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("platform_settings").update({ visual_effects: data.effects, updated_at: new Date().toISOString(), updated_by: context.userId }).eq("id", 1);
+    const e = data.effects;
+    await logEvent({ type: "settings_update", actor: context.userId, objectKind: "settings", objectId: "visual_effects", result: error ? "failed" : "ok", detail: `Efekty: ${e.enabled ? "włączone" : "wyłączone"}, ${e.intensity}, ${e.speed}, sekcje=${e.reveal}, przyciski=${e.interactive}, menu=${e.panels}` });
+    if (error) throw new Error("Nie udało się zapisać ustawień efektów.");
+    return { ok: true as const };
+  });
 
 export const setModuleVisibility = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

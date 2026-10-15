@@ -16,6 +16,7 @@ import { Toaster } from "../components/ui/sonner";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { MaintenanceGate } from "@/components/tnb/MaintenanceGate";
+import { VisualEffects } from "@/components/tnb/VisualEffects";
 import { ModuleGate } from "@/components/tnb/ModuleGate";
 import { useBrand } from "@/hooks/use-brand-settings";
 
@@ -152,7 +153,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="pl" data-fx="on" data-fx-intensity="subtle" data-fx-speed="standard" data-fx-reveal="on" data-fx-interactive="on" data-fx-panels="on">
       <head>
         <HeadContent />
       </head>
@@ -185,6 +186,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrandHead />
+      <VisualEffects />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <MaintenanceGate><ModuleGate><Outlet /></ModuleGate></MaintenanceGate>
       <Toaster position="bottom-right" />

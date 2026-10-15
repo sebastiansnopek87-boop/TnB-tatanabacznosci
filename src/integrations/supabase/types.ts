@@ -2313,6 +2313,7 @@ export type Database = {
           support_email: string | null
           updated_at: string
           updated_by: string | null
+          visual_effects: Json
         }
         Insert: {
           brand_settings?: Json
@@ -2331,6 +2332,7 @@ export type Database = {
           support_email?: string | null
           updated_at?: string
           updated_by?: string | null
+          visual_effects?: Json
         }
         Update: {
           brand_settings?: Json
@@ -2349,6 +2351,7 @@ export type Database = {
           support_email?: string | null
           updated_at?: string
           updated_by?: string | null
+          visual_effects?: Json
         }
         Relationships: []
       }
