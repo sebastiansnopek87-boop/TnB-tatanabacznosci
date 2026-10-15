@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { ModuleVisibilitySettings } from "@/components/admin/ModuleVisibility";
 import { BrandSettings } from "@/components/admin/BrandSettings";
+import { VisualEffectsSettings } from "@/components/admin/VisualEffectsSettings";
 
 export const Route = createFileRoute("/_authenticated/admin/ustawienia")({
   head: () => ({ meta: [
@@ -81,6 +82,8 @@ function PlatformSettings() {
       <BrandSettings canEdit={!ro} />
 
       <ModuleVisibilitySettings value={data.settings.module_visibility} canEdit={!ro} />
+
+      <VisualEffectsSettings value={(data.settings as any).visual_effects} canEdit={!ro} />
 
       <Section title="Podstawowe informacje" hint="Nazwa pojawia się w stopce strony i na ekranie przerwy technicznej.">
         <div className="space-y-2"><Label htmlFor="pn">Nazwa platformy</Label>

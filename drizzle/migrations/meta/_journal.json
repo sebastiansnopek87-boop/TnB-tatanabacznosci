@@ -393,6 +393,13 @@
       "when": 1792092864180,
       "tag": "0055_brand_slogan_validation",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1792093798497,
+      "tag": "0056_platform_visual_effects",
+      "breakpoints": true
     }
   ]
 }

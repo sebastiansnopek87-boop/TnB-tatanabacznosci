@@ -203,3 +203,28 @@
 .rich-inline { display: block; }
 .rich-inline-paragraph { display: block; }
 .ProseMirror-focused { box-shadow: inset 0 0 0 1px var(--ring); }
+
+/* ===== Visual effects (platform_settings.visual_effects) =====
+   Content is visible by default; hiding happens only after JS marks html.fx-ready,
+   so a JS/IntersectionObserver failure never leaves sections invisible. */
+:root { --fx-dur: 500ms; --fx-shift: 12px; --fx-ease: cubic-bezier(.22,.61,.36,1); }
+[data-fx-speed="fast"] { --fx-dur: 260ms; }
+[data-fx-speed="calm"] { --fx-dur: 800ms; }
+[data-fx-intensity="standard"] { --fx-shift: 24px; }
+
+.fx-ready[data-fx="on"][data-fx-reveal="on"] .fx-reveal:not(.fx-in) { opacity: 0; transform: translateY(var(--fx-shift)); }
+[data-fx="on"][data-fx-reveal="on"] .fx-reveal { transition: opacity var(--fx-dur) var(--fx-ease), transform var(--fx-dur) var(--fx-ease); }
+
+[data-fx="on"][data-fx-panels="on"] .tnb-menu[open] { animation: fx-panel-in var(--fx-dur) var(--fx-ease) both; }
+@keyframes fx-panel-in { from { opacity: 0; } to { opacity: 1; } }
+
+[data-fx="on"][data-fx-interactive="on"] :is(a, button):not([disabled]) { transition-property: color, background-color, border-color, opacity, box-shadow, transform; transition-duration: calc(var(--fx-dur) * .45); }
+
+[data-fx="off"] *, [data-fx-interactive="off"] :is(a, button), [data-fx-interactive="off"] :is(a, button) *,
+[data-fx-panels="off"] .tnb-menu, [data-fx-panels="off"] .tnb-menu * { transition: none !important; animation: none !important; }
+[data-fx-interactive="off"] .group:hover img, [data-fx="off"] .group:hover img { transform: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+  .tnb-menu[open] { animation: none !important; }
+}
