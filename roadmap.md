@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] Slogan marki: diagnoza i minimalny plan; wdrożenie czeka na osobną zgodę na wymaganą migrację walidacji
 - [x] Logo logowania/rejestracji z useBrand → brand_settings.logo; E2E 1280/390 px: proporcje, niezmienione pola/przyciski/teksty, przełączanie ekranów, brak przepełnienia i błędów; bez zmian bazy
 - [x] Menu premium: istniejące linki i logowanie, nieprzezroczysta nakładka, blokada tła, klawiatura i zamykanie
 - [x] E2E menu 1280/1206/768/390/320 px: 7 tras, logowanie/rejestracja, zalogowane Moje TNB i wylogowanie, X/Escape, focus i blokada tła; Hero 320 px/tablet bez przepełnienia; 3 testy widoczności PASS, bez migracji
