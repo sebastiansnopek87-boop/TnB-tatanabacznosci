@@ -1,7 +1,7 @@
 import { z } from "zod";
 export const TEXT_FONTS = ["Jost", "Cormorant Garamond", "Arial", "Georgia", "Verdana", "Tahoma", "Times New Roman", "Courier New"] as const;
 export const TEXT_COLORS = { domyslny: "inherit", tekst: "var(--foreground)", zloto: "var(--color-gold)", stonowany: "var(--muted-foreground)", akcent: "var(--accent)", czerwony: "var(--destructive)" } as const;
-export type RichNode = { type: string; text?: string; attrs?: Record<string, string | number | boolean | null>; marks?: { type: string; attrs?: Record<string, string | number | boolean | null> }[]; content?: RichNode[] };
+export type RichNode = { type: string; text?: string | undefined; attrs?: Record<string, string | number | boolean | null> | undefined; marks?: { type: string; attrs?: Record<string, string | number | boolean | null> | undefined }[] | undefined; content?: RichNode[] | undefined };
 export type TextFormat = { doc: RichNode; position?: "left" | "center" | "right"; width?: number; indent?: number; spaceBefore?: number; spaceAfter?: number; lineHeight?: number };
 const attrs = z.record(z.union([z.string().max(500), z.number(), z.boolean(), z.null()]));
 const NodeSchema: z.ZodType<RichNode> = z.lazy(() => z.object({ type: z.enum(["doc", "paragraph", "heading", "text", "hardBreak", "bulletList", "orderedList", "listItem", "blockquote", "horizontalRule"]), text: z.string().max(30000).optional(), attrs: attrs.optional(), marks: z.array(z.object({ type: z.enum(["bold", "italic", "underline", "strike", "textStyle", "highlight", "subscript", "superscript", "link"]), attrs: attrs.optional() }).strict()).max(12).optional(), content: z.array(NodeSchema).max(1000).optional() }).strict());

@@ -17,7 +17,7 @@ export type EditApi = { sel: Sel | null; onSelect: (s: Sel | null, locked?: bool
 type A = (el: string) => Record<string, string>;
 const noA: A = () => ({});
 
-function Paragraphs({ text, className = "", a = noA, format }: { text: string; className?: string; a?: A; format?: TextFormat }) {
+function Paragraphs({ text, className = "", a = noA, format }: { text: string; className?: string; a?: A; format?: TextFormat | undefined }) {
   return <div {...a("body")}><RichText format={format} fallback={<>{text.split(/\n\s*\n/).filter((p) => p.trim()).map((p, i) => (
     <p key={i} className={`mt-5 whitespace-pre-line text-[0.98rem] leading-[1.85] text-foreground/80 first:mt-0 ${className}`}>{p}</p>
   ))}</>} /></div>;
@@ -41,8 +41,8 @@ function Buttons({ s, center, a = noA }: { s: PageSection; center?: boolean; a?:
   );
 }
 
-const Eyebrow = ({ t, a = noA, format }: { t: string; a?: A; format?: TextFormat }) => t ? <p className="eyebrow text-gold" {...a("eyebrow")}><RichText format={format} fallback={t} inline /></p> : null;
-const H2 = ({ t, a = noA, format }: { t: string; a?: A; format?: TextFormat }) => t
+const Eyebrow = ({ t, a = noA, format }: { t: string; a?: A; format?: TextFormat | undefined }) => t ? <p className="eyebrow text-gold" {...a("eyebrow")}><RichText format={format} fallback={t} inline /></p> : null;
+const H2 = ({ t, a = noA, format }: { t: string; a?: A; format?: TextFormat | undefined }) => t
   ? <h2 {...a("heading")} className="mt-4 font-display text-[2rem] font-semibold leading-[1.1] text-foreground first:mt-0 sm:text-[2.6rem]"><RichText format={format} fallback={t} inline /></h2>
   : null;
 

@@ -1,7 +1,7 @@
 import { Fragment, type CSSProperties, type ReactNode } from "react";
 import { TextFormatSchema, type RichNode, type TextFormat } from "@/lib/rich-text";
 
-export function RichText({ format, fallback, inline = false }: { format?: TextFormat; fallback: ReactNode; inline?: boolean }) {
+export function RichText({ format, fallback, inline = false }: { format?: TextFormat | undefined; fallback: ReactNode; inline?: boolean }) {
   const parsed = format && TextFormatSchema.safeParse(format);
   if (!parsed || !parsed.success) return <>{fallback}</>;
   const f = parsed.data;

@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TEXT_FONTS, TEXT_COLORS, plainDoc, richPlainText, type RichNode, type TextFormat } from "@/lib/rich-text";
 
-export function TextEditor({ value, format, label, onChange }: { value: string; format?: TextFormat; label: string; onChange: (plain: string, format?: TextFormat) => void }) {
+export function TextEditor({ value, format, label, onChange }: { value: string; format?: TextFormat | undefined; label: string; onChange: (plain: string, format?: TextFormat) => void }) {
   const latest = useRef({ onChange, format });
   latest.current = { onChange, format };
   const [, redraw] = useState(0);
@@ -62,7 +62,7 @@ export function TextEditor({ value, format, label, onChange }: { value: string; 
       <EditorContent editor={editor} />
     </div>
     <details className="border border-border p-2"><summary className="cursor-pointer text-xs">Położenie i odstępy</summary><div className="mt-3 grid grid-cols-2 gap-2">
-      <label className="text-xs">Położenie bloku<select aria-label="Położenie bloku" className={`${sel} mt-1 w-full`} value={format?.position ?? "left"} onChange={e => setLayout({ position: e.target.value as TextFormat['position'] })}><option value="left">Po lewej</option><option value="center">Na środku</option><option value="right">Po prawej</option></select></label>
+      <label className="text-xs">Położenie bloku<select aria-label="Położenie bloku" className={`${sel} mt-1 w-full`} value={format?.position ?? "left"} onChange={e => setLayout({ position: e.target.value as "left" | "center" | "right" })}><option value="left">Po lewej</option><option value="center">Na środku</option><option value="right">Po prawej</option></select></label>
       {([['width', 'Szerokość (%)', 25, 100, 100], ['indent', 'Wcięcie (px)', 0, 120, 0], ['spaceBefore', 'Odstęp przed (px)', 0, 160, 0], ['spaceAfter', 'Odstęp po (px)', 0, 160, 0], ['lineHeight', 'Interlinia', 1, 3, 1.5]] as const).map(([key, name, min, max, def]) => <label key={key} className="text-xs">{name}<Input aria-label={name} className="mt-1 h-8" type="number" min={min} max={max} step={key === "lineHeight" ? 0.1 : 1} value={format?.[key] ?? def} onChange={e => { const n = Number(e.target.value); if (Number.isFinite(n)) setLayout({ [key]: Math.max(min, Math.min(max, n)) }); }} /></label>)}
     </div></details>
   </div>;
