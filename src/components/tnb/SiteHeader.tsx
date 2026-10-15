@@ -59,10 +59,10 @@ export function SiteHeader() {
             className={imgCls}
           />
           <span className="block [@media(min-width:1280px)_and_(max-width:1599px)]:hidden">
-            <span className="block truncate font-display text-[1.05rem] font-semibold uppercase tracking-[0.1em] text-foreground sm:text-[1.45rem] sm:tracking-[0.12em]">
-              Tata Na Baczności
+            <span className="text-copper block truncate font-display text-[1.05rem] font-bold uppercase tracking-[0.1em] sm:text-[1.45rem] sm:tracking-[0.12em]">
+              {brand?.site_name || "Tata Na Baczności"}
             </span>
-            <span className="eyebrow mt-1 block text-gold/80">Ojcostwo to służba</span>
+            <span className="eyebrow mt-1 block text-gold/70">Ojcostwo to służba</span>
           </span>
         </Link>
 
