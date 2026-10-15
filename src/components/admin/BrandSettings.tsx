@@ -70,7 +70,7 @@ export function BrandSettings({ canEdit }: { canEdit: boolean }) {
 
   if (error) return <p className="text-sm text-destructive">{errMsg(error)}</p>;
   if (data && !f) {
-    const s = { slogan: typeof data.settings.slogan === "string" ? data.settings.slogan : "Ojcostwo to służba", show_slogan: data.settings.show_slogan !== false } as Form;
+    const s = { slogan: typeof data.settings["slogan"] === "string" ? data.settings["slogan"] : "Ojcostwo to służba", show_slogan: data.settings["show_slogan"] !== false } as Form;
     for (const k of FORM_KEYS) {
       const value = data.settings[k];
       s[k] = typeof value === "string" ? value : "";
