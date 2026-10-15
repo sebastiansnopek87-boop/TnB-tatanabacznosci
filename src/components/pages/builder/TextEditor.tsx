@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { EditorContent, useEditor } from "@tiptap/react";
+import { EditorContent, useEditor, type JSONContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { TextStyle, FontFamily, FontSize, Color } from "@tiptap/extension-text-style";
 import TextAlign from "@tiptap/extension-text-align";
@@ -19,7 +19,7 @@ export function TextEditor({ value, format, label, onChange }: { value: string; 
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [StarterKit.configure({ heading: { levels: [1, 2, 3] }, link: { openOnClick: false } }), TextStyle, FontFamily, FontSize, Color, TextAlign.configure({ types: ["heading", "paragraph"] }), Highlight.configure({ multicolor: true }), Subscript, Superscript],
-    content: format?.doc ?? plainDoc(value),
+    content: (format?.doc ?? plainDoc(value)) as JSONContent,
     editorProps: { attributes: { role: "textbox", "aria-label": label, "aria-multiline": "true", class: "cms-rich-text min-h-36 max-h-80 overflow-y-auto p-3 text-sm outline-none" } },
     onUpdate: ({ editor: e }) => { const doc = e.getJSON() as RichNode; latest.current.onChange(richPlainText(doc), { ...latest.current.format, doc }); },
     onTransaction: () => redraw(n => n + 1),
@@ -27,7 +27,7 @@ export function TextEditor({ value, format, label, onChange }: { value: string; 
   useEffect(() => {
     if (!editor) return;
     const doc = format?.doc ?? plainDoc(value);
-    if (JSON.stringify(editor.getJSON()) !== JSON.stringify(doc)) editor.commands.setContent(doc, { emitUpdate: false });
+    if (JSON.stringify(editor.getJSON()) !== JSON.stringify(doc)) editor.commands.setContent(doc as JSONContent, { emitUpdate: false });
   }, [editor, value, format?.doc]);
   if (!editor) return <div className="min-h-36 border border-border" />;
   const tool = (name: string, Icon: typeof Bold, action: () => void, active = false, disabled = false) => <Button key={name} type="button" size="icon" variant={active ? "secondary" : "ghost"} className="h-8 w-8 shrink-0" title={name} aria-label={name} aria-pressed={active} disabled={disabled} onMouseDown={e => e.preventDefault()} onClick={action}><Icon className="h-4 w-4" /></Button>;
