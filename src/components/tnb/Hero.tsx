@@ -60,9 +60,9 @@ export function Hero() {
           </div>}
         </div>
 
-        <div className="mt-14 max-w-[440px] lg:absolute lg:right-14 lg:top-1/2 lg:mt-0 lg:max-w-[480px] lg:-translate-y-1/2">
-          <div className="border-l border-gold/40 pl-6 lg:pl-8">
-            <p className="font-display text-[1.45rem] font-medium uppercase leading-[1.2] tracking-[0.05em] text-foreground sm:text-[1.85rem]">
+        <div className="mt-14 min-w-0 max-w-[440px] xl:absolute xl:right-14 xl:top-1/2 xl:mt-0 xl:w-[calc(100%-720px)] xl:max-w-[480px] xl:-translate-y-1/2">
+          <div className="border-l border-gold/40 pl-4 sm:pl-6 xl:pl-8">
+            <p className="break-words font-display text-[1.3rem] font-medium uppercase leading-[1.25] text-foreground sm:text-[1.85rem]">
               Nie musisz mieć{" "}
               <span className="text-gold">wszystkiego poukładanego</span>.
             </p>
