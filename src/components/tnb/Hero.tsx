@@ -2,15 +2,6 @@ import { ArrowRight } from "lucide-react";
 import hero from "@/assets/hero.jpg.asset.json";
 import { useModuleVisibility } from "@/hooks/use-module-visibility";
 
-const PILLARS = [
-  "Sobą",
-  "Rodziną",
-  "Relacjami",
-  "Wiarą",
-  "Bezpieczeństwem",
-  "Emocjami",
-  "Przyszłością",
-];
 
 export function Hero() {
   const { visible } = useModuleVisibility();
@@ -69,29 +60,50 @@ export function Hero() {
           </div>}
         </div>
 
-        <div className="mt-12 lg:absolute lg:right-14 lg:top-1/2 lg:mt-0 lg:-translate-y-1/2">
-          <ul className="relative flex flex-col gap-4 border-l border-dotted border-gold/50 pl-6">
-            {PILLARS.map((p) => (
-              <li key={p} className="relative flex items-center">
-                <span className="absolute -left-[1.6rem] h-1.5 w-1.5 rounded-full bg-gold" />
-                <span className="text-[0.82rem] uppercase tracking-[0.14em] text-foreground">
-                  {p}
-                </span>
-              </li>
-            ))}
-          </ul>
-          {visible("community") && <div className="mt-10 border-l-2 border-gold pl-5">
-            <p className="text-[0.8rem] uppercase tracking-[0.14em] text-gold">
-              Nie musisz być sam
+        <div className="mt-14 max-w-[440px] lg:absolute lg:right-14 lg:top-1/2 lg:mt-0 lg:max-w-[480px] lg:-translate-y-1/2">
+          <div className="border-l border-gold/40 pl-6 lg:pl-8">
+            <p className="font-display text-[1.45rem] font-medium uppercase leading-[1.2] tracking-[0.05em] text-foreground sm:text-[1.85rem]">
+              Nie musisz mieć{" "}
+              <span className="text-gold">wszystkiego poukładanego</span>.
             </p>
-            <a
-              href="/spolecznosc"
-              className="mt-2 flex items-center gap-10 text-[0.85rem] text-foreground/85 transition-colors hover:text-gold"
-            >
-              Dołącz do społeczności
-              <ArrowRight className="h-4 w-4 text-gold" strokeWidth={1.75} />
-            </a>
-          </div>}
+            <p className="mt-5 text-[0.95rem] leading-[1.8] text-foreground/85">
+              Wystarczy, że nie przestajesz szukać.
+            </p>
+            <div className="mt-6 space-y-3.5 text-[0.92rem] leading-[1.75] text-foreground/75">
+              <p>
+                Możesz być <span className="text-gold">silny</span> i mieć gorszy
+                dzień.
+              </p>
+              <p>
+                Możesz <span className="text-gold">kochać swoją rodzinę</span> i
+                czasem nie wiedzieć, co zrobić.
+              </p>
+              <p>
+                Możesz mieć za sobą wiele i wciąż{" "}
+                <span className="text-gold">próbować zrozumieć siebie</span>.
+              </p>
+            </div>
+            <blockquote className="mt-9 border-l-2 border-gold pl-5">
+              <p className="font-display text-[1.25rem] font-medium leading-[1.3] text-gold sm:text-[1.5rem]">
+                „Nie musisz tu nikomu niczego udowadniać.”
+              </p>
+            </blockquote>
+            <p className="mt-9 max-w-[380px] text-[0.85rem] leading-[1.75] text-foreground/60">
+              To miejsce dla ludzi, którzy chcą żyć bardziej świadomie, być
+              bliżej swoich bliskich i nie zgubić po drodze samych siebie.
+            </p>
+          </div>
+          {visible("community") && (
+            <p className="mt-10 text-[0.78rem] uppercase tracking-[0.12em] text-foreground/55">
+              Nie musisz być sam —{" "}
+              <a
+                href="/spolecznosc"
+                className="text-gold/85 underline-offset-4 transition-colors hover:text-gold hover:underline"
+              >
+                dołącz do społeczności
+              </a>
+            </p>
+          )}
         </div>
       </div>
     </section>
