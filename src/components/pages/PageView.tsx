@@ -3,6 +3,9 @@ import type { MouseEvent, ReactNode } from "react";
 import { PageHeading, PageShell } from "@/components/tnb/PageShell";
 import { normalizeSections, type PageSection } from "@/lib/pages";
 
+import { RichText } from "./RichText";
+import type { TextFormat } from "@/lib/rich-text";
+
 type Props = {
   eyebrow: string; title: string; intro: string; sections: PageSection[];
   imageSrc: (file: string) => string | undefined; preview?: boolean;
@@ -14,10 +17,10 @@ export type EditApi = { sel: Sel | null; onSelect: (s: Sel | null, locked?: bool
 type A = (el: string) => Record<string, string>;
 const noA: A = () => ({});
 
-function Paragraphs({ text, className = "", a = noA }: { text: string; className?: string; a?: A }) {
-  return <div {...a("body")}>{text.split(/\n\s*\n/).filter((p) => p.trim()).map((p, i) => (
+function Paragraphs({ text, className = "", a = noA, format }: { text: string; className?: string; a?: A; format?: TextFormat | undefined }) {
+  return <div {...a("body")}><RichText format={format} fallback={<>{text.split(/\n\s*\n/).filter((p) => p.trim()).map((p, i) => (
     <p key={i} className={`mt-5 whitespace-pre-line text-[0.98rem] leading-[1.85] text-foreground/80 first:mt-0 ${className}`}>{p}</p>
-  ))}</div>;
+  ))}</>} /></div>;
 }
 
 function Buttons({ s, center, a = noA }: { s: PageSection; center?: boolean; a?: A }) {
@@ -38,16 +41,16 @@ function Buttons({ s, center, a = noA }: { s: PageSection; center?: boolean; a?:
   );
 }
 
-const Eyebrow = ({ t, a = noA }: { t: string; a?: A }) => t ? <p className="eyebrow text-gold" {...a("eyebrow")}>{t}</p> : null;
-const H2 = ({ t, a = noA }: { t: string; a?: A }) => t
-  ? <h2 {...a("heading")} className="mt-4 font-display text-[2rem] font-semibold leading-[1.1] text-foreground first:mt-0 sm:text-[2.6rem]">{t}</h2>
+const Eyebrow = ({ t, a = noA, format }: { t: string; a?: A; format?: TextFormat | undefined }) => t ? <p className="eyebrow text-gold" {...a("eyebrow")}><RichText format={format} fallback={t} inline /></p> : null;
+const H2 = ({ t, a = noA, format }: { t: string; a?: A; format?: TextFormat | undefined }) => t
+  ? <h2 {...a("heading")} className="mt-4 font-display text-[2rem] font-semibold leading-[1.1] text-foreground first:mt-0 sm:text-[2.6rem]"><RichText format={format} fallback={t} inline /></h2>
   : null;
 
 function Img({ s, src, className, eager, a = noA }: { s: PageSection; src: string; className: string; eager?: boolean; a?: A }) {
   return (
     <figure className="min-w-0">
       <img {...a("image")} src={src} alt={s.decorative ? "" : s.imageAlt || s.heading || ""} aria-hidden={s.decorative || undefined} loading={eager ? "eager" : "lazy"} decoding="async" className={`w-full object-cover ${className}`} />
-      {s.caption && <figcaption {...a("caption")} className="mt-3 text-xs tracking-wide text-muted-foreground">{s.caption}</figcaption>}
+      {s.caption && <figcaption {...a("caption")} className="mt-3 text-xs tracking-wide text-muted-foreground"><RichText format={s.textFormats?.["caption"]} fallback={s.caption} inline /></figcaption>}
     </figure>
   );
 }
@@ -61,9 +64,9 @@ function Section({ s, src, first, sel }: { s: PageSection; src?: string | undefi
         <section className="border-b border-border/60 px-5 py-14 lg:px-14 lg:py-24">
           <div className={`mx-auto grid max-w-6xl items-center gap-10 ${src ? "lg:grid-cols-[1.1fr_1fr] lg:gap-16" : ""}`}>
             <div className={`min-w-0 ${src && imgLeft ? "lg:order-2" : ""}`}>
-              <Eyebrow t={s.eyebrow} a={a} />
-              {s.heading && <h1 {...a("heading")} className="mt-5 font-display text-[2.3rem] font-semibold leading-[1.08] text-foreground sm:text-[3.2rem] lg:text-[3.6rem]">{s.heading}</h1>}
-              {s.body && <div className="mt-8 max-w-xl"><Paragraphs text={s.body} a={a} /></div>}
+              <Eyebrow t={s.eyebrow} a={a} format={s.textFormats?.["eyebrow"]} />
+              {s.heading && <h1 {...a("heading")} className="mt-5 font-display text-[2.3rem] font-semibold leading-[1.08] text-foreground sm:text-[3.2rem] lg:text-[3.6rem]"><RichText format={s.textFormats?.["heading"]} fallback={s.heading} inline /></h1>}
+              {s.body && <div className="mt-8 max-w-xl"><Paragraphs text={s.body} a={a} format={s.textFormats?.["body"]} /></div>}
               <Buttons s={s} a={a} />
             </div>
             {src && <Img a={a} s={s} src={src} eager className="aspect-[4/5] max-h-[640px] border border-border/60 sm:aspect-[4/3] lg:aspect-[4/5]" />}
@@ -74,13 +77,13 @@ function Section({ s, src, first, sel }: { s: PageSection; src?: string | undefi
       return (
         <section className="border-t border-border/60 bg-card/40 px-5 py-16 lg:px-14 lg:py-24">
           <div className="mx-auto max-w-6xl">
-            <div className="max-w-3xl"><Eyebrow t={s.eyebrow} a={a} /><H2 t={s.heading} a={a} />{s.body && <div className="mt-6"><Paragraphs text={s.body} a={a} /></div>}</div>
+            <div className="max-w-3xl"><Eyebrow t={s.eyebrow} a={a} format={s.textFormats?.["eyebrow"]} /><H2 t={s.heading} a={a} format={s.textFormats?.["heading"]} />{s.body && <div className="mt-6"><Paragraphs text={s.body} a={a} format={s.textFormats?.["body"]} /></div>}</div>
             <div className="mt-12 grid gap-px border border-border/60 bg-border/60 sm:grid-cols-2 lg:grid-cols-3">
               {s.items.map((it, i) => (
                 <div key={i} {...a(`item-${i}`)} className="bg-background p-7 lg:p-9">
                   <span className="font-display text-sm text-gold/70">{String(i + 1).padStart(2, "0")}</span>
-                  <h3 className="mt-3 text-[0.8rem] font-medium uppercase tracking-[0.18em] text-gold">{it.title}</h3>
-                  <p className="mt-4 text-[0.93rem] leading-[1.75] text-foreground/75">{it.body}</p>
+                  <h3 className="mt-3 text-[0.8rem] font-medium uppercase tracking-[0.18em] text-gold"><RichText format={s.textFormats?.[`item-${i}-title`]} fallback={it.title} inline /></h3>
+                  <div className="mt-4 text-[0.93rem] leading-[1.75] text-foreground/75"><RichText format={s.textFormats?.[`item-${i}-body`]} fallback={it.body} /></div>
                 </div>
               ))}
             </div>
@@ -92,18 +95,18 @@ function Section({ s, src, first, sel }: { s: PageSection; src?: string | undefi
       return (
         <section className="border-t border-border/60 px-5 py-16 lg:px-14 lg:py-24">
           <div className="mx-auto max-w-5xl">
-            <div className="max-w-3xl"><Eyebrow t={s.eyebrow} a={a} /><H2 t={s.heading} a={a} />{s.body && <div className="mt-6"><Paragraphs text={s.body} a={a} /></div>}</div>
+            <div className="max-w-3xl"><Eyebrow t={s.eyebrow} a={a} format={s.textFormats?.["eyebrow"]} /><H2 t={s.heading} a={a} format={s.textFormats?.["heading"]} />{s.body && <div className="mt-6"><Paragraphs text={s.body} a={a} format={s.textFormats?.["body"]} /></div>}</div>
             <div className="mt-12 grid gap-8 md:grid-cols-2">
               {s.items.map((it, i) => (
                 <div key={i} {...a(`item-${i}`)} className={`border p-7 lg:p-9 ${i === 0 ? "border-gold/50" : "border-border/60"}`}>
-                  <h3 className={`text-[0.8rem] font-medium uppercase tracking-[0.18em] ${i === 0 ? "text-gold" : "text-muted-foreground"}`}>{it.title}</h3>
-                  <ul className="mt-6 space-y-4">
+                  <h3 className={`text-[0.8rem] font-medium uppercase tracking-[0.18em] ${i === 0 ? "text-gold" : "text-muted-foreground"}`}><RichText format={s.textFormats?.[`item-${i}-title`]} fallback={it.title} inline /></h3>
+                  <RichText format={s.textFormats?.[`item-${i}-body`]} fallback={<ul className="mt-6 space-y-4">
                     {it.body.split("\n").map((l) => l.replace(/^[-*•]\s*/, "").trim()).filter(Boolean).map((l, k) => (
                       <li key={k} className="flex gap-3 text-[0.95rem] leading-[1.65] text-foreground/80">
                         <span aria-hidden className={`mt-[0.6rem] h-px w-4 shrink-0 ${i === 0 ? "bg-gold" : "bg-muted-foreground/60"}`} />{l}
                       </li>
                     ))}
-                  </ul>
+                  </ul>} />
                 </div>
               ))}
             </div>
@@ -118,22 +121,22 @@ function Section({ s, src, first, sel }: { s: PageSection; src?: string | undefi
           {src && <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/30" />}
           <div className={`relative mx-auto max-w-4xl px-5 text-center lg:px-14 ${src ? "py-28 lg:py-40" : "py-16 lg:py-24"}`}>
             <span aria-hidden className="mx-auto block h-10 w-px bg-gold" />
-            <blockquote {...a("body")} className="mt-8 font-display text-[1.8rem] italic leading-snug text-foreground sm:text-[2.5rem]">„{s.body}”</blockquote>
-            {s.quoteAuthor && <p {...a("quoteAuthor")} className="eyebrow mt-8 text-gold">{s.quoteAuthor}</p>}
+            <blockquote {...a("body")} className="mt-8 font-display text-[1.8rem] italic leading-snug text-foreground sm:text-[2.5rem]"><RichText format={s.textFormats?.["body"]} fallback={<>„{s.body}”</>} /></blockquote>
+            {s.quoteAuthor && <p {...a("quoteAuthor")} className="eyebrow mt-8 text-gold"><RichText format={s.textFormats?.["quoteAuthor"]} fallback={s.quoteAuthor} inline /></p>}
             <Buttons s={s} center a={a} />
           </div>
         </section>
       );
     case "image": {
       const alt = s.decorative ? "" : s.imageAlt || s.heading || "";
-      const text = (s.heading || s.body || s.buttons.length > 0) && <div className="mt-6"><H2 t={s.heading} a={a} />{s.body && <div className="mt-6"><Paragraphs text={s.body} a={a} /></div>}<Buttons s={s} a={a} /></div>;
+      const text = (s.heading || s.body || s.buttons.length > 0) && <div className="mt-6"><H2 t={s.heading} a={a} format={s.textFormats?.["heading"]} />{s.body && <div className="mt-6"><Paragraphs text={s.body} a={a} format={s.textFormats?.["body"]} /></div>}<Buttons s={s} a={a} /></div>;
       if (s.display === "inset" || s.display === "featured") {
         const featured = s.display === "featured";
         return (
           <section className="px-5 py-10 lg:px-14 lg:py-14">
             <figure className={`mx-auto min-w-0 ${featured ? "max-w-4xl border border-gold/40 bg-card/50 p-3 sm:p-5" : "max-w-3xl"}`}>
               {src && <img {...a("image")} src={src} alt={alt} aria-hidden={s.decorative || undefined} loading="lazy" decoding="async" className="aspect-[3/2] w-full object-cover" />}
-              {s.caption && <figcaption {...a("caption")} className={featured ? "mt-4 border-l-2 border-gold pl-4 font-display text-[1.25rem] italic leading-snug text-foreground/90" : "mt-3 text-xs tracking-wide text-muted-foreground"}>{s.caption}</figcaption>}
+              {s.caption && <figcaption {...a("caption")} className={featured ? "mt-4 border-l-2 border-gold pl-4 font-display text-[1.25rem] italic leading-snug text-foreground/90" : "mt-3 text-xs tracking-wide text-muted-foreground"}><RichText format={s.textFormats?.["caption"]} fallback={s.caption} inline /></figcaption>}
             </figure>
             {text && <div className="mx-auto max-w-3xl">{text}</div>}
           </section>
@@ -142,7 +145,7 @@ function Section({ s, src, first, sel }: { s: PageSection; src?: string | undefi
       return (
         <section className="border-t border-border/60">
           {src && <figure className="m-0"><img src={src} alt={alt} aria-hidden={s.decorative || undefined} loading="lazy" decoding="async" className="h-[42vh] min-h-[260px] w-full object-cover lg:h-[62vh]" />
-            {s.caption && <figcaption {...a("caption")} className="mx-auto max-w-3xl px-5 pt-4 text-center font-display text-[1.15rem] italic text-foreground/80 lg:px-0">{s.caption}</figcaption>}</figure>}
+            {s.caption && <figcaption {...a("caption")} className="mx-auto max-w-3xl px-5 pt-4 text-center font-display text-[1.15rem] italic text-foreground/80 lg:px-0"><RichText format={s.textFormats?.["caption"]} fallback={s.caption} inline /></figcaption>}</figure>}
           {text && <div className="mx-auto max-w-3xl px-5 pb-12 lg:px-14">{text}</div>}
           {!text && <div className="pb-10" />}
         </section>
@@ -152,8 +155,8 @@ function Section({ s, src, first, sel }: { s: PageSection; src?: string | undefi
       return (
         <section className="border-t border-border/60 px-5 py-16 lg:px-14 lg:py-24">
           <div className="mx-auto max-w-4xl border border-gold/40 bg-card/50 px-6 py-12 text-center sm:px-12 lg:py-16">
-            <Eyebrow t={s.eyebrow} a={a} /><H2 t={s.heading} a={a} />
-            {s.body && <div className="mx-auto mt-6 max-w-2xl"><Paragraphs text={s.body} a={a} /></div>}
+            <Eyebrow t={s.eyebrow} a={a} format={s.textFormats?.["eyebrow"]} /><H2 t={s.heading} a={a} format={s.textFormats?.["heading"]} />
+            {s.body && <div className="mx-auto mt-6 max-w-2xl"><Paragraphs text={s.body} a={a} format={s.textFormats?.["body"]} /></div>}
             <Buttons s={s} center a={a} />
           </div>
         </section>
@@ -163,8 +166,8 @@ function Section({ s, src, first, sel }: { s: PageSection; src?: string | undefi
         <section className={`px-5 py-16 lg:px-14 lg:py-24 ${first ? "" : "border-t border-border/60"}`}>
           <div className={`mx-auto grid items-center gap-10 ${src ? "max-w-6xl lg:grid-cols-2 lg:gap-16" : "max-w-3xl"}`}>
             <div className={`min-w-0 ${src && imgLeft ? "lg:order-2" : ""}`}>
-              <Eyebrow t={s.eyebrow} a={a} /><H2 t={s.heading} a={a} />
-              {s.body && <div className="mt-7"><Paragraphs text={s.body} a={a} /></div>}
+              <Eyebrow t={s.eyebrow} a={a} format={s.textFormats?.["eyebrow"]} /><H2 t={s.heading} a={a} format={s.textFormats?.["heading"]} />
+              {s.body && <div className="mt-7"><Paragraphs text={s.body} a={a} format={s.textFormats?.["body"]} /></div>}
               <Buttons s={s} a={a} />
             </div>
             {src && <Img a={a} s={s} src={src} className="aspect-[4/5] max-h-[620px] border border-border/60 sm:aspect-[3/2] lg:aspect-[4/5]" />}

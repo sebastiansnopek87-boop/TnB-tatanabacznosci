@@ -1,8 +1,11 @@
+import { lazy, Suspense } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { IMAGE_DISPLAY, SECTION_KINDS, isSafeHref, type ImageDisplay, type PageDraft, type PageSection, type SectionKind } from "@/lib/pages";
+
+const TextEditor = lazy(() => import("./TextEditor").then(m => ({ default: m.TextEditor })));
 
 // Right-hand panel: edits exactly the fields the selected element renders from.
 type Patch = (p: Partial<PageSection>, key?: string) => void;
@@ -18,8 +21,8 @@ export function Inspector({ s, el, busy, imageUrl, onPatch, onSelectEl, onUpload
 }) {
   const btn = el.startsWith("button-") ? Number(el.slice(7)) : -1;
   const item = el.startsWith("item-") ? Number(el.slice(5)) : -1;
-  const text = (k: "eyebrow" | "heading" | "body" | "quoteAuthor" | "caption", label: string, rows = 0) => (
-    <F label={label}>{rows ? <Textarea rows={rows} value={s[k]} onChange={(e) => onPatch({ [k]: e.target.value }, k)} /> : <Input value={s[k]} maxLength={k === "caption" ? 300 : 200} onChange={(e) => onPatch({ [k]: e.target.value }, k)} />}</F>
+  const text = (k: "eyebrow" | "heading" | "body" | "quoteAuthor" | "caption", label: string, _rows = 0) => (
+    <Suspense fallback={<p className="text-xs text-muted-foreground">Wczytywanie edytora…</p>}><TextEditor key={`${s.id}:${k}`} label={label} value={s[k]} format={s.textFormats?.[k]} onChange={(plain, format) => { const formats = { ...s.textFormats }; if (format) formats[k] = format; else delete formats[k]; onPatch({ [k]: plain, textFormats: formats }, k); }} /></Suspense>
   );
 
   if (el === "eyebrow") return text("eyebrow", "Nadtytuł (mały złoty napis)");
@@ -29,7 +32,8 @@ export function Inspector({ s, el, busy, imageUrl, onPatch, onSelectEl, onUpload
   if (el === "caption") return text("caption", "Podpis pod zdjęciem");
   if (el === "image") return <ImageFields s={s} busy={busy} imageUrl={imageUrl} onPatch={onPatch} onUpload={onUpload} />;
   if (btn >= 0 && s.buttons[btn]) {
-    const b = s.buttons[btn]!;
+    const b = s.buttons[btn];
+    if (!b) return null;
     const set = (p: Partial<typeof b>, k: string) => onPatch({ buttons: s.buttons.map((x, j) => (j === btn ? { ...x, ...p } : x)) }, `btn${btn}${k}`);
     return (
       <>
@@ -43,12 +47,12 @@ export function Inspector({ s, el, busy, imageUrl, onPatch, onSelectEl, onUpload
     );
   }
   if (item >= 0 && s.items[item]) {
-    const it = s.items[item]!;
+    const it = s.items[item];
+    if (!it) return null;
     const set = (p: Partial<typeof it>, k: string) => onPatch({ items: s.items.map((x, j) => (j === item ? { ...x, ...p } : x)) }, `it${item}${k}`);
     return (
       <>
-        <F label={s.kind === "values" ? "Nazwa karty" : "Tytuł kolumny"}><Input value={it.title} maxLength={120} onChange={(e) => set({ title: e.target.value }, "t")} /></F>
-        <F label={s.kind === "values" ? "Opis" : "Punkty listy — każdy w nowej linii"}><Textarea rows={s.kind === "values" ? 4 : 8} value={it.body} onChange={(e) => set({ body: e.target.value }, "b")} /></F>
+        {(["title", "body"] as const).map(field => <Suspense key={`${s.id}:${item}:${field}`} fallback={null}><TextEditor label={field === "title" ? "Tytuł" : "Treść"} value={it[field]} format={s.textFormats?.[`item-${item}-${field}`]} onChange={(plain, format) => { const formats = { ...s.textFormats }; const key = `item-${item}-${field}`; if (format) formats[key] = format; else delete formats[key]; onPatch({ items: s.items.map((x, j) => j === item ? { ...x, [field]: plain } : x), textFormats: formats }, key); }} /></Suspense>)}
         {s.kind === "values" && <Button size="sm" variant="ghost" onClick={() => { onPatch({ items: s.items.filter((_, j) => j !== item) }); onSelectEl("section"); }}><Trash2 className="mr-1 h-3.5 w-3.5" />Usuń kartę</Button>}
       </>
     );

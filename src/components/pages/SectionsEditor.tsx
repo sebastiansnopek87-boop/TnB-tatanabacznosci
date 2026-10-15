@@ -15,8 +15,14 @@ type Props = {
 };
 
 export function SectionsEditor({ sections, urls, busy, onChange, onUpload, kinds }: Props) {
-  const setSec = (i: number, patch: Partial<PageSection>) => onChange((a) => a.map((s, j) => (j === i ? { ...s, ...patch } : s)));
-  const move = (i: number, dir: -1 | 1) => onChange((o) => { const a = [...o]; const j = i + dir; if (j < 0 || j >= a.length) return o; [a[i], a[j]] = [a[j]!, a[i]!]; return a; });
+  const setSec = (i: number, patch: Partial<PageSection>) => onChange((a) => a.map((s, j) => {
+    if (j !== i) return s;
+    const formats = { ...s.textFormats };
+    for (const key of ["eyebrow", "heading", "body", "quoteAuthor", "caption"] as const) if (key in patch) delete formats[key];
+    if (patch.items) for (const key of Object.keys(formats)) if (key.startsWith("item-")) delete formats[key];
+    return { ...s, ...patch, textFormats: formats };
+  }));
+  const move = (i: number, dir: -1 | 1) => onChange((o) => { const a = [...o]; const j = i + dir; const from = a[i]; const to = a[j]; if (!from || !to) return o; a[i] = to; a[j] = from; return a; });
   const upload = onUpload;
   const allowed = kinds ?? (Object.keys(KIND_LABEL) as SectionKind[]);
   return (

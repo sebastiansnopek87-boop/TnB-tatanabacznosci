@@ -1,3 +1,4 @@
+import type { TextFormat } from "./rich-text";
 // Shared, browser-safe model for CMS pages (O TNB, Moja historia and future subpages).
 export type PageButton = { label: string; href: string };
 export type PageItem = { title: string; body: string };
@@ -21,6 +22,7 @@ export type PageSection = {
   items: PageItem[]; // value cards or the two columns of a comparison
   hidden?: boolean; // hidden sections stay in the page but are not shown publicly
   optional?: boolean; // "opcjonalna treść": intentionally empty, no pre-publish warning
+  textFormats?: Record<string, TextFormat>;
 };
 export type PublicPage = {
   id: string; slug: string; system_key: string | null; title: string; intro: string;
