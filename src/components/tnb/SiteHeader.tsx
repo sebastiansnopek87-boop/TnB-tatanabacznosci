@@ -5,7 +5,7 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import logo from "@/assets/logo.png.asset.json";
+import logo from "@/assets/logo-384.webp.asset.json";
 import { useModuleVisibility } from "@/hooks/use-module-visibility";
 import { brandSrc, getBrandSlogan, useBrand } from "@/hooks/use-brand-settings";
 import { Button } from "@/components/ui/button";

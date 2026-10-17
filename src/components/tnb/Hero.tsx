@@ -1,5 +1,5 @@
 import { ArrowRight } from "lucide-react";
-import hero from "@/assets/hero.jpg.asset.json";
+import hero from "@/assets/hero-opt.jpg.asset.json";
 import { useModuleVisibility } from "@/hooks/use-module-visibility";
 
 

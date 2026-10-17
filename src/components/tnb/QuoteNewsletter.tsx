@@ -2,7 +2,7 @@ import { useRef, useState, type FormEvent } from "react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowRight, Loader2, Lock, Mail } from "lucide-react";
-import banner from "@/assets/banner.jpg.asset.json";
+import banner from "@/assets/banner-opt.jpg.asset.json";
 import { useModuleVisibility } from "@/hooks/use-module-visibility";
 import { NEWSLETTER_CONSENT_TEXT, newsletterSchema, subscribeNewsletter } from "@/lib/newsletter.functions";
 
