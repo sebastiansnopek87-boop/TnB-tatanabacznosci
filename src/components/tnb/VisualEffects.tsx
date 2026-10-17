@@ -40,9 +40,13 @@ export function VisualEffects() {
     };
     // Page content may be swapped after data loads; re-scan new nodes (debounced).
     const mo = new MutationObserver(() => { window.clearTimeout(t); t = window.setTimeout(scan, 80); });
-    mo.observe(document.body, { childList: true, subtree: true });
-    t = window.setTimeout(scan, 60);
-    return () => { window.clearTimeout(t); io.disconnect(); mo.disconnect(); };
+    // Start observing immediately, but delay the first class mutations until the
+    // window load event: lazy route subtrees finish hydrating by then, so adding
+    // fx-reveal cannot race React hydration (attribute mismatch warning).
+    const kick = () => { mo.observe(document.body, { childList: true, subtree: true }); t = window.setTimeout(scan, 60); };
+    if (document.readyState === "complete") requestAnimationFrame(kick);
+    else window.addEventListener("load", kick, { once: true });
+    return () => { window.clearTimeout(t); window.removeEventListener("load", kick); io.disconnect(); mo.disconnect(); };
   }, [path, key]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return null;

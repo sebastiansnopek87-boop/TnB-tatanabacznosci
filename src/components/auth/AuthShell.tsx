@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import logo from "@/assets/logo.png.asset.json";
+import logo from "@/assets/logo-384.webp.asset.json";
 import { brandSrc, getBrandSlogan, useBrand } from "@/hooks/use-brand-settings";
 
 /** Shared frame for every authentication screen: logo above a centred card. */

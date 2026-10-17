@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Mail, Phone } from "lucide-react";
-import logo from "@/assets/logo.png.asset.json";
+import logo from "@/assets/logo-384.webp.asset.json";
 import { byOrder, getSiteSettings, visibleSocial } from "@/config/site-settings";
 import { SocialIcon } from "./SocialIcon";
 import { usePlatformSettings } from "@/hooks/use-platform-settings";
