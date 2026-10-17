@@ -43,8 +43,7 @@ export function VisualEffects() {
     // Start observing immediately, but delay the first class mutations until the
     // window load event: lazy route subtrees finish hydrating by then, so adding
     // fx-reveal cannot race React hydration (attribute mismatch warning).
-    mo.observe(document.body, { childList: true, subtree: true });
-    const kick = () => { t = window.setTimeout(scan, 60); };
+    const kick = () => { mo.observe(document.body, { childList: true, subtree: true }); t = window.setTimeout(scan, 60); };
     if (document.readyState === "complete") requestAnimationFrame(kick);
     else window.addEventListener("load", kick, { once: true });
     return () => { window.clearTimeout(t); window.removeEventListener("load", kick); io.disconnect(); mo.disconnect(); };
