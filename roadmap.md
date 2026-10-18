@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] Centrum kontroli Etap 3: poprawić historię, jawne błędy i limity, powiązania, wspólny odczyt dostępu, wyszukiwanie i istniejące linki; testy wyłącznie odczytowe i raport, bez zmian bazy.
 - [x] Moje TNB: ograniczony audyt 0057 i aktualnych zabezpieczeń; regresja tylko do odczytu 1280/390 px, 9 testów PASS i raport; wykryto nadmiarowe ACL (TRUNCATE), bez zmian bazy i danych
 - [ ] Moje TNB: ograniczenie nadmiarowych uprawnień user_avatars — wymaga osobnej zgody właściciela; audyt nie wprowadza napraw
 - [ ] Moje TNB: pełny zapis/odczyt profilu oraz avatary wpisu i komentarza — potrzebne uzgodnione konto testowe i izolowane środowisko; brak zgody na zmianę rzeczywistych danych
