@@ -23,7 +23,12 @@ export const Route = createFileRoute("/_authenticated/admin/ustawienia")({
     { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
   ] }), component: PlatformSettings });
 
-type Form = { platform_name: string; contact_email: string; support_email: string; notice_enabled: boolean; maintenance_enabled: boolean; maintenance_message: string; social_youtube: string; social_spotify: string; social_tiktok: string; social_instagram: string };
+type Form = { platform_name: string; contact_email: string; support_email: string; notice_enabled: boolean; maintenance_enabled: boolean; maintenance_message: string; social_youtube: string; social_spotify: string; social_tiktok: string; social_instagram: string;
+  company_legal_name: string; company_legal_form: string; company_nip: string; company_regon: string; company_krs: string;
+  company_address_street: string; company_address_postal: string; company_address_city: string; company_address_country: string;
+  contact_phone: string; contact_hours: string;
+  billing_same_as_company: boolean; billing_name: string; billing_nip: string; billing_address: string;
+  footer_description: string; footer_copyright: string; footer_show_contact: boolean };
 
 function Section({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
@@ -48,7 +53,13 @@ function PlatformSettings() {
     const s = data.settings;
     setF({ platform_name: s.platform_name, contact_email: s.contact_email ?? "", support_email: s.support_email ?? "",
       notice_enabled: s.notice_enabled, maintenance_enabled: s.maintenance_enabled, maintenance_message: s.maintenance_message,
-      social_youtube: s.social_youtube ?? "", social_spotify: s.social_spotify ?? "", social_tiktok: s.social_tiktok ?? "", social_instagram: s.social_instagram ?? "" });
+      social_youtube: s.social_youtube ?? "", social_spotify: s.social_spotify ?? "", social_tiktok: s.social_tiktok ?? "", social_instagram: s.social_instagram ?? "",
+      company_legal_name: s.company_legal_name ?? "", company_legal_form: s.company_legal_form ?? "", company_nip: s.company_nip ?? "",
+      company_regon: s.company_regon ?? "", company_krs: s.company_krs ?? "", company_address_street: s.company_address_street ?? "",
+      company_address_postal: s.company_address_postal ?? "", company_address_city: s.company_address_city ?? "", company_address_country: s.company_address_country ?? "",
+      contact_phone: s.contact_phone ?? "", contact_hours: s.contact_hours ?? "",
+      billing_same_as_company: s.billing_same_as_company, billing_name: s.billing_name ?? "", billing_nip: s.billing_nip ?? "", billing_address: s.billing_address ?? "",
+      footer_description: s.footer_description ?? "", footer_copyright: s.footer_copyright ?? "", footer_show_contact: s.footer_show_contact });
   }, [data]);
 
   async function onSubmit(e: FormEvent) {
