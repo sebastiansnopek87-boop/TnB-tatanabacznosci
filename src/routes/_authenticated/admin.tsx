@@ -23,7 +23,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 
 type NavItem = { to: string; label: string; exact?: boolean };
 const GROUPS: Array<{ title: string; items: NavItem[] }> = [
-  { title: "Pulpit", items: [{ to: "/admin", label: "Przegląd platformy", exact: true }] },
+  { title: "Pulpit", items: [{ to: "/admin", label: "Przegląd platformy", exact: true }, { to: "/admin/centrum-kontroli", label: "Centrum kontroli" }] },
   { title: "Zarządzanie", items: [
     { to: "/admin/uzytkownicy", label: "Użytkownicy" },
     { to: "/admin/spolecznosc", label: "Społeczność i moderacja" },

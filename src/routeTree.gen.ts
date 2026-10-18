@@ -44,6 +44,7 @@ import { Route as AuthenticatedAdminArtykulyRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminAsystentAiRouteImport } from './routes/_authenticated/admin.asystent-ai'
 import { Route as AuthenticatedAdminBezpieczenstwoRouteImport } from './routes/_authenticated/admin.bezpieczenstwo'
 import { Route as AuthenticatedAdminBibliotekaRouteImport } from './routes/_authenticated/admin.biblioteka'
+import { Route as AuthenticatedAdminCentrumKontroliRouteImport } from './routes/_authenticated/admin.centrum-kontroli'
 import { Route as AuthenticatedAdminDziennikRouteImport } from './routes/_authenticated/admin.dziennik'
 import { Route as AuthenticatedAdminMultimediaRouteImport } from './routes/_authenticated/admin.multimedia'
 import { Route as AuthenticatedAdminPlatnosciRouteImport } from './routes/_authenticated/admin.platnosci'
@@ -257,6 +258,12 @@ const AuthenticatedAdminBibliotekaRoute =
   AuthenticatedAdminBibliotekaRouteImport.update({
     id: '/biblioteka',
     path: '/biblioteka',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminCentrumKontroliRoute =
+  AuthenticatedAdminCentrumKontroliRouteImport.update({
+    id: '/centrum-kontroli',
+    path: '/centrum-kontroli',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminDziennikRoute =
@@ -496,6 +503,7 @@ export interface FileRoutesByFullPath {
   '/admin/asystent-ai': typeof AuthenticatedAdminAsystentAiRoute
   '/admin/bezpieczenstwo': typeof AuthenticatedAdminBezpieczenstwoRoute
   '/admin/biblioteka': typeof AuthenticatedAdminBibliotekaRoute
+  '/admin/centrum-kontroli': typeof AuthenticatedAdminCentrumKontroliRoute
   '/admin/dziennik': typeof AuthenticatedAdminDziennikRoute
   '/admin/multimedia': typeof AuthenticatedAdminMultimediaRoute
   '/admin/platnosci': typeof AuthenticatedAdminPlatnosciRoute
@@ -566,6 +574,7 @@ export interface FileRoutesByTo {
   '/admin/asystent-ai': typeof AuthenticatedAdminAsystentAiRoute
   '/admin/bezpieczenstwo': typeof AuthenticatedAdminBezpieczenstwoRoute
   '/admin/biblioteka': typeof AuthenticatedAdminBibliotekaRoute
+  '/admin/centrum-kontroli': typeof AuthenticatedAdminCentrumKontroliRoute
   '/admin/dziennik': typeof AuthenticatedAdminDziennikRoute
   '/admin/multimedia': typeof AuthenticatedAdminMultimediaRoute
   '/admin/platnosci': typeof AuthenticatedAdminPlatnosciRoute
@@ -639,6 +648,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/asystent-ai': typeof AuthenticatedAdminAsystentAiRoute
   '/_authenticated/admin/bezpieczenstwo': typeof AuthenticatedAdminBezpieczenstwoRoute
   '/_authenticated/admin/biblioteka': typeof AuthenticatedAdminBibliotekaRoute
+  '/_authenticated/admin/centrum-kontroli': typeof AuthenticatedAdminCentrumKontroliRoute
   '/_authenticated/admin/dziennik': typeof AuthenticatedAdminDziennikRoute
   '/_authenticated/admin/multimedia': typeof AuthenticatedAdminMultimediaRoute
   '/_authenticated/admin/platnosci': typeof AuthenticatedAdminPlatnosciRoute
@@ -712,6 +722,7 @@ export interface FileRouteTypes {
     | '/admin/asystent-ai'
     | '/admin/bezpieczenstwo'
     | '/admin/biblioteka'
+    | '/admin/centrum-kontroli'
     | '/admin/dziennik'
     | '/admin/multimedia'
     | '/admin/platnosci'
@@ -782,6 +793,7 @@ export interface FileRouteTypes {
     | '/admin/asystent-ai'
     | '/admin/bezpieczenstwo'
     | '/admin/biblioteka'
+    | '/admin/centrum-kontroli'
     | '/admin/dziennik'
     | '/admin/multimedia'
     | '/admin/platnosci'
@@ -854,6 +866,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/asystent-ai'
     | '/_authenticated/admin/bezpieczenstwo'
     | '/_authenticated/admin/biblioteka'
+    | '/_authenticated/admin/centrum-kontroli'
     | '/_authenticated/admin/dziennik'
     | '/_authenticated/admin/multimedia'
     | '/_authenticated/admin/platnosci'
@@ -1184,6 +1197,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminBibliotekaRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/centrum-kontroli': {
+      id: '/_authenticated/admin/centrum-kontroli'
+      path: '/centrum-kontroli'
+      fullPath: '/admin/centrum-kontroli'
+      preLoaderRoute: typeof AuthenticatedAdminCentrumKontroliRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/dziennik': {
       id: '/_authenticated/admin/dziennik'
       path: '/dziennik'
@@ -1437,6 +1457,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminAsystentAiRoute: typeof AuthenticatedAdminAsystentAiRoute
   AuthenticatedAdminBezpieczenstwoRoute: typeof AuthenticatedAdminBezpieczenstwoRoute
   AuthenticatedAdminBibliotekaRoute: typeof AuthenticatedAdminBibliotekaRoute
+  AuthenticatedAdminCentrumKontroliRoute: typeof AuthenticatedAdminCentrumKontroliRoute
   AuthenticatedAdminDziennikRoute: typeof AuthenticatedAdminDziennikRoute
   AuthenticatedAdminMultimediaRoute: typeof AuthenticatedAdminMultimediaRoute
   AuthenticatedAdminPlatnosciRoute: typeof AuthenticatedAdminPlatnosciRoute
@@ -1465,6 +1486,8 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminAsystentAiRoute: AuthenticatedAdminAsystentAiRoute,
   AuthenticatedAdminBezpieczenstwoRoute: AuthenticatedAdminBezpieczenstwoRoute,
   AuthenticatedAdminBibliotekaRoute: AuthenticatedAdminBibliotekaRoute,
+  AuthenticatedAdminCentrumKontroliRoute:
+    AuthenticatedAdminCentrumKontroliRoute,
   AuthenticatedAdminDziennikRoute: AuthenticatedAdminDziennikRoute,
   AuthenticatedAdminMultimediaRoute: AuthenticatedAdminMultimediaRoute,
   AuthenticatedAdminPlatnosciRoute: AuthenticatedAdminPlatnosciRoute,
