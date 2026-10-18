@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-export const Route = createFileRoute('/api/public/avatar/')({ server: { handlers: {
+export const Route = createFileRoute('/api/public/avatar/$kind/$id')({ server: { handlers: {
   GET: async ({ request, params }) => {
     const denied = () => new Response('Not found', { status: 404, headers: { 'cache-control': 'no-store' } });
     if (!/^[0-9a-f-]{36}$/.test(params.id) || !['own', 'post', 'comment'].includes(params.kind)) return denied();

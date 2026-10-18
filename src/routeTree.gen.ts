@@ -66,7 +66,6 @@ import { Route as AuthenticatedAdminZdarzeniaRouteImport } from './routes/_authe
 import { Route as AuthenticatedAdminZgloszeniaGlosRouteImport } from './routes/_authenticated/admin.zgloszenia-glos'
 import { Route as SpotkaniaRezerwacjaTokenRouteImport } from './routes/spotkania.rezerwacja.$token'
 import { Route as SpotkaniaZgloszenieTokenRouteImport } from './routes/spotkania.zgloszenie.$token'
-import { Route as ApiPublicAvatarRouteImport } from './routes/api/public/avatar..'
 import { Route as ApiPublicBrandFileRouteImport } from './routes/api/public/brand.$file'
 import { Route as ApiPublicCronConsultRemindersRouteImport } from './routes/api/public/cron/consult-reminders'
 import { Route as ApiPublicCronInstagramSyncRouteImport } from './routes/api/public/cron/instagram-sync'
@@ -78,6 +77,7 @@ import { Route as ApiPublicPaymentsPayuRouteImport } from './routes/api/public/p
 import { Route as ApiPublicPaymentsTpayRouteImport } from './routes/api/public/payments/tpay'
 import { Route as ApiPublicPodcastCoverIdRouteImport } from './routes/api/public/podcast-cover.$id'
 import { Route as ApiPublicArticleImageIdNameRouteImport } from './routes/api/public/article-image.$id.$name'
+import { Route as ApiPublicAvatarKindIdRouteImport } from './routes/api/public/avatar.$kind.$id'
 import { Route as ApiPublicPageImageIdNameRouteImport } from './routes/api/public/page-image.$id.$name'
 
 const IndexRoute = IndexRouteImport.update({
@@ -391,11 +391,6 @@ const SpotkaniaZgloszenieTokenRoute =
     path: '/spotkania/zgloszenie/$token',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicAvatarRoute = ApiPublicAvatarRouteImport.update({
-  id: '/api/public/avatar/',
-  path: '/api/public/avatar/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiPublicBrandFileRoute = ApiPublicBrandFileRouteImport.update({
   id: '/api/public/brand/$file',
   path: '/api/public/brand/$file',
@@ -455,6 +450,11 @@ const ApiPublicArticleImageIdNameRoute =
     path: '/api/public/article-image/$id/$name',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicAvatarKindIdRoute = ApiPublicAvatarKindIdRouteImport.update({
+  id: '/api/public/avatar/$kind/$id',
+  path: '/api/public/avatar/$kind/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPageImageIdNameRoute =
   ApiPublicPageImageIdNameRouteImport.update({
     id: '/api/public/page-image/$id/$name',
@@ -519,7 +519,6 @@ export interface FileRoutesByFullPath {
   '/spotkania/rezerwacja/$token': typeof SpotkaniaRezerwacjaTokenRoute
   '/spotkania/zgloszenie/$token': typeof SpotkaniaZgloszenieTokenRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
-  '/api/public/avatar/': typeof ApiPublicAvatarRoute
   '/api/public/brand/$file': typeof ApiPublicBrandFileRoute
   '/api/public/cron/consult-reminders': typeof ApiPublicCronConsultRemindersRoute
   '/api/public/cron/instagram-sync': typeof ApiPublicCronInstagramSyncRoute
@@ -531,6 +530,7 @@ export interface FileRoutesByFullPath {
   '/api/public/payments/tpay': typeof ApiPublicPaymentsTpayRoute
   '/api/public/podcast-cover/$id': typeof ApiPublicPodcastCoverIdRoute
   '/api/public/article-image/$id/$name': typeof ApiPublicArticleImageIdNameRoute
+  '/api/public/avatar/$kind/$id': typeof ApiPublicAvatarKindIdRoute
   '/api/public/page-image/$id/$name': typeof ApiPublicPageImageIdNameRoute
 }
 export interface FileRoutesByTo {
@@ -589,7 +589,6 @@ export interface FileRoutesByTo {
   '/spotkania/rezerwacja/$token': typeof SpotkaniaRezerwacjaTokenRoute
   '/spotkania/zgloszenie/$token': typeof SpotkaniaZgloszenieTokenRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
-  '/api/public/avatar': typeof ApiPublicAvatarRoute
   '/api/public/brand/$file': typeof ApiPublicBrandFileRoute
   '/api/public/cron/consult-reminders': typeof ApiPublicCronConsultRemindersRoute
   '/api/public/cron/instagram-sync': typeof ApiPublicCronInstagramSyncRoute
@@ -601,6 +600,7 @@ export interface FileRoutesByTo {
   '/api/public/payments/tpay': typeof ApiPublicPaymentsTpayRoute
   '/api/public/podcast-cover/$id': typeof ApiPublicPodcastCoverIdRoute
   '/api/public/article-image/$id/$name': typeof ApiPublicArticleImageIdNameRoute
+  '/api/public/avatar/$kind/$id': typeof ApiPublicAvatarKindIdRoute
   '/api/public/page-image/$id/$name': typeof ApiPublicPageImageIdNameRoute
 }
 export interface FileRoutesById {
@@ -662,7 +662,6 @@ export interface FileRoutesById {
   '/spotkania/rezerwacja/$token': typeof SpotkaniaRezerwacjaTokenRoute
   '/spotkania/zgloszenie/$token': typeof SpotkaniaZgloszenieTokenRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
-  '/api/public/avatar/': typeof ApiPublicAvatarRoute
   '/api/public/brand/$file': typeof ApiPublicBrandFileRoute
   '/api/public/cron/consult-reminders': typeof ApiPublicCronConsultRemindersRoute
   '/api/public/cron/instagram-sync': typeof ApiPublicCronInstagramSyncRoute
@@ -674,6 +673,7 @@ export interface FileRoutesById {
   '/api/public/payments/tpay': typeof ApiPublicPaymentsTpayRoute
   '/api/public/podcast-cover/$id': typeof ApiPublicPodcastCoverIdRoute
   '/api/public/article-image/$id/$name': typeof ApiPublicArticleImageIdNameRoute
+  '/api/public/avatar/$kind/$id': typeof ApiPublicAvatarKindIdRoute
   '/api/public/page-image/$id/$name': typeof ApiPublicPageImageIdNameRoute
 }
 export interface FileRouteTypes {
@@ -735,7 +735,6 @@ export interface FileRouteTypes {
     | '/spotkania/rezerwacja/$token'
     | '/spotkania/zgloszenie/$token'
     | '/admin/'
-    | '/api/public/avatar/'
     | '/api/public/brand/$file'
     | '/api/public/cron/consult-reminders'
     | '/api/public/cron/instagram-sync'
@@ -747,6 +746,7 @@ export interface FileRouteTypes {
     | '/api/public/payments/tpay'
     | '/api/public/podcast-cover/$id'
     | '/api/public/article-image/$id/$name'
+    | '/api/public/avatar/$kind/$id'
     | '/api/public/page-image/$id/$name'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -805,7 +805,6 @@ export interface FileRouteTypes {
     | '/spotkania/rezerwacja/$token'
     | '/spotkania/zgloszenie/$token'
     | '/admin'
-    | '/api/public/avatar'
     | '/api/public/brand/$file'
     | '/api/public/cron/consult-reminders'
     | '/api/public/cron/instagram-sync'
@@ -817,6 +816,7 @@ export interface FileRouteTypes {
     | '/api/public/payments/tpay'
     | '/api/public/podcast-cover/$id'
     | '/api/public/article-image/$id/$name'
+    | '/api/public/avatar/$kind/$id'
     | '/api/public/page-image/$id/$name'
   id:
     | '__root__'
@@ -877,7 +877,6 @@ export interface FileRouteTypes {
     | '/spotkania/rezerwacja/$token'
     | '/spotkania/zgloszenie/$token'
     | '/_authenticated/admin/'
-    | '/api/public/avatar/'
     | '/api/public/brand/$file'
     | '/api/public/cron/consult-reminders'
     | '/api/public/cron/instagram-sync'
@@ -889,6 +888,7 @@ export interface FileRouteTypes {
     | '/api/public/payments/tpay'
     | '/api/public/podcast-cover/$id'
     | '/api/public/article-image/$id/$name'
+    | '/api/public/avatar/$kind/$id'
     | '/api/public/page-image/$id/$name'
   fileRoutesById: FileRoutesById
 }
@@ -922,7 +922,6 @@ export interface RootRouteChildren {
   SpotkaniaIndexRoute: typeof SpotkaniaIndexRoute
   SpotkaniaRezerwacjaTokenRoute: typeof SpotkaniaRezerwacjaTokenRoute
   SpotkaniaZgloszenieTokenRoute: typeof SpotkaniaZgloszenieTokenRoute
-  ApiPublicAvatarRoute: typeof ApiPublicAvatarRoute
   ApiPublicBrandFileRoute: typeof ApiPublicBrandFileRoute
   ApiPublicCronConsultRemindersRoute: typeof ApiPublicCronConsultRemindersRoute
   ApiPublicCronInstagramSyncRoute: typeof ApiPublicCronInstagramSyncRoute
@@ -934,6 +933,7 @@ export interface RootRouteChildren {
   ApiPublicPaymentsTpayRoute: typeof ApiPublicPaymentsTpayRoute
   ApiPublicPodcastCoverIdRoute: typeof ApiPublicPodcastCoverIdRoute
   ApiPublicArticleImageIdNameRoute: typeof ApiPublicArticleImageIdNameRoute
+  ApiPublicAvatarKindIdRoute: typeof ApiPublicAvatarKindIdRoute
   ApiPublicPageImageIdNameRoute: typeof ApiPublicPageImageIdNameRoute
 }
 
@@ -1338,13 +1338,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SpotkaniaZgloszenieTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/avatar/': {
-      id: '/api/public/avatar/'
-      path: '/api/public/avatar'
-      fullPath: '/api/public/avatar/'
-      preLoaderRoute: typeof ApiPublicAvatarRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/brand/$file': {
       id: '/api/public/brand/$file'
       path: '/api/public/brand/$file'
@@ -1420,6 +1413,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/article-image/$id/$name'
       fullPath: '/api/public/article-image/$id/$name'
       preLoaderRoute: typeof ApiPublicArticleImageIdNameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/avatar/$kind/$id': {
+      id: '/api/public/avatar/$kind/$id'
+      path: '/api/public/avatar/$kind/$id'
+      fullPath: '/api/public/avatar/$kind/$id'
+      preLoaderRoute: typeof ApiPublicAvatarKindIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/page-image/$id/$name': {
@@ -1537,7 +1537,6 @@ const rootRouteChildren: RootRouteChildren = {
   SpotkaniaIndexRoute: SpotkaniaIndexRoute,
   SpotkaniaRezerwacjaTokenRoute: SpotkaniaRezerwacjaTokenRoute,
   SpotkaniaZgloszenieTokenRoute: SpotkaniaZgloszenieTokenRoute,
-  ApiPublicAvatarRoute: ApiPublicAvatarRoute,
   ApiPublicBrandFileRoute: ApiPublicBrandFileRoute,
   ApiPublicCronConsultRemindersRoute: ApiPublicCronConsultRemindersRoute,
   ApiPublicCronInstagramSyncRoute: ApiPublicCronInstagramSyncRoute,
@@ -1549,6 +1548,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPaymentsTpayRoute: ApiPublicPaymentsTpayRoute,
   ApiPublicPodcastCoverIdRoute: ApiPublicPodcastCoverIdRoute,
   ApiPublicArticleImageIdNameRoute: ApiPublicArticleImageIdNameRoute,
+  ApiPublicAvatarKindIdRoute: ApiPublicAvatarKindIdRoute,
   ApiPublicPageImageIdNameRoute: ApiPublicPageImageIdNameRoute,
 }
 export const routeTree = rootRouteImport
