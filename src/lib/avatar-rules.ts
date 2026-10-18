@@ -8,5 +8,5 @@ export function validateAvatarSource(type: string, size: number, width: number, 
   if (width < 1 || height < 1 || width > AVATAR_SOURCE_MAX_DIMENSION || height > AVATAR_SOURCE_MAX_DIMENSION) throw new Error('Obraz może mieć maksymalnie 4096 × 4096 pikseli.');
 }
 export function accountName(metadata: Record<string, unknown>) {
-  return typeof metadata.first_name === 'string' ? metadata.first_name.trim() : '';
+  return typeof metadata['first_name'] === 'string' ? metadata['first_name'].trim() : '';
 }

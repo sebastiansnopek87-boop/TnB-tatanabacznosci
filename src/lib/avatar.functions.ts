@@ -20,7 +20,7 @@ export const saveMyAvatar = createServerFn({ method: 'POST' }).middleware([requi
     const { decode, encode, parseRiff, getWebpInfo } = await import('@stacksjs/ts-webp');
     const bytes = new Uint8Array(await image.arrayBuffer());
     const info = getWebpInfo(parseRiff(bytes));
-    if (info.width !== AVATAR_SIZE || info.height !== AVATAR_SIZE || info.isAnimated) throw new Error('Nieprawidłowe wymiary avatara.');
+    if (info.width !== AVATAR_SIZE || info.height !== AVATAR_SIZE || info.hasAnimation) throw new Error('Nieprawidłowe wymiary avatara.');
     let normalized: Uint8Array;
     try {
       const decoded = decode(bytes);
