@@ -1,5 +1,7 @@
 # Roadmap
-- [ ] Moje TNB: ograniczony audyt 0057 i aktualnych zabezpieczeń, testy regresji tylko do odczytu oraz raport PASS/FAIL/NIEZWERYFIKOWANO; bez zmian bazy i danych użytkowników
+- [x] Moje TNB: ograniczony audyt 0057 i aktualnych zabezpieczeń; regresja tylko do odczytu 1280/390 px, 9 testów PASS i raport; wykryto nadmiarowe ACL (TRUNCATE), bez zmian bazy i danych
+- [ ] Moje TNB: ograniczenie nadmiarowych uprawnień user_avatars — wymaga osobnej zgody właściciela; audyt nie wprowadza napraw
+- [ ] Moje TNB: pełny zapis/odczyt profilu oraz avatary wpisu i komentarza — potrzebne uzgodnione konto testowe i izolowane środowisko; brak zgody na zmianę rzeczywistych danych
 - [x] Moje TNB: analiza istniejących funkcji, avatarów i uprawnień; minimalny plan oraz SQL przygotowane — wdrożenie czeka na osobną zgodę na bazę
 - [x] Moje TNB: powitanie, cztery szybkie akcje, uporządkowana przestrzeń oraz osobne ustawienia konta
 - [x] Moje TNB: bezpieczne własne avatary, wspólny widok w nagłówku i społeczności, skróty zgodne z faktycznym dostępem
