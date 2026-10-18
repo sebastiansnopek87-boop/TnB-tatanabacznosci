@@ -1,10 +1,11 @@
+import { UserAvatar } from "@/components/account/UserAvatar";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { PageShell } from "@/components/tnb/PageShell";
 import { GuestField, JoinDialog } from "@/components/community/JoinDialog";
-import { ConfirmDelete, Initial, PostCard } from "@/components/community/PostCard";
+import { ConfirmDelete, PostCard } from "@/components/community/PostCard";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { COMMENT_MAX, createComment, deleteComment, fmtWhen, getPost, listComments, updateComment, useUid, type Comment } from "@/lib/community";
@@ -101,7 +102,7 @@ function CommentItem({ c, uid, onChanged }: { c: Comment; uid: string | null; on
   }
   return (
     <div className="flex gap-3 border-l border-gold/30 pl-4">
-      <Initial name={c.author_name} />
+      <UserAvatar name={c.author_name} kind="comment" id={c.id} />
       <div className="min-w-0 flex-1">
         <p className="text-sm"><span className="font-medium text-foreground">{c.author_name}</span>
           <span className="ml-2 text-xs text-muted-foreground">{fmtWhen(c.created_at)}{c.updated_at !== c.created_at && " · edytowano"}</span></p>

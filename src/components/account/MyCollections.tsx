@@ -11,7 +11,7 @@ export function MyPurchases() {
   const q = useQuery({ queryKey: ["my-purchases"], queryFn: () => fn() });
   if (q.isLoading) return <p className="text-sm text-muted-foreground">Ładowanie…</p>;
   if (q.error) return <p className="text-sm text-destructive">Nie udało się wczytać materiałów.</p>;
-  if (!q.data?.length) return <p className="text-sm leading-relaxed text-muted-foreground">Nie masz jeszcze zakupionych materiałów. Znajdziesz je w <Link to="/biblioteka" className="text-gold underline">Bibliotece</Link>.</p>;
+  if (!q.data?.length) return <div className="space-y-3"><p className="text-sm leading-relaxed text-muted-foreground">Twoja kolekcja czeka na pierwszy materiał.</p><Button asChild variant="outline" size="sm"><Link to="/biblioteka">Odkryj Bibliotekę</Link></Button></div>;
   return (
     <ul className="space-y-3">
       {q.data.map((p) => (
@@ -35,11 +35,11 @@ export function MyArticles({ uid }: { uid: string }) {
   if (q.isLoading) return <p className="text-sm text-muted-foreground">Ładowanie…</p>;
   if (q.error) return <p className="text-sm text-destructive">Nie udało się wczytać kolekcji.</p>;
   const items = q.data ?? [];
-  if (!items.length) return <p className="text-sm leading-relaxed text-muted-foreground">Nie masz jeszcze zapisanych artykułów. Przejrzyj <Link to="/artykuly" className="text-gold underline">Artykuły</Link> i kliknij „Zapisz artykuł” pod tekstem, który chcesz mieć pod ręką.</p>;
+  if (!items.length) return <div className="space-y-3"><p className="text-sm leading-relaxed text-muted-foreground">Tutaj będą czekać teksty, do których zechcesz wrócić.</p><Button asChild variant="outline" size="sm"><Link to="/artykuly">Przejrzyj artykuły</Link></Button></div>;
   return (
     <>
       <p className="mb-4 text-sm text-muted-foreground">Zapisane artykuły: {items.length}</p>
-      <ul className="grid grid-cols-[minmax(0,1fr)] gap-4 md:grid-cols-2">
+      <ul className="grid grid-cols-[minmax(0,1fr)] gap-4 xl:grid-cols-1">
         {items.map(({ article_id, article: a }) => (
           <li key={article_id} className="flex min-w-0 gap-4 border border-border/50 p-3">
             <div className="h-20 w-28 shrink-0 overflow-hidden bg-surface-deep">

@@ -22,6 +22,7 @@ import { Route as RegulaminRouteImport } from './routes/regulamin'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedMojeTnbRouteImport } from './routes/_authenticated/moje-tnb'
+import { Route as AuthenticatedUstawieniaKontaRouteImport } from './routes/_authenticated/ustawienia-konta'
 import { Route as ArtykulyIndexRouteImport } from './routes/artykuly.index'
 import { Route as ArtykulySlugRouteImport } from './routes/artykuly.$slug'
 import { Route as BibliotekaIndexRouteImport } from './routes/biblioteka.index'
@@ -143,6 +144,12 @@ const AuthenticatedMojeTnbRoute = AuthenticatedMojeTnbRouteImport.update({
   path: '/moje-tnb',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedUstawieniaKontaRoute =
+  AuthenticatedUstawieniaKontaRouteImport.update({
+    id: '/ustawienia-konta',
+    path: '/ustawienia-konta',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ArtykulyIndexRoute = ArtykulyIndexRouteImport.update({
   id: '/artykuly/',
   path: '/artykuly/',
@@ -468,6 +475,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/moje-tnb': typeof AuthenticatedMojeTnbRoute
+  '/ustawienia-konta': typeof AuthenticatedUstawieniaKontaRoute
   '/artykuly/$slug': typeof ArtykulySlugRoute
   '/biblioteka/$slug': typeof BibliotekaSlugRoute
   '/biblioteka/pobierz': typeof BibliotekaPobierzRoute
@@ -537,6 +545,7 @@ export interface FileRoutesByTo {
   '/regulamin': typeof RegulaminRoute
   '/reset-password': typeof ResetPasswordRoute
   '/moje-tnb': typeof AuthenticatedMojeTnbRoute
+  '/ustawienia-konta': typeof AuthenticatedUstawieniaKontaRoute
   '/artykuly/$slug': typeof ArtykulySlugRoute
   '/biblioteka/$slug': typeof BibliotekaSlugRoute
   '/biblioteka/pobierz': typeof BibliotekaPobierzRoute
@@ -609,6 +618,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/moje-tnb': typeof AuthenticatedMojeTnbRoute
+  '/_authenticated/ustawienia-konta': typeof AuthenticatedUstawieniaKontaRoute
   '/artykuly/$slug': typeof ArtykulySlugRoute
   '/biblioteka/$slug': typeof BibliotekaSlugRoute
   '/biblioteka/pobierz': typeof BibliotekaPobierzRoute
@@ -681,6 +691,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/admin'
     | '/moje-tnb'
+    | '/ustawienia-konta'
     | '/artykuly/$slug'
     | '/biblioteka/$slug'
     | '/biblioteka/pobierz'
@@ -750,6 +761,7 @@ export interface FileRouteTypes {
     | '/regulamin'
     | '/reset-password'
     | '/moje-tnb'
+    | '/ustawienia-konta'
     | '/artykuly/$slug'
     | '/biblioteka/$slug'
     | '/biblioteka/pobierz'
@@ -821,6 +833,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/admin'
     | '/_authenticated/moje-tnb'
+    | '/_authenticated/ustawienia-konta'
     | '/artykuly/$slug'
     | '/biblioteka/$slug'
     | '/biblioteka/pobierz'
@@ -1015,6 +1028,13 @@ declare module '@tanstack/react-router' {
       path: '/moje-tnb'
       fullPath: '/moje-tnb'
       preLoaderRoute: typeof AuthenticatedMojeTnbRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ustawienia-konta': {
+      id: '/_authenticated/ustawienia-konta'
+      path: '/ustawienia-konta'
+      fullPath: '/ustawienia-konta'
+      preLoaderRoute: typeof AuthenticatedUstawieniaKontaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/artykuly/': {
@@ -1475,11 +1495,13 @@ const AuthenticatedAdminRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedMojeTnbRoute: typeof AuthenticatedMojeTnbRoute
+  AuthenticatedUstawieniaKontaRoute: typeof AuthenticatedUstawieniaKontaRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedMojeTnbRoute: AuthenticatedMojeTnbRoute,
+  AuthenticatedUstawieniaKontaRoute: AuthenticatedUstawieniaKontaRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

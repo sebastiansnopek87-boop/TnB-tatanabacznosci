@@ -19,7 +19,7 @@ export function MyMeetings() {
   return (
     <div className="space-y-6">
       {!upcoming.length ? (
-        <p className="text-sm leading-relaxed text-muted-foreground">Nie masz zaplanowanych rozmów 1:1. <Link to="/spotkania/rozmowa-1-1" className="text-gold underline">Umów rozmowę</Link>.</p>
+        <div className="space-y-3"><p className="text-sm leading-relaxed text-muted-foreground">Kiedy zechcesz porozmawiać, tutaj znajdziesz swój termin.</p><Button asChild variant="outline" size="sm"><Link to="/spotkania/rozmowa-1-1">Umów rozmowę</Link></Button></div>
       ) : (
         <ul className="space-y-4">
           {upcoming.map((b) => {
@@ -65,7 +65,7 @@ function CancelDialog({ id, onClose }: { id: string | null; onClose: () => void 
   const [other, setOther] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const m = useMutation({
-    mutationFn: () => fn({ data: { id: id!, reason: reason!, other } }),
+    mutationFn: () => { if (!id || !reason) throw new Error("Wybierz spotkanie i powód."); return fn({ data: { id, reason, other } }); },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["my-consults"] }); qc.invalidateQueries({ queryKey: ["consult-slots"] }); setReason(null); setOther(""); onClose(); },
     onError: (e) => setErr(e instanceof Error ? e.message : "Nie udało się anulować."),
   });
