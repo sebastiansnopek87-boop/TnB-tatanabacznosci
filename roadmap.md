@@ -1,5 +1,5 @@
 # Roadmap
-- [ ] Centrum kontroli 360°: otwieranie konkretnych zamówień/kont, tytuły materiałów, historia e-mail po pewnym identyfikatorze; testy i weryfikacja tylko odczytowa, bez zmian bazy i publikacji.
+- [x] Centrum kontroli 360°: parametr record (UUID) otwiera istniejące szczegóły zamówienia/konta; tytuły i slugi materiałów; e-mail related_id + trzeci offset historii. 19 testów PASS i zalogowane E2E tylko odczytowe PASS; bez zmian bazy i publikacji.
 - [x] Centrum kontroli Etap 3: historia dokładnych obiektów oddzielona od aktora, jawne błędy/limity, powiązania user_id/e-mail, wspólny hasAccess, slugi i pełne nazwisko, istniejące linki; 8 testów PASS, E2E odczytowe PASS, zamówienie 1010 niezmienione, bez zmian bazy; raport Etap-3-Centrum-kontroli-TNB.md.
 - [x] Moje TNB: ograniczony audyt 0057 i aktualnych zabezpieczeń; regresja tylko do odczytu 1280/390 px, 9 testów PASS i raport; wykryto nadmiarowe ACL (TRUNCATE), bez zmian bazy i danych
 - [ ] Moje TNB: ograniczenie nadmiarowych uprawnień user_avatars — wymaga osobnej zgody właściciela; audyt nie wprowadza napraw
