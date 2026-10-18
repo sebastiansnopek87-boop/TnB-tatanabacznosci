@@ -41,7 +41,7 @@ describe("Legal CMS integration (in-memory data only)", () => {
  });
  it("requires visible substantive content even when approved", () => {
    m.approved = true;
-   for (const s of [[], [{ ...newSection(), heading: "Nagłówek" }], [{ ...sections()[0], hidden: true }]]) {
+   for (const s of [[], [{ ...newSection(), heading: "Nagłówek" }], [{ ...newSection(), body: "Ukryta treść", hidden: true }]]) {
      expect(legalReady("regulamin", s)).toBe(false);
      expect(() => assertLegalPublication("regulamin", s)).toThrow("uzupełnienia");
    }
