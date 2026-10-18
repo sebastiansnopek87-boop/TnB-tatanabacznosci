@@ -3,6 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { isSafeHref, type PageDraft, type PageVersion, type PublicPage } from "./pages";
+import { assertLegalPublication, LEGAL_KEYS } from "./legal-pages";
 import { TextFormatsSchema } from "./rich-text";
 
 // Generic CMS for content pages. Public reads: service role, published rows only, safe columns.
@@ -67,19 +68,22 @@ const PageInput = z.object({
   sections: z.array(Section).max(40), seo_title: z.string().max(70, "Tytuł SEO: maks. 70 znaków."), seo_description: z.string().max(170, "Opis SEO: maks. 170 znaków."),
 });
 
+const SavePageInput = PageInput.extend({ system_key: z.enum(LEGAL_KEYS).nullable().optional() });
+
 export const adminSavePage = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => PageInput.parse(d))
+  .inputValidator((d: unknown) => SavePageInput.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { id, ...row } = data;
+    const { id, system_key, ...row } = data;
     if (id) {
-      const { data: cur } = await context.supabase.from("site_pages").select("system_key, slug").eq("id", id).maybeSingle();
+      const { data: cur } = await context.supabase.from("site_pages").select("system_key, slug, status").eq("id", id).maybeSingle();
       if (!cur) throw new Error("Nie znaleziono strony.");
       if (cur.system_key) row.slug = cur.slug; // fixed URLs of menu pages stay stable
+      if (cur.status === "published") assertLegalPublication(cur.system_key, row.sections);
     }
     const q = id
       ? context.supabase.from("site_pages").update({ ...row, draft: null, draft_updated_at: null }).eq("id", id) /* form saves go live; the builder then starts from them */.select("id").single()
-      : context.supabase.from("site_pages").insert({ ...row, created_by: context.userId }).select("id").single();
+      : context.supabase.from("site_pages").insert({ ...row, ...(system_key ? { system_key, slug: system_key } : {}), created_by: context.userId }).select("id").single();
     const { data: r, error } = await q;
     if (error) throw new Error(error.code === "23505" ? "Strona o takim adresie już istnieje." : "Nie udało się zapisać strony.");
     await logEvent({ type: id ? "page_edit" : "page_create", actor: context.userId, objectKind: "page", objectId: r.id, detail: row.slug });
@@ -91,6 +95,11 @@ export const adminSetPageStatus = createServerFn({ method: "POST" }).middleware(
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const patch: { status: string; published_at?: string } = { status: data.status };
+    if (data.status === "published") {
+      const { data: cur, error } = await context.supabase.from("site_pages").select("system_key, sections").eq("id", data.id).maybeSingle();
+      if (error || !cur) throw new Error("Nie znaleziono strony.");
+      assertLegalPublication(cur.system_key, cur.sections);
+    }
     if (data.status === "published") patch.published_at = new Date().toISOString();
     const { error } = await context.supabase.from("site_pages").update(patch).eq("id", data.id);
     await logEvent({ type: `page_${data.status}`, actor: context.userId, objectKind: "page", objectId: data.id, result: error ? "failed" : "ok" });
@@ -159,6 +168,7 @@ export const adminPublishDraft = createServerFn({ method: "POST" }).middleware([
     const src = (cur.draft ?? live) as PageDraft;
     let row: z.infer<typeof PageInput>;
     try { row = PageInput.parse({ ...src, id: data.id, slug: cur.system_key ? cur.slug : src.slug }); } catch (e) { throw new Error(firstIssue(e)); }
+    assertLegalPublication(cur.system_key, row.sections);
     const { id: _i, ...fields } = row;
     // Keep the previous public version recoverable before the first builder publish.
     const { count } = await context.supabase.from("site_page_versions").select("id", { count: "exact", head: true }).eq("page_id", data.id);

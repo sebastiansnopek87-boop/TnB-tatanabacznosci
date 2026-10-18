@@ -32,6 +32,9 @@ export type PublicPage = {
 export const SYSTEM_PAGES: Record<string, { path: string; label: string }> = {
   "o-tnb": { path: "/o-tnb", label: "O TNB" },
   "moja-historia": { path: "/moja-historia", label: "Moja historia" },
+  "regulamin": { path: "/regulamin", label: "Regulamin" },
+  "polityka-prywatnosci": { path: "/polityka-prywatnosci", label: "Polityka prywatności" },
+  "polityka-cookies": { path: "/polityka-cookies", label: "Polityka cookies" },
 };
 export const pagePath = (p: { slug: string; system_key: string | null }) =>
   (p.system_key && SYSTEM_PAGES[p.system_key]?.path) || `/strony/${p.slug}`;
