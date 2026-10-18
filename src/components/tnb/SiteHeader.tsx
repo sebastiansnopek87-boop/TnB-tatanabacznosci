@@ -123,7 +123,7 @@ export function SiteHeader() {
           {auth.status === "signed-in" && (<>
             <Button variant="ghost" type="button" onClick={signOut} className={`hidden h-auto rounded-none whitespace-nowrap px-6 py-3 text-foreground lg:block ${outline}`}>Wyloguj</Button>
             <Link to="/moje-tnb" aria-label="Moje TNB" className="flex items-center gap-2 whitespace-nowrap text-gold">
-              <UserAvatar own name={auth.user?.user_metadata.first_name ?? ""} className="size-9" />
+              <UserAvatar own name={auth.user?.user_metadata['first_name'] ?? ""} className="size-9" />
               <span className="hidden lg:inline">Moje TNB</span>
             </Link>
           </>)}
@@ -164,7 +164,7 @@ export function SiteHeader() {
                   ))}
                 </nav>
                 <section aria-labelledby="tnb-account-title" className="min-w-0 border-t border-menu-gold/20 pt-5 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-3">
-                  {auth.user ? <UserAvatar own name={auth.user.user_metadata.first_name ?? ""} className="mb-3 size-10" /> : <UserRound aria-hidden="true" className="mb-3 size-5 text-menu-gold" strokeWidth={1.25} />}
+                  {auth.user ? <UserAvatar own name={auth.user.user_metadata['first_name'] ?? ""} className="mb-3 size-10" /> : <UserRound aria-hidden="true" className="mb-3 size-5 text-menu-gold" strokeWidth={1.25} />}
                   <h2 id="tnb-account-title" className="mb-4 font-display text-2xl font-normal">Moje TNB</h2>
                   <div className="flex flex-col items-stretch gap-2">
                     {auth.status === "loading" && <p role="status" className="text-sm text-muted-foreground">Ładowanie…</p>}
