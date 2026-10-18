@@ -1,3 +1,4 @@
+import { UserAvatar } from "@/components/account/UserAvatar";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -114,7 +115,7 @@ export function PostCard({ post, uid, full, onChanged, onDeleted }: {
   return (
     <article className="rounded-sm border border-border/50 bg-card/70 p-5 shadow-[0_1px_0_0_color-mix(in_oklab,var(--color-gold)_12%,transparent)_inset] transition-colors hover:border-gold/30 sm:p-7">
       <header className="flex items-center gap-3">
-        <Initial name={post.author_name} />
+        <UserAvatar name={post.author_name} kind="post" id={post.id} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <p className="truncate font-medium text-foreground">{post.author_name}</p>

@@ -22,6 +22,7 @@ import { Route as RegulaminRouteImport } from './routes/regulamin'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedMojeTnbRouteImport } from './routes/_authenticated/moje-tnb'
+import { Route as AuthenticatedUstawieniaKontaRouteImport } from './routes/_authenticated/ustawienia-konta'
 import { Route as ArtykulyIndexRouteImport } from './routes/artykuly.index'
 import { Route as ArtykulySlugRouteImport } from './routes/artykuly.$slug'
 import { Route as BibliotekaIndexRouteImport } from './routes/biblioteka.index'
@@ -76,6 +77,7 @@ import { Route as ApiPublicPaymentsPayuRouteImport } from './routes/api/public/p
 import { Route as ApiPublicPaymentsTpayRouteImport } from './routes/api/public/payments/tpay'
 import { Route as ApiPublicPodcastCoverIdRouteImport } from './routes/api/public/podcast-cover.$id'
 import { Route as ApiPublicArticleImageIdNameRouteImport } from './routes/api/public/article-image.$id.$name'
+import { Route as ApiPublicAvatarKindIdRouteImport } from './routes/api/public/avatar.$kind.$id'
 import { Route as ApiPublicPageImageIdNameRouteImport } from './routes/api/public/page-image.$id.$name'
 
 const IndexRoute = IndexRouteImport.update({
@@ -142,6 +144,12 @@ const AuthenticatedMojeTnbRoute = AuthenticatedMojeTnbRouteImport.update({
   path: '/moje-tnb',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedUstawieniaKontaRoute =
+  AuthenticatedUstawieniaKontaRouteImport.update({
+    id: '/ustawienia-konta',
+    path: '/ustawienia-konta',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ArtykulyIndexRoute = ArtykulyIndexRouteImport.update({
   id: '/artykuly/',
   path: '/artykuly/',
@@ -442,6 +450,11 @@ const ApiPublicArticleImageIdNameRoute =
     path: '/api/public/article-image/$id/$name',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicAvatarKindIdRoute = ApiPublicAvatarKindIdRouteImport.update({
+  id: '/api/public/avatar/$kind/$id',
+  path: '/api/public/avatar/$kind/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPageImageIdNameRoute =
   ApiPublicPageImageIdNameRouteImport.update({
     id: '/api/public/page-image/$id/$name',
@@ -462,6 +475,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/moje-tnb': typeof AuthenticatedMojeTnbRoute
+  '/ustawienia-konta': typeof AuthenticatedUstawieniaKontaRoute
   '/artykuly/$slug': typeof ArtykulySlugRoute
   '/biblioteka/$slug': typeof BibliotekaSlugRoute
   '/biblioteka/pobierz': typeof BibliotekaPobierzRoute
@@ -516,6 +530,7 @@ export interface FileRoutesByFullPath {
   '/api/public/payments/tpay': typeof ApiPublicPaymentsTpayRoute
   '/api/public/podcast-cover/$id': typeof ApiPublicPodcastCoverIdRoute
   '/api/public/article-image/$id/$name': typeof ApiPublicArticleImageIdNameRoute
+  '/api/public/avatar/$kind/$id': typeof ApiPublicAvatarKindIdRoute
   '/api/public/page-image/$id/$name': typeof ApiPublicPageImageIdNameRoute
 }
 export interface FileRoutesByTo {
@@ -530,6 +545,7 @@ export interface FileRoutesByTo {
   '/regulamin': typeof RegulaminRoute
   '/reset-password': typeof ResetPasswordRoute
   '/moje-tnb': typeof AuthenticatedMojeTnbRoute
+  '/ustawienia-konta': typeof AuthenticatedUstawieniaKontaRoute
   '/artykuly/$slug': typeof ArtykulySlugRoute
   '/biblioteka/$slug': typeof BibliotekaSlugRoute
   '/biblioteka/pobierz': typeof BibliotekaPobierzRoute
@@ -584,6 +600,7 @@ export interface FileRoutesByTo {
   '/api/public/payments/tpay': typeof ApiPublicPaymentsTpayRoute
   '/api/public/podcast-cover/$id': typeof ApiPublicPodcastCoverIdRoute
   '/api/public/article-image/$id/$name': typeof ApiPublicArticleImageIdNameRoute
+  '/api/public/avatar/$kind/$id': typeof ApiPublicAvatarKindIdRoute
   '/api/public/page-image/$id/$name': typeof ApiPublicPageImageIdNameRoute
 }
 export interface FileRoutesById {
@@ -601,6 +618,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/moje-tnb': typeof AuthenticatedMojeTnbRoute
+  '/_authenticated/ustawienia-konta': typeof AuthenticatedUstawieniaKontaRoute
   '/artykuly/$slug': typeof ArtykulySlugRoute
   '/biblioteka/$slug': typeof BibliotekaSlugRoute
   '/biblioteka/pobierz': typeof BibliotekaPobierzRoute
@@ -655,6 +673,7 @@ export interface FileRoutesById {
   '/api/public/payments/tpay': typeof ApiPublicPaymentsTpayRoute
   '/api/public/podcast-cover/$id': typeof ApiPublicPodcastCoverIdRoute
   '/api/public/article-image/$id/$name': typeof ApiPublicArticleImageIdNameRoute
+  '/api/public/avatar/$kind/$id': typeof ApiPublicAvatarKindIdRoute
   '/api/public/page-image/$id/$name': typeof ApiPublicPageImageIdNameRoute
 }
 export interface FileRouteTypes {
@@ -672,6 +691,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/admin'
     | '/moje-tnb'
+    | '/ustawienia-konta'
     | '/artykuly/$slug'
     | '/biblioteka/$slug'
     | '/biblioteka/pobierz'
@@ -726,6 +746,7 @@ export interface FileRouteTypes {
     | '/api/public/payments/tpay'
     | '/api/public/podcast-cover/$id'
     | '/api/public/article-image/$id/$name'
+    | '/api/public/avatar/$kind/$id'
     | '/api/public/page-image/$id/$name'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -740,6 +761,7 @@ export interface FileRouteTypes {
     | '/regulamin'
     | '/reset-password'
     | '/moje-tnb'
+    | '/ustawienia-konta'
     | '/artykuly/$slug'
     | '/biblioteka/$slug'
     | '/biblioteka/pobierz'
@@ -794,6 +816,7 @@ export interface FileRouteTypes {
     | '/api/public/payments/tpay'
     | '/api/public/podcast-cover/$id'
     | '/api/public/article-image/$id/$name'
+    | '/api/public/avatar/$kind/$id'
     | '/api/public/page-image/$id/$name'
   id:
     | '__root__'
@@ -810,6 +833,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/admin'
     | '/_authenticated/moje-tnb'
+    | '/_authenticated/ustawienia-konta'
     | '/artykuly/$slug'
     | '/biblioteka/$slug'
     | '/biblioteka/pobierz'
@@ -864,6 +888,7 @@ export interface FileRouteTypes {
     | '/api/public/payments/tpay'
     | '/api/public/podcast-cover/$id'
     | '/api/public/article-image/$id/$name'
+    | '/api/public/avatar/$kind/$id'
     | '/api/public/page-image/$id/$name'
   fileRoutesById: FileRoutesById
 }
@@ -908,6 +933,7 @@ export interface RootRouteChildren {
   ApiPublicPaymentsTpayRoute: typeof ApiPublicPaymentsTpayRoute
   ApiPublicPodcastCoverIdRoute: typeof ApiPublicPodcastCoverIdRoute
   ApiPublicArticleImageIdNameRoute: typeof ApiPublicArticleImageIdNameRoute
+  ApiPublicAvatarKindIdRoute: typeof ApiPublicAvatarKindIdRoute
   ApiPublicPageImageIdNameRoute: typeof ApiPublicPageImageIdNameRoute
 }
 
@@ -1002,6 +1028,13 @@ declare module '@tanstack/react-router' {
       path: '/moje-tnb'
       fullPath: '/moje-tnb'
       preLoaderRoute: typeof AuthenticatedMojeTnbRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ustawienia-konta': {
+      id: '/_authenticated/ustawienia-konta'
+      path: '/ustawienia-konta'
+      fullPath: '/ustawienia-konta'
+      preLoaderRoute: typeof AuthenticatedUstawieniaKontaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/artykuly/': {
@@ -1382,6 +1415,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicArticleImageIdNameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/avatar/$kind/$id': {
+      id: '/api/public/avatar/$kind/$id'
+      path: '/api/public/avatar/$kind/$id'
+      fullPath: '/api/public/avatar/$kind/$id'
+      preLoaderRoute: typeof ApiPublicAvatarKindIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/page-image/$id/$name': {
       id: '/api/public/page-image/$id/$name'
       path: '/api/public/page-image/$id/$name'
@@ -1455,11 +1495,13 @@ const AuthenticatedAdminRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedMojeTnbRoute: typeof AuthenticatedMojeTnbRoute
+  AuthenticatedUstawieniaKontaRoute: typeof AuthenticatedUstawieniaKontaRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedMojeTnbRoute: AuthenticatedMojeTnbRoute,
+  AuthenticatedUstawieniaKontaRoute: AuthenticatedUstawieniaKontaRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -1506,6 +1548,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPaymentsTpayRoute: ApiPublicPaymentsTpayRoute,
   ApiPublicPodcastCoverIdRoute: ApiPublicPodcastCoverIdRoute,
   ApiPublicArticleImageIdNameRoute: ApiPublicArticleImageIdNameRoute,
+  ApiPublicAvatarKindIdRoute: ApiPublicAvatarKindIdRoute,
   ApiPublicPageImageIdNameRoute: ApiPublicPageImageIdNameRoute,
 }
 export const routeTree = rootRouteImport

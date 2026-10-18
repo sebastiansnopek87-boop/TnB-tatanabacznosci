@@ -31,3 +31,6 @@
 
 - Głos TNB social media (YouTube videos, Instagram media) come only from one admin-connected source each, synced server-side (youtube.server.ts / instagram.server.ts, official OAuth for Instagram) when >30 min old or manually; keys/tokens stay server-only, no manual entries or placeholders. Why: no duplicate catalogue, secrets never reach the browser.
 - Visual effects: platform_settings.visual_effects (public flags) -> data-fx-* attributes on <html> via VisualEffects in __root + CSS in styles.css; content visible unless JS adds fx-ready, reduced-motion always wins. Why: one source, no animation library, no hidden content on failure.
+
+- Account forms stay on a protected settings route; Moje TNB reuses collections and bookings. Why: separate maintenance without changing access.
+- Avatars use owner-scoped server functions, private media and user_avatars; shared UserAvatar serves own or visible-community context; media usage protects referenced avatars. Why: one view without external URLs or public account IDs.

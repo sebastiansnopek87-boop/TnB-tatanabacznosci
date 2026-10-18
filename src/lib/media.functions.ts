@@ -35,14 +35,15 @@ async function admin() {
 // Builds "bucket/path" -> usages from every table that stores file paths.
 async function buildUsage(): Promise<Map<string, Usage[]>> {
   const db = await admin();
-  const [li, lc, pe, me, sp] = await Promise.all([
+  const [li, lc, pe, me, sp, avatars] = await Promise.all([
     db.from("library_items").select("id, title, status, cover_url"),
     db.from("library_item_content").select("item_id, file_path"),
     db.from("podcast_episodes").select("id, title, status, cover_path, audio_path"),
     db.from("meetings").select("id, title, status, image_url"),
     db.from("site_pages").select("id, title, status, sections"),
+    db.from("user_avatars").select("object_path"),
   ]);
-  const err = li.error || lc.error || pe.error || me.error || sp.error;
+  const err = li.error || lc.error || pe.error || me.error || sp.error || avatars.error;
   if (err) throw new Error("Nie udało się ustalić powiązań plików.");
   const map = new Map<string, Usage[]>();
   const add = (key: string | null | undefined, u: Usage) => { if (!key) return; map.set(key, [...(map.get(key) ?? []), u]); };
@@ -64,6 +65,7 @@ async function buildUsage(): Promise<Map<string, Usage[]>> {
       add(`page-images/${p.id}/${n}`, { module: "pages", label: "Zdjęcie w sekcji strony", title: p.title, status: p.status, published: p.status === "published" });
     }
   }
+  for (const a of avatars.data ?? []) add(`media/${a.object_path}`, { module: "account", label: "Avatar użytkownika", title: "Zdjęcie profilowe", status: "active", published: false });
   return map;
 }
 
@@ -154,7 +156,7 @@ export const finalizeMediaUpload = createServerFn({ method: "POST" }).middleware
     await assertAdmin(context);
     const o = (await allObjects()).find((x) => x.bucket_id === UPLOAD_BUCKET && x.name === data.path);
     if (!o) throw new Error("Nie znaleziono przesłanego pliku.");
-    const ext = data.path.split(".").pop()!;
+    const ext = data.path.split(".").pop() ?? "";
     const ok = (ALLOWED[o.mimetype] ?? []).includes(ext) && Number(o.size) <= MAX_UPLOAD;
     if (!ok) {
       await (await admin()).storage.from(UPLOAD_BUCKET).remove([data.path]);

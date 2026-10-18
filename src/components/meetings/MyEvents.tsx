@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -14,7 +15,7 @@ export function MyEvents() {
   const rows = q.data ?? [];
   const cancelled = rows.filter((r) => r.status === "cancelled" || r.status === "rejected");
   const ended = rows.filter((r) => r.ended && !cancelled.includes(r)).reverse();
-  const upcoming = rows.filter((r) => !r.ended && !cancelled.includes(r));
+  const upcoming = rows.filter((r) => !r.ended && !cancelled.includes(r)).sort((a, b) => a.starts_at.localeCompare(b.starts_at));
   const group = (title: string, list: typeof rows, empty: React.ReactNode) => (
     <div>
       <h3 className="text-xs uppercase tracking-[0.14em] text-muted-foreground">{title}</h3>
@@ -35,9 +36,8 @@ export function MyEvents() {
   );
   return (
     <div className="space-y-6">
-      {group("Nadchodzące", upcoming, <>Nie masz zapisów na webinary ani spotkania LIVE. <Link to="/spotkania" className="text-gold underline">Zobacz spotkania</Link>.</>)}
-      {group("Zakończone", ended, "Brak zakończonych wydarzeń.")}
-      {group("Anulowane", cancelled, "Brak anulowanych zgłoszeń.")}
+      {upcoming.length ? group("Nadchodzące", upcoming, null) : <div className="space-y-3"><p className="text-sm text-muted-foreground">Nie masz jeszcze nadchodzących spotkań. Może znajdziesz coś dla siebie?</p><Button asChild variant="outline" size="sm"><Link to="/spotkania">Zobacz spotkania</Link></Button></div>}
+      {(ended.length > 0 || cancelled.length > 0) && <details><summary className="cursor-pointer text-sm text-gold">Historia spotkań</summary><div className="mt-4 space-y-4">{ended.length > 0 && group("Zakończone", ended, null)}{cancelled.length > 0 && group("Anulowane", cancelled, null)}</div></details>}
     </div>
   );
 }
