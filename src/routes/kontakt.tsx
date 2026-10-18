@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { ArrowRight, CheckCircle2, Loader2, Mail, Phone } from "lucide-react";
 import { PageHeading, PageShell } from "@/components/tnb/PageShell";
 import { SocialIcon } from "@/components/tnb/SocialIcon";
-import { getSiteSettings, visibleSocial } from "@/config/site-settings";
+import { getSiteSettings, type SocialLink } from "@/config/site-settings";
 import { usePlatformSettings } from "@/hooks/use-platform-settings";
 import { contactSchema, submitContact } from "@/lib/contact.functions";
 
@@ -31,12 +31,28 @@ const inputCls =
 function ContactPage() {
   const s = getSiteSettings();
   const t = s.contactPage;
-  const social = visibleSocial(s);
   const { data: ps } = usePlatformSettings();
-  const { phone } = s.contact;
+  const social: SocialLink[] = ([
+    { platform: "youtube", label: "YouTube", url: ps?.social_youtube },
+    { platform: "spotify", label: "Spotify", url: ps?.social_spotify },
+    { platform: "tiktok", label: "TikTok", url: ps?.social_tiktok },
+    { platform: "instagram", label: "Instagram", url: ps?.social_instagram },
+  ] as { platform: SocialLink["platform"]; label: string; url: string | null | undefined }[])
+    .filter((x) => !!x.url)
+    .map((x, i) => ({ platform: x.platform, label: x.label, url: x.url!, order: i + 1, visible: true }));
+  const phone = ps?.contact_phone ?? s.contact.phone;
+  const hours = ps?.contact_hours ?? null;
   const email = ps?.contact_email ?? s.contact.email;
   const support = ps?.support_email ?? null;
-  const hasData = !!email || !!support || !!phone || social.length > 0;
+  const registry = [
+    ps?.company_legal_name,
+    ps?.company_legal_form,
+    [ps?.company_address_street, [ps?.company_address_postal, ps?.company_address_city].filter(Boolean).join(" ") || null, ps?.company_address_country].filter(Boolean).join(", ") || null,
+    ps?.company_nip ? `NIP: ${ps.company_nip}` : null,
+    ps?.company_regon ? `REGON: ${ps.company_regon}` : null,
+    ps?.company_krs ? `KRS: ${ps.company_krs}` : null,
+  ].filter(Boolean) as string[];
+  const hasData = !!email || !!support || !!phone || !!hours || social.length > 0 || registry.length > 0;
 
   const send = useServerFn(submitContact);
   const [f, setF] = useState<Fields>(EMPTY);
@@ -186,7 +202,23 @@ function ContactPage() {
                   </a>
                 </li>
               )}
+              {hours && (
+                <li>
+                  <span className="block text-xs text-muted-foreground">Dostępność</span>
+                  <span className="text-foreground">{hours}</span>
+                </li>
+              )}
             </ul>
+            {registry.length > 0 && (
+              <div className="mt-6 border-t border-border/60 pt-5">
+                <span className="block text-xs text-muted-foreground">Dane rejestrowe</span>
+                <p className="mt-2 text-[0.85rem] leading-[1.75] text-foreground">
+                  {registry.map((line, i) => (
+                    <span key={i} className="block">{line}</span>
+                  ))}
+                </p>
+              </div>
+            )}
             {social.length > 0 && (
               <div className="mt-6 flex gap-3">
                 {social.map((x) => (

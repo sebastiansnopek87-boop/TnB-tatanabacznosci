@@ -2297,8 +2297,26 @@ export type Database = {
       }
       platform_settings: {
         Row: {
+          billing_address: string | null
+          billing_name: string | null
+          billing_nip: string | null
+          billing_same_as_company: boolean
           brand_settings: Json
+          company_address_city: string | null
+          company_address_country: string | null
+          company_address_postal: string | null
+          company_address_street: string | null
+          company_krs: string | null
+          company_legal_form: string | null
+          company_legal_name: string | null
+          company_nip: string | null
+          company_regon: string | null
           contact_email: string | null
+          contact_hours: string | null
+          contact_phone: string | null
+          footer_copyright: string | null
+          footer_description: string | null
+          footer_show_contact: boolean
           id: number
           maintenance_enabled: boolean
           maintenance_message: string
@@ -2316,8 +2334,26 @@ export type Database = {
           visual_effects: Json
         }
         Insert: {
+          billing_address?: string | null
+          billing_name?: string | null
+          billing_nip?: string | null
+          billing_same_as_company?: boolean
           brand_settings?: Json
+          company_address_city?: string | null
+          company_address_country?: string | null
+          company_address_postal?: string | null
+          company_address_street?: string | null
+          company_krs?: string | null
+          company_legal_form?: string | null
+          company_legal_name?: string | null
+          company_nip?: string | null
+          company_regon?: string | null
           contact_email?: string | null
+          contact_hours?: string | null
+          contact_phone?: string | null
+          footer_copyright?: string | null
+          footer_description?: string | null
+          footer_show_contact?: boolean
           id?: number
           maintenance_enabled?: boolean
           maintenance_message?: string
@@ -2335,8 +2371,26 @@ export type Database = {
           visual_effects?: Json
         }
         Update: {
+          billing_address?: string | null
+          billing_name?: string | null
+          billing_nip?: string | null
+          billing_same_as_company?: boolean
           brand_settings?: Json
+          company_address_city?: string | null
+          company_address_country?: string | null
+          company_address_postal?: string | null
+          company_address_street?: string | null
+          company_krs?: string | null
+          company_legal_form?: string | null
+          company_legal_name?: string | null
+          company_nip?: string | null
+          company_regon?: string | null
           contact_email?: string | null
+          contact_hours?: string | null
+          contact_phone?: string | null
+          footer_copyright?: string | null
+          footer_description?: string | null
+          footer_show_contact?: boolean
           id?: number
           maintenance_enabled?: boolean
           maintenance_message?: string

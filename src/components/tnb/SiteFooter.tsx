@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Mail, Phone } from "lucide-react";
 import logo from "@/assets/logo-384.webp.asset.json";
-import { byOrder, getSiteSettings, visibleSocial } from "@/config/site-settings";
+import { byOrder, getSiteSettings, type SocialLink } from "@/config/site-settings";
 import { SocialIcon } from "./SocialIcon";
 import { usePlatformSettings } from "@/hooks/use-platform-settings";
 import { useModuleVisibility } from "@/hooks/use-module-visibility";
@@ -28,13 +28,31 @@ export function SiteFooter() {
   const brand = useBrand();
   const slogan = getBrandSlogan(brand);
   const s = getSiteSettings();
-  const social = visibleSocial(s);
   const { data: ps } = usePlatformSettings();
-  const { phone, showInFooter } = s.contact;
+  // Social icons come from platform settings (single source); static list stays a fallback-free empty default.
+  const social: SocialLink[] = ([
+    { platform: "youtube", label: "YouTube", url: ps?.social_youtube },
+    { platform: "spotify", label: "Spotify", url: ps?.social_spotify },
+    { platform: "tiktok", label: "TikTok", url: ps?.social_tiktok },
+    { platform: "instagram", label: "Instagram", url: ps?.social_instagram },
+  ] as { platform: SocialLink["platform"]; label: string; url: string | null | undefined }[])
+    .filter((x) => !!x.url)
+    .map((x, i) => ({ platform: x.platform, label: x.label, url: x.url!, order: i + 1, visible: true }));
+  const phone = ps?.contact_phone ?? s.contact.phone;
   const email = ps?.contact_email ?? s.contact.email;
+  const showInFooter = ps?.footer_show_contact ?? s.contact.showInFooter;
   const hasContactColumn = showInFooter && (!!email || !!phone || social.length > 0);
   const year = new Date().getFullYear();
-  const owner = s.organization.legalName || ps?.platform_name || s.organization.name;
+  const owner = ps?.company_legal_name || s.organization.legalName || ps?.platform_name || s.organization.name;
+  const description = ps?.footer_description ?? s.footer.brandDescription;
+  const copyright = ps?.footer_copyright ?? s.footer.copyrightText;
+  const registry = [
+    ps?.company_legal_form,
+    ps?.company_nip ? `NIP: ${ps.company_nip}` : null,
+    ps?.company_regon ? `REGON: ${ps.company_regon}` : null,
+    ps?.company_krs ? `KRS: ${ps.company_krs}` : null,
+  ].filter(Boolean) as string[];
+  const address = [ps?.company_address_street, [ps?.company_address_postal, ps?.company_address_city].filter(Boolean).join(" ") || null, ps?.company_address_country].filter(Boolean) as string[];
 
   return (
     <footer className="border-t border-border/60 bg-surface-deep">
@@ -49,12 +67,12 @@ export function SiteFooter() {
               {slogan && <span data-brand-slogan className="mt-1 block max-w-[40ch] break-words text-xs uppercase leading-relaxed text-gold/80">{slogan}</span>}
             </span>
           </Link>
-          {s.footer.brandDescription && (
+          {description && (
             <p className="mt-6 max-w-xs text-[0.85rem] leading-[1.75] text-muted-foreground">
-              {s.footer.brandDescription}
+              {description}
             </p>
           )}
-          {s.footer.aboutLink.visible && visiblePath(s.footer.aboutLink.href, "menu") && (
+          {s.footer.aboutLink.visible && visiblePath(s.footer.aboutLink.href, "page") && (
             <a
               href={s.footer.aboutLink.href}
               className="mt-5 inline-flex items-center gap-3 text-[0.75rem] uppercase tracking-[0.16em] text-gold transition-colors hover:text-gold-bright"
@@ -69,7 +87,7 @@ export function SiteFooter() {
           <div key={col.id}>
             <h3 className="eyebrow text-gold">{col.title}</h3>
             <ul className="mt-6 flex flex-col gap-3">
-              {byOrder(col.links).filter(l => visiblePath(l.href, "menu")).map((l) => (
+              {byOrder(col.links).filter(l => visiblePath(l.href, "page")).map((l) => (
                 <li key={l.id}>
                   <FooterLink href={l.href}>{l.label}</FooterLink>
                 </li>
@@ -119,7 +137,14 @@ export function SiteFooter() {
         )}
       </div>
       <div className="border-t border-border/60 px-5 py-6 text-[0.75rem] text-muted-foreground lg:px-14">
-        © {year} {owner ?? "Tata Na Baczności"}. {s.footer.copyrightText}
+        <p>© {year} {owner ?? "Tata Na Baczności"}. {copyright}</p>
+        {(registry.length > 0 || address.length > 0) && (
+          <p className="mt-2 leading-relaxed">
+            {address.length > 0 && <span>{address.join(", ")}</span>}
+            {address.length > 0 && registry.length > 0 && <span> · </span>}
+            {registry.length > 0 && <span>{registry.join(" · ")}</span>}
+          </p>
+        )}
       </div>
     </footer>
   );

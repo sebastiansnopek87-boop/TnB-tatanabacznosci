@@ -407,6 +407,13 @@
       "when": 1792325708428,
       "tag": "0057_user_avatars",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1792341678268,
+      "tag": "0058_platform_settings_company_contact_footer",
+      "breakpoints": true
     }
   ]
 }
