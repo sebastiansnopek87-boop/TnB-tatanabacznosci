@@ -15,6 +15,7 @@ import { VisualBuilder } from "@/components/pages/builder/VisualBuilder";
 import {
   adminCheckSlug, adminCreatePageUpload, adminGetPage, adminListPages, adminPageImageUrls, adminSavePage, adminSetPageStatus,
 } from "@/lib/pages.functions";
+import { LEGAL_KEYS, isLegalKey } from "@/lib/legal-pages";
 import { PAGE_STATUS, SYSTEM_PAGES, normalizeSections, pagePath, type PageSection } from "@/lib/pages";
 
 export const Route = createFileRoute("/_authenticated/admin/strony")({ component: PagesAdmin });
@@ -26,14 +27,15 @@ function PagesAdmin() {
   const listFn = useServerFn(adminListPages);
   const list = useQuery({ queryKey: ["admin-pages"], queryFn: () => listFn() });
   const [editing, setEditing] = useState<string | "new" | null>(null);
+  const [newLegal, setNewLegal] = useState<string | null>(null);
   const [visual, setVisual] = useState<string | null>(null);
   if (visual) return <VisualBuilder id={visual} onClose={() => { setVisual(null); list.refetch(); }} onFormView={() => { setEditing(visual); setVisual(null); }} />;
-  if (editing) return <Editor id={editing === "new" ? null : editing} onClose={() => { setEditing(null); list.refetch(); }} onVisual={(pid) => { setEditing(null); setVisual(pid); }} />;
+  if (editing) return <Editor systemKey={editing === "new" ? newLegal : null} id={editing === "new" ? null : editing} onClose={() => { setEditing(null); list.refetch(); }} onVisual={(pid) => { setEditing(null); setVisual(pid); }} />;
   return (
     <div className="max-w-4xl">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-3xl font-semibold uppercase">Strony</h1>
-        <Button onClick={() => setEditing("new")}><Plus className="mr-1 h-4 w-4" />Nowa podstrona</Button>
+        <Button onClick={() => { setNewLegal(null); setEditing("new"); }}><Plus className="mr-1 h-4 w-4" />Nowa podstrona</Button>
       </div>
       <p className="mt-2 text-sm text-muted-foreground">Treść stron „O TNB”, „Moja historia” i kolejnych podstron. Publicznie widać tylko opublikowane wersje.</p>
       {list.isLoading && <p className="mt-6 text-sm text-muted-foreground">Wczytywanie…</p>}
@@ -50,16 +52,22 @@ function PagesAdmin() {
           </div>
         ))}
         {list.data?.length === 0 && <p className="p-4 text-sm text-muted-foreground">Brak stron.</p>}
+        {list.data && LEGAL_KEYS.filter((key) => !list.data.some((p) => p.system_key === key)).map((key) => (
+          <div key={key} className="flex flex-wrap items-center justify-between gap-2 p-4">
+            <span>{SYSTEM_PAGES[key]?.label} <span className="text-xs text-muted-foreground">/{key} · brak dokumentu</span></span>
+            <Button size="sm" variant="outline" onClick={() => { setNewLegal(key); setEditing("new"); }}>Utwórz szkic</Button>
+          </div>
+        ))}
       </div>
     </div>
   );
 }
 
-function Editor({ id, onClose, onVisual }: { id: string | null; onClose: () => void; onVisual: (id: string) => void }) {
+function Editor({ id, systemKey, onClose, onVisual }: { id: string | null; systemKey: string | null; onClose: () => void; onVisual: (id: string) => void }) {
   const qc = useQueryClient();
   const getFn = useServerFn(adminGetPage); const saveFn = useServerFn(adminSavePage); const statusFn = useServerFn(adminSetPageStatus);
   const slugFn = useServerFn(adminCheckSlug); const upFn = useServerFn(adminCreatePageUpload); const urlsFn = useServerFn(adminPageImageUrls);
-  const [d, setD] = useState<Draft>(EMPTY);
+  const [d, setD] = useState<Draft>(() => systemKey ? { ...EMPTY, system_key: systemKey, slug: systemKey, title: SYSTEM_PAGES[systemKey]?.label ?? "" } : EMPTY);
   const [pageId, setPageId] = useState<string | null>(id);
   const [loading, setLoading] = useState(!!id);
   const [busy, setBusy] = useState(false);
@@ -87,7 +95,7 @@ function Editor({ id, onClose, onVisual }: { id: string | null; onClose: () => v
   async function save(): Promise<string | null> {
     setBusy(true);
     try {
-      const r = await saveFn({ data: { id: pageId, slug: d.slug, title: d.title, intro: d.intro, sections: d.sections, seo_title: d.seo_title, seo_description: d.seo_description } });
+      const r = await saveFn({ data: { id: pageId, system_key: isLegalKey(d.system_key) ? d.system_key : null, slug: d.slug, title: d.title, intro: d.intro, sections: d.sections, seo_title: d.seo_title, seo_description: d.seo_description } });
       setPageId(r.id); setDirty(false); qc.invalidateQueries({ queryKey: ["admin-pages"] }); toast.success("Zapisano szkic zmian.");
       return r.id;
     } catch (e) { toast.error(errMsg(e)); return null; } finally { setBusy(false); }
@@ -141,6 +149,7 @@ function Editor({ id, onClose, onVisual }: { id: string | null; onClose: () => v
       </div>}
       {d.status === "published" && <p className="border border-gold/40 p-3 text-xs text-muted-foreground">Zapisane zmiany w opublikowanej stronie są od razu widoczne publicznie. Chcesz pracować spokojnie? Najpierw kliknij „Cofnij publikację”.</p>}
 
+      {isLegalKey(d.system_key) && <p role="alert" className="border border-gold/40 p-3 text-sm text-gold">Dokument prawny wymaga treści i osobnego zatwierdzenia. Sam zapis szkicu nie oznacza gotowości do publikacji.</p>}
       <Field label="Tytuł strony"><Input value={d.title} onChange={(e) => set({ title: e.target.value })} maxLength={200} /></Field>
       <Field label="Adres strony">
         {system ? <p className="text-sm text-muted-foreground">{system.path} — stały adres z menu, nie podlega zmianie.</p> : (

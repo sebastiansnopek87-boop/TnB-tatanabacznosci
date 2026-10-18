@@ -22,7 +22,7 @@ export const COVERAGE: { area: string; ok: boolean; note: string }[] = [
   { area: "Strona główna", ok: false, note: "Układ zapisany w kodzie. Proponowany etap 40.3." },
   { area: "Nagłówek i menu", ok: false, note: "Stałe w kodzie. Proponowany etap 40.4." },
   { area: "Stopka", ok: false, note: "Stała w kodzie. Proponowany etap 40.4." },
-  { area: "Strony prawne", ok: false, note: "Treść w kodzie, czeka na zatwierdzenie. Etap 40.5." },
+  { area: "Strony prawne", ok: true, note: "Treść i wersje w CMS; publikacja wymaga treści i osobnego zatwierdzenia dokumentu." },
   { area: "Artykuły", ok: false, note: "Te same bloki, edycja w „Artykuły” (formularz)." },
   { area: "Biblioteka, Podcast, Spotkania, Rozmowy 1:1", ok: false, note: "Treść w swoich modułach panelu; logika (płatności, zapisy, dostęp) nie jest edytowalna wizualnie." },
   { area: "Rozmowy społeczności, Moje TNB", ok: false, note: "Dane użytkowników i uprawnienia — tylko moderacja w panelu." },
