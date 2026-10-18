@@ -58,8 +58,8 @@ function PlatformSettings() {
       company_regon: s.company_regon ?? "", company_krs: s.company_krs ?? "", company_address_street: s.company_address_street ?? "",
       company_address_postal: s.company_address_postal ?? "", company_address_city: s.company_address_city ?? "", company_address_country: s.company_address_country ?? "",
       contact_phone: s.contact_phone ?? "", contact_hours: s.contact_hours ?? "",
-      billing_same_as_company: s.billing_same_as_company, billing_name: s.billing_name ?? "", billing_nip: s.billing_nip ?? "", billing_address: s.billing_address ?? "",
-      footer_description: s.footer_description ?? "", footer_copyright: s.footer_copyright ?? "", footer_show_contact: s.footer_show_contact });
+      billing_same_as_company: s.billing_same_as_company ?? true, billing_name: s.billing_name ?? "", billing_nip: s.billing_nip ?? "", billing_address: s.billing_address ?? "",
+      footer_description: s.footer_description ?? "", footer_copyright: s.footer_copyright ?? "", footer_show_contact: s.footer_show_contact ?? true });
   }, [data]);
 
   async function onSubmit(e: FormEvent) {

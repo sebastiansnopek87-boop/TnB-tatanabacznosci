@@ -35,7 +35,9 @@ export function SiteFooter() {
     { platform: "spotify", label: "Spotify", url: ps?.social_spotify },
     { platform: "tiktok", label: "TikTok", url: ps?.social_tiktok },
     { platform: "instagram", label: "Instagram", url: ps?.social_instagram },
-  ] as const).filter((x): x is SocialLink => !!x.url).map((x, i) => ({ ...x, url: x.url!, order: i + 1, visible: true }));
+  ] as { platform: SocialLink["platform"]; label: string; url: string | null | undefined }[])
+    .filter((x) => !!x.url)
+    .map((x, i) => ({ platform: x.platform, label: x.label, url: x.url!, order: i + 1, visible: true }));
   const phone = ps?.contact_phone ?? s.contact.phone;
   const email = ps?.contact_email ?? s.contact.email;
   const showInFooter = ps?.footer_show_contact ?? s.contact.showInFooter;
