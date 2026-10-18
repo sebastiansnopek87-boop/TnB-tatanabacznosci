@@ -32,7 +32,7 @@ export const controlCenterSearch = createServerFn({ method: "POST" })
     const pattern = filterValue(`%${safe}%`);
     const [identSearch, authResult, materials] = await Promise.all([
       read(context.supabase.from("user_identities").select("user_id, tnb_id").ilike("tnb_id", `%${safe}%`).limit(SEARCH_LIMIT + 1)),
-      read(supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 })),
+      read<{ users: AuthUser[] }>(supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 })),
       read(context.supabase.from("library_items").select("id, slug, title").eq("slug", safe).limit(SEARCH_LIMIT + 1)),
     ]);
     const authUsers: AuthUser[] = authResult.error ? [] : authResult.data?.users ?? [];
@@ -60,8 +60,8 @@ export const controlCenterSearch = createServerFn({ method: "POST" })
     const [roles, identities, linkedOrders, linkedRequests] = await Promise.all([
       ids.length ? read(context.supabase.from("user_roles").select("user_id, role").in("user_id", ids)) : empty,
       ids.length ? read(context.supabase.from("user_identities").select("user_id, tnb_id").in("user_id", ids)) : empty,
-      orderLinks.length ? read(context.supabase.from("library_orders").select(ORDER_COLS).or(orderLinks.join(",")).order("created_at", { ascending: false }).limit(SEARCH_LIMIT + 1)) : empty,
-      requestLinks.length ? read(context.supabase.from("library_requests").select(REQUEST_COLS).or(requestLinks.join(",")).order("created_at", { ascending: false }).limit(SEARCH_LIMIT + 1)) : empty,
+      orderLinks.length ? read((itemIds.length ? context.supabase.from("library_orders").select(ORDER_COLS).in("item_id", itemIds) : context.supabase.from("library_orders").select(ORDER_COLS)).or(orderLinks.join(",")).order("created_at", { ascending: false }).limit(SEARCH_LIMIT + 1)) : empty,
+      requestLinks.length ? read((itemIds.length ? context.supabase.from("library_requests").select(REQUEST_COLS).in("item_id", itemIds) : context.supabase.from("library_requests").select(REQUEST_COLS)).or(requestLinks.join(",")).order("created_at", { ascending: false }).limit(SEARCH_LIMIT + 1)) : empty,
     ]);
     const users = ids.map((id) => {
       const u = authUsers.find((a) => a.id === id);

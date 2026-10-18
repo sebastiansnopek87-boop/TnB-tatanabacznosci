@@ -5,7 +5,7 @@ describe('Control Center read-only rules', () => {
   it('preserves the real 69.99 PLN paid order without using is_test for access', () => {
     const order = { amount: 6999, currency: 'PLN', is_test: false, status: 'paid', paid_at: '2026-10-02T16:01:21.066Z', access_revoked_at: null };
     expect(order.amount / 100).toBe(69.99); expect(order.currency).toBe('PLN'); expect(order.is_test).toBe(false); expect(hasAccess(order)).toBe(true);
-    expect(hasAccess({ ...order, is_test: true })).toBe(true);
+    const testOrder = { ...order, is_test: true }; expect(hasAccess(testOrder)).toBe(true);
   });
   it('never grants access without server payment confirmation', () => { expect(hasAccess({ status: 'paid', paid_at: null, access_revoked_at: null })).toBe(false); });
   it('preserves revocation and refund access rules', () => { for (const status of ['paid','refund_pending','refunded']) { expect(hasAccess({ status, paid_at: '2026-10-02', access_revoked_at: null })).toBe(true); expect(hasAccess({ status, paid_at: '2026-10-02', access_revoked_at: '2026-10-03' })).toBe(false); } });

@@ -14,7 +14,7 @@ export function requestNameFilter(words: string[]) {
   return words.length > 1 ? `and(first_name.ilike.${filterValue(`%${words.slice(0, -1).join(" ")}%`)},last_name.ilike.${filterValue(`%${words.at(-1)}%`)})` : null;
 }
 export function accountMatches(userId: string | null, email: string | null, users: Array<{ id: string; email: string | null }>) {
-  return users.flatMap((u) => userId === u.id ? [{ userId: u.id, kind: "user_id" as const }]
+  return users.flatMap<{ userId: string; kind: "user_id" | "email" }>((u) => userId === u.id ? [{ userId: u.id, kind: "user_id" as const }]
     : email && u.email && email.toLowerCase() === u.email.toLowerCase() ? [{ userId: u.id, kind: "email" as const }] : []);
 }
 export function accessPresentation(allowed: boolean, expiresAt: string | null, now = Date.now()) {
