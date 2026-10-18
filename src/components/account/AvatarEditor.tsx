@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useServerFn } from '@tanstack/react-start';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ export function AvatarEditor({ name }: { name: string }) {
   const [image, setImage] = useState<Blob | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
+  const input = useRef<HTMLInputElement>(null);
   const save = useServerFn(saveMyAvatar); const remove = useServerFn(removeMyAvatar); const qc = useQueryClient();
   async function choose(file?: File) {
     if (!file) return; setMessage(''); setBusy(true);
@@ -44,7 +45,8 @@ export function AvatarEditor({ name }: { name: string }) {
     {preview ? <img src={preview} alt="Podgląd nowego avatara" className="size-20 rounded-full object-cover" /> : <UserAvatar own name={name} className="size-20 text-2xl" />}
     <div className="min-w-0 space-y-3">
       <label className="block text-sm text-foreground" htmlFor="avatar-file">Zdjęcie profilowe</label>
-      <input id="avatar-file" type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={e => { void choose(e.target.files?.[0]); e.target.value = ''; }} className="block max-w-full text-sm text-muted-foreground file:mr-3 file:border file:border-border file:bg-background file:px-3 file:py-2 file:text-foreground" />
+      <input ref={input} id="avatar-file" type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={e => { void choose(e.target.files?.[0]); e.target.value = ''; }} className="sr-only" />
+      <Button variant="outline" disabled={busy} onClick={() => input.current?.click()}>Wybierz zdjęcie</Button>
       <div className="flex flex-wrap gap-2">
         {image && <><Button disabled={busy} onClick={() => commit()}>Zapisz avatar</Button><Button variant="ghost" disabled={busy} onClick={() => { setImage(null); setPreview(null); }}>Anuluj</Button></>}
         <Button variant="outline" disabled={busy} onClick={() => commit(true)}>Usuń avatar</Button>

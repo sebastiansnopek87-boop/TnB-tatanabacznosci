@@ -41,8 +41,8 @@ export function MyMeetings() {
         </ul>
       )}
       {past.length > 0 && (
-        <div>
-          <p className="eyebrow text-muted-foreground">Historia</p>
+        <details>
+          <summary className="cursor-pointer text-sm text-gold">Historia rozmów</summary>
           <ul className="mt-2 space-y-2">
             {past.map((b) => (
               <li key={b.id} className="flex flex-wrap justify-between gap-2 border-b border-border/50 pb-2 text-sm last:border-0">
@@ -51,7 +51,7 @@ export function MyMeetings() {
               </li>
             ))}
           </ul>
-        </div>
+        </details>
       )}
       <CancelDialog id={cancelId} onClose={() => setCancelId(null)} />
     </div>
