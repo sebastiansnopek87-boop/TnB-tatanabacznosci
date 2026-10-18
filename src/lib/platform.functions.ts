@@ -54,11 +54,17 @@ export const getPlatformSettings = createServerFn({ method: "GET" })
     if (error || !data) throw new Error("Nie udało się pobrać ustawień platformy.");
     const { data: email } = await context.supabase.from("email_settings")
       .select("notification_recipient, sender_name, sender_local_part, sender_domain, contact_notifications_enabled, newsletter_notifications_enabled, newsletter_double_opt_in").eq("id", 1).maybeSingle();
-    return { settings: data as PublicPlatformSettings & { updated_at: string }, email, canEdit: await isSuper(context) };
+    return { settings: data as PublicPlatformSettings & BillingSettings & { updated_at: string }, email, canEdit: await isSuper(context) };
   });
 
 const optEmail = z.union([z.string().trim().email("Podaj poprawny adres e-mail").max(255), z.literal("")]).transform((v) => (v === "" ? null : v));
 const optUrl = z.union([z.string().trim().url("Podaj pełny adres zaczynający się od https://").max(500).refine((v) => v.startsWith("https://"), "Adres musi zaczynać się od https://"), z.literal("")]).transform((v) => (v === "" ? null : v));
+const optText = (max: number) => z.union([z.string().trim().max(max), z.literal("")]).transform((v) => (v === "" ? null : v));
+const optNip = z.union([z.string().trim().regex(/^\d{10}$/, "NIP musi mieć dokładnie 10 cyfr (bez myślników)"), z.literal("")]).transform((v) => (v === "" ? null : v));
+const optRegon = z.union([z.string().trim().regex(/^\d{9}(\d{5})?$/, "REGON musi mieć 9 lub 14 cyfr"), z.literal("")]).transform((v) => (v === "" ? null : v));
+const optKrs = z.union([z.string().trim().regex(/^\d{10}$/, "KRS musi mieć dokładnie 10 cyfr"), z.literal("")]).transform((v) => (v === "" ? null : v));
+const optPostal = z.union([z.string().trim().regex(/^\d{2}-\d{3}$/, "Kod pocztowy w formacie 00-000"), z.literal("")]).transform((v) => (v === "" ? null : v));
+const optPhone = z.union([z.string().trim().regex(/^\+?[0-9\s-]{7,20}$/, "Podaj poprawny numer telefonu"), z.literal("")]).transform((v) => (v === "" ? null : v));
 export const platformSchema = z.object({
   social_youtube: optUrl, social_spotify: optUrl, social_tiktok: optUrl, social_instagram: optUrl,
   platform_name: z.string().trim().min(1, "Podaj nazwę platformy").max(100),
@@ -67,8 +73,28 @@ export const platformSchema = z.object({
   notice_enabled: z.boolean(),
   maintenance_enabled: z.boolean(),
   maintenance_message: z.string().trim().max(500, "Komunikat może mieć najwyżej 500 znaków"),
+  company_legal_name: optText(200),
+  company_legal_form: optText(100),
+  company_nip: optNip,
+  company_regon: optRegon,
+  company_krs: optKrs,
+  company_address_street: optText(200),
+  company_address_postal: optPostal,
+  company_address_city: optText(100),
+  company_address_country: optText(100),
+  contact_phone: optPhone,
+  contact_hours: optText(200),
+  billing_same_as_company: z.boolean(),
+  billing_name: optText(200),
+  billing_nip: optNip,
+  billing_address: optText(300),
+  footer_description: optText(500),
+  footer_copyright: optText(200),
+  footer_show_contact: z.boolean(),
 }).refine((d) => !(d.notice_enabled || d.maintenance_enabled) || d.maintenance_message.length > 0, {
   message: "Wpisz treść komunikatu, zanim go włączysz.", path: ["maintenance_message"],
+}).refine((d) => d.billing_same_as_company || !!d.billing_name, {
+  message: "Podaj nazwę nabywcy na fakturze albo włącz kopiowanie danych podmiotu.", path: ["billing_name"],
 });
 
 export const updatePlatformSettings = createServerFn({ method: "POST" })
@@ -77,7 +103,7 @@ export const updatePlatformSettings = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertSuperadmin(context, "platform_settings");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: prev } = await supabaseAdmin.from("platform_settings").select(PUBLIC_COLS).eq("id", 1).single();
+    const { data: prev } = await supabaseAdmin.from("platform_settings").select(`${PUBLIC_COLS}, ${BILLING_COLS}`).eq("id", 1).single();
     const { error } = await supabaseAdmin.from("platform_settings")
       .update({ ...data, updated_at: new Date().toISOString(), updated_by: context.userId }).eq("id", 1);
     if (error) {
