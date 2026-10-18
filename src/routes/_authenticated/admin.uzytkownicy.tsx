@@ -1,7 +1,8 @@
+import { adminRecordSearch } from "@/lib/admin-record-search";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Fragment, useState } from "react";
+import { Fragment, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { listUsers, getUserDetail, setUserRole, ROLE_VALUES } from "@/lib/users.functions";
 import { errMsg, fmtDate } from "@/components/admin/format";
@@ -10,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
-export const Route = createFileRoute("/_authenticated/admin/uzytkownicy")({ component: UsersPage });
+export const Route = createFileRoute("/_authenticated/admin/uzytkownicy")({ validateSearch: adminRecordSearch, head: () => ({ meta: [{ title: "Użytkownicy — Tata Na Baczności" }, { name: "description", content: "Administracyjny podgląd kont użytkowników TNB." }, { property: "og:title", content: "Użytkownicy — Tata Na Baczności" }, { property: "og:description", content: "Panel administracyjny TNB — szczegóły i historia." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex, nofollow" }] }), component: UsersPage });
 
 export const ROLE_LABELS: Record<string, string> = {
   superadmin: "Superadministrator", admin: "Administrator", moderator: "Moderator", editor: "Redaktor", support: "Obsługa użytkowników", premium: "Premium (podcast)",
@@ -18,10 +19,12 @@ export const ROLE_LABELS: Record<string, string> = {
 const sel = "h-9 rounded-md border border-input bg-background px-2 text-sm";
 
 function UsersPage() {
+  const { record } = Route.useSearch();
   const fn = useServerFn(listUsers);
   const [q, setQ] = useState(""); const [applied, setApplied] = useState("");
   const [role, setRole] = useState(""); const [status, setStatus] = useState(""); const [page, setPage] = useState(0);
-  const [open, setOpen] = useState<string | null>(null);
+  const [open, setOpen] = useState<string | null>(record ?? null);
+  useEffect(() => { setOpen(record ?? null); }, [record]);
   const { data, error, isFetching } = useQuery({
     queryKey: ["admin-users", applied, role, status, page],
     queryFn: () => fn({ data: { q: applied, role: role as never, status: status as never, page } }),

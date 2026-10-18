@@ -10,6 +10,9 @@ export function searchParts(q: string) {
   return { safe, words: safe.split(" ").filter(Boolean) };
 }
 export const filterValue = (v: string) => `"${v.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+export function materialSearchFilter(safe: string) {
+  return `slug.eq.${filterValue(safe)},title.ilike.${filterValue(`%${safe}%`)}`;
+}
 export function requestNameFilter(words: string[]) {
   return words.length > 1 ? `and(first_name.ilike.${filterValue(`%${words.slice(0, -1).join(" ")}%`)},last_name.ilike.${filterValue(`%${words.at(-1)}%`)})` : null;
 }
@@ -21,8 +24,9 @@ export function accessPresentation(allowed: boolean, expiresAt: string | null, n
   const expired = !!expiresAt && new Date(expiresAt).getTime() <= now;
   return { allowed, expired, label: allowed && expired ? "Reguła dostępu spełniona — data ważności minęła, wymaga weryfikacji" : allowed ? "aktywny" : "brak" };
 }
-export type HistoryEvent = { id: string; at: string; source: "order" | "admin"; type: string; actor: string | null; objectKind: string; objectId: string; detail: string | null; result: string | null };
-export function historyPage(order: HistoryEvent[], admin: HistoryEvent[], offsets: { order: number; admin: number }) {
-  const rows = [...order, ...admin].sort((a, b) => b.at.localeCompare(a.at) || a.source.localeCompare(b.source) || a.id.localeCompare(b.id)).slice(0, HISTORY_SIZE);
-  return { rows, next: { order: offsets.order + rows.filter((r) => r.source === "order").length, admin: offsets.admin + rows.filter((r) => r.source === "admin").length }, hasMore: order.length + admin.length > rows.length };
+export type HistoryEvent = { id: string; at: string; source: "order" | "admin" | "mail"; type: string; actor: string | null; objectKind: string; objectId: string; detail: string | null; result: string | null };
+export function historyPage(order: HistoryEvent[], admin: HistoryEvent[], offsets: { order: number; admin: number; mail?: number }, mail: HistoryEvent[] = []) {
+  const all = [...new Map([...order, ...admin, ...mail].map((e) => [`${e.source}-${e.id}`, e])).values()];
+  const rows = all.sort((a, b) => b.at.localeCompare(a.at) || a.source.localeCompare(b.source) || a.id.localeCompare(b.id)).slice(0, HISTORY_SIZE);
+  return { rows, next: { order: offsets.order + rows.filter((r) => r.source === "order").length, admin: offsets.admin + rows.filter((r) => r.source === "admin").length , mail: (offsets.mail ?? 0) + rows.filter((r) => r.source === "mail").length }, hasMore: all.length > rows.length };
 }

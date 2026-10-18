@@ -3,7 +3,7 @@ import { assertAdmin } from "./admin-auth.server";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { SEARCH_LIMIT, HISTORY_SIZE, readState, searchParts, requestNameFilter, filterValue, accountMatches, accessPresentation, historyPage, type HistoryEvent } from "./control-center";
+import { SEARCH_LIMIT, HISTORY_SIZE, readState, searchParts, requestNameFilter, filterValue, materialSearchFilter, accountMatches, accessPresentation, historyPage, type HistoryEvent } from "./control-center";
 
 const ORDER_COLS = "id, order_number, created_at, paid_at, delivered_at, status, delivery_status, buyer_email, buyer_name, amount, currency, payment_method, provider, environment, is_test, user_id, access_expires_at, access_revoked_at, item_id, library_items(title, slug)";
 const REQUEST_COLS = "id, item_id, item_title, mode, status, user_id, first_name, last_name, email, downloaded_at, download_count, notification_status, created_at";
@@ -33,7 +33,7 @@ export const controlCenterSearch = createServerFn({ method: "POST" })
     const [identSearch, authResult, materials] = await Promise.all([
       read(context.supabase.from("user_identities").select("user_id, tnb_id").ilike("tnb_id", `%${safe}%`).limit(SEARCH_LIMIT + 1)),
       read<{ users: AuthUser[] }>(supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 })),
-      read(context.supabase.from("library_items").select("id, slug, title").eq("slug", safe).limit(SEARCH_LIMIT + 1)),
+      read(context.supabase.from("library_items").select("id, slug, title").or(materialSearchFilter(safe)).order("id", { ascending: true }).limit(SEARCH_LIMIT + 1)),
     ]);
     const authUsers: AuthUser[] = authResult.error ? [] : authResult.data?.users ?? [];
     const matched = new Set<string>(identSearch.error ? [] : (identSearch.data ?? []).slice(0, SEARCH_LIMIT).map((r) => r.user_id));
@@ -72,7 +72,7 @@ export const controlCenterSearch = createServerFn({ method: "POST" })
     });
     const allOrders = [...new Map([...orders.slice(0, SEARCH_LIMIT), ...(linkedOrders.error ? [] : linkedOrders.data ?? []) as unknown as OrderRow[]].map((o) => [o.id, o])).values()].sort((a, b) => b.created_at.localeCompare(a.created_at));
     const allRequests = [...new Map([...requests.slice(0, SEARCH_LIMIT), ...(linkedRequests.error ? [] : linkedRequests.data ?? []) as RequestRow[]].map((r) => [r.id, r])).values()].sort((a, b) => b.created_at.localeCompare(a.created_at));
-    const sourceIncomplete = !!(identSearch.error || authResult.error || materials.error) || authUsers.length >= 1000 || matched.size > SEARCH_LIMIT;
+    const sourceIncomplete = !!(identSearch.error || authResult.error || materials.error) || authUsers.length >= 1000 || matched.size > SEARCH_LIMIT || (materials.data?.length ?? 0) > SEARCH_LIMIT;
     return {
       states: {
         users: readState(authResult.error || identSearch.error || roles.error || identities.error, Math.max(matched.size, identSearch.data?.length ?? 0), SEARCH_LIMIT, authUsers.length >= 1000),
@@ -80,7 +80,7 @@ export const controlCenterSearch = createServerFn({ method: "POST" })
         orders: readState(orderSearch.error || linkedOrders.error, Math.max(orders.length, linkedOrders.data?.length ?? 0, allOrders.length), SEARCH_LIMIT, sourceIncomplete),
         requests: readState(requestSearch.error || linkedRequests.error, Math.max(requests.length, linkedRequests.data?.length ?? 0, allRequests.length), SEARCH_LIMIT, sourceIncomplete),
       }, users,
-      materials: materials.error ? [] : materials.data ?? [],
+      materials: materials.error ? [] : (materials.data ?? []).slice(0, SEARCH_LIMIT),
       orders: allOrders.slice(0, SEARCH_LIMIT).map((o) => {
         const access = accessPresentation(hasAccess(o), o.access_expires_at);
         const warnings: string[] = [];
@@ -102,7 +102,7 @@ export const controlCenterSearch = createServerFn({ method: "POST" })
 
 export const controlCenterHistory = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ kind: z.enum(["order", "user", "library_request", "actor"]), id: z.string().uuid(), offsets: z.object({ order: z.number().int().min(0).max(1000000), admin: z.number().int().min(0).max(1000000) }).default({ order: 0, admin: 0 }), before: z.string().datetime().optional() }).parse(d))
+  .inputValidator((d: unknown) => z.object({ kind: z.enum(["order", "user", "library_request", "actor"]), id: z.string().uuid(), offsets: z.object({ order: z.number().int().min(0).max(1000000), admin: z.number().int().min(0).max(1000000), mail: z.number().int().min(0).max(1000000).default(0) }).default({ order: 0, admin: 0, mail: 0 }), before: z.string().datetime().optional() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     // Freeze the upper boundary so newer writes don't shift subsequent pages.
@@ -110,12 +110,14 @@ export const controlCenterHistory = createServerFn({ method: "POST" })
     const empty = { data: [], error: null };
     let adminQuery = context.supabase.from("admin_events").select("id, created_at, type, actor, object_kind, object_id, result, detail").lte("created_at", before);
     adminQuery = data.kind === "actor" ? adminQuery.eq("actor", data.id) : adminQuery.eq("object_kind", data.kind).eq("object_id", data.id);
-    const [orderRes, adminRes] = await Promise.all([
+    const [orderRes, adminRes, mailRes] = await Promise.all([
       data.kind === "order" ? read(context.supabase.from("library_order_events").select("id, order_id, type, detail, created_at").eq("order_id", data.id).lte("created_at", before).order("created_at", { ascending: false }).order("id", { ascending: true }).range(data.offsets.order, data.offsets.order + HISTORY_SIZE)) : empty,
       read(adminQuery.order("created_at", { ascending: false }).order("id", { ascending: true }).range(data.offsets.admin, data.offsets.admin + HISTORY_SIZE)),
+      data.kind === "order" ? read(context.supabase.from("email_notification_log").select("id, related_id, kind, template_key, status, reason, mode, created_at").eq("related_id", data.id).lte("created_at", before).order("created_at", { ascending: false }).order("id", { ascending: true }).range(data.offsets.mail, data.offsets.mail + HISTORY_SIZE)) : empty,
     ]);
-    if (orderRes.error || adminRes.error) return { ...historyPage([], [], data.offsets), error: "Nie udało się pobrać historii. Spróbuj ponownie.", before };
+    if (orderRes.error || adminRes.error || mailRes.error) return { ...historyPage([], [], data.offsets), error: "Nie udało się pobrać historii. Spróbuj ponownie.", before };
     const orderRows: HistoryEvent[] = (orderRes.data ?? []).map((e) => ({ id: e.id, at: e.created_at, source: "order", type: e.type, actor: null, objectKind: "order", objectId: e.order_id, detail: e.detail, result: null }));
     const adminRows: HistoryEvent[] = (adminRes.data ?? []).map((e) => ({ id: e.id, at: e.created_at, source: "admin", type: e.type, actor: e.actor, objectKind: e.object_kind ?? "—", objectId: e.object_id ?? "—", detail: e.detail, result: e.result }));
-    return { ...historyPage(orderRows, adminRows, data.offsets), error: null, before };
+    const mailRows: HistoryEvent[] = (mailRes.data ?? []).map((e) => ({ id: e.id, at: e.created_at, source: "mail", type: e.template_key ?? e.kind, actor: null, objectKind: "order", objectId: e.related_id ?? data.id, detail: `Tryb: ${e.mode}${e.reason ? ` · ${e.reason}` : ""}`, result: e.status === "simulated" ? "symulacja (nie wysłano)" : e.status === "sent" ? "wysłano" : e.status }));
+    return { ...historyPage(orderRows, adminRows, data.offsets, mailRows), error: null, before };
   });

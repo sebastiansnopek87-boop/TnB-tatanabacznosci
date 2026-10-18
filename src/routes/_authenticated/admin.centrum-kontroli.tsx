@@ -42,7 +42,7 @@ function History({ kind, id, title }: { kind: "order" | "user" | "library_reques
   const [opened, setOpened] = useState(false);
   const [busy, setBusy] = useState(false);
   const [rows, setRows] = useState<HistoryEvent[]>([]);
-  const [next, setNext] = useState({ order: 0, admin: 0 });
+  const [next, setNext] = useState({ order: 0, admin: 0, mail: 0 });
   const [before, setBefore] = useState<string>();
   const [more, setMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,11 +64,11 @@ function History({ kind, id, title }: { kind: "order" | "user" | "library_reques
       {!error && !busy && !rows.length && <p className="text-muted-foreground">Brak zapisanych zdarzeń w tych rejestrach.</p>}
       {rows.map((e) => <div key={`${e.source}-${e.id}`} className="space-y-1 border-l border-border pl-3 text-xs break-words">
         <p><span className="text-muted-foreground">{fmtDate(e.at)}</span> · <strong>{e.type}</strong>{e.result ? ` · ${e.result}` : ""}</p>
-        <p className="text-muted-foreground">Źródło: {e.source === "order" ? "rejestr zamówienia" : "dziennik administratora"} · Aktor: {e.actor ?? "nie zapisano w źródle"}</p>
+        <p className="text-muted-foreground">Źródło: {e.source === "order" ? "rejestr zamówienia" : e.source === "mail" ? "rejestr powiadomień e-mail" : "dziennik administratora"} · Aktor: {e.actor ?? "nie zapisano w źródle"}</p>
         <p className="text-muted-foreground">Obiekt: {e.objectKind} · {e.objectId}</p>
         {e.detail && <p>{e.detail}</p>}
       </div>)}
-      {rows.length > 0 && <p className="text-xs text-muted-foreground">Wpisy z obu rejestrów pozostają oddzielne; mogą opisywać różne aspekty tej samej operacji.</p>}
+      {rows.length > 0 && <p className="text-xs text-muted-foreground">Wpisy z rejestrów pozostają oddzielne; mogą opisywać różne aspekty tej samej operacji.</p>}
       {more && <p className="text-xs text-gold">Historia niepełna — dostępne są starsze wpisy.</p>}
       {(more || error) && <Button variant="outline" size="sm" disabled={busy} onClick={load}>{error ? "Spróbuj ponownie" : "Pokaż starsze"}</Button>}
     </div>}
@@ -87,17 +87,17 @@ function ControlCenterPage() {
     catch (e) { setError(errMsg(e)); } finally { setBusy(false); }
   }
   return <div className="space-y-6 break-words">
-    <div><h1 className="font-display text-2xl font-semibold uppercase">Centrum kontroli</h1><p className="mt-1 text-sm text-muted-foreground">Tryb tylko do odczytu. E-mail, imię i nazwisko, TNB ID, numer zamówienia lub slug materiału.</p></div>
+    <div><h1 className="font-display text-2xl font-semibold uppercase">Centrum kontroli</h1><p className="mt-1 text-sm text-muted-foreground">Tryb tylko do odczytu. E-mail, imię i nazwisko, TNB ID, numer zamówienia, slug lub tytuł materiału.</p></div>
     <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); run(); }}>
-      <Input aria-label="Wyszukaj w Centrum kontroli" value={q} onChange={(e) => setQ(e.target.value)} placeholder="E-mail, Jan Nowak, TNB ID, numer lub slug" className="min-w-0 max-w-md" />
+      <Input aria-label="Wyszukaj w Centrum kontroli" value={q} onChange={(e) => setQ(e.target.value)} placeholder="E-mail, Jan Nowak, TNB ID, numer, slug lub tytuł" className="min-w-0 max-w-md" />
       <Button type="submit" disabled={busy || q.trim().length < 2}><Search className="mr-2 h-4 w-4" aria-hidden />{busy ? "Szukam…" : "Szukaj"}</Button>
     </form>
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
     {res && <div key={runId} className="space-y-8">
       <section><h2 className="eyebrow text-gold">Konta ({res.users.length})</h2><ReadNotice state={res.states.users} empty={!res.users.length}>Brak pasujących kont.</ReadNotice>
         <ul className="mt-2 divide-y divide-border/60 border border-border/60">{res.users.map((u) => <li key={u.id} className="space-y-2 px-4 py-3 text-sm">
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1"><Link to="/admin/uzytkownicy" className="font-medium underline-offset-4 hover:underline">{u.email ?? u.id}</Link>{u.name && <span>{u.name}</span>}{u.tnbId && <span className="text-xs text-muted-foreground">TNB ID: {u.tnbId}</span>}{u.roles && <span className="text-xs text-gold">{u.roles.join(", ")}</span>}<span className="text-xs text-muted-foreground">{u.confirmed === null ? "Potwierdzenie konta: nie odczytano" : u.confirmed ? "potwierdzone" : "niepotwierdzone"}</span></div>
-          <p className="text-xs text-muted-foreground">Link otwiera listę użytkowników; szczegóły wybierz na liście.</p>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1"><Link to="/admin/uzytkownicy" search={{ record: u.id }} className="font-medium underline-offset-4 hover:underline">{u.email ?? u.id}</Link>{u.name && <span>{u.name}</span>}{u.tnbId && <span className="text-xs text-muted-foreground">TNB ID: {u.tnbId}</span>}{u.roles && <span className="text-xs text-gold">{u.roles.join(", ")}</span>}<span className="text-xs text-muted-foreground">{u.confirmed === null ? "Potwierdzenie konta: nie odczytano" : u.confirmed ? "potwierdzone" : "niepotwierdzone"}</span></div>
+          <p className="text-xs text-muted-foreground">Link otwiera szczegóły wskazanego konta.</p>
           <History kind="user" id={u.id} title="Historia obiektu konta" />
           <History kind="actor" id={u.id} title="Działania tej osoby jako aktora (oddzielny rejestr)" />
         </li>)}</ul>
@@ -105,12 +105,12 @@ function ControlCenterPage() {
       {(res.materials.length > 0 || res.states.materials.error) && <section><h2 className="eyebrow text-gold">Materiały ({res.materials.length})</h2><ReadNotice state={res.states.materials} empty={!res.materials.length}>Brak pasujących materiałów.</ReadNotice>{res.materials.map((m) => <p key={m.id} className="mt-2 text-sm"><Link to="/admin/biblioteka" className="underline">{m.title}</Link> · {m.slug}</p>)}<p className="mt-1 text-xs text-muted-foreground">Link otwiera Bibliotekę; szczegóły materiału wybierz na liście.</p></section>}
       <section><h2 className="eyebrow text-gold">Zamówienia ({res.orders.length})</h2><ReadNotice state={res.states.orders} empty={!res.orders.length}>Brak pasujących zamówień.</ReadNotice>
         <ul className="mt-2 divide-y divide-border/60 border border-border/60">{res.orders.map((o) => <li key={o.id} className="space-y-2 px-4 py-3 text-sm" data-order={o.orderNumber}>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1"><Link to="/admin/zamowienia" className="font-medium underline-offset-4 hover:underline">{o.orderNumber}</Link><Link to="/admin/biblioteka" className="text-muted-foreground underline-offset-4 hover:underline">{o.itemTitle}</Link><span>{(o.amount / 100).toFixed(2)} {o.currency}</span><span className="text-xs text-muted-foreground">{fmtDate(o.createdAt)}</span><span className="text-xs text-muted-foreground">{o.isTest ? "testowe (is_test=true)" : "rzeczywiste (is_test=false)"}</span></div>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1"><Link to="/admin/zamowienia" search={{ record: o.id }} className="font-medium underline-offset-4 hover:underline">{o.orderNumber}</Link><Link to="/admin/biblioteka" className="text-muted-foreground underline-offset-4 hover:underline">{o.itemTitle}</Link><span>{(o.amount / 100).toFixed(2)} {o.currency}</span><span className="text-xs text-muted-foreground">{fmtDate(o.createdAt)}</span><span className="text-xs text-muted-foreground">{o.isTest ? "testowe (is_test=true)" : "rzeczywiste (is_test=false)"}</span></div>
           <p className="text-xs text-muted-foreground">{o.buyerEmail}{o.itemSlug ? ` · ${o.itemSlug}` : ""}</p>
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs"><span>Zamówienie: <strong>{ORDER_STATUS[o.status] ?? o.status}</strong></span><span>Płatność: <strong>{o.paidAt ? `opłacona ${fmtDate(o.paidAt)}` : "brak daty potwierdzenia płatności"}</strong></span><span>Dostęp: <strong className={o.access.allowed ? "text-gold" : ""}>{o.access.label}</strong>{o.accessRevokedAt ? " (cofnięty)" : ""}</span></div>
           {o.accessExpiresAt && <p className="text-xs text-muted-foreground">Zapisana data ważności: {fmtDate(o.accessExpiresAt)}. Istniejąca reguła dostępu nie uwzględnia tej daty.</p>}
           <Matches userId={o.userId} matches={o.matches} /><Warnings rows={o.warnings} />
-          <p className="text-xs text-muted-foreground">Linki otwierają listy zamówień i materiałów; szczegóły wybierz na odpowiedniej liście.</p>
+          <p className="text-xs text-muted-foreground">Numer otwiera szczegóły zamówienia; materiał prowadzi do listy Biblioteki.</p>
           <History kind="order" id={o.id} title={`Historia zamówienia ${o.orderNumber}`} />
         </li>)}</ul>
       </section>

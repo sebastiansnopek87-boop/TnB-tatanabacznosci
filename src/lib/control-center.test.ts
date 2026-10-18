@@ -16,7 +16,7 @@ describe('Control Center read-only rules', () => {
   it('pages chronology without deleting two aspects of the same operation', () => {
     const make = (source: 'order' | 'admin', n: number): HistoryEvent => ({ id: String(n), at: new Date(Date.UTC(2026, 0, 1, 0, n)).toISOString(), source, type: 'paid', actor: null, objectKind: 'order', objectId: 'a', detail: null, result: null });
     const order = Array.from({ length: 31 }, (_, n) => make('order', 31-n)); const admin = [make('admin', 31)];
-    const page = historyPage(order, admin, { order: 0, admin: 0 }); expect(page.rows).toHaveLength(HISTORY_SIZE); expect(page.rows.filter((r) => r.at === order[0]?.at)).toHaveLength(2); expect(page.hasMore).toBe(true); expect(page.next).toEqual({ order: 29, admin: 1 });
+    const page = historyPage(order, admin, { order: 0, admin: 0 }); expect(page.rows).toHaveLength(HISTORY_SIZE); expect(page.rows.filter((r) => r.at === order[0]?.at)).toHaveLength(2); expect(page.hasMore).toBe(true); expect(page.next).toEqual({ order: 29, admin: 1, mail: 0 });
     const last = historyPage(order.slice(page.next.order), [], page.next); expect(last.rows).toHaveLength(2); expect(last.hasMore).toBe(false);
   });
 });
