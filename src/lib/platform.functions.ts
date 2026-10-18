@@ -12,8 +12,17 @@ export type PublicPlatformSettings = {
   module_visibility?: ModuleVisibility;
   brand_settings?: Record<string, string | boolean>;
   visual_effects?: VisualEffects;
+  company_legal_name?: string | null; company_legal_form?: string | null;
+  company_nip?: string | null; company_regon?: string | null; company_krs?: string | null;
+  company_address_street?: string | null; company_address_postal?: string | null;
+  company_address_city?: string | null; company_address_country?: string | null;
+  contact_phone?: string | null; contact_hours?: string | null;
+  footer_description?: string | null; footer_copyright?: string | null; footer_show_contact?: boolean;
 };
-const PUBLIC_COLS = "platform_name, contact_email, support_email, notice_enabled, maintenance_enabled, maintenance_message, social_youtube, social_spotify, social_tiktok, social_instagram, podcast_layout, module_visibility, brand_settings, visual_effects";
+// Admin-only billing fields — never in PUBLIC_COLS, never in public responses.
+export type BillingSettings = { billing_same_as_company: boolean; billing_name: string | null; billing_nip: string | null; billing_address: string | null };
+const BILLING_COLS = "billing_same_as_company, billing_name, billing_nip, billing_address";
+const PUBLIC_COLS = "platform_name, contact_email, support_email, notice_enabled, maintenance_enabled, maintenance_message, social_youtube, social_spotify, social_tiktok, social_instagram, podcast_layout, module_visibility, brand_settings, visual_effects, company_legal_name, company_legal_form, company_nip, company_regon, company_krs, company_address_street, company_address_postal, company_address_city, company_address_country, contact_phone, contact_hours, footer_description, footer_copyright, footer_show_contact";
 
 // Public: only non-sensitive columns, read through the anon SELECT policy.
 export const getPublicPlatformSettings = createServerFn({ method: "GET" }).handler(async () => {
@@ -41,7 +50,7 @@ export const getPlatformSettings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context);
-    const { data, error } = await context.supabase.from("platform_settings").select(`${PUBLIC_COLS}, updated_at`).eq("id", 1).maybeSingle();
+    const { data, error } = await context.supabase.from("platform_settings").select(`${PUBLIC_COLS}, ${BILLING_COLS}, updated_at`).eq("id", 1).maybeSingle();
     if (error || !data) throw new Error("Nie udało się pobrać ustawień platformy.");
     const { data: email } = await context.supabase.from("email_settings")
       .select("notification_recipient, sender_name, sender_local_part, sender_domain, contact_notifications_enabled, newsletter_notifications_enabled, newsletter_double_opt_in").eq("id", 1).maybeSingle();
