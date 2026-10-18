@@ -37,3 +37,8 @@
 - [x] Serwowanie prywatnych plików marki przez /api/public/brand/$file po sprawdzeniu referencji
 - [x] Nagłówek/stopka używają logo marki; favicon/og:image/SEO strony głównej z ustawień
 - [x] E2E: przesyłanie, zapis, serwowanie 200/404, favicon+og+tytuł, sprzątanie, mobile 390px, dziennik zdarzeń
+
+## Centralne ustawienia danych firmy (2026-10-18) — ZROBIONE
+- Migracja 0058: platform_settings +18 kolumn (firma, kontakt, faktury, stopka)
+- /admin/ustawienia: sekcje firma/faktury/stopka; SiteFooter i /kontakt podpięte pod ustawienia
+- Testy: platform.test.ts 5/5 PASS; E2E PASS
