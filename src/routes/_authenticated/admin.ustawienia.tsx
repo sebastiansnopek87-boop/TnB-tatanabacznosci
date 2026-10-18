@@ -107,6 +107,61 @@ function PlatformSettings() {
           <Input id="ce" type="email" disabled={ro} value={f.contact_email} onChange={(e) => set("contact_email", e.target.value)} placeholder="np. kontakt@twojadomena.pl" /></div>
         <div className="space-y-2"><Label htmlFor="se">Adres e-mail do obsługi użytkowników</Label>
           <Input id="se" type="email" disabled={ro} value={f.support_email} onChange={(e) => set("support_email", e.target.value)} placeholder="np. pomoc@twojadomena.pl" /></div>
+        <div className="space-y-2"><Label htmlFor="cp">Telefon kontaktowy</Label>
+          <Input id="cp" disabled={ro} value={f.contact_phone} maxLength={20} onChange={(e) => set("contact_phone", e.target.value)} placeholder="np. +48 600 000 000" /></div>
+        <div className="space-y-2"><Label htmlFor="ch">Godziny / opis dostępności</Label>
+          <Input id="ch" disabled={ro} value={f.contact_hours} maxLength={200} onChange={(e) => set("contact_hours", e.target.value)} placeholder="np. Pon–Pt 9:00–17:00" /></div>
+      </Section>
+
+      <Section title="Dane firmy i podmiotu prawnego" hint="Wyświetlane w stopce i na stronie Kontakt tylko wtedy, gdy są uzupełnione. Puste pole = dane ukryte.">
+        <div className="space-y-2"><Label htmlFor="cln">Pełna nazwa prawna</Label>
+          <Input id="cln" disabled={ro} value={f.company_legal_name} maxLength={200} onChange={(e) => set("company_legal_name", e.target.value)} /></div>
+        <div className="space-y-2"><Label htmlFor="clf">Forma prawna</Label>
+          <Input id="clf" disabled={ro} value={f.company_legal_form} maxLength={100} onChange={(e) => set("company_legal_form", e.target.value)} placeholder="np. jednoosobowa działalność gospodarcza" /></div>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="space-y-2"><Label htmlFor="nip">NIP</Label>
+            <Input id="nip" disabled={ro} value={f.company_nip} maxLength={10} onChange={(e) => set("company_nip", e.target.value)} placeholder="10 cyfr" /></div>
+          <div className="space-y-2"><Label htmlFor="regon">REGON</Label>
+            <Input id="regon" disabled={ro} value={f.company_regon} maxLength={14} onChange={(e) => set("company_regon", e.target.value)} placeholder="9 lub 14 cyfr" /></div>
+          <div className="space-y-2"><Label htmlFor="krs">KRS</Label>
+            <Input id="krs" disabled={ro} value={f.company_krs} maxLength={10} onChange={(e) => set("company_krs", e.target.value)} placeholder="10 cyfr" /></div>
+        </div>
+        <div className="space-y-2"><Label htmlFor="cas">Ulica i numer</Label>
+          <Input id="cas" disabled={ro} value={f.company_address_street} maxLength={200} onChange={(e) => set("company_address_street", e.target.value)} /></div>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="space-y-2"><Label htmlFor="cap">Kod pocztowy</Label>
+            <Input id="cap" disabled={ro} value={f.company_address_postal} maxLength={6} onChange={(e) => set("company_address_postal", e.target.value)} placeholder="00-000" /></div>
+          <div className="space-y-2"><Label htmlFor="cac">Miejscowość</Label>
+            <Input id="cac" disabled={ro} value={f.company_address_city} maxLength={100} onChange={(e) => set("company_address_city", e.target.value)} /></div>
+          <div className="space-y-2"><Label htmlFor="caco">Kraj</Label>
+            <Input id="caco" disabled={ro} value={f.company_address_country} maxLength={100} onChange={(e) => set("company_address_country", e.target.value)} placeholder="np. Polska" /></div>
+        </div>
+      </Section>
+
+      <Section title="Dane do faktur" hint="Te dane nie są publikowane na stronie — widzą je wyłącznie administratorzy.">
+        <div className="flex items-center justify-between gap-4">
+          <Label htmlFor="bsac">Dane do faktury takie same jak dane podmiotu</Label>
+          <Switch id="bsac" disabled={ro} checked={f.billing_same_as_company} onCheckedChange={(v) => set("billing_same_as_company", v)} /></div>
+        {!f.billing_same_as_company && (
+          <>
+            <div className="space-y-2"><Label htmlFor="bn">Nazwa nabywcy na fakturze</Label>
+              <Input id="bn" disabled={ro} value={f.billing_name} maxLength={200} onChange={(e) => set("billing_name", e.target.value)} /></div>
+            <div className="space-y-2"><Label htmlFor="bnip">NIP nabywcy</Label>
+              <Input id="bnip" disabled={ro} value={f.billing_nip} maxLength={10} onChange={(e) => set("billing_nip", e.target.value)} placeholder="10 cyfr" /></div>
+            <div className="space-y-2"><Label htmlFor="ba">Adres do faktury</Label>
+              <Textarea id="ba" disabled={ro} rows={2} maxLength={300} value={f.billing_address} onChange={(e) => set("billing_address", e.target.value)} /></div>
+          </>
+        )}
+      </Section>
+
+      <Section title="Stopka strony" hint="Puste pola oznaczają dotychczasowe teksty domyślne.">
+        <div className="space-y-2"><Label htmlFor="fd">Opis marki pod logo</Label>
+          <Textarea id="fd" disabled={ro} rows={3} maxLength={500} value={f.footer_description} onChange={(e) => set("footer_description", e.target.value)} placeholder="Puste = dotychczasowy opis" /></div>
+        <div className="space-y-2"><Label htmlFor="fc">Tekst praw autorskich</Label>
+          <Input id="fc" disabled={ro} value={f.footer_copyright} maxLength={200} onChange={(e) => set("footer_copyright", e.target.value)} placeholder="Puste = „Wszelkie prawa zastrzeżone.”" /></div>
+        <div className="flex items-center justify-between gap-4">
+          <Label htmlFor="fsc">Pokaż kolumnę kontaktową w stopce</Label>
+          <Switch id="fsc" disabled={ro} checked={f.footer_show_contact} onCheckedChange={(v) => set("footer_show_contact", v)} /></div>
       </Section>
 
       <Section title="Oficjalne kanały" hint="Używane na stronie Głos TNB. Puste pole = kanał nie jest pokazywany. Wpisz pełny adres https://.">
