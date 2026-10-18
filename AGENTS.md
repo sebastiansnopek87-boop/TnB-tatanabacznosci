@@ -11,7 +11,7 @@
 
 - Admin panel under /admin (src/routes/_authenticated/admin*); every admin server fn calls assertAdmin from src/lib/admin-auth.server.ts and logs via logEvent to admin_events; RLS repeats the rule — defense in depth.
 - Signup open (email+confirmation, Google, Apple) -> /moje-tnb; roles granted only manually in user_roles.
-- Private buckets only; public media served via /api/public/* routes after access checks. Module rules (incl. Library): src/lib/AGENTS.md.
+- Private buckets only; public media served via /api/public/* after access checks. Read subdirectory AGENTS.md before changing files there; module rules: src/lib/AGENTS.md.
 - Roles: user_roles enum (superadmin, admin, moderator, editor, support, premium); panel access = admin; only superadmin changes roles (src/lib/users.functions.ts), last superadmin protected; why: reuse existing has_role/RLS.
 - Platform settings: singleton platform_settings (public read of safe columns); writes only via server fn after assertSuperadmin; maintenance screen is a UI gate in __root, /admin and /auth exempt. Why: config editable, admins never locked out.
 - Module presentation flags live in platform_settings.module_visibility and use src/config/modules.ts for path matching; public menu/home sections and ModuleGate consume the same flags, never admin navigation or purchase delivery. Why: one visibility source without changing entitlements or deleting content.
@@ -35,4 +35,3 @@
 - Account forms stay on a protected settings route; Moje TNB reuses collections and bookings. Why: separate maintenance without changing access.
 - Avatars use owner-scoped server functions, private media and user_avatars; shared UserAvatar serves own or visible-community context; media usage protects referenced avatars. Why: one view without external URLs or public account IDs.
 
-- Control Center aggregates read-only queries (never list helpers with cleanup/identity writes), imports hasAccess inside its server handler, and pages history by exact object separately from actor history; why: preserve access truth, data integrity and complete order history without new registries.
