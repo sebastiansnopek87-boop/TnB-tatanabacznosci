@@ -34,3 +34,5 @@
 
 - Account forms stay on a protected settings route; Moje TNB reuses collections and bookings. Why: separate maintenance without changing access.
 - Avatars use owner-scoped server functions, private media and user_avatars; shared UserAvatar serves own or visible-community context; media usage protects referenced avatars. Why: one view without external URLs or public account IDs.
+
+- Control Center aggregates read-only queries (never list helpers with cleanup/identity writes), imports hasAccess inside its server handler, and pages history by exact object separately from actor history; why: preserve access truth, data integrity and complete order history without new registries.
