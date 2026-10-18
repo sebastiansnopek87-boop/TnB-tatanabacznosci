@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] Moje TNB: ograniczony audyt 0057 i aktualnych zabezpieczeń, testy regresji tylko do odczytu oraz raport PASS/FAIL/NIEZWERYFIKOWANO; bez zmian bazy i danych użytkowników
 - [x] Moje TNB: analiza istniejących funkcji, avatarów i uprawnień; minimalny plan oraz SQL przygotowane — wdrożenie czeka na osobną zgodę na bazę
 - [x] Moje TNB: powitanie, cztery szybkie akcje, uporządkowana przestrzeń oraz osobne ustawienia konta
 - [x] Moje TNB: bezpieczne własne avatary, wspólny widok w nagłówku i społeczności, skróty zgodne z faktycznym dostępem
