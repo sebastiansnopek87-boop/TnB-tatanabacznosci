@@ -25,7 +25,7 @@ function query(table: string) {
   return q;
 }
 const ctx = () => ({ userId: id, supabase: { from: query } });
-const sections = () => [{ ...newSection("text"), body: "Treść testowa w pamięci testu" }];
+const sections = () => [{ ...newSection("text"), optional: false, body: "Treść testowa w pamięci testu" }];
 const draft = (key: string, s = sections()) => ({ slug: key, title: SYSTEM_PAGES[key]?.label ?? key, intro: "", sections: s, seo_title: "", seo_description: "" });
 const call = (fn: any, data: any) => fn({ data, context: ctx() });
 beforeEach(() => { m.rows = []; m.versions = []; m.approved = false; m.auth.mockReset(); m.events.mockReset(); });
