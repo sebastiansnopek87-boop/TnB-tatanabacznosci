@@ -1,8 +1,10 @@
 # Roadmap
 - [x] Moje TNB: analiza istniejących funkcji, avatarów i uprawnień; minimalny plan oraz SQL przygotowane — wdrożenie czeka na osobną zgodę na bazę
-- [ ] Moje TNB: powitanie, cztery szybkie akcje, uporządkowana przestrzeń oraz osobne ustawienia konta
-- [ ] Moje TNB: bezpieczne własne avatary, wspólny widok w nagłówku i społeczności, skróty zgodne z faktycznym dostępem
-- [ ] Moje TNB: testy funkcji, avatarów, uprawnień oraz desktop/390 px
+- [x] Moje TNB: powitanie, cztery szybkie akcje, uporządkowana przestrzeń oraz osobne ustawienia konta
+- [x] Moje TNB: bezpieczne własne avatary, wspólny widok w nagłówku i społeczności, skróty zgodne z faktycznym dostępem
+- [x] Moje TNB: avatar dodanie/podgląd/zapis/odświeżenie/zmiana/usunięcie, SVG i fałszywy WebP, obcy identyfikator, walidacja profilu/hasła, skróty, superadmin i desktop/390 px; 9 testów automatycznych PASS
+- [ ] Moje TNB: pełne E2E zwykłego konta, moderatora i administratora — potrzebne wskazanie istniejących kont oraz zgoda na sesje
+- [ ] Moje TNB: skuteczna zmiana hasła — wymaga istniejącego konta testowego i uzgodnienia; hasła właściciela nie zmieniano
 - [x] Slogan marki: diagnoza, zaakceptowany minimalny plan i finalny SQL aktualizacji walidacji
 - [x] Slogan marki: migracja 0055, pola panelu, wspólny odczyt; E2E zapisu/odświeżenia/edycji/ukrycia/pustego tekstu w nagłówku, menu, stopce, logowaniu i rejestracji 1280/390 px; logi potwierdzone, próbny tekst przywrócony
 - [x] Logo logowania/rejestracji z useBrand → brand_settings.logo; E2E 1280/390 px: proporcje, niezmienione pola/przyciski/teksty, przełączanie ekranów, brak przepełnienia i błędów; bez zmian bazy
