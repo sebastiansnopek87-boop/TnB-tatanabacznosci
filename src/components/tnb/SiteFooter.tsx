@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Mail, Phone } from "lucide-react";
 import logo from "@/assets/logo-384.webp.asset.json";
-import { byOrder, getSiteSettings, visibleSocial } from "@/config/site-settings";
+import { byOrder, getSiteSettings, type SocialLink } from "@/config/site-settings";
 import { SocialIcon } from "./SocialIcon";
 import { usePlatformSettings } from "@/hooks/use-platform-settings";
 import { useModuleVisibility } from "@/hooks/use-module-visibility";
@@ -28,13 +28,29 @@ export function SiteFooter() {
   const brand = useBrand();
   const slogan = getBrandSlogan(brand);
   const s = getSiteSettings();
-  const social = visibleSocial(s);
   const { data: ps } = usePlatformSettings();
-  const { phone, showInFooter } = s.contact;
+  // Social icons come from platform settings (single source); static list stays a fallback-free empty default.
+  const social: SocialLink[] = ([
+    { platform: "youtube", label: "YouTube", url: ps?.social_youtube },
+    { platform: "spotify", label: "Spotify", url: ps?.social_spotify },
+    { platform: "tiktok", label: "TikTok", url: ps?.social_tiktok },
+    { platform: "instagram", label: "Instagram", url: ps?.social_instagram },
+  ] as const).filter((x): x is SocialLink => !!x.url).map((x, i) => ({ ...x, url: x.url!, order: i + 1, visible: true }));
+  const phone = ps?.contact_phone ?? s.contact.phone;
   const email = ps?.contact_email ?? s.contact.email;
+  const showInFooter = ps?.footer_show_contact ?? s.contact.showInFooter;
   const hasContactColumn = showInFooter && (!!email || !!phone || social.length > 0);
   const year = new Date().getFullYear();
-  const owner = s.organization.legalName || ps?.platform_name || s.organization.name;
+  const owner = ps?.company_legal_name || s.organization.legalName || ps?.platform_name || s.organization.name;
+  const description = ps?.footer_description ?? s.footer.brandDescription;
+  const copyright = ps?.footer_copyright ?? s.footer.copyrightText;
+  const registry = [
+    ps?.company_legal_form,
+    ps?.company_nip ? `NIP: ${ps.company_nip}` : null,
+    ps?.company_regon ? `REGON: ${ps.company_regon}` : null,
+    ps?.company_krs ? `KRS: ${ps.company_krs}` : null,
+  ].filter(Boolean) as string[];
+  const address = [ps?.company_address_street, [ps?.company_address_postal, ps?.company_address_city].filter(Boolean).join(" ") || null, ps?.company_address_country].filter(Boolean) as string[];
 
   return (
     <footer className="border-t border-border/60 bg-surface-deep">
