@@ -1,5 +1,5 @@
 # Roadmap
-- [ ] Moje TNB: analiza istniejących funkcji, avatarów i uprawnień; minimalny plan oraz SQL do osobnej zgody, jeśli wymagany
+- [x] Moje TNB: analiza istniejących funkcji, avatarów i uprawnień; minimalny plan oraz SQL przygotowane — wdrożenie czeka na osobną zgodę na bazę
 - [ ] Moje TNB: powitanie, cztery szybkie akcje, uporządkowana przestrzeń oraz osobne ustawienia konta
 - [ ] Moje TNB: bezpieczne własne avatary, wspólny widok w nagłówku i społeczności, skróty zgodne z faktycznym dostępem
 - [ ] Moje TNB: testy funkcji, avatarów, uprawnień oraz desktop/390 px
