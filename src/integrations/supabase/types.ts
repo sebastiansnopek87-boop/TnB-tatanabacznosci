@@ -2591,6 +2591,24 @@ export type Database = {
         }
         Relationships: []
       }
+      user_avatars: {
+        Row: {
+          object_path: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          object_path: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          object_path?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_identities: {
         Row: {
           created_at: string
