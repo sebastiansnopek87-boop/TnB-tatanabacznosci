@@ -65,12 +65,12 @@ export function SiteFooter() {
               {slogan && <span data-brand-slogan className="mt-1 block max-w-[40ch] break-words text-xs uppercase leading-relaxed text-gold/80">{slogan}</span>}
             </span>
           </Link>
-          {s.footer.brandDescription && (
+          {description && (
             <p className="mt-6 max-w-xs text-[0.85rem] leading-[1.75] text-muted-foreground">
-              {s.footer.brandDescription}
+              {description}
             </p>
           )}
-          {s.footer.aboutLink.visible && visiblePath(s.footer.aboutLink.href, "menu") && (
+          {s.footer.aboutLink.visible && visiblePath(s.footer.aboutLink.href, "page") && (
             <a
               href={s.footer.aboutLink.href}
               className="mt-5 inline-flex items-center gap-3 text-[0.75rem] uppercase tracking-[0.16em] text-gold transition-colors hover:text-gold-bright"
@@ -85,7 +85,7 @@ export function SiteFooter() {
           <div key={col.id}>
             <h3 className="eyebrow text-gold">{col.title}</h3>
             <ul className="mt-6 flex flex-col gap-3">
-              {byOrder(col.links).filter(l => visiblePath(l.href, "menu")).map((l) => (
+              {byOrder(col.links).filter(l => visiblePath(l.href, "page")).map((l) => (
                 <li key={l.id}>
                   <FooterLink href={l.href}>{l.label}</FooterLink>
                 </li>
@@ -135,7 +135,14 @@ export function SiteFooter() {
         )}
       </div>
       <div className="border-t border-border/60 px-5 py-6 text-[0.75rem] text-muted-foreground lg:px-14">
-        © {year} {owner ?? "Tata Na Baczności"}. {s.footer.copyrightText}
+        <p>© {year} {owner ?? "Tata Na Baczności"}. {copyright}</p>
+        {(registry.length > 0 || address.length > 0) && (
+          <p className="mt-2 leading-relaxed">
+            {address.length > 0 && <span>{address.join(", ")}</span>}
+            {address.length > 0 && registry.length > 0 && <span> · </span>}
+            {registry.length > 0 && <span>{registry.join(" · ")}</span>}
+          </p>
+        )}
       </div>
     </footer>
   );
