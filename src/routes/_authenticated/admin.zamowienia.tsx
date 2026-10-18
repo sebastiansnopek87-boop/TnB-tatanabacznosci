@@ -1,7 +1,8 @@
+import { adminRecordSearch } from "@/lib/admin-record-search";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { adminGetOrder, adminListOrders, adminResendDelivery, adminSalesSummary, adminSetOrderStatus } from "@/lib/orders.functions";
 import { fmtDate, errMsg } from "@/components/admin/format";
@@ -10,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EVENT_MAP } from "@/lib/notify/registry";
 
-export const Route = createFileRoute("/_authenticated/admin/zamowienia")({ component: Orders });
+export const Route = createFileRoute("/_authenticated/admin/zamowienia")({ validateSearch: adminRecordSearch, head: () => ({ meta: [{ title: "Sprzedaż i zamówienia — Tata Na Baczności" }, { name: "description", content: "Administracyjny podgląd zamówień materiałów TNB." }, { property: "og:title", content: "Zamówienia — Tata Na Baczności" }, { property: "og:description", content: "Panel administracyjny TNB — szczegóły i historia." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex, nofollow" }] }), component: Orders });
 
 const STATUS: Record<string, string> = { pending: "Oczekuje na płatność", paid: "Opłacone", failed: "Płatność nieudana", cancelled: "Anulowane", refund_pending: "Zwrot w toku", refunded: "Zwrócone", needs_review: "Wymaga weryfikacji" };
 const PROVIDER: Record<string, string> = { manual: "Przelew tradycyjny", p24: "Przelewy24", tpay: "Tpay", payu: "PayU" };
@@ -20,10 +21,12 @@ const TestBadge = () => <span className="ml-2 inline-block border border-destruc
 const field = "h-10 border border-border/60 bg-background px-3 text-sm";
 
 function Orders() {
+  const { record } = Route.useSearch();
   const list = useServerFn(adminListOrders); const summary = useServerFn(adminSalesSummary);
   const [q, setQ] = useState(""); const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all"); const [provider, setProvider] = useState("all"); const [from, setFrom] = useState(""); const [to, setTo] = useState(""); const [kind, setKind] = useState("all");
-  const [openId, setOpenId] = useState<string | null>(null);
+  const [openId, setOpenId] = useState<string | null>(record ?? null);
+  useEffect(() => { setOpenId(record ?? null); }, [record]);
   const { data, isLoading, error } = useQuery({ queryKey: ["admin-orders", search, status, provider, from, to, kind], queryFn: () => list({ data: { q: search, status: status as "all", provider: provider as "all", from, to, kind: kind as "all" } }) });
   const sum = useQuery({ queryKey: ["admin-sales"], queryFn: () => summary() });
   const s = sum.data;
@@ -91,7 +94,7 @@ function OrderDetail({ id, onClose }: { id: string; onClose: () => void }) {
   const get = useServerFn(adminGetOrder); const resend = useServerFn(adminResendDelivery); const setSt = useServerFn(adminSetOrderStatus);
   const qc = useQueryClient();
   const [reason, setReason] = useState(""); const [revoke, setRevoke] = useState(false);
-  const { data, isLoading } = useQuery({ queryKey: ["admin-order", id], queryFn: () => get({ data: { id } }) });
+  const { data, isLoading, error } = useQuery({ queryKey: ["admin-order", id], queryFn: () => get({ data: { id } }) });
   const refresh = () => { qc.invalidateQueries({ queryKey: ["admin-order", id] }); qc.invalidateQueries({ queryKey: ["admin-orders"] }); qc.invalidateQueries({ queryKey: ["admin-sales"] }); };
   const m = useMutation({
     mutationFn: () => resend({ data: { id } }),
@@ -103,6 +106,7 @@ function OrderDetail({ id, onClose }: { id: string; onClose: () => void }) {
     onSuccess: () => { toast.success("Zapisano zmianę statusu."); setReason(""); refresh(); },
     onError: (e) => toast.error(errMsg(e)),
   });
+  if (error) return <p role="alert" className="text-sm text-destructive">{errMsg(error)}</p>;
   if (isLoading || !data) return <p className="text-sm text-muted-foreground">Ładowanie szczegółów…</p>;
   const o: any = data.order;
   const confirmDo = (a: Action, msg: string) => { if (window.confirm(msg)) act.mutate({ action: a }); };
