@@ -226,7 +226,7 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
     setSections((a) => [...a, ...legacyHomeSections().map((x) => ({ ...x, id: newSection().id }))]);
     toast.success("Dodano dotychczasowe sekcje do szkicu. Strona publiczna bez zmian do publikacji.");
   };
-  const blocks = BLOCKS.filter((b) => (isHome || !isLegacyHomeKind(b.kind)) && (!q || (SECTION_KINDS[b.kind] + b.desc).toLowerCase().includes(q.toLowerCase()));
+  const blocks = BLOCKS.filter((b) => (isHome || !isLegacyHomeKind(b.kind)) && (!q || (SECTION_KINDS[b.kind] + b.desc).toLowerCase().includes(q.toLowerCase())));
   const selSection = sel ? d.sections[sel.i] : undefined;
   const timeStr = saveState.at ? new Date(saveState.at).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" }) : null;
 
