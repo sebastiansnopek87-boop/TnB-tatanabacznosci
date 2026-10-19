@@ -16,14 +16,14 @@ export function legalHead(slug: LegalPage["slug"], page?: PublicPage | null) {
       { property: "og:description", content: p.description },
       { property: "og:type", content: "article" },
       { name: "twitter:card", content: "summary" },
-      ...(page && legalReady(slug, page.sections) ? [] : [{ name: "robots", content: "noindex" }]),
+      ...(page && legalReady(slug, page) ? [] : [{ name: "robots", content: "noindex" }]),
     ],
   };
 }
 
 export function LegalPageView({ slug, page }: { slug: LegalPage["slug"]; page?: PublicPage | null }) {
   const p = getLegalPage(slug);
-  const ready = !!page && legalReady(slug, page.sections);
+  const ready = !!page && legalReady(slug, page);
   return (
     <PageShell>
       <PageHeading eyebrow="Informacje" title={p.title} />

@@ -27,6 +27,7 @@ export type PageSection = {
 export type PublicPage = {
   id: string; slug: string; system_key: string | null; title: string; intro: string;
   sections: PageSection[]; seo_title: string; seo_description: string; published_at: string | null; updated_at: string;
+  status?: string; legal_approved?: boolean;
 };
 
 export const SYSTEM_PAGES: Record<string, { path: string; label: string }> = {
