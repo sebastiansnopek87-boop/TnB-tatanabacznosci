@@ -35,6 +35,23 @@ const draft = (key: string, s = sections()) => ({ slug: key, title: SYSTEM_PAGES
 const call = (fn: any, data: any) => fn({ data, context: ctx() });
 beforeEach(() => { m.rows = []; m.versions = []; m.logs = []; m.approved = false; m.race = false; m.versionError = false; m.auth.mockReset(); m.events.mockReset(); m.events.mockImplementation(async (e: any) => { m.logs.push({ id: crypto.randomUUID(), type: e.type, actor: e.actor, object_kind: e.objectKind, object_id: e.objectId, result: e.result ?? "ok", detail: e.detail }); }); });
 describe("Legal CMS integration (in-memory data only)", () => {
+ it("versions the additive home draft without deleting content, publishing or changing other pages", async () => {
+   const d = homeDraft(); const nav = d.sections.find(s => s.kind === "home-nav"); if (!nav) throw new Error("missing nav");
+   const oldNav = structuredClone(nav); nav.hidden = true;
+   const cinematic = d.sections.find(s => s.kind === "cinematic"); if (!cinematic) throw new Error("missing cinematic");
+   cinematic.items[0] = { ...cinematic.items[0], title: "Własna zachowana historia", focalX: 27 };
+   const original = { id, system_key: "home", status: "draft", published_at: null, ...draft("home", []) };
+   const other = { id: "other", system_key: "o-tnb", status: "published", ...draft("o-tnb") };
+   m.rows = [structuredClone(original), structuredClone(other)];
+   await call(adminSaveDraft, { id, draft: d, version: true });
+   expect(m.rows[0].sections).toEqual(original.sections);
+   expect(m.rows[0].status).toBe("draft"); expect(m.rows[0].published_at).toBeNull();
+   expect(m.rows[0].draft.sections.map((s: any) => s.kind)).toEqual(["home-nav", "cinematic", "value-strip"]);
+   expect(m.rows[0].draft.sections[0]).toEqual({ ...oldNav, hidden: true });
+   expect(m.rows[0].draft.sections[1].items[0]).toMatchObject({ title: "Własna zachowana historia", focalX: 27 });
+   expect(m.rows[1]).toEqual(other); expect(m.versions[0].snapshot).toEqual(d);
+   expect(await call(getPublicPage, { key: "home" })).toBeNull();
+ });
  it("home persists individual scene settings through draft, publish, public read and restore", async () => {
    const d = homeDraft(); d.sections = d.sections.map(s => ({ ...s, optional: false })); const scene = d.sections[1]; if (!scene) throw new Error("missing scene");
    scene.items[0] = { ...scene.items[0], title: "Indywidualna scena", body: "Indywidualny opis", image: "img-scene.jpg", imageAlt: "Opis testowy", href: "/artykuly", hidden: true, focalX: 27, focalY: 63, align: "right" };
