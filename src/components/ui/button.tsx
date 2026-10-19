@@ -9,6 +9,8 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
+        cinematic: "bg-cinematic-copper text-cinematic-background hover:bg-cinematic-copper/90",
+        cinematicOutline: "border border-cinematic-copper/70 bg-cinematic-background text-cinematic-foreground hover:bg-cinematic-copper/15",
         default: "bg-primary text-primary-foreground shadow hover:bg-primary/90",
         destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
         outline:

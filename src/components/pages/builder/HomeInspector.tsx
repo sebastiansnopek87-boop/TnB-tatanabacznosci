@@ -53,11 +53,11 @@ export function HomeInspector({ s, el, busy, urls, onPatch, onSelectEl, onUpload
         <p className="mb-2 text-[0.65rem] uppercase tracking-wide text-gold">{list.label} {item + 1}</p>
         {list.fields.map((k) => <FieldInput key={k} f={{ key: k, label: ITEM_LABEL[k] ?? k, multiline: k === "body" }} value={(it[k] as string) ?? ""} onChange={(v) => patchItem({ [k]: k === "href" ? v.trim() : v }, k)} />)}
         {list.image && <ImageBox url={imgUrl(it.image)} busy={busy} alt={it.alt ?? ""} onAlt={(v) => patchItem({ alt: v }, "alt")} onFile={(f) => onUploadItem(item, f)} />}
-        <div className="flex flex-wrap gap-1">
+        {!list.fixed && <div className="flex flex-wrap gap-1">
           <Button size="sm" variant="ghost" disabled={item === 0} onClick={() => { const a = [...s.items]; [a[item - 1], a[item]] = [a[item]!, a[item - 1]!]; onPatch({ items: a }); onSelectEl(`item-${item - 1}`); }}>W lewo/górę</Button>
           <Button size="sm" variant="ghost" disabled={item === s.items.length - 1} onClick={() => { const a = [...s.items]; [a[item + 1], a[item]] = [a[item]!, a[item + 1]!]; onPatch({ items: a }); onSelectEl(`item-${item + 1}`); }}>W prawo/dół</Button>
           <Button size="sm" variant="ghost" onClick={() => { onPatch({ items: s.items.filter((_, j) => j !== item) }); onSelectEl("section"); }}><Trash2 className="mr-1 h-3.5 w-3.5" />Usuń</Button>
-        </div>
+        </div>}
       </>
     );
   }
@@ -74,8 +74,8 @@ export function HomeInspector({ s, el, busy, urls, onPatch, onSelectEl, onUpload
       {list && (
         <div className="mb-3 space-y-1">
           <p className="text-[0.65rem] uppercase tracking-wide text-muted-foreground">{list.label}i</p>
-          {s.items.map((it, k) => <button key={k} onClick={() => onSelectEl(`item-${k}`)} className="block w-full border border-border/50 px-2 py-1 text-left text-xs hover:border-gold/60">{it.title || `(bez tytułu ${k + 1})`}</button>)}
-          {s.items.length < list.max && <Button size="sm" variant="outline" onClick={() => { onPatch({ items: [...s.items, { title: "Nowy element", body: "", href: "/" }] }); onSelectEl(`item-${s.items.length}`); }}><Plus className="mr-1 h-3 w-3" />Dodaj</Button>}
+          {s.items.map((it, k) => <Button key={k} variant="outline" onClick={() => onSelectEl(`item-${k}`)} className="h-auto w-full justify-start whitespace-normal px-2 py-1 text-left text-xs">{it.title || `(bez tytułu ${k + 1})`}</Button>)}
+          {!list.fixed && s.items.length < list.max && <Button size="sm" variant="outline" onClick={() => { onPatch({ items: [...s.items, { title: "Nowy element", body: "", href: "/" }] }); onSelectEl(`item-${s.items.length}`); }}><Plus className="mr-1 h-3 w-3" />Dodaj</Button>}
         </div>
       )}
       <label className="flex items-center gap-2 text-xs text-muted-foreground"><input type="checkbox" checked={!!s.hidden} onChange={(e) => onPatch({ hidden: e.target.checked })} />Ukryj sekcję na stronie publicznej</label>

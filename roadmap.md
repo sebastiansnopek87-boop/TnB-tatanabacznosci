@@ -48,4 +48,4 @@
 
 - [x] Strona główna w Visual Builderze: wspólny renderer, 7 edytowalnych sekcji, przełącznik Niezalogowany/Zalogowany, szkic bez publikacji.
 - [ ] Nagłówek, menu i stopka w edytorze wizualnym (globalne) — osobny etap.
-- [ ] Filmowa sekcja „pięć etapów życia”: jeden blok w istniejącym szkicu home, pełna edycja, zachowanie pozostałych sekcji; bez publikacji.
+- [x] Filmowa sekcja „pięć etapów życia”: jeden blok na początku istniejącego szkicu home, pięć obrazów i edytowalne pola; 33 testy stron i 19 regresji PASS, build OK, zapis/odczyt i przywrócenie próbnego nagłówka PASS; 7 dotychczasowych sekcji oraz publiczna / niezmienione, bez publikacji. Przesyłanie nowych zdjęć w tym etapie nie było testowane.
