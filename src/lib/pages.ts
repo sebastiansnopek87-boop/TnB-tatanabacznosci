@@ -1,8 +1,18 @@
 import type { TextFormat } from "./rich-text";
 // Shared, browser-safe model for CMS pages (O TNB, Moja historia and future subpages).
 export type PageButton = { label: string; href: string; variant?: "solid" | "outline" | "link"; icon?: "arrow" | "play" | "none"; hidden?: boolean };
-export type PageItem = { title: string; body: string; image?: string | null; asset?: string | null; imageAlt?: string; href?: string; hidden?: boolean; align?: "left" | "center" | "right"; focalX?: number; focalY?: number; icon?: "users" | "book" | "shield" | "family" | "target" | "none" };
-export type SectionKind = "hero" | "text" | "values" | "columns" | "quote" | "image" | "cta" | "cinematic" | "value-strip" | "home-nav";
+export type PageItem = { title: string; body: string; image?: string | null; asset?: string | null; imageAlt?: string; href?: string; hidden?: boolean; align?: "left" | "center" | "right"; focalX?: number; focalY?: number; icon?: ItemIcon; cta?: string; variant?: "card" | "tile" };
+export const ITEM_ICONS = ["users", "book", "shield", "family", "target", "mic", "calendar", "compass", "bag", "user", "none"] as const;
+export type ItemIcon = (typeof ITEM_ICONS)[number];
+export type SectionKind = "hero" | "text" | "values" | "columns" | "quote" | "image" | "cta" | "cinematic" | "value-strip" | "home-nav" | LegacyHomeKind;
+// Blocks that reproduce the pre-CMS home page; editable copies of formerly code-owned sections.
+export const LEGACY_HOME_KINDS = ["home-hero", "home-articles", "home-talks", "quick-nav", "pillars", "quote-newsletter", "home-footer"] as const;
+export type LegacyHomeKind = (typeof LEGACY_HOME_KINDS)[number];
+export const isLegacyHomeKind = (k: string): k is LegacyHomeKind => (LEGACY_HOME_KINDS as readonly string[]).includes(k);
+export const HOME_KINDS: readonly string[] = ["cinematic", "value-strip", "home-nav", ...LEGACY_HOME_KINDS];
+export type Audience = "all" | "guest" | "member";
+// Presentation only: who sees a section. Never an access rule — protected content stays guarded server-side.
+export const shownFor = (s: { audience?: Audience | undefined }, signedIn: boolean | null) => !s.audience || s.audience === "all" || (signedIn !== null && (s.audience === "member") === signedIn);
 export type ImageDisplay = "full" | "inset" | "featured";
 export const IMAGE_DISPLAY: Record<ImageDisplay, string> = { full: "Pełna szerokość", inset: "W kolumnie tekstu", featured: "Wyróżniony blok" };
 export type PageSection = {
@@ -22,6 +32,7 @@ export type PageSection = {
   items: PageItem[]; // value cards or the two columns of a comparison
   hidden?: boolean; // hidden sections stay in the page but are not shown publicly
   optional?: boolean; // "opcjonalna treść": intentionally empty, no pre-publish warning
+  audience?: Audience;
   textFormats?: Record<string, TextFormat>;
   appearance?: { height?: number; padding?: number; gap?: number; width?: number; overlay?: number; tone?: "copper" | "gold" | "text"; align?: "left" | "center" | "right" };
 };
@@ -48,6 +59,8 @@ export const SECTION_KINDS: Record<SectionKind, string> = {
   cinematic: "Filmowe otwarcie", "value-strip": "Pas wartości", "home-nav": "Nagłówek strony głównej",
   hero: "Otwarcie strony", text: "Tekst (opcjonalnie ze zdjęciem)", values: "Karty wartości", columns: "Dwie kolumny (listy)",
   quote: "Cytat", image: "Zdjęcie", cta: "Wezwanie do działania",
+  "home-hero": "Otwarcie „Czuwaj”", "home-articles": "Artykuły (lista na żywo)", "home-talks": "Rozmowy społeczności (lista na żywo)",
+  "quick-nav": "Skróty", pillars: "Karty filarów", "quote-newsletter": "Cytat i newsletter", "home-footer": "Stopka strony głównej",
 };
 
 export const newSection = (kind: SectionKind = "text"): PageSection => ({
