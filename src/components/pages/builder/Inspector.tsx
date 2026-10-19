@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { IMAGE_DISPLAY, SECTION_KINDS, isSafeHref, type ImageDisplay, type PageDraft, type PageSection, type SectionKind } from "@/lib/pages";
+import { AppearanceFields, HomeItemFields } from "./HomeFields";
 
 const TextEditor = lazy(() => import("./TextEditor").then(m => ({ default: m.TextEditor })));
 
@@ -17,10 +18,11 @@ function F({ label, hint, children }: { label: string; hint?: string; children: 
 const sel = "h-8 w-full border border-border bg-background px-2 text-xs";
 
 export function Inspector({ s, el, busy, imageUrl, onPatch, onSelectEl, onUpload }: {
-  s: PageSection; el: string; busy: boolean; imageUrl: string | undefined; onPatch: Patch; onSelectEl: (el: string) => void; onUpload: (f: File) => void;
+  s: PageSection; el: string; busy: boolean; imageUrl: string | undefined; onPatch: Patch; onSelectEl: (el: string) => void; onUpload: (f: File, item?: number) => void;
 }) {
   const btn = el.startsWith("button-") ? Number(el.slice(7)) : -1;
-  const item = el.startsWith("item-") ? Number(el.slice(5)) : -1;
+  const item = el.startsWith("item-") ? Number(el.split("-")[1]) : -1;
+  const home = ["cinematic", "value-strip", "home-nav"].includes(s.kind);
   const text = (k: "eyebrow" | "heading" | "body" | "quoteAuthor" | "caption", label: string, _rows = 0) => (
     <Suspense fallback={<p className="text-xs text-muted-foreground">Wczytywanie edytora…</p>}><TextEditor key={`${s.id}:${k}`} label={label} value={s[k]} format={s.textFormats?.[k]} onChange={(plain, format) => { const formats = { ...s.textFormats }; if (format) formats[k] = format; else delete formats[k]; onPatch({ [k]: plain, textFormats: formats }, k); }} /></Suspense>
   );
@@ -41,7 +43,9 @@ export function Inspector({ s, el, busy, imageUrl, onPatch, onSelectEl, onUpload
         <F label="Adres" hint={b.href && !isSafeHref(b.href) ? "Adres musi zaczynać się od / (strona TNB), https:// lub mailto:" : "Np. /spolecznosc lub https://…"}>
           <Input value={b.href} maxLength={500} onChange={(e) => set({ href: e.target.value.trim() }, "h")} className={b.href && !isSafeHref(b.href) ? "border-destructive" : ""} />
         </F>
-        <p className="mb-3 text-[0.65rem] text-muted-foreground">Pierwszy przycisk jest złoty, drugi obramowany, kolejne jako link.</p>
+        <F label="Styl przycisku"><select aria-label="Styl przycisku" className={sel} value={b.variant ?? (btn === 0 ? "solid" : "outline")} onChange={e => set({ variant: e.target.value as "solid" | "outline" | "link" }, "v")}><option value="solid">Wyróżniony</option><option value="outline">Obramowany</option><option value="link">Link</option></select></F>
+        <F label="Ikona przycisku"><select className={sel} value={b.icon ?? "none"} onChange={e => set({ icon: e.target.value as "none" | "play" | "arrow" }, "i")}><option value="none">Bez ikony</option><option value="arrow">Strzałka</option><option value="play">Odtwarzanie</option></select></F>
+        <label className="mb-3 flex items-center gap-2 text-xs"><input type="checkbox" checked={b.hidden ?? false} onChange={e => set({ hidden: e.target.checked }, "hide")} />Ukryj przycisk</label>
         <Button size="sm" variant="ghost" onClick={() => { onPatch({ buttons: s.buttons.filter((_, j) => j !== btn) }); onSelectEl("section"); }}><Trash2 className="mr-1 h-3.5 w-3.5" />Usuń przycisk</Button>
       </>
     );
@@ -53,7 +57,8 @@ export function Inspector({ s, el, busy, imageUrl, onPatch, onSelectEl, onUpload
     return (
       <>
         {(["title", "body"] as const).map(field => <Suspense key={`${s.id}:${item}:${field}`} fallback={null}><TextEditor label={field === "title" ? "Tytuł" : "Treść"} value={it[field]} format={s.textFormats?.[`item-${item}-${field}`]} onChange={(plain, format) => { const formats = { ...s.textFormats }; const key = `item-${item}-${field}`; if (format) formats[key] = format; else delete formats[key]; onPatch({ items: s.items.map((x, j) => j === item ? { ...x, [field]: plain } : x), textFormats: formats }, key); }} /></Suspense>)}
-        {s.kind === "values" && <Button size="sm" variant="ghost" onClick={() => { onPatch({ items: s.items.filter((_, j) => j !== item) }); onSelectEl("section"); }}><Trash2 className="mr-1 h-3.5 w-3.5" />Usuń kartę</Button>}
+        {home && <HomeItemFields s={s} index={item} busy={busy} onPatch={onPatch} onSelect={onSelectEl} onUpload={onUpload} />}
+        {!home && s.kind === "values" && <Button size="sm" variant="ghost" onClick={() => { onPatch({ items: s.items.filter((_, j) => j !== item) }); onSelectEl("section"); }}><Trash2 className="mr-1 h-3.5 w-3.5" />Usuń kartę</Button>}
       </>
     );
   }
@@ -61,6 +66,7 @@ export function Inspector({ s, el, busy, imageUrl, onPatch, onSelectEl, onUpload
   // Whole section
   return (
     <>
+      {home && <AppearanceFields s={s} onPatch={onPatch} />}
       <F label="Rodzaj sekcji">
         <select className={sel} value={s.kind} onChange={(e) => { const kind = e.target.value as SectionKind; onPatch({ kind, ...(kind === "columns" && s.items.length < 2 ? { items: [...s.items, { title: "", body: "" }, { title: "", body: "" }].slice(0, 2) } : {}) }); }}>
           {Object.entries(SECTION_KINDS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
@@ -70,14 +76,15 @@ export function Inspector({ s, el, busy, imageUrl, onPatch, onSelectEl, onUpload
       {s.kind !== "quote" && text("heading", "Nagłówek")}
       {text("body", s.kind === "quote" ? "Treść cytatu" : "Tekst", 6)}
       {s.kind === "quote" && text("quoteAuthor", "Autor cytatu")}
-      {(s.kind === "values" || s.kind === "columns") && (
+      {s.kind === "cinematic" && text("caption", "Druga część nagłówka")}
+      {(s.kind === "values" || s.kind === "columns" || home) && (
         <div className="mb-3 space-y-1">
           <p className="text-[0.65rem] uppercase tracking-wide text-muted-foreground">{s.kind === "values" ? "Karty" : "Kolumny"}</p>
           {s.items.map((it, k) => <button key={k} onClick={() => onSelectEl(`item-${k}`)} className="block w-full border border-border/50 px-2 py-1 text-left text-xs hover:border-gold/60">{it.title || `(bez tytułu ${k + 1})`}</button>)}
-          {s.kind === "values" && s.items.length < 12 && <Button size="sm" variant="outline" onClick={() => { onPatch({ items: [...s.items, { title: "Nowa karta", body: "" }] }); onSelectEl(`item-${s.items.length}`); }}><Plus className="mr-1 h-3 w-3" />Karta</Button>}
+          {(s.kind === "values" || home) && s.items.length < 12 && <Button size="sm" variant="outline" onClick={() => { onPatch({ items: [...s.items, { title: "Nowy element", body: "" }] }); onSelectEl(`item-${s.items.length}`); }}><Plus className="mr-1 h-3 w-3" />Element</Button>}
         </div>
       )}
-      {!NO_IMAGE.includes(s.kind) && <ImageFields s={s} busy={busy} imageUrl={imageUrl} onPatch={onPatch} onUpload={onUpload} />}
+      {!home && !NO_IMAGE.includes(s.kind) && <ImageFields s={s} busy={busy} imageUrl={imageUrl} onPatch={onPatch} onUpload={onUpload} />}
       <div className="mb-3 space-y-1">
         <p className="text-[0.65rem] uppercase tracking-wide text-muted-foreground">Przyciski</p>
         {s.buttons.map((b, k) => <button key={k} onClick={() => onSelectEl(`button-${k}`)} className="block w-full border border-border/50 px-2 py-1 text-left text-xs hover:border-gold/60">{b.label || "(bez etykiety)"} <span className="text-muted-foreground">{b.href}</span></button>)}
