@@ -186,7 +186,9 @@
 .home-header { background: var(--color-home-background); --home-highlight: var(--color-home-copper); }
 .home-header-nav { align-items: center; gap: var(--home-gap, 22px); }
 .home-header > div { min-height: var(--home-height, 76px); }
-@media (min-width: 1280px) { .home-header [aria-label="Menu"] { display: none; } }
+.home-header img { max-height: 64px; max-width: 64px; }
+.home-header > div > a > span > span:first-child { font-size: 20px; }
+@media (min-width: 1100px) { .home-header-nav { display: flex; } .home-header [aria-label="Menu"] { display: none; } }
 .home-header-nav a { font-size: 10px; white-space: nowrap; }
 @media (max-width: 1100px) { .home-headline { font-size: 44px; } .home-scene-caption { padding-inline: 10px; } .home-value { grid-template-columns: 26px minmax(0,1fr); gap: 10px; } }
 @media (max-width: 767px) {
