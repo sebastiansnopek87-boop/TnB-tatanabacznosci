@@ -2,6 +2,8 @@ import { ArrowRight, BookOpen, CirclePlay, Crosshair, ShieldCheck, Users, UsersR
 import { Button } from "@/components/ui/button";
 import { useModuleVisibility } from "@/hooks/use-module-visibility";
 import { assetUrl, focusClass } from "@/lib/home-content";
+import { useAuth } from "@/hooks/use-auth";
+import { resolveHomeCta } from "@/lib/home-cta";
 import { SmartLink, noA, setting, type HomeBlockProps } from "./util";
 
 const icons = [Users, BookOpen, ShieldCheck, UsersRound, Crosshair];
@@ -9,6 +11,8 @@ const icons = [Users, BookOpen, ShieldCheck, UsersRound, Crosshair];
 export function CinematicHero({ s, a = noA, imageSrc }: HomeBlockProps) {
   const f = (key: string) => setting(s, key);
   const { visible } = useModuleVisibility();
+  const { status } = useAuth();
+  const cta = resolveHomeCta(s.settings, status);
   const allowed = (href: string) => (href !== "/spolecznosc" || visible("community")) && (href !== "/o-tnb" || visible("about"));
   return (
     <section data-cinematic-hero data-height={f("sceneHeight")} data-contrast={f("contrast")} className="cinematic-hero bg-cinematic-background text-cinematic-foreground">
@@ -30,8 +34,8 @@ export function CinematicHero({ s, a = noA, imageSrc }: HomeBlockProps) {
         </h2>
         <p {...a("f:body")} className="mx-auto mt-4 max-w-4xl whitespace-pre-line font-display text-lg leading-relaxed text-cinematic-foreground/85">{f("body")}</p>
         <div className="mt-6 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
-          {f("ctaLabel") && allowed(f("ctaHref")) && <Button asChild variant="cinematic" size="lg" className="h-auto min-h-12 whitespace-normal rounded-sm py-3 text-xs uppercase">
-            <SmartLink {...a("f:ctaLabel")} href={f("ctaHref")}><span>{f("ctaLabel")}</span><ArrowRight aria-hidden /></SmartLink>
+          {cta.visible && allowed(cta.href) && <Button asChild variant="cinematic" size="lg" className="h-auto min-h-12 whitespace-normal rounded-sm py-3 text-xs uppercase">
+            <SmartLink {...a("f:ctaLabel")} href={cta.href}><span>{f("ctaLabel")}</span><ArrowRight aria-hidden /></SmartLink>
           </Button>}
           {f("secondaryLabel") && allowed(f("secondaryHref")) && <Button asChild variant="cinematicOutline" size="lg" className="h-auto min-h-12 whitespace-normal rounded-sm py-3 text-xs uppercase">
             <SmartLink {...a("f:secondaryLabel")} href={f("secondaryHref")}><CirclePlay aria-hidden /><span>{f("secondaryLabel")}</span></SmartLink>

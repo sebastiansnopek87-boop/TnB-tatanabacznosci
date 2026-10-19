@@ -42,7 +42,7 @@ export function HomeInspector({ s, el, busy, urls, onPatch, onSelectEl, onUpload
 
   if (el.startsWith("f:")) {
     const f = fields.find((x) => x.key === el.slice(2));
-    if (f) return <><FieldInput f={f} value={s.settings?.[f.key] ?? ""} onChange={(v) => set(f.key, v)} /><Button size="sm" variant="ghost" onClick={() => onSelectEl("section")}>Wszystkie pola sekcji</Button></>;
+    if (f) return <><FieldInput f={f} value={s.settings?.[f.key] ?? f.defaultValue ?? ""} onChange={(v) => set(f.key, v)} /><Button size="sm" variant="ghost" onClick={() => onSelectEl("section")}>Wszystkie pola sekcji</Button></>;
   }
   const item = el.startsWith("item-") ? Number(el.slice(5)) : -1;
   if (list && item >= 0 && s.items[item]) {
@@ -64,7 +64,7 @@ export function HomeInspector({ s, el, busy, urls, onPatch, onSelectEl, onUpload
   return (
     <>
       {MODULE_NOTE[kind] && <p className="mb-3 border border-gold/40 p-2 text-[0.7rem] text-muted-foreground">{MODULE_NOTE[kind]}</p>}
-      {fields.map((f) => <FieldInput key={f.key} f={f} value={s.settings?.[f.key] ?? ""} onChange={(v) => set(f.key, v)} />)}
+      {fields.map((f) => <FieldInput key={f.key} f={f} value={s.settings?.[f.key] ?? f.defaultValue ?? ""} onChange={(v) => set(f.key, v)} />)}
       {hasSectionImage && (
         <>
           <ImageBox url={imgUrl(s.image) ?? imgUrl(kind === "home_hero" ? "asset:hero" : "asset:banner")} busy={busy} alt={s.imageAlt} onAlt={(v) => onPatch({ imageAlt: v }, "alt")} onFile={onUpload} />

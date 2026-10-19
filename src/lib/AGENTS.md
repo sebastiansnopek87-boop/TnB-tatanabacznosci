@@ -22,3 +22,4 @@
 - "/" renders site_pages system_key "home" only when its published sections contain `home_*` blocks (usableHome); otherwise homeDefaultSections(). Both paths and the builder use PageView → HomeBlock. Why: one renderer, never a blank or legacy home.
 - Home blocks keep text in `section.settings` (keys listed in HOME_FIELDS) and lists in `items`; dynamic data (articles, posts, newsletter) stays in its modules. Builder viewer toggle uses PreviewContext, which only overrides useAuth for presentation.
 - Cinematic opening is an opt-in `home_cinematic` block in existing home drafts, with five item images and named settings, rendered through HomeBlock; never add it to the built-in fallback automatically. Why: preserve public content until explicit publication without a second CMS.
+- Cinematic primary CTA resolves CMS settings through home-cta and useAuth; PreviewContext changes presentation only. Why: persisted conditional destinations without changing sessions or access.
