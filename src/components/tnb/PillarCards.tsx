@@ -1,66 +1,9 @@
-import { Link } from "@tanstack/react-router";
 import { useModuleVisibility } from "@/hooks/use-module-visibility";
 import { ArrowRight, ChevronRight } from "lucide-react";
-import cardHistoria from "@/assets/card-historia.jpg.asset.json";
-import cardBiblioteka from "@/assets/card-biblioteka.jpg.asset.json";
-import cardPodcast from "@/assets/card-podcast.jpg.asset.json";
-import tileSpolecznosc from "@/assets/tile-spolecznosc.jpg.asset.json";
-import tileSpotkania from "@/assets/tile-spotkania.jpg.asset.json";
-import tileTworczosc from "@/assets/tile-tworczosc.jpg.asset.json";
+import { assetUrl } from "@/lib/home-content";
+import { SmartLink, noA, setting, type HomeBlockProps } from "./home/util";
 
-const CARDS = [
-  {
-    num: "01",
-    id: "moja-historia", to: "/moja-historia",
-    title: "Moja historia",
-    desc: "Od trudnych początków, przez 18 lat służby, po rodzinę, życie po mundurze i wszystko to, co nauczyło mnie pokory, odpowiedzialności i wdzięczności.",
-    cta: "Poznaj moją drogę",
-    image: cardHistoria.url,
-    alt: "Portret mężczyzny w ciepłym świetle",
-  },
-  {
-    num: "02",
-    id: "biblioteka", to: "/biblioteka",
-    title: "Biblioteka TNB",
-    desc: "E-booki, zeszyty ćwiczeń, dokumenty, nagrania i materiały, które zostają na dłużej.",
-    cta: "Przeglądaj materiały",
-    image: cardBiblioteka.url,
-    alt: "Książki i kubek kawy w ciepłym świetle",
-  },
-  {
-    num: "03",
-    id: "podcast", to: "/podcast",
-    title: "Głos TNB",
-    desc: "Rozmowy o życiu, wartościach, relacjach, wyzwaniach i powrotach. Prawdziwe historie, bez udawania.",
-    cta: "Posłuchaj Głosu TNB",
-    image: cardPodcast.url,
-    alt: "Mikrofon studyjny",
-  },
-];
-
-const TILES = [
-  {
-    id: "spolecznosc", to: "/spolecznosc",
-    title: "Rozmowy społeczności",
-    desc: "Miejsce, w którym możesz czytać, komentować, dzielić się doświadczeniami i być częścią czegoś większego.",
-    image: tileSpolecznosc.url,
-    alt: "Ludzie przy ognisku",
-  },
-  {
-    id: "spotkania", to: "/spotkania/rozmowa-1-1",
-    title: "Spotkania 1:1",
-    desc: "Czas na rozmowę.\nCzas dla Ciebie.",
-    image: tileSpotkania.url,
-    alt: "Rozświetlona chata wieczorem",
-  },
-  {
-    id: "tworczosc", to: "/biblioteka",
-    title: "Moja twórczość",
-    desc: "Muzyka, wiersze, teksty.\nInny wymiar tych samych doświadczeń.",
-    image: tileTworczosc.url,
-    alt: "Kompas i mapa",
-  },
-];
+const img = (v: string | undefined, imageSrc: HomeBlockProps["imageSrc"]) => (v ? assetUrl(v) ?? imageSrc?.(v) : undefined);
 
 export function PillarCards() {
   const { visiblePath } = useModuleVisibility();
