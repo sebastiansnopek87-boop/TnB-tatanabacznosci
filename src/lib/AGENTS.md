@@ -17,3 +17,7 @@
 - Library catalogue: Biblioteka TNB is the single catalogue for free, members-only and paid materials; filters live in the URL (dostep/format/kategoria/sort/q) and /materialy-premium redirects to ?dostep=premium. Why: one catalogue, no duplicate premium module.
 - Biblioteka materials follow the editorial standard in src/config/editorial.ts, shown read-only at /admin/standardy; why: static content needs no table and is versioned with code.
 - Library PDFs: new uploads go through src/lib/library/pdf.server.ts (original in originals/, only the watermarked copy becomes file_path; failed -> no file served); free-material delivery modes (direct/form_download/email) + every download/request logged in library_requests (admin-only reads, 12-month retention). Why: no unmarked file ever served, one register.
+
+## Home page (CMS)
+- "/" renders site_pages system_key "home" only when its published sections contain `home_*` blocks (usableHome); otherwise homeDefaultSections(). Both paths and the builder use PageView → HomeBlock. Why: one renderer, never a blank or legacy home.
+- Home blocks keep text in `section.settings` (keys listed in HOME_FIELDS) and lists in `items`; dynamic data (articles, posts, newsletter) stays in its modules. Builder viewer toggle uses PreviewContext, which only overrides useAuth for presentation.
