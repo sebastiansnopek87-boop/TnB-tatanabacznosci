@@ -236,3 +236,22 @@ export const adminRestoreVersion = createServerFn({ method: "POST" }).middleware
     await logEvent({ type: "page_version_restored", actor: context.userId, objectKind: "page", objectId: data.id, detail: data.versionId });
     return { draft: v.snapshot as PageDraft };
   });
+
+// Home page only: starts a fresh draft from the built-in layout. The previous draft (or, without one, the
+// published content) is first stored untouched in site_page_versions; published columns are never changed.
+export const adminStartHomeDraft = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), draft: DraftInput }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { data: cur, error } = await context.supabase.from("site_pages").select("system_key, slug, title, intro, sections, seo_title, seo_description, draft").eq("id", data.id).maybeSingle();
+    if (error || !cur) throw new Error("Nie znaleziono strony.");
+    if (cur.system_key !== "home") throw new Error("Ta operacja dotyczy wyłącznie strony głównej.");
+    const previous = cur.draft ?? { slug: cur.slug, title: cur.title, intro: cur.intro, sections: cur.sections, seo_title: cur.seo_title, seo_description: cur.seo_description };
+    const { error: vErr } = await context.supabase.from("site_page_versions").insert({ page_id: data.id, kind: "draft", snapshot: previous, created_by: context.userId });
+    if (vErr) throw new Error("Nie udało się zachować poprzedniego szkicu — nic nie zmieniono.");
+    const now = new Date().toISOString();
+    const { error: uErr } = await context.supabase.from("site_pages").update({ draft: { ...data.draft, slug: cur.slug }, draft_updated_at: now }).eq("id", data.id);
+    if (uErr) throw new Error("Nie udało się utworzyć szkicu.");
+    await logEvent({ type: "page_home_draft_started", actor: context.userId, objectKind: "page", objectId: data.id });
+    return { savedAt: now };
+  });

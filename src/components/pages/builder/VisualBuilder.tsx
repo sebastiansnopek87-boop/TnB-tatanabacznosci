@@ -14,13 +14,13 @@ import { legalDigest } from "@/lib/legal-approval";
 import { errMsg } from "@/components/admin/format";
 import { PageView, type Sel } from "@/components/pages/PageView";
 import {
-  adminCreatePageUpload, adminGetPage, adminListVersions, adminPageImageUrls, adminPublishDraft, adminRestoreVersion, adminSaveDraft,
+  adminCreatePageUpload, adminGetPage, adminStartHomeDraft, adminListVersions, adminPageImageUrls, adminPublishDraft, adminRestoreVersion, adminSaveDraft,
 } from "@/lib/pages.functions";
 import { isHomeKind, SECTION_KINDS, SYSTEM_PAGES, newSection, normalizeSections, pagePath, type PageDraft, type PageSection, type PageVersion, type SectionKind } from "@/lib/pages";
 import { Frame } from "./Frame";
 import { HomeInspector } from "./HomeInspector";
 import { PreviewContext, type PreviewViewer } from "@/hooks/preview-viewer";
-import { HOME_FIELDS, newHomeSection } from "@/lib/home-content";
+import { HOME_FIELDS, homeDefaultSections, newHomeSection, usableHome } from "@/lib/home-content";
 import { SaveTemplateDialog, TemplatesPanel, useTemplates } from "./Templates";
 import { adminInstantiateTemplate, type BuilderTemplate } from "@/lib/templates.functions";
 import { Inspector, PagePanel } from "./Inspector";
@@ -64,6 +64,16 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
   const onOverflow = useCallback((b: number[]) => setOverflow((o) => (o.join() === b.join() ? o : b)), []);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
+  const startHomeFn = useServerFn(adminStartHomeDraft);
+  const [reload, setReload] = useState(0);
+  async function startHome() {
+    if (!d) return;
+    if (!confirm("Utworzyć szkic z obecnej strony głównej? Poprzedni szkic zostanie zachowany w historii wersji, strona publiczna się nie zmieni.")) return;
+    try {
+      await startHomeFn({ data: { id, draft: { ...d, title: d.title || "Strona główna", sections: homeDefaultSections() } } });
+      toast.success("Utworzono szkic z obecnej strony głównej."); setD(null); setReload((n) => n + 1);
+    } catch (e) { toast.error(errMsg(e)); }
+  }
   useEffect(() => {
     let live = true;
     getFn({ data: { id } }).then((p) => {
@@ -75,7 +85,7 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
       if (typeof window !== "undefined" && window.innerWidth < 1024) { setLeft(null); setRightOpen(false); }
     }).catch((e) => { toast.error(errMsg(e)); onClose(); });
     return () => { live = false; };
-  }, [id]);
+  }, [id, reload]);
 
   const names = (d?.sections ?? []).flatMap((s) => [s.image, ...s.items.map((it) => it.image)]).filter((n): n is string => !!n && !n.startsWith("asset:"));
   useEffect(() => {
@@ -228,6 +238,16 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
   };
 
   if (!d || !meta) return <div className="fixed inset-0 z-50 flex items-center justify-center bg-background text-sm text-muted-foreground">Wczytywanie edytora…</div>;
+  if (meta.system_key === "home" && !usableHome(d.sections)) return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background p-6">
+      <div className="max-w-lg space-y-4 border border-gold/50 bg-card p-6 text-sm">
+        <h2 className="font-display text-xl font-semibold uppercase">Strona główna</h2>
+        <p className="text-muted-foreground">Zapisany szkic używa starszego układu, którego strona publiczna nie wyświetla — dlatego edytor nie odpowiadał wyglądowi strony. Strona pod adresem / pokazuje obecnie wbudowaną treść.</p>
+        <p className="text-muted-foreground">Utwórz nowy szkic z obecnej strony: każda sekcja będzie edytowalna. Poprzedni szkic zostanie zachowany w historii wersji. Nic nie zostanie opublikowane.</p>
+        <div className="flex flex-wrap gap-2"><Button onClick={startHome}>Utwórz szkic z obecnej strony</Button><Button variant="outline" onClick={onClose}>Wróć</Button></div>
+      </div>
+    </div>
+  );
   const unpublished = !same(d, meta.live) || meta.status !== "published";
   const system = meta.system_key ? SYSTEM_PAGES[meta.system_key] : null;
   const blocks = BLOCKS.filter((b) => (isHomeKind(b.kind) ? meta.system_key === "home" : true)).filter((b) => !q || (SECTION_KINDS[b.kind] + b.desc).toLowerCase().includes(q.toLowerCase()));
