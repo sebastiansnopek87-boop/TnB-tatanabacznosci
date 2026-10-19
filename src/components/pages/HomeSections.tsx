@@ -10,7 +10,7 @@ import { RichText } from "./RichText";
 export function homeAppearance(s: PageSection): CSSProperties {
   return { "--home-height": `${s.appearance?.height ?? 410}px`, "--home-padding": `${s.appearance?.padding ?? 32}px`, "--home-gap": `${s.appearance?.gap ?? 0}px`, "--home-width": `${s.appearance?.width ?? 820}px`, "--home-overlay": (s.appearance?.overlay ?? 65) / 100, textAlign: s.appearance?.align ?? "center" } as CSSProperties;
 }
-export function HomeSection({ s, imageSrc, sel }: { s: PageSection; imageSrc: (n: string) => string | undefined; sel?: string | null }) {
+export function HomeSection({ s, imageSrc, sel }: { s: PageSection; imageSrc: (n: string) => string | undefined; sel?: string | null | undefined }) {
   const { visiblePath } = useModuleVisibility();
   const edit = sel !== undefined;
   const a = (el: string) => edit ? { "data-el": el, ...(sel === el ? { "data-on": "" } : {}) } : {};
@@ -35,8 +35,8 @@ export function HomeSection({ s, imageSrc, sel }: { s: PageSection; imageSrc: (n
         })}
       </div>
       <div className="home-intro">
-        <h1 className="home-headline"><span {...a("heading")}><RichText format={s.textFormats?.heading} fallback={s.heading} inline /></span>{" "}<span {...a("caption")} className="home-highlight"><RichText format={s.textFormats?.caption} fallback={s.caption} inline /></span></h1>
-        <div {...a("body")} className="home-intro-body"><RichText format={s.textFormats?.body} fallback={s.body} /></div>
+        <h1 className="home-headline"><span {...a("heading")}><RichText format={s.textFormats?.["heading"]} fallback={s.heading} inline /></span>{" "}<span {...a("caption")} className="home-highlight"><RichText format={s.textFormats?.["caption"]} fallback={s.caption} inline /></span></h1>
+        <div {...a("body")} className="home-intro-body"><RichText format={s.textFormats?.["body"]} fallback={s.body} /></div>
         <div className="home-ctas">
           {s.buttons.map((b, i) => (edit || !b.hidden) && (edit || visiblePath(b.href, "page")) ? <Button key={i} asChild variant="ghost" className={`home-cta home-cta-${b.variant ?? (i === 0 ? "solid" : "outline")} ${b.hidden ? "opacity-40" : ""}`}><a {...a(`button-${i}`)} href={isSafeHref(b.href) ? b.href : undefined}>{b.icon === "play" && <CirclePlay className="size-5" strokeWidth={1.4} />}{b.label}{b.icon === "arrow" && <ArrowRight className="size-4" />}</a></Button> : null)}
         </div>
