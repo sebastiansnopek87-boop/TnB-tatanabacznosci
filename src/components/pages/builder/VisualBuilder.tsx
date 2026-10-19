@@ -8,6 +8,9 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { isLegalKey } from "@/lib/legal-pages";
+import { legalDigest } from "@/lib/legal-approval";
 import { errMsg } from "@/components/admin/format";
 import { PageView, type Sel } from "@/components/pages/PageView";
 import {
@@ -51,6 +54,7 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [overflow, setOverflow] = useState<number[]>([]);
   const [modal, setModal] = useState<null | "history" | "coverage" | "publish">(null);
+  const [legalConfirmation, setLegalConfirmation] = useState<string | null>(null);
   const [versions, setVersions] = useState<PageVersion[] | null>(null);
   const [preview, setPreview] = useState<PageVersion | null>(null);
   const onOverflow = useCallback((b: number[]) => setOverflow((o) => (o.join() === b.join() ? o : b)), []);
@@ -123,10 +127,14 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
     to === "list" ? onClose() : onFormView();
   }
   async function publish() {
+    if (!d || !meta) return;
+    const legal = isLegalKey(meta.system_key);
+    const expectedDigest = legal ? await legalDigest(d) : undefined;
+    if (legal && legalConfirmation !== JSON.stringify(d)) return;
     if (saveState.dirty && !(await save(false))) return;
     setSaveState((s) => ({ ...s, busy: true }));
     try {
-      await pubFn({ data: { id } });
+      await pubFn({ data: { id, ...(legal ? { legalConfirmed: true, expectedDigest } : {}) } });
       setMeta((m) => m && d ? { ...m, status: "published", live: d } : m);
       toast.success("Opublikowano. Zmiany są widoczne na stronie publicznej.");
       setModal(null);
@@ -234,7 +242,7 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
         <Button size="icon" variant="ghost" aria-label="Zasięg edytora" title="Co można edytować wizualnie" onClick={() => setModal("coverage")}><Info className="h-4 w-4" /></Button>
         <Button size="sm" variant="ghost" className="hidden sm:inline-flex" onClick={() => exit("form")}>Widok formularza</Button>
         <Button size="sm" variant="outline" disabled={saveState.busy} onClick={() => save(true)}>Zapisz szkic</Button>
-        <Button size="sm" disabled={saveState.busy} onClick={() => setModal("publish")}>Opublikuj</Button>
+        <Button size="sm" disabled={saveState.busy} onClick={() => { setLegalConfirmation(null); setModal("publish"); }}>Opublikuj</Button>
         <Button size="icon" variant="ghost" aria-label="Panel ustawień" onClick={() => setRightOpen((r) => !r)}><PanelRight className="h-4 w-4" /></Button>
       </div>
 
@@ -366,14 +374,18 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
               <div className="mt-4 space-y-3 text-sm">
                 <p className="text-muted-foreground">Szkic zastąpi publiczną wersję strony {pagePath({ slug: d.slug, system_key: meta.system_key })}. Poprzednia wersja zostanie w historii i można ją przywrócić.</p>
                 <ChangeList items={diffDrafts(meta.live, d)} />
+                {isLegalKey(meta.system_key) && <div role="alert" className="space-y-3 border border-gold/60 p-3">
+                  <p className="text-gold">Zatwierdzenie dotyczy wyłącznie tej wersji dokumentu. Zmiana treści wymaga ponownego sprawdzenia i zatwierdzenia.</p>
+                  <label className="flex items-start gap-3 leading-relaxed"><Checkbox className="mt-1" checked={legalConfirmation === JSON.stringify(d)} disabled={saveState.busy} onCheckedChange={(checked) => setLegalConfirmation(checked === true ? JSON.stringify(d) : null)} /><span>Potwierdzam, że treść tego dokumentu została przeze mnie sprawdzona i zatwierdzam ją do publikacji</span></label>
+                </div>}
                 {(() => { const issues = findEmpty(d.sections); return issues.length > 0 ? (<>
                   <div className="border border-gold/60 bg-gold/5 p-3" data-testid="needs-attention">
                     <p className="font-display text-sm font-semibold uppercase text-gold">Wymaga uwagi</p>
                     <p className="mb-2 text-xs text-muted-foreground">Te elementy są puste i na stronie publicznej zostawią pustą przestrzeń. Jeśli to zamierzone, zaznacz w sekcji „Opcjonalna treść”.</p>
                     <ul className="space-y-1">{issues.map((x, k) => <li key={k}><button className="text-left text-xs underline decoration-gold/50 hover:text-gold" onClick={() => { setSel({ i: x.i, el: x.el } as Sel); setRightOpen(true); setModal(null); }}>{x.label}</button></li>)}</ul>
                   </div>
-                  <div className="flex flex-wrap gap-2"><Button onClick={() => setModal(null)}>Wróć do edycji</Button><Button variant="outline" disabled={saveState.busy} onClick={publish}>Opublikuj mimo ostrzeżenia</Button></div>
-                </>) : <div className="flex gap-2"><Button disabled={saveState.busy} onClick={publish}>Tak, opublikuj</Button><Button variant="outline" onClick={() => setModal(null)}>Anuluj</Button></div>; })()}
+                  <div className="flex flex-wrap gap-2"><Button onClick={() => setModal(null)}>Wróć do edycji</Button><Button variant="outline" disabled={saveState.busy || (isLegalKey(meta.system_key) && legalConfirmation !== JSON.stringify(d))} onClick={publish}>{isLegalKey(meta.system_key) ? "Zatwierdź i opublikuj" : "Opublikuj mimo ostrzeżenia"}</Button></div>
+                </>) : <div className="flex flex-wrap gap-2"><Button disabled={saveState.busy || (isLegalKey(meta.system_key) && legalConfirmation !== JSON.stringify(d))} onClick={publish}>{isLegalKey(meta.system_key) ? "Zatwierdź i opublikuj" : "Tak, opublikuj"}</Button><Button variant="outline" onClick={() => setModal(null)}>Anuluj</Button></div>; })()}
               </div>
             )}
             {modal === "coverage" && (

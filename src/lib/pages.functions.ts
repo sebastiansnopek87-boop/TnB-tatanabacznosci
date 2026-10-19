@@ -3,7 +3,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { isSafeHref, type PageDraft, type PageVersion, type PublicPage } from "./pages";
-import { assertLegalPublication, LEGAL_KEYS } from "./legal-pages";
+import { assertLegalPublication, isLegalKey, LEGAL_KEYS } from "./legal-pages";
+import { approvalDetail, legalDigest, legalSnapshot } from "./legal-approval";
 import { TextFormatsSchema } from "./rich-text";
 
 // Generic CMS for content pages. Public reads: service role, published rows only, safe columns.
@@ -11,7 +12,7 @@ import { TextFormatsSchema } from "./rich-text";
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin;
 const BUCKET = "page-images";
 type Ctx = { supabase: any; userId: string };
-const COLS = "id, slug, system_key, title, intro, sections, seo_title, seo_description, published_at, updated_at";
+const COLS = "id, slug, system_key, title, intro, sections, seo_title, seo_description, published_at, updated_at, status";
 const SLUG = z.string().regex(/^[a-z0-9-]{1,120}$/, "Adres może zawierać tylko małe litery, cyfry i myślniki.");
 
 export const getPublicPage = createServerFn({ method: "GET" })
@@ -20,7 +21,20 @@ export const getPublicPage = createServerFn({ method: "GET" })
     let q = (await admin()).from("site_pages").select(COLS).eq("status", "published");
     if (data.key) q = q.eq("system_key", data.key); else if (data.slug) q = q.eq("slug", data.slug).is("system_key", null); else return null;
     const { data: p } = await q.maybeSingle();
-    return (p as any) ?? null;
+    if (!p) return null;
+    if (isLegalKey(p.system_key)) {
+      const digest = await legalDigest(p as unknown as PageDraft);
+      const db = await admin();
+      const { data: versions, error } = await db.from("site_page_versions").select("id, snapshot, created_by").eq("page_id", p.id).eq("kind", "publish").contains("snapshot", { _legal: { digest, publishedAt: p.published_at } });
+      let approved = false;
+      if (!error) for (const v of versions ?? []) {
+        if (await legalDigest(v.snapshot as unknown as PageDraft) !== digest) continue;
+        const { data: event } = await db.from("admin_events").select("id").eq("type", "legal_document_approved").eq("object_kind", "page").eq("object_id", p.id).eq("actor", v.created_by).eq("result", "ok").eq("detail", approvalDetail(v.id, digest)).limit(1);
+        if (event?.length) { approved = true; break; }
+      }
+      return { ...p, legal_approved: approved } as unknown as PublicPage;
+    }
+    return p as unknown as PublicPage;
   });
 
 // ---------- admin ----------
@@ -128,7 +142,7 @@ export const adminPageImageUrls = createServerFn({ method: "POST" }).middleware(
     if (!data.names.length) return {} as Record<string, string>;
     const { data: s } = await (await admin()).storage.from(BUCKET).createSignedUrls(data.names.map((n) => `${data.id}/${n}`), 3600);
     const out: Record<string, string> = {};
-    (s ?? []).forEach((x, i) => { if (x.signedUrl) out[data.names[i]!] = x.signedUrl; });
+    (s ?? []).forEach((x, i) => { const name = data.names[i]; if (x.signedUrl && name) out[name] = x.signedUrl; });
     return out;
   });
 
@@ -159,7 +173,7 @@ export const adminSaveDraft = createServerFn({ method: "POST" }).middleware([req
   });
 
 export const adminPublishDraft = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), legalConfirmed: z.boolean().optional(), expectedDigest: z.string().regex(/^[a-f0-9]{64}$/).optional() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { data: cur } = await context.supabase.from("site_pages").select("*").eq("id", data.id).maybeSingle();
@@ -168,8 +182,24 @@ export const adminPublishDraft = createServerFn({ method: "POST" }).middleware([
     const src = (cur.draft ?? live) as PageDraft;
     let row: z.infer<typeof PageInput>;
     try { row = PageInput.parse({ ...src, id: data.id, slug: cur.system_key ? cur.slug : src.slug }); } catch (e) { throw new Error(firstIssue(e)); }
-    assertLegalPublication(cur.system_key, row.sections);
+    assertLegalPublication(cur.system_key, row.sections, data.legalConfirmed === true);
     const { id: _i, ...fields } = row;
+    if (isLegalKey(cur.system_key)) {
+      const digest = await legalDigest(fields);
+      if (digest !== data.expectedDigest) throw new Error("Treść zmieniła się od zatwierdzenia. Otwórz ponownie okno publikacji i sprawdź aktualną wersję.");
+      const versionId = crypto.randomUUID();
+      const publishedAt = new Date().toISOString();
+      const { error: versionError } = await context.supabase.from("site_page_versions").insert({ id: versionId, page_id: data.id, kind: "publish", snapshot: { ...legalSnapshot(fields), _legal: { digest, publishedAt } }, created_by: context.userId });
+      if (versionError) throw new Error("Nie udało się zapisać zatwierdzonej wersji. Dokument nie został opublikowany.");
+      await logEvent({ type: "legal_document_approved", actor: context.userId, objectKind: "page", objectId: data.id, detail: approvalDetail(versionId, digest) });
+      // logEvent intentionally tolerates failure elsewhere; legal publication fails closed.
+      const { data: events, error: eventError } = await (await admin()).from("admin_events").select("id").eq("type", "legal_document_approved").eq("object_kind", "page").eq("object_id", data.id).eq("actor", context.userId).eq("result", "ok").eq("detail", approvalDetail(versionId, digest)).limit(1);
+      if (eventError || !events?.length) throw new Error("Nie udało się potwierdzić wpisu zatwierdzenia w dzienniku. Dokument nie został opublikowany.");
+      const { data: changed, error: updateError } = await context.supabase.from("site_pages").update({ ...fields, draft: fields, draft_updated_at: publishedAt, status: "published", published_at: publishedAt }).eq("id", data.id).eq("updated_at", cur.updated_at).select("id").maybeSingle();
+      if (updateError || !changed) throw new Error("Dokument zmienił się podczas publikacji lub zapis nie powiódł się. Sprawdź wersję i zatwierdź ją ponownie.");
+      await logEvent({ type: "page_published", actor: context.userId, objectKind: "page", objectId: data.id, detail: approvalDetail(versionId, digest) });
+      return { ok: true };
+    }
     // Keep the previous public version recoverable before the first builder publish.
     const { count } = await context.supabase.from("site_page_versions").select("id", { count: "exact", head: true }).eq("page_id", data.id);
     if (!count && cur.status === "published") await addVersion(context, data.id, "publish", live);

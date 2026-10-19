@@ -18,7 +18,7 @@ import {
 import { LEGAL_KEYS, isLegalKey } from "@/lib/legal-pages";
 import { PAGE_STATUS, SYSTEM_PAGES, normalizeSections, pagePath, type PageSection } from "@/lib/pages";
 
-export const Route = createFileRoute("/_authenticated/admin/strony")({ component: PagesAdmin });
+export const Route = createFileRoute("/_authenticated/admin/strony")({ head: () => ({ meta: [{ title: "Strony CMS — Tata Na Baczności" }, { name: "description", content: "Zarządzanie stronami i wersjami dokumentów TNB." }, { property: "og:title", content: "Strony CMS — Tata Na Baczności" }, { property: "og:description", content: "Zarządzanie stronami i wersjami dokumentów TNB." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: PagesAdmin });
 
 type Draft = { draft_updated_at?: string | null; id: string | null; slug: string; system_key: string | null; title: string; intro: string; sections: PageSection[]; seo_title: string; seo_description: string; status: string };
 const EMPTY: Draft = { id: null, slug: "", system_key: null, title: "", intro: "", sections: [], seo_title: "", seo_description: "", status: "draft" };
@@ -149,7 +149,7 @@ function Editor({ id, systemKey, onClose, onVisual }: { id: string | null; syste
       </div>}
       {d.status === "published" && <p className="border border-gold/40 p-3 text-xs text-muted-foreground">Zapisane zmiany w opublikowanej stronie są od razu widoczne publicznie. Chcesz pracować spokojnie? Najpierw kliknij „Cofnij publikację”.</p>}
 
-      {isLegalKey(d.system_key) && <p role="alert" className="border border-gold/40 p-3 text-sm text-gold">Dokument prawny wymaga treści i osobnego zatwierdzenia. Sam zapis szkicu nie oznacza gotowości do publikacji.</p>}
+      {isLegalKey(d.system_key) && <p role="alert" className="border border-gold/40 p-3 text-sm text-gold">Dokument prawny zatwierdzisz i opublikujesz w edytorze wizualnym. Sam zapis szkicu nie oznacza zatwierdzenia.</p>}
       <Field label="Tytuł strony"><Input value={d.title} onChange={(e) => set({ title: e.target.value })} maxLength={200} /></Field>
       <Field label="Adres strony">
         {system ? <p className="text-sm text-muted-foreground">{system.path} — stały adres z menu, nie podlega zmianie.</p> : (
@@ -173,7 +173,7 @@ function Editor({ id, systemKey, onClose, onVisual }: { id: string | null; syste
       <div className="sticky bottom-0 flex flex-wrap gap-2 border-t border-border/60 bg-background py-3">
         <Button onClick={save} disabled={busy}>{d.status === "published" ? "Zapisz zmiany" : "Zapisz szkic"}</Button>
         <Button variant="outline" onClick={() => setPreview(true)}>Podgląd</Button>
-        {d.status !== "published" && <Button variant="outline" disabled={busy} onClick={() => setStatus("published")}>Opublikuj</Button>}
+        {d.status !== "published" && !isLegalKey(d.system_key) && <Button variant="outline" disabled={busy} onClick={() => setStatus("published")}>Opublikuj</Button>}
         {d.status === "published" && <Button variant="outline" disabled={busy} onClick={() => setStatus("draft")}>Cofnij publikację</Button>}
         {d.status !== "archived" && pageId && <Button variant="ghost" disabled={busy} onClick={() => confirm("Zarchiwizować stronę? Zniknie z widoku publicznego.") && setStatus("archived")}>Archiwizuj</Button>}
         {d.status === "published" && pageId && <a href={pagePath(d)} target="_blank" rel="noreferrer" className="self-center text-xs text-gold underline">Zobacz stronę</a>}
