@@ -16,21 +16,21 @@ const homeOptions = queryOptions({ queryKey: ["public-page", "home"], queryFn: (
 
 export const Route = createFileRoute("/")({
   loader: ({ context }) => context.queryClient.ensureQueryData(homeOptions),
-  head: () => ({
+  head: ({ loaderData: page }) => ({
     meta: [
-      { title: "Tata Na Baczności — Ojcostwo to służba" },
+      { title: page?.seo_title || "Tata Na Baczności — Ojcostwo to służba" },
       {
         name: "description",
         content:
-          "Przestrzeń prawdziwych historii, rozmów, doświadczeń i wartości. Artykuły, rozmowy społeczności, biblioteka, Głos TNB i spotkania 1:1.",
+          page?.seo_description || "Przestrzeń prawdziwych historii, rozmów, doświadczeń i wartości. Artykuły, rozmowy społeczności, biblioteka, Głos TNB i spotkania 1:1.",
       },
-      { property: "og:title", content: "Tata Na Baczności — Ojcostwo to służba" },
+      { property: "og:title", content: page?.seo_title || "Tata Na Baczności — Ojcostwo to służba" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       {
         property: "og:description",
         content:
-          "Czuwaj nad tym, co naprawdę ważne. Historie, rozmowy i materiały dla ojców i ludzi z zasadami.",
+          page?.seo_description || "Czuwaj nad tym, co naprawdę ważne. Historie, rozmowy i materiały dla ojców i ludzi z zasadami.",
       },
     ],
   }),
