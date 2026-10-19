@@ -25,13 +25,14 @@ function toPublic(e: any): EpisodeDetail {
   return {
     id: e.id, slug: e.slug, title: e.title, subtitle: e.subtitle ?? "", episode_number: e.episode_number ?? null, summary: e.summary, description: e.description, category: e.category, access: e.access,
     has_cover: !!e.cover_path, has_audio: !!e.audio_path, has_external: !!e.external_url, duration_seconds: e.duration_seconds,
-    featured: e.featured, published_at: e.published_at, updated_at: e.updated_at,
+    featured: e.featured, sort_order: e.sort_order, published_at: e.published_at, updated_at: e.updated_at,
   };
 }
 
 export const listEpisodes = createServerFn({ method: "GET" }).handler(async (): Promise<PublicEpisode[]> => {
-  const { data } = await (await admin()).from("podcast_episodes").select(COLS).eq("status", "published")
+  const { data, error } = await (await admin()).from("podcast_episodes").select(COLS).eq("status", "published")
     .order("featured", { ascending: false }).order("sort_order", { ascending: true }).order("published_at", { ascending: false }).limit(300);
+  if (error) throw new Error("Nie udało się pobrać odcinków.");
   return (data ?? []).map((e) => { const { description: _d, ...rest } = toPublic(e); return rest; });
 });
 

@@ -3,16 +3,23 @@ import { useQuery } from "@tanstack/react-query";
 import { Clock, ExternalLink, Headphones, Lock } from "lucide-react";
 import { PageShell } from "@/components/tnb/PageShell";
 import { AudioPlayer } from "@/components/podcast/AudioPlayer";
+import { EpisodeNavigation } from "@/components/podcast/EpisodeNavigation";
 import { useAuth } from "@/hooks/use-auth";
-import { getEpisode, getEpisodeMedia } from "@/lib/podcast.functions";
+import { getEpisode, getEpisodeMedia, listEpisodes } from "@/lib/podcast.functions";
 import { listCategories } from "@/lib/library";
 import { EP_ACCESS, coverUrl, fmtDay, fmtDuration, type EpisodeDetail } from "@/lib/podcast";
 
 export const Route = createFileRoute("/podcast/$slug")({
-  loader: async ({ params }) => ({ episode: await getEpisode({ data: { slug: params.slug } }) }),
+  loader: async ({ params }) => {
+    const [episode, catalogue] = await Promise.all([
+      getEpisode({ data: { slug: params.slug } }),
+      listEpisodes().then((episodes) => ({ episodes, unavailable: false })).catch(() => ({ episodes: [], unavailable: true })),
+    ]);
+    return { episode, ...catalogue };
+  },
   head: ({ loaderData }) => {
     const e = loaderData?.episode;
-    if (!e) return { meta: [{ title: "Odcinek niedostępny — Głos TNB" }, { name: "robots", content: "noindex" }] };
+    if (!e) return { meta: [{ title: "Odcinek niedostępny — Głos TNB" }, { name: "description", content: "Ten odcinek Głosu TNB nie jest dostępny." }, { property: "og:title", content: "Odcinek niedostępny — Głos TNB" }, { property: "og:description", content: "Ten odcinek Głosu TNB nie jest dostępny." }, { property: "og:type", content: "article" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] };
     const t = `${e.title} — Głos TNB`;
     const d = e.summary || "Odcinek podcastu Tata Na Baczności.";
     return { meta: [
@@ -26,7 +33,7 @@ export const Route = createFileRoute("/podcast/$slug")({
 const paras = (s: string) => s.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
 
 function EpisodePage() {
-  const { episode: e } = Route.useLoaderData();
+  const { episode: e, episodes, unavailable } = Route.useLoaderData();
   const cats = useQuery({ queryKey: ["library-categories"], queryFn: listCategories });
   if (!e) return (
     <PageShell>
@@ -57,11 +64,15 @@ function EpisodePage() {
             {e.subtitle && <p className="mt-2 text-[1.05rem] italic text-foreground/75">{e.subtitle}</p>}
           </div>
         </div>
-        <div className="mt-8"><Media e={e} /></div>
+        <div className="mt-8">
+          <p className="mb-3 inline-flex items-center gap-2 text-xs uppercase text-gold"><Headphones className="h-3 w-3" />Bieżący odcinek</p>
+          <Media key={e.id} e={e} />
+        </div>
         {e.summary && <p className="mt-8 text-[1.05rem] leading-[1.75] text-foreground/90">{e.summary}</p>}
         <div className="mt-6 space-y-4 text-[0.95rem] leading-[1.8] text-foreground/80">
           {paras(e.description).map((p, i) => <p key={i} className="whitespace-pre-line break-words">{p}</p>)}
         </div>
+        <EpisodeNavigation current={e} episodes={episodes} unavailable={unavailable} />
       </article>
     </PageShell>
   );
