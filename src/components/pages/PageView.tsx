@@ -8,11 +8,13 @@ import type { TextFormat } from "@/lib/rich-text";
 import { HomeSection } from "./HomeSections";
 import { SiteHeader } from "@/components/tnb/SiteHeader";
 import { SiteFooter } from "@/components/tnb/SiteFooter";
+import { HomeLayout } from "@/components/tnb/HomeLayout";
 
 type Props = {
   eyebrow: string; title: string; intro: string; sections: PageSection[];
   imageSrc: (file: string) => string | undefined; preview?: boolean;
   edit?: EditApi | undefined;
+  homePage?: boolean;
 };
 // Visual Builder hooks: only set inside the admin builder; public rendering is unchanged.
 export type Sel = { i: number; el: string };
@@ -182,7 +184,7 @@ function Section({ s, src, first, sel }: { s: PageSection; src?: string | undefi
 }
 
 // One renderer for public pages, the admin preview and the Visual Builder, so all look identical.
-export function PageView({ eyebrow, title, intro, sections: raw, imageSrc, preview, edit }: Props) {
+export function PageView({ eyebrow, title, intro, sections: raw, imageSrc, preview, edit, homePage = false }: Props) {
   const all = normalizeSections(raw);
   const sections = edit ? all : all.filter((s) => !s.hidden);
   const home = all.some(s => s.kind === "home-nav" || s.kind === "cinematic");
@@ -197,15 +199,9 @@ export function PageView({ eyebrow, title, intro, sections: raw, imageSrc, previ
     e.stopPropagation();
     edit.onSelect({ i: Number(sec.dataset["sec"]), el: t.closest<HTMLElement>("[data-el]")?.dataset["el"] ?? "section" });
   };
-  return (
-    <div onClickCapture={edit ? onClick : undefined}>
-    <div className="flex min-h-screen flex-col bg-background">
-      {!home && <SiteHeader />}
-      {preview && <div className="bg-gold px-5 py-2 text-center text-[0.72rem] uppercase tracking-[0.14em] text-primary-foreground">Podgląd — ta wersja nie jest jeszcze widoczna publicznie</div>}
-      {!hasHero && <PageHeading eyebrow={eyebrow} title={title} intro={intro} />}
-      <div className="overflow-x-hidden">
+  const content = <div className="overflow-x-hidden">
         {edit?.zone?.(0)}
-        {sections.map((s, i) => edit ? (
+        {sections.map((s, i) => homePage && s.kind === "home-nav" ? null : edit ? (
           <div key={s.id}>
             <div data-sec={i} {...(edit.sel?.i === i && edit.sel.el === "section" ? { "data-sec-on": "" } : {})} className={s.hidden ? "opacity-40" : ""}>
               {["cinematic", "value-strip", "home-nav"].includes(s.kind) ? <HomeSection s={s} imageSrc={imageSrc} sel={edit.sel?.i === i ? edit.sel.el : null} /> : <Section s={s} first={i === 0 && !hasHero} src={s.image ? imageSrc(s.image) : undefined} sel={edit.sel?.i === i ? edit.sel.el : null} />}
@@ -213,11 +209,16 @@ export function PageView({ eyebrow, title, intro, sections: raw, imageSrc, previ
             {edit.zone?.(i + 1)}
           </div>
         ) : ["cinematic", "value-strip", "home-nav"].includes(s.kind) ? <HomeSection key={s.id} s={s} imageSrc={imageSrc} /> : <Section key={s.id} s={s} first={i === 0 && !hasHero} src={s.image ? imageSrc(s.image) : undefined} />)}
-      </div>
+      </div>;
+  return <div onClickCapture={edit ? onClick : undefined}>
+    {homePage ? <HomeLayout>{content}</HomeLayout> : <div className="flex min-h-screen flex-col bg-background">
+      {!home && <SiteHeader />}
+      {preview && <div className="bg-gold px-5 py-2 text-center text-[0.72rem] uppercase tracking-[0.14em] text-primary-foreground">Podgląd — ta wersja nie jest jeszcze widoczna publicznie</div>}
+      {!hasHero && <PageHeading eyebrow={eyebrow} title={title} intro={intro} />}
+      {content}
       <SiteFooter />
-    </div>
-    </div>
-  );
+    </div>}
+  </div>;
 }
 
 // Sections only, without the page shell — used inside article pages.

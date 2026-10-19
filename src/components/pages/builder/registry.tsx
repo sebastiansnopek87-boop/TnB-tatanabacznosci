@@ -22,7 +22,7 @@ export const canInsert = (kind: SectionKind, at: number) => kind !== "hero" || a
 
 export const COVERAGE: { area: string; ok: boolean; note: string }[] = [
   { area: "Strony CMS (O TNB, Moja historia, /strony/…)", ok: true, note: "Treść, kolejność, zdjęcia, przyciski, ukrywanie sekcji, szkic, wersje i publikacja." },
-  { area: "Strona główna", ok: true, note: "Filmowe otwarcie, sceny, pas wartości i wariant nagłówka; szkic, wersje i jawna publikacja. Pozostałe sekcje dynamiczne w swoich modułach." },
+  { area: "Strona główna", ok: true, note: "Dodane filmowe otwarcie, sceny i pas wartości; szkic, wersje i jawna publikacja. Istniejący nagłówek i wszystkie dotychczasowe sekcje pozostają bez zmian." },
   { area: "Nagłówek i menu", ok: false, note: "Stałe w kodzie. Proponowany etap 40.4." },
   { area: "Stopka", ok: false, note: "Stała w kodzie. Proponowany etap 40.4." },
   { area: "Strony prawne", ok: true, note: "Treść i wersje w CMS; publikacja wymaga treści i osobnego zatwierdzenia dokumentu." },

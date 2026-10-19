@@ -1,12 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { SiteHeader } from "@/components/tnb/SiteHeader";
-import { Hero } from "@/components/tnb/Hero";
-import { HomeArticles, HomeConversations } from "@/components/tnb/HomeSections";
-import { QuickNav } from "@/components/tnb/QuickNav";
-import { PillarCards } from "@/components/tnb/PillarCards";
-import { QuoteNewsletter } from "@/components/tnb/QuoteNewsletter";
-import { SiteFooter } from "@/components/tnb/SiteFooter";
-import { useModuleVisibility } from "@/hooks/use-module-visibility";
+import { HomeLayout } from "@/components/tnb/HomeLayout";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { getPublicPage } from "@/lib/pages.functions";
 import { pageImageUrl } from "@/lib/pages";
@@ -38,17 +31,10 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const { visible } = useModuleVisibility();
   const { data: page } = useSuspenseQuery(homeOptions);
   return (
-    <main className="min-h-screen bg-background">
-      {page ? <><PageSections sections={page.sections} imageSrc={file => pageImageUrl(page.id, file)} /></> : <><SiteHeader /><Hero /></>}
-      {visible("articles") && <HomeArticles />}
-      {visible("community") && <HomeConversations />}
-      <QuickNav />
-      <PillarCards />
-      <QuoteNewsletter />
-      <SiteFooter />
-    </main>
+    <HomeLayout>
+      {page && <PageSections sections={page.sections.filter(s => s.kind !== "home-nav")} imageSrc={file => pageImageUrl(page.id, file)} />}
+    </HomeLayout>
   );
 }
