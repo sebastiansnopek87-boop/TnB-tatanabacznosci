@@ -30,7 +30,7 @@ export function LegacyHomeBlock({ s, sel, imageSrc }: BlockProps & { s: PageSect
 export const isFullHome = (sections: PageSection[] | undefined) => !!sections?.some((s) => isLegacyHomeKind(s.kind));
 
 // Legacy mode keeps the code-owned sections around additive CMS content (fallback when nothing imported).
-export function HomeLayout({ children, sections, editing = false }: { children?: ReactNode; sections?: PageSection[]; editing?: boolean }) {
+export function HomeLayout({ children, sections, editing = false }: { children?: ReactNode; sections?: PageSection[] | undefined; editing?: boolean }) {
   const { visible } = useModuleVisibility();
   if (isFullHome(sections)) {
     const nav = sections!.some((s) => s.kind === "home-nav" && !s.hidden);
