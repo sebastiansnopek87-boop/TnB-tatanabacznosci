@@ -1,6 +1,6 @@
 import { z } from "zod";
 export const TEXT_FONTS = ["Jost", "Cormorant Garamond", "Arial", "Georgia", "Verdana", "Tahoma", "Times New Roman", "Courier New"] as const;
-export const TEXT_COLORS = { domyslny: "inherit", tekst: "var(--foreground)", zloto: "var(--color-gold)", stonowany: "var(--muted-foreground)", akcent: "var(--accent)", czerwony: "var(--destructive)" } as const;
+export const TEXT_COLORS = { domyslny: "inherit", tekst: "var(--foreground)", zloto: "var(--color-gold)", miedz: "var(--color-home-copper)", stonowany: "var(--muted-foreground)", akcent: "var(--accent)", czerwony: "var(--destructive)" } as const;
 export type RichNode = { type: string; text?: string | undefined; attrs?: Record<string, string | number | boolean | null> | undefined; marks?: { type: string; attrs?: Record<string, string | number | boolean | null> | undefined }[] | undefined; content?: RichNode[] | undefined };
 export type TextFormat = { doc: RichNode; position?: "left" | "center" | "right"; width?: number; indent?: number; spaceBefore?: number; spaceAfter?: number; lineHeight?: number };
 const attrs = z.record(z.union([z.string().max(500), z.number(), z.boolean(), z.null()]));
