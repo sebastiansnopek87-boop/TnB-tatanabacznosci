@@ -25,7 +25,7 @@ function toPublic(e: any): EpisodeDetail {
   return {
     id: e.id, slug: e.slug, title: e.title, subtitle: e.subtitle ?? "", episode_number: e.episode_number ?? null, summary: e.summary, description: e.description, category: e.category, access: e.access,
     has_cover: !!e.cover_path, has_audio: !!e.audio_path, has_external: !!e.external_url, duration_seconds: e.duration_seconds,
-    featured: e.featured, published_at: e.published_at, updated_at: e.updated_at,
+    featured: e.featured, sort_order: e.sort_order, published_at: e.published_at, updated_at: e.updated_at,
   };
 }
 
