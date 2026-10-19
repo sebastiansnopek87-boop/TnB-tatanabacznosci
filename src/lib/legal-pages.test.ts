@@ -131,7 +131,7 @@ describe("Explicit exact-version approval (no real documents)", () => {
    const p = { system_key: "regulamin", sections: sections(), status: "draft", legal_approved: true }; expect(legalReady("regulamin", p)).toBe(false); expect(legalReady("regulamin", { ...p, status: "published", legal_approved: false })).toBe(false);
  });
  it("digest ignores object key order but detects formatting edits", async () => {
-   const d = setup(); expect(await legalDigest({ ...d, sections: d.sections.map(s => ({ body: s.body, ...s })) })).toBe(await legalDigest(d));
+   const d = setup(); expect(await legalDigest({ ...d, sections: d.sections.map(s => Object.fromEntries(Object.entries(s).reverse()) as typeof s) })).toBe(await legalDigest(d));
    expect(await legalDigest({ ...d, sections: d.sections.map(s => ({ ...s, heading: "Nowy" })) })).not.toBe(await legalDigest(d));
  });
 });
