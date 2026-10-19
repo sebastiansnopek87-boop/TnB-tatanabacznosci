@@ -2,7 +2,7 @@ import { assertAdmin, logEvent } from "./admin-auth.server";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { isSafeHref, type PageDraft, type PageVersion, type PublicPage } from "./pages";
+import { HOME_KINDS, isSafeHref, type PageDraft, type PageVersion, type PublicPage } from "./pages";
 import { assertLegalPublication, isLegalKey, LEGAL_KEYS } from "./legal-pages";
 import { approvalDetail, legalDigest, legalSnapshot } from "./legal-approval";
 import { TextFormatsSchema } from "./rich-text";
