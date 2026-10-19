@@ -15,7 +15,7 @@ export function HomeSection({ s, imageSrc, sel }: { s: PageSection; imageSrc: (n
   const edit = sel !== undefined;
   const a = (el: string) => edit ? { "data-el": el, ...(sel === el ? { "data-on": "" } : {}) } : {};
   const tone = s.appearance?.tone ?? "copper";
-  if (s.kind === "home-nav") return <SiteHeader homeSection={s} editing={edit} />;
+  if (s.kind === "home-nav") return <div style={homeAppearance(s)}><SiteHeader homeSection={s} editing={edit} /></div>;
   const icons = { users: UsersRound, book: BookOpen, shield: ShieldCheck, family: House, target: Crosshair, none: null };
   const items = s.items.map((it, i) => ({ it, i })).filter(({ it }) => edit || !it.hidden);
   return <section className={`home-section home-tone-${tone} ${s.kind === "cinematic" ? "home-cinematic" : "home-values"}`} style={homeAppearance(s)}>
