@@ -3,6 +3,7 @@ import type { TextFormat } from "./rich-text";
 export type PageButton = { label: string; href: string; variant?: "solid" | "outline" | "link"; icon?: "arrow" | "play" | "none"; hidden?: boolean };
 export type PageItem = { title: string; body: string; image?: string | null; asset?: string | null; imageAlt?: string; href?: string; hidden?: boolean; align?: "left" | "center" | "right"; focalX?: number; focalY?: number; icon?: ItemIcon; cta?: string; variant?: "card" | "tile" };
 export const ITEM_ICONS = ["users", "book", "shield", "family", "target", "mic", "calendar", "compass", "bag", "user", "none"] as const;
+export const HOME_ASSET_KEYS = ["before", "expecting", "duty", "father", "after", "hero", "banner", "historia", "biblioteka", "podcast", "spolecznosc", "spotkania", "tworczosc"] as const;
 export type ItemIcon = (typeof ITEM_ICONS)[number];
 export type SectionKind = "hero" | "text" | "values" | "columns" | "quote" | "image" | "cta" | "cinematic" | "value-strip" | "home-nav" | LegacyHomeKind;
 // Blocks that reproduce the pre-CMS home page; editable copies of formerly code-owned sections.
