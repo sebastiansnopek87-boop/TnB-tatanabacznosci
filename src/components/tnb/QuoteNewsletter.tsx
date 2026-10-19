@@ -2,7 +2,9 @@ import { useRef, useState, type FormEvent } from "react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowRight, Loader2, Lock, Mail } from "lucide-react";
-import banner from "@/assets/banner-opt.jpg.asset.json";
+import { usePreview } from "@/hooks/preview-viewer";
+import { assetUrl, focusClass, HOME_ASSETS } from "@/lib/home-content";
+import { noA, setting, type HomeBlockProps } from "./home/util";
 import { useModuleVisibility } from "@/hooks/use-module-visibility";
 import { NEWSLETTER_CONSENT_TEXT, newsletterSchema, subscribeNewsletter } from "@/lib/newsletter.functions";
 
@@ -13,8 +15,11 @@ const MESSAGES = {
   pending: "Sprawdź skrzynkę i potwierdź zapis, klikając link w wiadomości.",
 } as const;
 
-export function QuoteNewsletter() {
+export function QuoteNewsletter({ s, a = noA, imageSrc }: HomeBlockProps) {
   const { visible } = useModuleVisibility();
+  const preview = usePreview();
+  const f = (k: string) => setting(s, k);
+  const src = (s.image && (assetUrl(s.image) ?? imageSrc?.(s.image))) || HOME_ASSETS["banner"];
   const send = useServerFn(subscribeNewsletter);
   const [email, setEmail] = useState("");
   const [consent, setConsent] = useState(false);
@@ -25,6 +30,7 @@ export function QuoteNewsletter() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (preview?.editing) return; // never subscribe from the editor preview
     const parsed = newsletterSchema.safeParse({ email, consent });
     if (!parsed.success) {
       setMsg({ ok: false, text: parsed.error.issues[0]?.message ?? "Sprawdź formularz." });
@@ -48,7 +54,7 @@ export function QuoteNewsletter() {
   return (
     <section className={`grid gap-px bg-border/40 ${visible("newsletter") ? "lg:grid-cols-[1.55fr_1fr]" : ""}`}>
       <div className="relative isolate flex items-center overflow-hidden px-5 py-16 sm:py-20 lg:px-14 lg:py-28">
-        <img src={banner.url} loading="lazy" decoding="async" alt="Panorama gór o zachodzie słońca" className="absolute inset-0 -z-20 h-full w-full object-cover" />
+        <img {...a("image")} src={src} loading="lazy" decoding="async" alt={s.decorative ? "" : s.imageAlt} className={`absolute inset-0 -z-20 h-full w-full object-cover ${focusClass(f("focus"))}`} />
         <div
           className="absolute inset-0 -z-10"
           style={{
@@ -57,22 +63,19 @@ export function QuoteNewsletter() {
           }}
         />
         <div className="border-l-2 border-gold pl-7">
-          <p className="font-display text-[1.2rem] leading-[1.7] text-foreground sm:text-[1.45rem]">
-            Nie musisz być żołnierzem, żeby być człowiekiem z zasadami.
-            <br />
-            Nie musisz mieć za sobą wyjątkowej historii, żeby mieć coś wartościowego do przekazania.
+          <p {...a("f:quote")} className="font-display text-[1.2rem] leading-[1.7] text-foreground sm:text-[1.45rem]">
+            {f("quote").split("
+").map((l, i) => <span key={i}>{i > 0 && <br />}{l}</span>)}
           </p>
-          <p className="eyebrow mt-5 text-gold">Tata Na Baczności</p>
+          {f("sign") && <p {...a("f:sign")} className="eyebrow mt-5 text-gold">{f("sign")}</p>}
         </div>
       </div>
 
       {visible("newsletter") && <div className="flex items-center gap-6 bg-surface-deep px-5 py-14 lg:px-14 lg:py-28">
         <Mail className="hidden h-10 w-10 shrink-0 text-foreground/80 sm:block" strokeWidth={1} />
         <div className="w-full">
-          <h2 className="text-[0.82rem] uppercase tracking-[0.16em] text-gold">Bądź na bieżąco</h2>
-          <p className="mt-2 text-[0.82rem] leading-[1.6] text-muted-foreground">
-            Otrzymuj nowe materiały, zapowiedzi podcastów i ważne informacje.
-          </p>
+          <h2 {...a("f:newsHeading")} className="text-[0.82rem] uppercase tracking-[0.16em] text-gold">{f("newsHeading")}</h2>
+          <p {...a("f:newsBody")} className="mt-2 whitespace-pre-line text-[0.82rem] leading-[1.6] text-muted-foreground">{f("newsBody")}</p>
           <form onSubmit={handleSubmit} noValidate className="mt-4">
             <div className="flex flex-wrap gap-3">
               <input
