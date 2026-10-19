@@ -9,7 +9,7 @@ import { getMyAvatar } from '@/lib/avatar.functions';
 export function UserAvatar({ name = '', own = false, kind, id, className = 'size-10' }: { name?: string; own?: boolean; kind?: 'post' | 'comment'; id?: string; className?: string }) {
   const auth = useAuth();
   const fn = useServerFn(getMyAvatar);
-  const q = useQuery({ queryKey: ['my-avatar', auth.user?.id], queryFn: () => fn(), enabled: own && !!auth.user });
+  const q = useQuery({ queryKey: ['my-avatar', auth.user?.id], queryFn: () => fn(), enabled: own && !!auth.user && !auth.user.id.startsWith('00000000-') });
   const path = own ? q.data : kind && id ? `/api/public/avatar/${kind}/${id}` : null;
   const [src, setSrc] = useState<string | null>(null);
   useEffect(() => {

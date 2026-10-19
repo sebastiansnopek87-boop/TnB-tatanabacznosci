@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import type { MouseEvent, ReactNode } from "react";
 import { PageHeading, PageShell } from "@/components/tnb/PageShell";
-import { normalizeSections, type PageSection } from "@/lib/pages";
+import { isHomeKind, normalizeSections, type PageSection } from "@/lib/pages";
+import { HomeBlock } from "@/components/tnb/home/HomeBlock";
 
 import { RichText } from "./RichText";
 import type { TextFormat } from "@/lib/rich-text";
@@ -55,8 +56,9 @@ function Img({ s, src, className, eager, a = noA }: { s: PageSection; src: strin
   );
 }
 
-function Section({ s, src, first, sel }: { s: PageSection; src?: string | undefined; first: boolean; sel?: string | null | undefined }) {
+function Section({ s, src, first, sel, imageSrc }: { s: PageSection; src?: string | undefined; first: boolean; sel?: string | null | undefined; imageSrc?: (file: string) => string | undefined }) {
   const a: A = sel === undefined ? noA : (el) => (sel === el ? { "data-el": el, "data-on": "" } : { "data-el": el });
+  if (isHomeKind(s.kind)) return <HomeBlock s={s} a={sel === undefined ? undefined : a} imageSrc={imageSrc} />;
   const imgLeft = s.layout === "left";
   switch (s.kind) {
     case "hero":
@@ -181,7 +183,7 @@ function Section({ s, src, first, sel }: { s: PageSection; src?: string | undefi
 export function PageView({ eyebrow, title, intro, sections: raw, imageSrc, preview, edit }: Props) {
   const all = normalizeSections(raw);
   const sections = edit ? all : all.filter((s) => !s.hidden);
-  const hasHero = sections[0]?.kind === "hero";
+  const hasHero = sections[0]?.kind === "hero" || sections.some((s) => isHomeKind(s.kind));
   const onClick = (e: MouseEvent<HTMLDivElement>) => {
     if (!edit) return;
     const t = e.target as HTMLElement;
@@ -202,11 +204,11 @@ export function PageView({ eyebrow, title, intro, sections: raw, imageSrc, previ
         {sections.map((s, i) => edit ? (
           <div key={s.id}>
             <div data-sec={i} {...(edit.sel?.i === i && edit.sel.el === "section" ? { "data-sec-on": "" } : {})} className={s.hidden ? "opacity-40" : ""}>
-              <Section s={s} first={i === 0 && !hasHero} src={s.image ? imageSrc(s.image) : undefined} sel={edit.sel?.i === i ? edit.sel.el : null} />
+              <Section s={s} first={i === 0 && !hasHero} src={s.image ? imageSrc(s.image) : undefined} sel={edit.sel?.i === i ? edit.sel.el : null} imageSrc={imageSrc} />
             </div>
             {edit.zone?.(i + 1)}
           </div>
-        ) : <Section key={s.id} s={s} first={i === 0 && !hasHero} src={s.image ? imageSrc(s.image) : undefined} />)}
+        ) : <Section key={s.id} s={s} first={i === 0 && !hasHero} src={s.image ? imageSrc(s.image) : undefined} imageSrc={imageSrc} />)}
       </div>
     </PageShell>
     </div>

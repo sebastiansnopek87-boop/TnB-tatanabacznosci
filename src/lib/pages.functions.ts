@@ -2,7 +2,7 @@ import { assertAdmin, logEvent } from "./admin-auth.server";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { isSafeHref, type PageDraft, type PageVersion, type PublicPage } from "./pages";
+import { HOME_KINDS, isSafeHref, type PageDraft, type PageVersion, type PublicPage } from "./pages";
 import { assertLegalPublication, isLegalKey, LEGAL_KEYS } from "./legal-pages";
 import { approvalDetail, legalDigest, legalSnapshot } from "./legal-approval";
 import { TextFormatsSchema } from "./rich-text";
@@ -70,9 +70,10 @@ const Btn = z.object({ label: z.string().trim().min(1, "Przycisk musi mieć etyk
 const sectionShape = (btn: z.ZodTypeAny) => z.object({
   textFormats: TextFormatsSchema,
   hidden: z.boolean().default(false), optional: z.boolean().default(false),
-  id: z.string().regex(/^[a-z0-9]{1,20}$/), kind: z.enum(["hero", "text", "values", "columns", "quote", "image", "cta"]),
+  id: z.string().regex(/^[a-z0-9]{1,20}$/), kind: z.enum(["hero", "text", "values", "columns", "quote", "image", "cta", ...HOME_KINDS]),
+  settings: z.record(z.string().regex(/^[a-zA-Z0-9]{1,40}$/), z.string().max(3000)).refine((r) => Object.keys(r).length <= 40).optional(),
   eyebrow: z.string().max(200).default(""), layout: z.enum(["left", "right"]).default("right"), display: z.enum(["full", "inset", "featured"]).default("full"), decorative: z.boolean().default(false),
-  items: z.array(z.object({ title: z.string().max(120), body: z.string().max(3000) })).max(12).default([]),
+  items: z.array(z.object({ title: z.string().max(120), body: z.string().max(3000), href: z.string().max(500).refine((h) => !h || isSafeHref(h), "Adres musi zaczynać się od / lub https://").optional(), cta: z.string().max(60).optional(), image: z.string().regex(/^(asset:[a-z-]{1,40}|[a-z0-9-]+\.(jpg|png|webp))$/).optional(), alt: z.string().max(200).optional() })).max(12).default([]),
   heading: z.string().max(200), body: z.string().max(20000), image: z.string().regex(/^[a-z0-9-]+\.(jpg|png|webp)$/).nullable(),
   imageAlt: z.string().max(200), caption: z.string().max(300), quoteAuthor: z.string().max(120), buttons: z.array(btn).max(4),
 });
@@ -84,7 +85,7 @@ const PageInput = z.object({
   sections: z.array(Section).max(40), seo_title: z.string().max(70, "Tytuł SEO: maks. 70 znaków."), seo_description: z.string().max(170, "Opis SEO: maks. 170 znaków."),
 });
 
-const SavePageInput = PageInput.extend({ system_key: z.enum(LEGAL_KEYS).nullable().optional() });
+const SavePageInput = PageInput.extend({ system_key: z.enum([...LEGAL_KEYS, "home"]).nullable().optional() });
 
 export const adminSavePage = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => SavePageInput.parse(d))
@@ -234,4 +235,23 @@ export const adminRestoreVersion = createServerFn({ method: "POST" }).middleware
     await addVersion(context, data.id, "restore", v.snapshot);
     await logEvent({ type: "page_version_restored", actor: context.userId, objectKind: "page", objectId: data.id, detail: data.versionId });
     return { draft: v.snapshot as PageDraft };
+  });
+
+// Home page only: starts a fresh draft from the built-in layout. The previous draft (or, without one, the
+// published content) is first stored untouched in site_page_versions; published columns are never changed.
+export const adminStartHomeDraft = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), draft: DraftInput }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { data: cur, error } = await context.supabase.from("site_pages").select("system_key, slug, title, intro, sections, seo_title, seo_description, draft").eq("id", data.id).maybeSingle();
+    if (error || !cur) throw new Error("Nie znaleziono strony.");
+    if (cur.system_key !== "home") throw new Error("Ta operacja dotyczy wyłącznie strony głównej.");
+    const previous = cur.draft ?? { slug: cur.slug, title: cur.title, intro: cur.intro, sections: cur.sections, seo_title: cur.seo_title, seo_description: cur.seo_description };
+    const { error: vErr } = await context.supabase.from("site_page_versions").insert({ page_id: data.id, kind: "draft", snapshot: previous, created_by: context.userId });
+    if (vErr) throw new Error("Nie udało się zachować poprzedniego szkicu — nic nie zmieniono.");
+    const now = new Date().toISOString();
+    const { error: uErr } = await context.supabase.from("site_pages").update({ draft: { ...data.draft, slug: cur.slug }, draft_updated_at: now }).eq("id", data.id);
+    if (uErr) throw new Error("Nie udało się utworzyć szkicu.");
+    await logEvent({ type: "page_home_draft_started", actor: context.userId, objectKind: "page", objectId: data.id });
+    return { savedAt: now };
   });

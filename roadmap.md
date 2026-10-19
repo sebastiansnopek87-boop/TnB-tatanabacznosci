@@ -45,3 +45,7 @@
 - Migracja 0058: platform_settings +18 kolumn (firma, kontakt, faktury, stopka)
 - /admin/ustawienia: sekcje firma/faktury/stopka; SiteFooter i /kontakt podpięte pod ustawienia
 - Testy: platform.test.ts 5/5 PASS; E2E PASS
+
+- [x] Strona główna w Visual Builderze: wspólny renderer, 7 edytowalnych sekcji, przełącznik Niezalogowany/Zalogowany, szkic bez publikacji.
+- [ ] Nagłówek, menu i stopka w edytorze wizualnym (globalne) — osobny etap.
+- [ ] Filmowa sekcja „pięć etapów życia” — osobny etap.

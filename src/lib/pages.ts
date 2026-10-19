@@ -1,8 +1,11 @@
 import type { TextFormat } from "./rich-text";
 // Shared, browser-safe model for CMS pages (O TNB, Moja historia and future subpages).
 export type PageButton = { label: string; href: string };
-export type PageItem = { title: string; body: string };
-export type SectionKind = "hero" | "text" | "values" | "columns" | "quote" | "image" | "cta";
+export type PageItem = { title: string; body: string; href?: string; cta?: string; image?: string; alt?: string };
+export const HOME_KINDS = ["home_hero", "home_articles", "home_community", "home_quicknav", "home_pillars", "home_tiles", "home_quote_newsletter"] as const;
+export type HomeKind = (typeof HOME_KINDS)[number];
+export const isHomeKind = (k: string): k is HomeKind => (HOME_KINDS as readonly string[]).includes(k);
+export type SectionKind = "hero" | "text" | "values" | "columns" | "quote" | "image" | "cta" | HomeKind;
 export type ImageDisplay = "full" | "inset" | "featured";
 export const IMAGE_DISPLAY: Record<ImageDisplay, string> = { full: "Pełna szerokość", inset: "W kolumnie tekstu", featured: "Wyróżniony blok" };
 export type PageSection = {
@@ -23,6 +26,7 @@ export type PageSection = {
   hidden?: boolean; // hidden sections stay in the page but are not shown publicly
   optional?: boolean; // "opcjonalna treść": intentionally empty, no pre-publish warning
   textFormats?: Record<string, TextFormat>;
+  settings?: Record<string, string>; // home-page blocks: named text fields and appearance options
 };
 export type PublicPage = {
   id: string; slug: string; system_key: string | null; title: string; intro: string;
@@ -31,6 +35,7 @@ export type PublicPage = {
 };
 
 export const SYSTEM_PAGES: Record<string, { path: string; label: string }> = {
+  "home": { path: "/", label: "Strona główna" },
   "o-tnb": { path: "/o-tnb", label: "O TNB" },
   "moja-historia": { path: "/moja-historia", label: "Moja historia" },
   "regulamin": { path: "/regulamin", label: "Regulamin" },
@@ -45,6 +50,8 @@ export const PAGE_STATUS: Record<string, string> = { draft: "Szkic", published: 
 export const SECTION_KINDS: Record<SectionKind, string> = {
   hero: "Otwarcie strony", text: "Tekst (opcjonalnie ze zdjęciem)", values: "Karty wartości", columns: "Dwie kolumny (listy)",
   quote: "Cytat", image: "Zdjęcie", cta: "Wezwanie do działania",
+  home_hero: "Strona główna: otwarcie", home_articles: "Strona główna: artykuły", home_community: "Strona główna: rozmowy społeczności",
+  home_quicknav: "Strona główna: skróty", home_pillars: "Strona główna: filary", home_tiles: "Strona główna: kafelki", home_quote_newsletter: "Strona główna: cytat i newsletter",
 };
 
 export const newSection = (kind: SectionKind = "text"): PageSection => ({
