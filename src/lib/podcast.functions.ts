@@ -30,8 +30,9 @@ function toPublic(e: any): EpisodeDetail {
 }
 
 export const listEpisodes = createServerFn({ method: "GET" }).handler(async (): Promise<PublicEpisode[]> => {
-  const { data } = await (await admin()).from("podcast_episodes").select(COLS).eq("status", "published")
+  const { data, error } = await (await admin()).from("podcast_episodes").select(COLS).eq("status", "published")
     .order("featured", { ascending: false }).order("sort_order", { ascending: true }).order("published_at", { ascending: false }).limit(300);
+  if (error) throw new Error("Nie udało się pobrać odcinków.");
   return (data ?? []).map((e) => { const { description: _d, ...rest } = toPublic(e); return rest; });
 });
 
