@@ -36,7 +36,7 @@ const call = (fn: any, data: any) => fn({ data, context: ctx() });
 beforeEach(() => { m.rows = []; m.versions = []; m.logs = []; m.approved = false; m.race = false; m.versionError = false; m.auth.mockReset(); m.events.mockReset(); m.events.mockImplementation(async (e: any) => { m.logs.push({ id: crypto.randomUUID(), type: e.type, actor: e.actor, object_kind: e.objectKind, object_id: e.objectId, result: e.result ?? "ok", detail: e.detail }); }); });
 describe("Legal CMS integration (in-memory data only)", () => {
  it("home persists individual scene settings through draft, publish, public read and restore", async () => {
-   const d = homeDraft(); const scene = d.sections[1]; if (!scene) throw new Error("missing scene");
+   const d = homeDraft(); d.sections = d.sections.map(s => ({ ...s, optional: false })); const scene = d.sections[1]; if (!scene) throw new Error("missing scene");
    scene.items[0] = { ...scene.items[0], title: "Indywidualna scena", body: "Indywidualny opis", image: "img-scene.jpg", imageAlt: "Opis testowy", href: "/artykuly", hidden: true, focalX: 27, focalY: 63, align: "right" };
    await call(adminSavePage, { ...d, sections: [], id: null, system_key: "home" });
    expect(await call(getPublicPage, { key: "home" })).toBeNull();
@@ -53,7 +53,7 @@ describe("Legal CMS integration (in-memory data only)", () => {
    m.rows = [{ id, system_key: "home", status: "draft", ...homeDraft() }];
    const d = homeDraft(); const s = d.sections[1]; if (!s) throw new Error("missing");
    s.items[0] = { title: "test", body: "test", href: "javascript:alert(1)", focalX: 101 };
-   await expect(call(adminSaveDraft, { id, draft: d })).rejects.toThrow();
+   expect(() => call(adminSaveDraft, { id, draft: d })).toThrow();
  });
  it("item reordering keeps formatting and independent copies with the correct scene", () => {
    const s = { ...newSection("cinematic"), items: [{ title: "A", body: "a", image: "a.jpg" }, { title: "B", body: "b", image: "b.jpg" }], textFormats: { "item-0-title": { doc: { type: "doc", content: [] }, width: 65 } } };
