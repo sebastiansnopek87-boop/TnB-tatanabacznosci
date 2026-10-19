@@ -70,9 +70,10 @@ const Btn = z.object({ label: z.string().trim().min(1, "Przycisk musi mieć etyk
 const sectionShape = (btn: z.ZodTypeAny) => z.object({
   textFormats: TextFormatsSchema,
   hidden: z.boolean().default(false), optional: z.boolean().default(false),
-  id: z.string().regex(/^[a-z0-9]{1,20}$/), kind: z.enum(["hero", "text", "values", "columns", "quote", "image", "cta"]),
+  id: z.string().regex(/^[a-z0-9]{1,20}$/), kind: z.enum(["hero", "text", "values", "columns", "quote", "image", "cta", ...HOME_KINDS]),
+  settings: z.record(z.string().regex(/^[a-zA-Z0-9]{1,40}$/), z.string().max(3000)).refine((r) => Object.keys(r).length <= 40).optional(),
   eyebrow: z.string().max(200).default(""), layout: z.enum(["left", "right"]).default("right"), display: z.enum(["full", "inset", "featured"]).default("full"), decorative: z.boolean().default(false),
-  items: z.array(z.object({ title: z.string().max(120), body: z.string().max(3000) })).max(12).default([]),
+  items: z.array(z.object({ title: z.string().max(120), body: z.string().max(3000), href: z.string().max(500).refine((h) => !h || isSafeHref(h), "Adres musi zaczynać się od / lub https://").optional(), cta: z.string().max(60).optional(), image: z.string().regex(/^(asset:[a-z-]{1,40}|[a-z0-9-]+\.(jpg|png|webp))$/).optional(), alt: z.string().max(200).optional() })).max(12).default([]),
   heading: z.string().max(200), body: z.string().max(20000), image: z.string().regex(/^[a-z0-9-]+\.(jpg|png|webp)$/).nullable(),
   imageAlt: z.string().max(200), caption: z.string().max(300), quoteAuthor: z.string().max(120), buttons: z.array(btn).max(4),
 });
@@ -84,7 +85,7 @@ const PageInput = z.object({
   sections: z.array(Section).max(40), seo_title: z.string().max(70, "Tytuł SEO: maks. 70 znaków."), seo_description: z.string().max(170, "Opis SEO: maks. 170 znaków."),
 });
 
-const SavePageInput = PageInput.extend({ system_key: z.enum(LEGAL_KEYS).nullable().optional() });
+const SavePageInput = PageInput.extend({ system_key: z.enum([...LEGAL_KEYS, "home"]).nullable().optional() });
 
 export const adminSavePage = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => SavePageInput.parse(d))
