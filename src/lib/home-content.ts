@@ -7,9 +7,11 @@ import tileSpolecznosc from "@/assets/tile-spolecznosc.jpg.asset.json";
 import tileSpotkania from "@/assets/tile-spotkania.jpg.asset.json";
 import tileTworczosc from "@/assets/tile-tworczosc.jpg.asset.json";
 import { newSection, type HomeKind, type PageItem, type PageSection } from "./pages";
+import { CINEMATIC_ASSETS, newCinematicSection } from "./cinematic-content";
 
 // Built-in photos of the home page. Sections reference them as "asset:<name>" until an admin uploads a replacement.
 export const HOME_ASSETS: Record<string, string> = {
+  ...CINEMATIC_ASSETS,
   hero: hero.url, banner: banner.url, "card-historia": cardHistoria.url, "card-biblioteka": cardBiblioteka.url, "card-podcast": cardPodcast.url,
   "tile-spolecznosc": tileSpolecznosc.url, "tile-spotkania": tileSpotkania.url, "tile-tworczosc": tileTworczosc.url,
 };
@@ -22,6 +24,20 @@ const GOLD = "Słowa w *gwiazdkach* są złote.";
 
 // Field list per block: drives the inspector; the renderer reads the same keys.
 export const HOME_FIELDS: Record<HomeKind, Field[]> = {
+  home_cinematic: [
+    { key: "line1", label: "Nagłówek — część jasna" }, { key: "line2", label: "Nagłówek — część miedziana" },
+    { key: "body", label: "Główny opis", multiline: true },
+    { key: "ctaLabel", label: "Pierwszy przycisk — tekst" }, { key: "ctaHref", label: "Pierwszy przycisk — adres" },
+    { key: "secondaryLabel", label: "Drugi przycisk — tekst" }, { key: "secondaryHref", label: "Drugi przycisk — adres" },
+    ...Array.from({ length: 5 }, (_, i): Field[] => [
+      { key: `value${i + 1}Title`, label: `Wartość ${i + 1} — nagłówek` },
+      { key: `value${i + 1}Body`, label: `Wartość ${i + 1} — opis`, multiline: true },
+      { ...FOCUS, key: `scene${i + 1}Focus`, label: `Scena ${i + 1} — kadrowanie` },
+    ]).flat(),
+    { key: "sceneHeight", label: "Wysokość scen", options: [["", "Standardowa"], ["compact", "Niższa"], ["tall", "Wyższa"]] },
+    { key: "contrast", label: "Przyciemnienie zdjęć", options: [["", "Standardowe"], ["soft", "Łagodniejsze"], ["deep", "Mocniejsze"]] },
+    { key: "valuesVisible", label: "Pas wartości", options: [["", "Widoczny"], ["off", "Ukryty"]] }, SPACING,
+  ],
   home_hero: [
     { key: "eyebrow", label: "Nadtytuł" }, { key: "line1", label: "Nagłówek — linia 1 (biała)" }, { key: "line2", label: "Nagłówek — linia 2 (złota)" }, { key: "line3", label: "Nagłówek — linia 3 (złota)" },
     { key: "body", label: "Opis", multiline: true }, { key: "ctaLabel", label: "Przycisk — etykieta", hint: "Pusta etykieta ukrywa przycisk." }, { key: "ctaHref", label: "Przycisk — adres" },
@@ -48,7 +64,8 @@ export const HOME_FIELDS: Record<HomeKind, Field[]> = {
   ],
 };
 // Which item fields each list block offers.
-export const HOME_ITEM_FIELDS: Partial<Record<HomeKind, { label: string; fields: (keyof PageItem)[]; max: number; image?: boolean }>> = {
+export const HOME_ITEM_FIELDS: Partial<Record<HomeKind, { label: string; fields: (keyof PageItem)[]; max: number; image?: boolean; fixed?: boolean }>> = {
+  home_cinematic: { label: "Scena", fields: ["title", "body"], max: 5, image: true, fixed: true },
   home_quicknav: { label: "Skrót", fields: ["title", "body", "href"], max: 9 },
   home_pillars: { label: "Karta", fields: ["title", "body", "cta", "href"], max: 6, image: true },
   home_tiles: { label: "Kafelek", fields: ["title", "body", "href"], max: 6, image: true },
@@ -101,7 +118,9 @@ export function homeDefaultSections(): PageSection[] {
 }
 
 export const newHomeSection = (kind: HomeKind): PageSection => {
-  const base = homeDefaultSections().find((s) => s.kind === kind)!;
+  if (kind === "home_cinematic") return newCinematicSection();
+  const base = homeDefaultSections().find((s) => s.kind === kind);
+  if (!base) throw new Error("Nieznany typ sekcji strony głównej.");
   return { ...structuredClone(base), id: newSection().id };
 };
 

@@ -2,7 +2,7 @@ import type { TextFormat } from "./rich-text";
 // Shared, browser-safe model for CMS pages (O TNB, Moja historia and future subpages).
 export type PageButton = { label: string; href: string };
 export type PageItem = { title: string; body: string; href?: string; cta?: string; image?: string; alt?: string };
-export const HOME_KINDS = ["home_hero", "home_articles", "home_community", "home_quicknav", "home_pillars", "home_tiles", "home_quote_newsletter"] as const;
+export const HOME_KINDS = ["home_cinematic", "home_hero", "home_articles", "home_community", "home_quicknav", "home_pillars", "home_tiles", "home_quote_newsletter"] as const;
 export type HomeKind = (typeof HOME_KINDS)[number];
 export const isHomeKind = (k: string): k is HomeKind => (HOME_KINDS as readonly string[]).includes(k);
 export type SectionKind = "hero" | "text" | "values" | "columns" | "quote" | "image" | "cta" | HomeKind;
@@ -48,6 +48,7 @@ export const pagePath = (p: { slug: string; system_key: string | null }) =>
 export const PAGE_STATUS: Record<string, string> = { draft: "Szkic", published: "Opublikowana", archived: "Zarchiwizowana" };
 
 export const SECTION_KINDS: Record<SectionKind, string> = {
+  home_cinematic: "Strona główna: pięć historii",
   hero: "Otwarcie strony", text: "Tekst (opcjonalnie ze zdjęciem)", values: "Karty wartości", columns: "Dwie kolumny (listy)",
   quote: "Cytat", image: "Zdjęcie", cta: "Wezwanie do działania",
   home_hero: "Strona główna: otwarcie", home_articles: "Strona główna: artykuły", home_community: "Strona główna: rozmowy społeczności",

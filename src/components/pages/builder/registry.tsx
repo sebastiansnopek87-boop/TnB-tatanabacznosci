@@ -17,6 +17,7 @@ export const BLOCKS: { kind: SectionKind; cat: (typeof CATEGORIES)[number]; desc
 
 const HT = () => <T><L w="45%" gold /><span className="block h-3 w-full bg-foreground/25" /></T>;
 BLOCKS.unshift(
+  { kind: "home_cinematic", cat: "Strona główna", desc: "Pięć filmowych scen, dwa przyciski i pas wartości. Dodaj na początku istniejącego szkicu.", Thumb: HT },
   { kind: "home_hero", cat: "Strona główna", desc: "Otwarcie z nagłówkiem, opisem, przyciskiem i prawą kolumną.", Thumb: HT },
   { kind: "home_articles", cat: "Strona główna", desc: "Wyróżnione artykuły z modułu „Artykuły”.", Thumb: HT },
   { kind: "home_community", cat: "Strona główna", desc: "Najnowsze rozmowy społeczności i zaproszenie.", Thumb: HT },
@@ -26,7 +27,7 @@ BLOCKS.unshift(
   { kind: "home_quote_newsletter", cat: "Strona główna", desc: "Cytat na zdjęciu i zapis do newslettera.", Thumb: HT },
 );
 
-export const canInsert = (kind: SectionKind, at: number) => kind !== "hero" || at === 0;
+export const canInsert = (kind: SectionKind, at: number) => (kind !== "hero" && kind !== "home_cinematic") || at === 0;
 
 export const COVERAGE: { area: string; ok: boolean; note: string }[] = [
   { area: "Strony CMS (O TNB, Moja historia, /strony/…)", ok: true, note: "Treść, kolejność, zdjęcia, przyciski, ukrywanie sekcji, szkic, wersje i publikacja." },

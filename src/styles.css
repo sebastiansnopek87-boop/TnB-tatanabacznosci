@@ -141,6 +141,20 @@
   --color-surface-deep: oklch(0.132 0.01 58);
   --color-menu-background: oklch(0.16 0.003 80);
   --color-menu-gold: oklch(0.74 0.065 80);
+  --color-cinematic-background: oklch(0.13 0.003 65);
+  --color-cinematic-foreground: oklch(0.96 0.006 80);
+  --color-cinematic-copper: oklch(0.74 0.105 59);
+}
+
+.cinematic-hero { letter-spacing: 0; }
+.cinematic-scene { min-height: 430px; }
+.cinematic-scene-shade { background: linear-gradient(0deg, var(--color-cinematic-background) 0%, oklch(0.13 0.003 65 / .9) 12%, transparent 65%); }
+.cinematic-hero[data-contrast="soft"] .cinematic-scene-shade { background: linear-gradient(0deg, var(--color-cinematic-background), oklch(0.13 0.003 65 / .7) 14%, transparent 50%); }
+.cinematic-hero[data-contrast="deep"] .cinematic-scene-shade { background: linear-gradient(0deg, var(--color-cinematic-background), oklch(0.13 0.003 65 / .95) 20%, oklch(0.13 0.003 65 / .2) 75%); }
+.cinematic-hero[data-height="compact"] .cinematic-scene { min-height: 360px; }
+.cinematic-hero[data-height="tall"] .cinematic-scene { min-height: 520px; }
+@media (min-width: 640px) and (max-width: 1023px) {
+  .cinematic-scene:last-child { grid-column: 1 / -1; }
 }
 
 .tnb-menu { overscroll-behavior: contain; }

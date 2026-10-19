@@ -1,4 +1,5 @@
 import { Hero } from "../Hero";
+import { CinematicHero } from "./CinematicHero";
 import { HomeArticles, HomeConversations } from "../HomeSections";
 import { QuickNav } from "../QuickNav";
 import { PillarCards, PillarTiles } from "../PillarCards";
@@ -13,6 +14,7 @@ export function HomeBlock(props: HomeBlockProps) {
   const { s } = props;
   const body = (() => {
     switch (s.kind) {
+      case "home_cinematic": return <CinematicHero {...props} />;
       case "home_hero": return <Hero {...props} />;
       case "home_articles": return visible("articles") ? <HomeArticles {...props} /> : null;
       case "home_community": return visible("community") ? <HomeConversations {...props} /> : null;
