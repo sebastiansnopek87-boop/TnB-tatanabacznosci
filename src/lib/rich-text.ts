@@ -37,7 +37,7 @@ export const TextFormatSchema = z.object({
   position: z.enum(["left", "center", "right"]).optional(), width: z.number().min(25).max(100).optional(),
   indent: z.number().min(0).max(120).optional(), spaceBefore: z.number().min(0).max(160).optional(), spaceAfter: z.number().min(0).max(160).optional(), lineHeight: z.number().min(1).max(3).optional(),
 }).strict();
-export const TextFormatsSchema = z.record(z.string().regex(/^(eyebrow|heading|body|quoteAuthor|caption|item-\d{1,2}-(title|body))$/), TextFormatSchema).refine(v => Object.keys(v).length <= 29).optional();
+export const TextFormatsSchema = z.record(z.string().regex(/^(eyebrow|heading|body|quoteAuthor|caption|item-\d{1,2}-(title|body)|button-\d)$/), TextFormatSchema).refine(v => Object.keys(v).length <= 33).optional();
 export const plainDoc = (text: string): RichNode => ({ type: "doc", content: text.split(/\n\s*\n/).map(p => ({ type: "paragraph", content: p ? p.split("\n").flatMap((line, i) => [...(i ? [{ type: "hardBreak" }] : []), ...(line ? [{ type: "text", text: line }] : [])]) : [] })) });
 export function richPlainText(doc: RichNode): string {
   const read = (n: RichNode): string => n.type === "text" ? n.text ?? "" : n.type === "hardBreak" ? "\n" : (n.content ?? []).map(read).join(["doc", "bulletList", "orderedList", "listItem"].includes(n.type) ? "\n\n" : "");

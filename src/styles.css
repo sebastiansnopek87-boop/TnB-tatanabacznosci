@@ -178,7 +178,7 @@
 .home-cta:hover { background: color-mix(in oklab, var(--color-home-button) 75%, var(--color-home-background)); color: var(--color-home-text); }
 .home-values { border-top: 1px solid color-mix(in oklab, var(--color-home-copper) 20%, transparent); padding: var(--home-padding) 4%; }
 .home-value-grid { display: grid; gap: var(--home-gap); }
-.home-value { min-width: 0; display: grid; grid-template-columns: 34px minmax(0,1fr); gap: 16px; padding-right: 16px; border-right: 1px solid color-mix(in oklab, var(--color-home-copper) 40%, transparent); }
+.home-value { position: relative; min-width: 0; display: grid; grid-template-columns: 34px minmax(0,1fr); gap: 16px; padding-right: 16px; border-right: 1px solid color-mix(in oklab, var(--color-home-copper) 40%, transparent); }
 .home-value:last-child { border-right: 0; }
 .home-value-icon { width: 30px; height: 30px; color: var(--home-highlight); }
 .home-value h2 { font: 600 14px/1.25 var(--font-display); color: var(--home-highlight); white-space: pre-line; }

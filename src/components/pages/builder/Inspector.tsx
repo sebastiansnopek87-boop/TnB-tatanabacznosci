@@ -39,7 +39,7 @@ export function Inspector({ s, el, busy, imageUrl, onPatch, onSelectEl, onUpload
     const set = (p: Partial<typeof b>, k: string) => onPatch({ buttons: s.buttons.map((x, j) => (j === btn ? { ...x, ...p } : x)) }, `btn${btn}${k}`);
     return (
       <>
-        <F label="Etykieta przycisku"><Input value={b.label} maxLength={60} onChange={(e) => set({ label: e.target.value }, "l")} /></F>
+        <Suspense fallback={null}><TextEditor label="Etykieta przycisku" value={b.label} format={s.textFormats?.[`button-${btn}`]} onChange={(plain, format) => { const textFormats = { ...s.textFormats }; if (format) textFormats[`button-${btn}`] = format; else delete textFormats[`button-${btn}`]; onPatch({ buttons: s.buttons.map((x,j) => j === btn ? { ...x, label: plain } : x), textFormats }, `button-${btn}`); }} /></Suspense>
         <F label="Adres" hint={b.href && !isSafeHref(b.href) ? "Adres musi zaczynać się od / (strona TNB), https:// lub mailto:" : "Np. /spolecznosc lub https://…"}>
           <Input value={b.href} maxLength={500} onChange={(e) => set({ href: e.target.value.trim() }, "h")} className={b.href && !isSafeHref(b.href) ? "border-destructive" : ""} />
         </F>
