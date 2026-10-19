@@ -5,6 +5,7 @@ import { byOrder, getSiteSettings, type SocialLink } from "@/config/site-setting
 import { SocialIcon } from "./SocialIcon";
 import { usePlatformSettings } from "@/hooks/use-platform-settings";
 import { useModuleVisibility } from "@/hooks/use-module-visibility";
+import type { PageSection } from "@/lib/pages";
 import { brandSrc, getBrandSlogan, useBrand } from "@/hooks/use-brand-settings";
 
 function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
@@ -23,7 +24,9 @@ function FooterLink({ href, children }: { href: string; children: React.ReactNod
   );
 }
 
-export function SiteFooter() {
+// Optional home-only override (Visual Builder "Stopka strony głównej"); empty fields keep the global footer.
+export function SiteFooter({ home, sel }: { home?: PageSection | undefined; sel?: string | null | undefined } = {}) {
+  const a = (el: string) => sel === undefined ? {} : { "data-el": el, ...(sel === el ? { "data-on": "" } : {}) };
   const { visiblePath } = useModuleVisibility();
   const brand = useBrand();
   const slogan = getBrandSlogan(brand);
@@ -44,8 +47,14 @@ export function SiteFooter() {
   const hasContactColumn = showInFooter && (!!email || !!phone || social.length > 0);
   const year = new Date().getFullYear();
   const owner = ps?.company_legal_name || s.organization.legalName || ps?.platform_name || s.organization.name;
-  const description = ps?.footer_description ?? s.footer.brandDescription;
-  const copyright = ps?.footer_copyright ?? s.footer.copyrightText;
+  const description = home?.body || (ps?.footer_description ?? s.footer.brandDescription);
+  const copyright = home?.caption || (ps?.footer_copyright ?? s.footer.copyrightText);
+  const homeAbout = home?.buttons[0];
+  const about = homeAbout ? { label: homeAbout.label, href: homeAbout.href, visible: !homeAbout.hidden } : s.footer.aboutLink;
+  const columns = home && home.items.length
+    ? home.items.filter((c) => !c.hidden).map((c, i) => ({ id: `h${i}`, i, title: c.title, links: c.body.split("\n").map((l, k) => { const [label, href] = l.split("|").map((x) => x.trim()); return { id: `${i}-${k}`, label: label ?? "", href: href || "/" }; }).filter((l) => l.label) }))
+    : byOrder(s.footer.columns).map((c) => ({ id: c.id, i: -1, title: c.title, links: byOrder(c.links) }));
+  const contactTitle = home?.eyebrow || s.footer.contactColumnTitle;
   const registry = [
     ps?.company_legal_form,
     ps?.company_nip ? `NIP: ${ps.company_nip}` : null,
@@ -68,26 +77,26 @@ export function SiteFooter() {
             </span>
           </Link>
           {description && (
-            <p className="mt-6 max-w-xs text-[0.85rem] leading-[1.75] text-muted-foreground">
+            <p {...a("body")} className="mt-6 max-w-xs text-[0.85rem] leading-[1.75] text-muted-foreground">
               {description}
             </p>
           )}
-          {s.footer.aboutLink.visible && visiblePath(s.footer.aboutLink.href, "page") && (
-            <a
-              href={s.footer.aboutLink.href}
+          {about.visible && visiblePath(about.href, "page") && (
+            <a {...a("button-0")}
+              href={about.href}
               className="mt-5 inline-flex items-center gap-3 text-[0.75rem] uppercase tracking-[0.16em] text-gold transition-colors hover:text-gold-bright"
             >
-              {s.footer.aboutLink.label}
+              {about.label}
               <ArrowRight className="h-4 w-4" strokeWidth={1.75} />
             </a>
           )}
         </div>
 
-        {byOrder(s.footer.columns).map((col) => (
-          <div key={col.id}>
+        {columns.map((col) => (
+          <div key={col.id} {...(col.i >= 0 ? a(`item-${col.i}`) : {})}>
             <h3 className="eyebrow text-gold">{col.title}</h3>
             <ul className="mt-6 flex flex-col gap-3">
-              {byOrder(col.links).filter(l => visiblePath(l.href, "page")).map((l) => (
+              {col.links.filter(l => visiblePath(l.href, "page")).map((l) => (
                 <li key={l.id}>
                   <FooterLink href={l.href}>{l.label}</FooterLink>
                 </li>
@@ -98,7 +107,7 @@ export function SiteFooter() {
 
         {hasContactColumn && (
           <div>
-            <h3 className="eyebrow text-gold">{s.footer.contactColumnTitle}</h3>
+            <h3 {...a("eyebrow")} className="eyebrow text-gold">{contactTitle}</h3>
             <ul className="mt-6 flex flex-col gap-3">
               {email && (
                 <li>
@@ -137,7 +146,7 @@ export function SiteFooter() {
         )}
       </div>
       <div className="border-t border-border/60 px-5 py-6 text-[0.75rem] text-muted-foreground lg:px-14">
-        <p>© {year} {owner ?? "Tata Na Baczności"}. {copyright}</p>
+        <p {...a("caption")}>© {year} {owner ?? "Tata Na Baczności"}. {copyright}</p>
         {(registry.length > 0 || address.length > 0) && (
           <p className="mt-2 leading-relaxed">
             {address.length > 0 && <span>{address.join(", ")}</span>}

@@ -2,7 +2,7 @@ import { assertAdmin, logEvent } from "./admin-auth.server";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { isSafeHref, type PageDraft, type PageVersion, type PublicPage } from "./pages";
+import { HOME_ASSET_KEYS, ITEM_ICONS, LEGACY_HOME_KINDS, isSafeHref, type PageDraft, type PageVersion, type PublicPage } from "./pages";
 import { assertLegalPublication, isLegalKey, LEGAL_KEYS } from "./legal-pages";
 import { approvalDetail, legalDigest, legalSnapshot } from "./legal-approval";
 import { TextFormatsSchema } from "./rich-text";
@@ -71,10 +71,10 @@ const Btn = z.object({ label: z.string().trim().min(1, "Przycisk musi mieć etyk
 const sectionShape = (btn: z.ZodTypeAny) => z.object({
   textFormats: TextFormatsSchema,
   hidden: z.boolean().default(false), optional: z.boolean().default(false),
-  id: z.string().regex(/^[a-z0-9]{1,20}$/), kind: z.enum(["hero", "text", "values", "columns", "quote", "image", "cta", "cinematic", "value-strip", "home-nav"]),
+  id: z.string().regex(/^[a-z0-9]{1,20}$/), kind: z.enum(["hero", "text", "values", "columns", "quote", "image", "cta", "cinematic", "value-strip", "home-nav", ...LEGACY_HOME_KINDS]), audience: z.enum(["all", "guest", "member"]).optional(),
   eyebrow: z.string().max(200).default(""), layout: z.enum(["left", "right"]).default("right"), display: z.enum(["full", "inset", "featured"]).default("full"), decorative: z.boolean().default(false),
   appearance: z.object({ height: z.number().min(48).max(720).optional(), padding: z.number().min(0).max(120).optional(), gap: z.number().min(0).max(64).optional(), width: z.number().min(280).max(1600).optional(), overlay: z.number().min(0).max(100).optional(), tone: z.enum(["copper", "gold", "text"]).optional(), align: z.enum(["left", "center", "right"]).optional() }).strict().optional(),
-  items: z.array(z.object({ title: z.string().max(120), body: z.string().max(3000), image: z.string().regex(/^[a-z0-9-]+\.(jpg|png|webp)$/).nullable().optional(), asset: z.enum(["before", "expecting", "duty", "father", "after"]).nullable().optional(), imageAlt: z.string().max(200).optional(), href: z.string().max(500).refine(h => !h || isSafeHref(h), "Nieprawidłowy adres elementu").optional(), hidden: z.boolean().optional(), align: z.enum(["left", "center", "right"]).optional(), focalX: z.number().min(0).max(100).optional(), focalY: z.number().min(0).max(100).optional(), icon: z.enum(["users", "book", "shield", "family", "target", "none"]).optional() })).max(12).default([]),
+  items: z.array(z.object({ title: z.string().max(120), body: z.string().max(3000), image: z.string().regex(/^[a-z0-9-]+\.(jpg|png|webp)$/).nullable().optional(), asset: z.enum(HOME_ASSET_KEYS).nullable().optional(), imageAlt: z.string().max(200).optional(), href: z.string().max(500).refine(h => !h || isSafeHref(h), "Nieprawidłowy adres elementu").optional(), hidden: z.boolean().optional(), align: z.enum(["left", "center", "right"]).optional(), focalX: z.number().min(0).max(100).optional(), focalY: z.number().min(0).max(100).optional(), icon: z.enum(ITEM_ICONS).optional(), cta: z.string().max(60).optional(), variant: z.enum(["card", "tile"]).optional() })).max(12).default([]),
   heading: z.string().max(200), body: z.string().max(20000), image: z.string().regex(/^[a-z0-9-]+\.(jpg|png|webp)$/).nullable(),
   imageAlt: z.string().max(200), caption: z.string().max(300), quoteAuthor: z.string().max(120), buttons: z.array(btn).max(4),
 });
