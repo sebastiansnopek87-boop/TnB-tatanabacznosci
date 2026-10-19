@@ -25,7 +25,7 @@
 - Guest article comments: created only by server fn (src/lib/guest-comments.functions.ts) as pending_email; guest PII + SHA-256 token hash live in server-only article_comment_guests; publish only after a valid single-use token. Why: nothing public before e-mail confirmation, no plaintext tokens.
 
 - Editorial AI assistant (/admin/asystent-ai): superadmin-only (assertSuperadmin + RLS on ai_* tables); context retrieval over approved sources per run, no model training; model calls only on explicit admin click; community analysis off until admin records a decision. Why: privacy and cost control.
-- Visual Builder: PageView + site_pages drafts/versions; registry defines scope. Legal system routes reuse CMS; server publication requires visible body text and existing explicit legal approval. Why: one editor, no accidental approval.
+- Visual Builder reuses CMS drafts/versions; legal publication requires exact-content confirmation, snapshot/event proof and conditional updated_at write (details in src/lib/AGENTS.md). Why: no stale approval.
 - CMS rich text uses validated Tiptap JSON in optional PageSection.textFormats and a shared React renderer; plain fields stay synchronized. Why: safe formatting, drafts and templates without migrations or raw HTML.
 - AI assistant materials: full drafts live in ai_materials with append-only ai_material_versions (superadmin-only); text formats hand off only as an ARTICLE draft (podcast scripts -> podcast_episodes; never the Library); provenance in admin-only article_ai_origin. Why: no second CMS, AI never publishes.
 

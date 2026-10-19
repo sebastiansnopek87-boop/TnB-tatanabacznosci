@@ -53,7 +53,7 @@ describe("Legal CMS integration (in-memory data only)", () => {
  });
  it.each(LEGAL_KEYS)("does not infer approval from content for %s", key => {
    expect(legalReady(key, { system_key: key, status: "published", sections: sections() })).toBe(false);
-   expect(() => assertLegalPublication(key, sections())).toThrow("zatwierdzony");
+   expect(() => assertLegalPublication(key, sections())).toThrow("zatwierdzenia");
  });
  it("creates an independent legal draft with fixed system key", async () => {
    const result = await call(adminSavePage, { id: null, system_key: "regulamin", ...draft("regulamin", []) });
@@ -82,5 +82,56 @@ describe("Legal CMS integration (in-memory data only)", () => {
    await call(adminPublishDraft, { id });
    expect((await call(getPublicPage, { key })).system_key).toBe(key);
    expect(pagePath({ slug: key, system_key: key })).toBe(`/${key}`);
+ });
+});
+describe("Explicit exact-version approval (no real documents)", () => {
+ const setup = () => { const d = draft("regulamin"); m.rows = [{ id, system_key: "regulamin", status: "draft", updated_at: "2026-10-19T10:00:00Z", ...d }]; return d; };
+ const approve = async (d: ReturnType<typeof draft>) => call(adminPublishDraft, { id, legalConfirmed: true, expectedDigest: await legalDigest(d) });
+ it("approves the exact version and records document, actor and version", async () => {
+   const d = setup(); await approve(d);
+   const v = m.versions[0];
+   expect(v).toMatchObject({ page_id: id, created_by: id, kind: "publish" });
+   expect(m.logs[0]).toMatchObject({ type: "legal_document_approved", actor: id, object_id: id, detail: approvalDetail(v.id, await legalDigest(d)) });
+   expect(legalReady("regulamin", await call(getPublicPage, { key: "regulamin" }))).toBe(true);
+ });
+ it.each([false, undefined])("rejects confirmation %s", async legalConfirmed => {
+   const d = setup(); await expect(call(adminPublishDraft, { id, legalConfirmed, expectedDigest: await legalDigest(d) })).rejects.toThrow("zatwierdzenia"); expect(m.versions).toHaveLength(0);
+ });
+ it("rejects empty and invalid content", async () => {
+   setup(); m.rows[0].sections = []; await expect(approve(draft("regulamin", []))).rejects.toThrow("uzupełnienia");
+   m.rows[0].sections = [{ kind: "invalid" }]; await expect(call(adminPublishDraft, { id, legalConfirmed: true })).rejects.toThrow(); expect(m.logs).toHaveLength(0);
+ });
+ it("rejects users without admin rights before approval or publication", async () => {
+   const d = setup(); m.auth.mockRejectedValue(new Error("Brak uprawnień")); await expect(approve(d)).rejects.toThrow("uprawnień"); expect(m.logs).toHaveLength(0); expect(m.rows[0].status).toBe("draft");
+ });
+ it("rejects a changed draft with an old confirmation digest", async () => {
+   const d = setup(); m.rows[0].draft = { ...d, intro: "Zmieniona treść" }; await expect(approve(d)).rejects.toThrow("Treść zmieniła"); expect(m.versions).toHaveLength(0);
+ });
+ it("invalidates public approval after content mutation and without an event", async () => {
+   const d = setup(); await approve(d); m.rows[0].intro = "Inna wersja"; expect((await call(getPublicPage, { key: "regulamin" })).legal_approved).toBe(false);
+   m.rows[0].intro = d.intro; m.logs = []; expect((await call(getPublicPage, { key: "regulamin" })).legal_approved).toBe(false);
+ });
+ it("fails closed when the audit log is unavailable", async () => {
+   const d = setup(); m.events.mockResolvedValue(undefined); await expect(approve(d)).rejects.toThrow("dzienniku"); expect(m.rows[0].status).toBe("draft");
+ });
+ it("fails closed when the version cannot be stored", async () => {
+   const d = setup(); m.versionError = true; await expect(approve(d)).rejects.toThrow("wersji"); expect(m.rows[0].status).toBe("draft"); expect(m.logs).toHaveLength(0);
+ });
+ it("rejects a concurrent page update without publishing", async () => {
+   const d = setup(); m.race = true; await expect(approve(d)).rejects.toThrow("podczas publikacji"); expect(m.rows[0].status).toBe("draft");
+ });
+ it("saving/reopening/restoring drafts does not transfer approval", async () => {
+   const d = setup(); await approve(d); const v = m.versions[0];
+   const edited = { ...d, intro: "Nowszy szkic" }; await call(adminSaveDraft, { id, draft: edited, version: true });
+   expect(m.rows[0].draft.intro).toBe("Nowszy szkic"); expect((await call(getPublicPage, { key: "regulamin" })).legal_approved).toBe(true);
+   await expect(call(adminPublishDraft, { id })).rejects.toThrow("zatwierdzenia");
+   await call(adminRestoreVersion, { id, versionId: v.id }); await expect(call(adminPublishDraft, { id })).rejects.toThrow("zatwierdzenia");
+ });
+ it("draft and unapproved published content never become ready", () => {
+   const p = { system_key: "regulamin", sections: sections(), status: "draft", legal_approved: true }; expect(legalReady("regulamin", p)).toBe(false); expect(legalReady("regulamin", { ...p, status: "published", legal_approved: false })).toBe(false);
+ });
+ it("digest ignores object key order but detects formatting edits", async () => {
+   const d = setup(); expect(await legalDigest({ ...d, sections: d.sections.map(s => ({ body: s.body, ...s })) })).toBe(await legalDigest(d));
+   expect(await legalDigest({ ...d, sections: d.sections.map(s => ({ ...s, heading: "Nowy" })) })).not.toBe(await legalDigest(d));
  });
 });

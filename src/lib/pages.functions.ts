@@ -25,9 +25,11 @@ export const getPublicPage = createServerFn({ method: "GET" })
     if (isLegalKey(p.system_key)) {
       const digest = await legalDigest(p as unknown as PageDraft);
       const db = await admin();
-      const { data: versions, error } = await db.from("site_page_versions").select("id, snapshot, created_by").eq("page_id", p.id).eq("kind", "publish").contains("snapshot", { _legal: { digest, publishedAt: p.published_at } });
+      const publishedAt = p.published_at ? new Date(p.published_at).toISOString() : null;
+      const { data: versions, error } = await db.from("site_page_versions").select("id, snapshot, created_by").eq("page_id", p.id).eq("kind", "publish").contains("snapshot", { _legal: { digest, publishedAt } });
       let approved = false;
       if (!error) for (const v of versions ?? []) {
+        if (!v.created_by) continue;
         if (await legalDigest(v.snapshot as unknown as PageDraft) !== digest) continue;
         const { data: event } = await db.from("admin_events").select("id").eq("type", "legal_document_approved").eq("object_kind", "page").eq("object_id", p.id).eq("actor", v.created_by).eq("result", "ok").eq("detail", approvalDetail(v.id, digest)).limit(1);
         if (event?.length) { approved = true; break; }
@@ -185,11 +187,12 @@ export const adminPublishDraft = createServerFn({ method: "POST" }).middleware([
     assertLegalPublication(cur.system_key, row.sections, data.legalConfirmed === true);
     const { id: _i, ...fields } = row;
     if (isLegalKey(cur.system_key)) {
-      const digest = await legalDigest(fields);
+      const legalFields = fields as unknown as PageDraft;
+      const digest = await legalDigest(legalFields);
       if (digest !== data.expectedDigest) throw new Error("Treść zmieniła się od zatwierdzenia. Otwórz ponownie okno publikacji i sprawdź aktualną wersję.");
       const versionId = crypto.randomUUID();
       const publishedAt = new Date().toISOString();
-      const { error: versionError } = await context.supabase.from("site_page_versions").insert({ id: versionId, page_id: data.id, kind: "publish", snapshot: { ...legalSnapshot(fields), _legal: { digest, publishedAt } }, created_by: context.userId });
+      const { error: versionError } = await context.supabase.from("site_page_versions").insert({ id: versionId, page_id: data.id, kind: "publish", snapshot: { ...legalSnapshot(legalFields), _legal: { digest, publishedAt } }, created_by: context.userId });
       if (versionError) throw new Error("Nie udało się zapisać zatwierdzonej wersji. Dokument nie został opublikowany.");
       await logEvent({ type: "legal_document_approved", actor: context.userId, objectKind: "page", objectId: data.id, detail: approvalDetail(versionId, digest) });
       // logEvent intentionally tolerates failure elsewhere; legal publication fails closed.
