@@ -261,7 +261,7 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
         <Button size="icon" variant="ghost" aria-label="Ponów" title="Ponów (Ctrl+Shift+Z)" disabled={!future.length} onClick={redo}><Redo2 className="h-4 w-4" /></Button>
         <Button size="icon" variant="ghost" aria-label="Historia wersji" title="Historia wersji" onClick={openHistory}><History className="h-4 w-4" /></Button>
         <Button size="icon" variant="ghost" aria-label="Zasięg edytora" title="Co można edytować wizualnie" onClick={() => setModal("coverage")}><Info className="h-4 w-4" /></Button>
-        <Button size="sm" variant="ghost" className="hidden sm:inline-flex" onClick={() => exit("form")}>Widok formularza</Button>
+        {meta.system_key !== "home" && <Button size="sm" variant="ghost" className="hidden sm:inline-flex" onClick={() => exit("form")}>Widok formularza</Button>}
         <Button size="sm" variant="outline" disabled={saveState.busy} onClick={() => save(true)}>Zapisz szkic</Button>
         <Button size="sm" disabled={saveState.busy} onClick={() => { setLegalConfirmation(null); setModal("publish"); }}>Opublikuj</Button>
         <Button size="icon" variant="ghost" aria-label="Panel ustawień" onClick={() => setRightOpen((r) => !r)}><PanelRight className="h-4 w-4" /></Button>

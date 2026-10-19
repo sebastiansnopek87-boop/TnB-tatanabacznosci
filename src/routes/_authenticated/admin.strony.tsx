@@ -59,7 +59,7 @@ function PagesAdmin() {
             <span className="flex flex-wrap items-center gap-2">
               <span className="text-xs uppercase tracking-wide text-gold">{PAGE_STATUS[p.status]}{p.draft_updated_at ? " · szkic w edytorze" : ""}</span>
               <Button size="sm" onClick={() => setVisual(p.id)}>Edytuj wizualnie</Button>
-              <Button size="sm" variant="outline" onClick={() => setEditing(p.id)}>Formularz</Button>
+              {p.system_key !== "home" && <Button size="sm" variant="outline" onClick={() => setEditing(p.id)}>Formularz</Button>}
             </span>
           </div>
         ))}
