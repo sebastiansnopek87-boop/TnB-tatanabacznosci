@@ -7,8 +7,15 @@ import { PillarCards } from "@/components/tnb/PillarCards";
 import { QuoteNewsletter } from "@/components/tnb/QuoteNewsletter";
 import { SiteFooter } from "@/components/tnb/SiteFooter";
 import { useModuleVisibility } from "@/hooks/use-module-visibility";
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { getPublicPage } from "@/lib/pages.functions";
+import { pageImageUrl } from "@/lib/pages";
+import { PageSections } from "@/components/pages/PageView";
+
+const homeOptions = queryOptions({ queryKey: ["public-page", "home"], queryFn: () => getPublicPage({ data: { key: "home" } }) });
 
 export const Route = createFileRoute("/")({
+  loader: ({ context }) => context.queryClient.ensureQueryData(homeOptions),
   head: () => ({
     meta: [
       { title: "Tata Na Baczności — Ojcostwo to służba" },
@@ -32,10 +39,10 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const { visible } = useModuleVisibility();
+  const { data: page } = useSuspenseQuery(homeOptions);
   return (
     <main className="min-h-screen bg-background">
-      <SiteHeader />
-      <Hero />
+      {page ? <><PageSections sections={page.sections} imageSrc={file => pageImageUrl(page.id, file)} /></> : <><SiteHeader /><Hero /></>}
       {visible("articles") && <HomeArticles />}
       {visible("community") && <HomeConversations />}
       <QuickNav />

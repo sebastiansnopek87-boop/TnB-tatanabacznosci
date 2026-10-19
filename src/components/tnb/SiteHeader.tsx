@@ -11,6 +11,7 @@ import { brandSrc, getBrandSlogan, useBrand } from "@/hooks/use-brand-settings";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/account/UserAvatar";
 import { HeaderSearch } from "./HeaderSearch";
+import { isSafeHref, type PageSection } from "@/lib/pages";
 
 const HEADER_SIZES: Record<string, string> = {
   small: "h-12 w-12 shrink-0 object-contain",
@@ -30,7 +31,7 @@ const NAV = [
   { label: "Spotkania", to: "/spotkania" },
 ] as const;
 
-export function SiteHeader() {
+export function SiteHeader({ homeSection, editing = false }: { homeSection?: PageSection; editing?: boolean } = {}) {
   const { visiblePath } = useModuleVisibility();
   const brand = useBrand();
   const slogan = getBrandSlogan(brand);
@@ -84,11 +85,14 @@ export function SiteHeader() {
   }
   const outline = "border border-gold/70 text-[0.72rem] uppercase tracking-[0.14em] transition-colors hover:bg-gold/10";
   const solid = "bg-gold text-[0.72rem] uppercase tracking-[0.14em] text-primary-foreground transition-colors hover:bg-gold-bright";
+  const homeNav = homeSection?.items.map((item, i) => ({ label: item.title, to: item.href ?? "/", hidden: item.hidden, i }));
+  const loginButton = homeSection?.buttons[0];
+  const joinButton = homeSection?.buttons[1];
 
   return (
-    <div className="h-[86px] shrink-0">
-    <header className="fixed inset-x-0 top-0 z-40 bg-surface-deep/60 backdrop-blur-md">
-      <div className="flex h-[86px] items-center gap-2 px-3 sm:gap-6 sm:px-5 lg:px-10">
+    <div className={homeSection ? "shrink-0" : "h-[86px] shrink-0"}>
+    <header className={homeSection ? `home-header z-40 ${editing ? "relative" : "sticky top-0"}` : "fixed inset-x-0 top-0 z-40 bg-surface-deep/60 backdrop-blur-md"}>
+      <div className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-3 sm:gap-4 sm:px-5 lg:flex lg:px-8 ${homeSection ? "min-h-[76px] py-2" : "h-[86px]"}`}>
         <Link to="/" aria-label="Tata Na Baczności — strona główna" className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3 lg:gap-4">
           <img
             src={imgSrc}
@@ -103,7 +107,8 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-3 lg:gap-5">
+        {homeNav && <nav aria-label="Nawigacja strony głównej" className="home-header-nav hidden xl:flex" style={{ gap: homeSection?.appearance?.gap ?? 22 }}>{homeNav.filter(item => (editing || !item.hidden) && (editing || visiblePath(item.to, "menu"))).map(item => <a key={item.i} data-el={editing ? `item-${item.i}` : undefined} href={isSafeHref(item.to) ? item.to : undefined} className={`nav-link ${item.hidden ? "opacity-40" : ""}`}>{item.label}</a>)}</nav>}
+        <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-3 lg:gap-4">
           <Button ref={searchRef} variant="ghost" size="icon" type="button"
             aria-label="Szukaj"
             aria-expanded={searchOpen} aria-controls="tnb-header-search" title="Szukaj"
@@ -114,11 +119,11 @@ export function SiteHeader() {
           </Button>
           {auth.status === "loading" && <span aria-hidden className="hidden h-[42px] w-[230px] lg:block" />}
           {auth.status === "signed-out" && (<>
-            <Link to="/auth" className={`hidden whitespace-nowrap px-6 py-3 text-foreground lg:block ${outline}`}>Zaloguj się</Link>
-            <Link to="/auth" search={{ tryb: "rejestracja" }} className={`hidden items-center gap-2 px-6 py-3 lg:flex ${solid}`}>
+             {(!loginButton?.hidden || editing) && <a data-el={editing ? "button-0" : undefined} href={loginButton && isSafeHref(loginButton.href) ? loginButton.href : "/auth"} className={`hidden whitespace-nowrap px-4 py-3 text-foreground lg:block ${homeSection ? `home-cta home-cta-${loginButton?.variant ?? "outline"}` : outline}`}>{loginButton?.label ?? "Zaloguj się"}</a>}
+             {(!joinButton?.hidden || editing) && <a data-el={editing ? "button-1" : undefined} href={joinButton && isSafeHref(joinButton.href) ? joinButton.href : "/auth?tryb=rejestracja"} className={`hidden items-center gap-2 px-4 py-3 lg:flex ${homeSection ? `home-cta home-cta-${joinButton?.variant ?? "solid"}` : solid}`}>
               <UserRound className="h-4 w-4" strokeWidth={1.75} />
-              Dołącz
-            </Link>
+               {joinButton?.label ?? "Dołącz"}
+             </a>}
           </>)}
           {auth.status === "signed-in" && (<>
             <Button variant="ghost" type="button" onClick={signOut} className={`hidden h-auto rounded-none whitespace-nowrap px-6 py-3 text-foreground lg:block ${outline}`}>Wyloguj</Button>
@@ -131,7 +136,7 @@ export function SiteHeader() {
             aria-label="Menu"
             aria-expanded={open} aria-controls="tnb-header-menu" title="Menu"
             onClick={() => { setOpen((v) => !v); setSearchOpen(false); }}
-            className="text-foreground [&_svg]:size-6"
+             className={`text-foreground [&_svg]:size-6 ${homeNav ? "xl:hidden" : ""}`}
           >
             {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </Button>
@@ -154,13 +159,13 @@ export function SiteHeader() {
               <p id="tnb-menu-title" className="mb-4 text-[10px] uppercase text-menu-gold/75 sm:mb-5">Odkryj TNB</p>
               <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_210px] lg:gap-12">
                 <nav aria-label="Menu główne" className="grid min-w-0 content-start gap-x-8 sm:grid-cols-2">
-                  {NAV.filter(item => visiblePath(item.to, "menu")).map((item, index) => (
-                    <Link key={item.label} to={item.to} onClick={() => setOpen(false)} aria-current={isActive(item.to) ? "page" : undefined}
+                  {(homeNav ?? NAV).filter(item => !("hidden" in item && item.hidden) && visiblePath(item.to, "menu")).map((item, index) => (
+                    <a key={item.label} href={item.to} onClick={() => setOpen(false)} aria-current={isActive(item.to) ? "page" : undefined}
                       className={`group grid min-h-[56px] min-w-0 grid-cols-[24px_minmax(0,1fr)_20px] items-center gap-3 border-b border-menu-gold/20 py-3 transition-colors hover:bg-menu-gold/5 hover:text-menu-gold focus-visible:bg-menu-gold/5 focus-visible:outline-2 focus-visible:outline-menu-gold focus-visible:outline-offset-4 sm:min-h-[72px] ${isActive(item.to) ? "text-menu-gold" : "text-foreground"}`}>
                       <span aria-hidden="true" className="font-sans text-xs text-menu-gold/70 lg:text-[13px]">{String(index + 1).padStart(2, "0")}</span>
                       <span className="min-w-0 break-words font-display text-2xl font-normal leading-tight tracking-normal sm:text-[28px] lg:text-[32px]">{item.label}</span>
                       <ArrowUpRight aria-hidden="true" className="size-4 shrink-0 text-menu-gold/50 transition-colors group-hover:text-menu-gold group-focus-visible:text-menu-gold" strokeWidth={1.25} />
-                    </Link>
+                    </a>
                   ))}
                 </nav>
                 <section aria-labelledby="tnb-account-title" className="min-w-0 border-t border-menu-gold/20 pt-5 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-3">
