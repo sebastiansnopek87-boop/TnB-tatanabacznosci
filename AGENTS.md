@@ -35,4 +35,5 @@
 - Account forms stay on a protected settings route; Moje TNB reuses collections and bookings. Why: separate maintenance without changing access.
 - Avatars use owner-scoped server functions, private media and user_avatars; shared UserAvatar serves own or visible-community context; media usage protects referenced avatars. Why: one view without external URLs or public account IDs.
 - Admin order/user deep links validate optional UUID `record` and open existing details; why: exact navigation without a second editor.
+- Cinematic home blocks are draft-only until explicit CMS publication; why: preserve public home. See src/lib/AGENTS.md.
 
