@@ -16,6 +16,7 @@ import {
   adminCheckSlug, adminCreatePageUpload, adminGetPage, adminListPages, adminPageImageUrls, adminSavePage, adminSetPageStatus,
 } from "@/lib/pages.functions";
 import { LEGAL_KEYS, isLegalKey } from "@/lib/legal-pages";
+import { homeDefaultSections } from "@/lib/home-content";
 import { PAGE_STATUS, SYSTEM_PAGES, normalizeSections, pagePath, type PageSection } from "@/lib/pages";
 
 export const Route = createFileRoute("/_authenticated/admin/strony")({ head: () => ({ meta: [{ title: "Strony CMS — Tata Na Baczności" }, { name: "description", content: "Zarządzanie stronami i wersjami dokumentów TNB." }, { property: "og:title", content: "Strony CMS — Tata Na Baczności" }, { property: "og:description", content: "Zarządzanie stronami i wersjami dokumentów TNB." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: PagesAdmin });
@@ -29,6 +30,17 @@ function PagesAdmin() {
   const [editing, setEditing] = useState<string | "new" | null>(null);
   const [newLegal, setNewLegal] = useState<string | null>(null);
   const [visual, setVisual] = useState<string | null>(null);
+  const saveFn = useServerFn(adminSavePage);
+  const [creatingHome, setCreatingHome] = useState(false);
+  // Copies today's home page into a new draft record; nothing becomes public until "Opublikuj".
+  async function createHome() {
+    setCreatingHome(true);
+    try {
+      const r = await saveFn({ data: { id: null, system_key: "home", slug: "home", title: "Strona główna", intro: "", sections: homeDefaultSections(), seo_title: "", seo_description: "" } });
+      toast.success("Utworzono szkic strony głównej. Strona publiczna bez zmian.");
+      await list.refetch(); setVisual(r.id);
+    } catch (e) { toast.error(errMsg(e)); } finally { setCreatingHome(false); }
+  }
   if (visual) return <VisualBuilder id={visual} onClose={() => { setVisual(null); list.refetch(); }} onFormView={() => { setEditing(visual); setVisual(null); }} />;
   if (editing) return <Editor systemKey={editing === "new" ? newLegal : null} id={editing === "new" ? null : editing} onClose={() => { setEditing(null); list.refetch(); }} onVisual={(pid) => { setEditing(null); setVisual(pid); }} />;
   return (
@@ -52,6 +64,12 @@ function PagesAdmin() {
           </div>
         ))}
         {list.data?.length === 0 && <p className="p-4 text-sm text-muted-foreground">Brak stron.</p>}
+        {list.data && !list.data.some((p) => p.system_key === "home") && (
+          <div className="flex flex-wrap items-center justify-between gap-2 p-4">
+            <span><span className="font-medium">Strona główna</span> <span className="text-xs text-muted-foreground">/ · wyświetlana z wbudowanej treści</span></span>
+            <Button size="sm" disabled={creatingHome} onClick={createHome}>Utwórz szkic z obecnej strony</Button>
+          </div>
+        )}
         {list.data && LEGAL_KEYS.filter((key) => !list.data.some((p) => p.system_key === key)).map((key) => (
           <div key={key} className="flex flex-wrap items-center justify-between gap-2 p-4">
             <span>{SYSTEM_PAGES[key]?.label} <span className="text-xs text-muted-foreground">/{key} · brak dokumentu</span></span>
