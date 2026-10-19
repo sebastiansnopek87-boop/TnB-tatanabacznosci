@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { HomeLayout } from "@/components/tnb/HomeLayout";
+import { HomeLayout, isFullHome } from "@/components/tnb/HomeLayout";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { getPublicPage } from "@/lib/pages.functions";
 import { pageImageUrl } from "@/lib/pages";
@@ -33,8 +33,8 @@ export const Route = createFileRoute("/")({
 function Index() {
   const { data: page } = useSuspenseQuery(homeOptions);
   return (
-    <HomeLayout>
-      {page && <PageSections sections={page.sections.filter(s => s.kind !== "home-nav")} imageSrc={file => pageImageUrl(page.id, file)} />}
+    <HomeLayout sections={page?.sections}>
+      {page && <PageSections sections={isFullHome(page.sections) ? page.sections : page.sections.filter(s => s.kind !== "home-nav")} imageSrc={file => pageImageUrl(page.id, file)} />}
     </HomeLayout>
   );
 }

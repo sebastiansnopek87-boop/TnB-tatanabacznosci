@@ -18,6 +18,9 @@ import {
 } from "@/lib/pages.functions";
 import { SECTION_KINDS, SYSTEM_PAGES, newSection, normalizeSections, pagePath, pageImageNames, type PageDraft, type PageSection, type PageVersion, type SectionKind } from "@/lib/pages";
 import { Frame } from "./Frame";
+import { PreviewAudienceProvider, type PreviewAudience } from "@/lib/preview-audience";
+import { legacyHomeSections } from "@/lib/home-legacy";
+import { isLegacyHomeKind } from "@/lib/pages";
 import { SaveTemplateDialog, TemplatesPanel, useTemplates } from "./Templates";
 import { adminInstantiateTemplate, type BuilderTemplate } from "@/lib/templates.functions";
 import { Inspector, PagePanel } from "./Inspector";
@@ -42,6 +45,7 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
   const last = useRef({ key: "", t: 0 });
   const [sel, setSel] = useState<Sel | null>(null);
   const [device, setDevice] = useState<Device>("desktop");
+  const [audience, setAudience] = useState<PreviewAudience>("guest");
   const [left, setLeft] = useState<"elements" | "structure" | null>("elements");
   const [rightOpen, setRightOpen] = useState(true);
   const [q, setQ] = useState("");
@@ -214,7 +218,15 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
   if (!d || !meta) return <div className="fixed inset-0 z-50 flex items-center justify-center bg-background text-sm text-muted-foreground">Wczytywanie edytora…</div>;
   const unpublished = !same(d, meta.live) || meta.status !== "published";
   const system = meta.system_key ? SYSTEM_PAGES[meta.system_key] : null;
-  const blocks = BLOCKS.filter((b) => !q || (SECTION_KINDS[b.kind] + b.desc).toLowerCase().includes(q.toLowerCase()));
+  const isHome = meta.system_key === "home";
+  const imported = d.sections.some((x) => isLegacyHomeKind(x.kind));
+  // Adds editable copies of the code-owned sections below the existing draft content, in their public order.
+  const importLegacy = () => {
+    if (imported) return;
+    setSections((a) => [...a, ...legacyHomeSections().map((x) => ({ ...x, id: newSection().id }))]);
+    toast.success("Dodano dotychczasowe sekcje do szkicu. Strona publiczna bez zmian do publikacji.");
+  };
+  const blocks = BLOCKS.filter((b) => (isHome || !isLegacyHomeKind(b.kind)) && (!q || (SECTION_KINDS[b.kind] + b.desc).toLowerCase().includes(q.toLowerCase())));
   const selSection = sel ? d.sections[sel.i] : undefined;
   const timeStr = saveState.at ? new Date(saveState.at).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" }) : null;
 
@@ -236,6 +248,12 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
             <button key={k} aria-label={l} title={l} onClick={() => setDevice(k)} className={`px-2.5 py-1.5 ${device === k ? "bg-gold text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}><I className="h-4 w-4" /></button>
           ))}
         </div>
+        <div role="group" aria-label="Podgląd jako" className="flex border border-border/60 text-[0.65rem] uppercase tracking-wide">
+          {([["guest", "Niezalogowany"], ["member", "Zalogowany"]] as const).map(([k, l]) => (
+            <button key={k} aria-pressed={audience === k} onClick={() => setAudience(k)} className={`px-2.5 py-1.5 ${audience === k ? "bg-gold text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>{l}</button>
+          ))}
+        </div>
+        {isHome && !imported && <Button size="sm" variant="outline" onClick={importLegacy}>Wczytaj dotychczasowe sekcje</Button>}
         <Button size="icon" variant="ghost" aria-label="Cofnij" title="Cofnij (Ctrl+Z)" disabled={!past.length} onClick={undo}><Undo2 className="h-4 w-4" /></Button>
         <Button size="icon" variant="ghost" aria-label="Ponów" title="Ponów (Ctrl+Shift+Z)" disabled={!future.length} onClick={redo}><Redo2 className="h-4 w-4" /></Button>
         <Button size="icon" variant="ghost" aria-label="Historia wersji" title="Historia wersji" onClick={openHistory}><History className="h-4 w-4" /></Button>
@@ -326,11 +344,13 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
             </div>
           )}
           <Frame width={WIDTH[device]} onOverflow={onOverflow}>
+            <PreviewAudienceProvider value={audience}>
             <PageView homePage={meta?.system_key === "home"} eyebrow="Tata Na Baczności" title={d.title || "(bez tytułu)"} intro={d.intro} sections={d.sections} imageSrc={(f) => urls[f]}
               edit={{ sel, zone, onSelect: (s, locked) => {
-                if (locked) { toast.message("Nagłówek i stopka nie są jeszcze edytowalne wizualnie — działają normalnie."); return; }
+                if (locked) { toast.message(isHome ? (imported ? "To wspólny nagłówek/stopka. Edytuj sekcję „Nagłówek strony głównej” lub „Stopka strony głównej” — zmiany dotyczą tylko strony głównej." : "Kliknij „Wczytaj dotychczasowe sekcje”, aby edytować całą stronę główną.") : "Nagłówek i stopka nie są edytowalne na tej stronie — działają normalnie."); return; }
                 setSel(s); if (s) { setRightOpen(true); setLeft((l) => (window.innerWidth < 1024 ? null : l)); }
               } }} />
+            </PreviewAudienceProvider>
           </Frame>
         </main>
 
@@ -433,7 +453,7 @@ function elementsOf(s: PageSection): [string, string][] {
   if (s.quoteAuthor) out.push(["quoteAuthor", "Autor cytatu"]);
   if (s.image) out.push(["image", "Zdjęcie"]);
   if (s.caption) out.push(["caption", "Podpis"]);
-  s.items.forEach((it, k) => out.push([`item-${k}`, `${s.kind === "values" ? "Karta" : "Kolumna"}: ${it.title || k + 1}`]));
+  s.items.forEach((it, k) => out.push([`item-${k}`, `${s.kind === "values" || s.kind === "pillars" ? "Karta" : s.kind === "columns" || s.kind === "home-footer" ? "Kolumna" : "Element"}: ${it.title || k + 1}`]));
   s.buttons.forEach((b, k) => out.push([`button-${k}`, `Przycisk: ${b.label || k + 1}`]));
   return out;
 }

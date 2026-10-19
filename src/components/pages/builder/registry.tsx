@@ -4,7 +4,7 @@ import { SECTION_KINDS, type PageDraft, type SectionKind } from "@/lib/pages";
 const T = ({ children }: { children: React.ReactNode }) => <span aria-hidden className="flex h-11 w-14 shrink-0 flex-col justify-center gap-1 border border-border/60 bg-background p-1.5">{children}</span>;
 const L = ({ w = "100%", gold }: { w?: string; gold?: boolean }) => <span className={`block h-1 ${gold ? "bg-gold" : "bg-foreground/30"}`} style={{ width: w }} />;
 
-export const CATEGORIES = ["Podstawowe", "Układ", "Akcje"] as const;
+export const CATEGORIES = ["Podstawowe", "Układ", "Akcje", "Strona główna"] as const;
 export const BLOCKS: { kind: SectionKind; cat: (typeof CATEGORIES)[number]; desc: string; Thumb: () => React.JSX.Element }[] = [
   { kind: "home-nav", cat: "Układ", desc: "Edytowalne linki i przyciski nagłówka strony głównej.", Thumb: () => <T><L gold /><L /></T> },
   { kind: "cinematic", cat: "Układ", desc: "Filmowe otwarcie z osobnymi scenami, tekstem i przyciskami.", Thumb: () => <T><span className="grid grid-cols-5 gap-px">{[0,1,2,3,4].map(i => <span key={i} className="h-4 bg-gold/30" />)}</span><L gold /></T> },
@@ -15,6 +15,13 @@ export const BLOCKS: { kind: SectionKind; cat: (typeof CATEGORIES)[number]; desc
   { kind: "hero", cat: "Układ", desc: "Duży nagłówek otwierający stronę. Tylko na samej górze.", Thumb: () => <T><L w="40%" gold /><span className="block h-2 w-full bg-foreground/50" /><L w="70%" /></T> },
   { kind: "columns", cat: "Układ", desc: "Dwie kolumny z listami punktów — np. porównanie.", Thumb: () => <T><span className="flex gap-1"><span className="h-6 flex-1 border border-gold/70" /><span className="h-6 flex-1 border border-foreground/30" /></span></T> },
   { kind: "values", cat: "Układ", desc: "Siatka kart z numerem, nazwą i krótkim opisem.", Thumb: () => <T><span className="grid grid-cols-3 gap-0.5">{[0, 1, 2, 3, 4, 5].map((i) => <span key={i} className="h-2.5 bg-foreground/25" />)}</span></T> },
+  { kind: "home-hero", cat: "Strona główna", desc: "Dotychczasowe otwarcie „Czuwaj” ze zdjęciem i prawą kolumną.", Thumb: () => <T><L w="40%" gold /><L w="70%" /></T> },
+  { kind: "home-articles", cat: "Strona główna", desc: "Najnowsze artykuły (na żywo) z edytowalnym nagłówkiem.", Thumb: () => <T><L w="40%" gold /><L /></T> },
+  { kind: "home-talks", cat: "Strona główna", desc: "Najnowsze rozmowy społeczności i zachęta do dołączenia.", Thumb: () => <T><L w="40%" gold /><L /></T> },
+  { kind: "quick-nav", cat: "Strona główna", desc: "Pas skrótów z ikonami do modułów.", Thumb: () => <T><L gold /></T> },
+  { kind: "pillars", cat: "Strona główna", desc: "Karty filarów i kafelki ze zdjęciami.", Thumb: () => <T><L w="60%" gold /><L /></T> },
+  { kind: "quote-newsletter", cat: "Strona główna", desc: "Cytat na tle zdjęcia i formularz newslettera.", Thumb: () => <T><L w="80%" /><L w="40%" gold /></T> },
+  { kind: "home-footer", cat: "Strona główna", desc: "Stopka tylko dla strony głównej (puste pola = Ustawienia).", Thumb: () => <T><L /><L w="50%" /></T> },
   { kind: "cta", cat: "Akcje", desc: "Ramka z zachętą i przyciskami (np. dołącz, napisz).", Thumb: () => <T><span className="flex h-7 flex-col items-center justify-center gap-1 border border-gold/60"><L w="60%" /><span className="block h-1.5 w-5 bg-gold" /></span></T> },
 ];
 
@@ -22,9 +29,9 @@ export const canInsert = (kind: SectionKind, at: number) => kind !== "hero" || a
 
 export const COVERAGE: { area: string; ok: boolean; note: string }[] = [
   { area: "Strony CMS (O TNB, Moja historia, /strony/…)", ok: true, note: "Treść, kolejność, zdjęcia, przyciski, ukrywanie sekcji, szkic, wersje i publikacja." },
-  { area: "Strona główna", ok: true, note: "Dodane filmowe otwarcie, sceny i pas wartości; szkic, wersje i jawna publikacja. Istniejący nagłówek i wszystkie dotychczasowe sekcje pozostają bez zmian." },
-  { area: "Nagłówek i menu", ok: false, note: "Stałe w kodzie. Proponowany etap 40.4." },
-  { area: "Stopka", ok: false, note: "Stała w kodzie. Proponowany etap 40.4." },
+  { area: "Strona główna", ok: true, note: "Po „Wczytaj dotychczasowe sekcje” cała strona: otwarcie, artykuły, rozmowy, skróty, karty, cytat z newsletterem i stopka; podgląd niezalogowany/zalogowany. Listy artykułów i rozmów wczytują się na żywo." },
+  { area: "Nagłówek i menu", ok: true, note: "Na stronie głównej przez sekcję „Nagłówek strony głównej” (tylko ta strona). Logo i slogan — Ustawienia (globalnie). Na pozostałych stronach bez zmian." },
+  { area: "Stopka", ok: true, note: "Na stronie głównej przez „Stopka strony głównej”. Dane firmy, kontakt i media — Ustawienia (globalnie)." },
   { area: "Strony prawne", ok: true, note: "Treść i wersje w CMS; publikacja wymaga treści i osobnego zatwierdzenia dokumentu." },
   { area: "Artykuły", ok: false, note: "Te same bloki, edycja w „Artykuły” (formularz)." },
   { area: "Biblioteka, Podcast, Spotkania, Rozmowy 1:1", ok: false, note: "Treść w swoich modułach panelu; logika (płatności, zapisy, dostęp) nie jest edytowalna wizualnie." },
