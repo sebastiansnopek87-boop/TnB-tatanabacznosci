@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { usePreview } from "./preview-viewer";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -31,6 +32,12 @@ function subscribe(l: () => void) {
   return () => { listeners.delete(l); };
 }
 
+// Simulated member for the builder preview: no real account, no data access.
+const PREVIEW_USER = { id: "00000000-0000-0000-0000-000000000000", user_metadata: { first_name: "Podgląd" } } as unknown as User;
+
 export function useAuth(): AuthState {
-  return useSyncExternalStore(subscribe, () => state, () => LOADING);
+  const real = useSyncExternalStore(subscribe, () => state, () => LOADING);
+  const preview = usePreview();
+  if (preview) return preview.viewer === "user" ? { status: "signed-in", user: PREVIEW_USER } : { status: "signed-out", user: null };
+  return real;
 }
