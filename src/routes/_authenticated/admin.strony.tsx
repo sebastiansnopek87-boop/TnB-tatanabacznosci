@@ -13,10 +13,11 @@ import { PageView } from "@/components/pages/PageView";
 import { SectionsEditor } from "@/components/pages/SectionsEditor";
 import { VisualBuilder } from "@/components/pages/builder/VisualBuilder";
 import {
-  adminCheckSlug, adminCreatePageUpload, adminGetPage, adminListPages, adminPageImageUrls, adminSavePage, adminSetPageStatus,
+  adminCheckSlug, adminCreatePageUpload, adminGetPage, adminListPages, adminPageImageUrls, adminSavePage, adminSaveDraft, adminSetPageStatus,
 } from "@/lib/pages.functions";
 import { LEGAL_KEYS, isLegalKey } from "@/lib/legal-pages";
 import { PAGE_STATUS, SYSTEM_PAGES, normalizeSections, pagePath, type PageSection } from "@/lib/pages";
+import { homeDraft } from "@/lib/home-draft";
 
 export const Route = createFileRoute("/_authenticated/admin/strony")({ head: () => ({ meta: [{ title: "Strony CMS — Tata Na Baczności" }, { name: "description", content: "Zarządzanie stronami i wersjami dokumentów TNB." }, { property: "og:title", content: "Strony CMS — Tata Na Baczności" }, { property: "og:description", content: "Zarządzanie stronami i wersjami dokumentów TNB." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: PagesAdmin });
 
@@ -25,10 +26,19 @@ const EMPTY: Draft = { id: null, slug: "", system_key: null, title: "", intro: "
 
 function PagesAdmin() {
   const listFn = useServerFn(adminListPages);
+  const createFn = useServerFn(adminSavePage);
+  const draftFn = useServerFn(adminSaveDraft);
+  const [creatingHome, setCreatingHome] = useState(false);
   const list = useQuery({ queryKey: ["admin-pages"], queryFn: () => listFn() });
   const [editing, setEditing] = useState<string | "new" | null>(null);
   const [newLegal, setNewLegal] = useState<string | null>(null);
   const [visual, setVisual] = useState<string | null>(null);
+  async function createHome() {
+    if (creatingHome || list.data?.some(p => p.system_key === "home")) return;
+    setCreatingHome(true);
+    try { const d = homeDraft(); const { id } = await createFn({ data: { ...d, id: null, system_key: "home", sections: [] } }); await draftFn({ data: { id, draft: d, version: true } }); await list.refetch(); setVisual(id); }
+    catch (e) { toast.error(errMsg(e)); } finally { setCreatingHome(false); }
+  }
   if (visual) return <VisualBuilder id={visual} onClose={() => { setVisual(null); list.refetch(); }} onFormView={() => { setEditing(visual); setVisual(null); }} />;
   if (editing) return <Editor systemKey={editing === "new" ? newLegal : null} id={editing === "new" ? null : editing} onClose={() => { setEditing(null); list.refetch(); }} onVisual={(pid) => { setEditing(null); setVisual(pid); }} />;
   return (
@@ -47,11 +57,12 @@ function PagesAdmin() {
             <span className="flex flex-wrap items-center gap-2">
               <span className="text-xs uppercase tracking-wide text-gold">{PAGE_STATUS[p.status]}{p.draft_updated_at ? " · szkic w edytorze" : ""}</span>
               <Button size="sm" onClick={() => setVisual(p.id)}>Edytuj wizualnie</Button>
-              <Button size="sm" variant="outline" onClick={() => setEditing(p.id)}>Formularz</Button>
+              {p.system_key !== "home" && <Button size="sm" variant="outline" onClick={() => setEditing(p.id)}>Formularz</Button>}
             </span>
           </div>
         ))}
         {list.data?.length === 0 && <p className="p-4 text-sm text-muted-foreground">Brak stron.</p>}
+        {list.data && !list.data.some(p => p.system_key === "home") && <div className="flex items-center justify-between gap-3 p-4"><span>Strona główna <span className="text-xs text-muted-foreground">/ · brak szkicu CMS</span></span><Button size="sm" disabled={creatingHome} onClick={createHome}>Przygotuj szkic strony głównej</Button></div>}
         {list.data && LEGAL_KEYS.filter((key) => !list.data.some((p) => p.system_key === key)).map((key) => (
           <div key={key} className="flex flex-wrap items-center justify-between gap-2 p-4">
             <span>{SYSTEM_PAGES[key]?.label} <span className="text-xs text-muted-foreground">/{key} · brak dokumentu</span></span>

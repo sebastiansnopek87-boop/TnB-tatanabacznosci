@@ -1,8 +1,8 @@
 import type { TextFormat } from "./rich-text";
 // Shared, browser-safe model for CMS pages (O TNB, Moja historia and future subpages).
-export type PageButton = { label: string; href: string };
-export type PageItem = { title: string; body: string };
-export type SectionKind = "hero" | "text" | "values" | "columns" | "quote" | "image" | "cta";
+export type PageButton = { label: string; href: string; variant?: "solid" | "outline" | "link"; icon?: "arrow" | "play" | "none"; hidden?: boolean };
+export type PageItem = { title: string; body: string; image?: string | null; asset?: string | null; imageAlt?: string; href?: string; hidden?: boolean; align?: "left" | "center" | "right"; focalX?: number; focalY?: number; icon?: "users" | "book" | "shield" | "family" | "target" | "none" };
+export type SectionKind = "hero" | "text" | "values" | "columns" | "quote" | "image" | "cta" | "cinematic" | "value-strip" | "home-nav";
 export type ImageDisplay = "full" | "inset" | "featured";
 export const IMAGE_DISPLAY: Record<ImageDisplay, string> = { full: "Pełna szerokość", inset: "W kolumnie tekstu", featured: "Wyróżniony blok" };
 export type PageSection = {
@@ -23,6 +23,7 @@ export type PageSection = {
   hidden?: boolean; // hidden sections stay in the page but are not shown publicly
   optional?: boolean; // "opcjonalna treść": intentionally empty, no pre-publish warning
   textFormats?: Record<string, TextFormat>;
+  appearance?: { height?: number; padding?: number; gap?: number; width?: number; overlay?: number; tone?: "copper" | "gold" | "text"; align?: "left" | "center" | "right" };
 };
 export type PublicPage = {
   id: string; slug: string; system_key: string | null; title: string; intro: string;
@@ -31,6 +32,7 @@ export type PublicPage = {
 };
 
 export const SYSTEM_PAGES: Record<string, { path: string; label: string }> = {
+  "home": { path: "/", label: "Strona główna" },
   "o-tnb": { path: "/o-tnb", label: "O TNB" },
   "moja-historia": { path: "/moja-historia", label: "Moja historia" },
   "regulamin": { path: "/regulamin", label: "Regulamin" },
@@ -43,6 +45,7 @@ export const pagePath = (p: { slug: string; system_key: string | null }) =>
 export const PAGE_STATUS: Record<string, string> = { draft: "Szkic", published: "Opublikowana", archived: "Zarchiwizowana" };
 
 export const SECTION_KINDS: Record<SectionKind, string> = {
+  cinematic: "Filmowe otwarcie", "value-strip": "Pas wartości", "home-nav": "Nagłówek strony głównej",
   hero: "Otwarcie strony", text: "Tekst (opcjonalnie ze zdjęciem)", values: "Karty wartości", columns: "Dwie kolumny (listy)",
   quote: "Cytat", image: "Zdjęcie", cta: "Wezwanie do działania",
 };
@@ -64,3 +67,14 @@ export const isSafeHref = (h: string) => /^\/(?!\/)[\w\-/#?=&.%]*$/.test(h) || /
 // Builder draft: the editable copy of a page; publishing copies it to the public columns.
 export type PageDraft = { slug: string; title: string; intro: string; sections: PageSection[]; seo_title: string; seo_description: string };
 export type PageVersion = { id: string; kind: "draft" | "publish" | "restore"; created_at: string; snapshot: PageDraft };
+
+// One reference traversal for nested media, previews, authorization and independent templates.
+export function pageImageNames(raw: unknown): string[] {
+  return [...new Set(normalizeSections(raw).flatMap(s => [s.image, ...s.items.map(it => it.image)]).filter((n): n is string => typeof n === "string" && /^[a-z0-9-]+\.(jpg|png|webp)$/.test(n)))];
+}
+// Indexed rich-text formats travel together with their items during reorder/delete/copy.
+export function reorderItems(s: PageSection, indexes: number[]): Partial<PageSection> {
+  const textFormats = Object.fromEntries(Object.entries(s.textFormats ?? {}).filter(([k]) => !k.startsWith("item-")));
+  indexes.forEach((old, current) => { for (const field of ["title", "body"]) { const f = s.textFormats?.[`item-${old}-${field}`]; if (f) textFormats[`item-${current}-${field}`] = structuredClone(f); } });
+  return { items: indexes.flatMap(i => s.items[i] ? [structuredClone(s.items[i])] : []), textFormats };
+}

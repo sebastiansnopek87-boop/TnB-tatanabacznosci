@@ -6,6 +6,9 @@ const L = ({ w = "100%", gold }: { w?: string; gold?: boolean }) => <span classN
 
 export const CATEGORIES = ["Podstawowe", "Układ", "Akcje"] as const;
 export const BLOCKS: { kind: SectionKind; cat: (typeof CATEGORIES)[number]; desc: string; Thumb: () => React.JSX.Element }[] = [
+  { kind: "home-nav", cat: "Układ", desc: "Edytowalne linki i przyciski nagłówka strony głównej.", Thumb: () => <T><L gold /><L /></T> },
+  { kind: "cinematic", cat: "Układ", desc: "Filmowe otwarcie z osobnymi scenami, tekstem i przyciskami.", Thumb: () => <T><span className="grid grid-cols-5 gap-px">{[0,1,2,3,4].map(i => <span key={i} className="h-4 bg-gold/30" />)}</span><L gold /></T> },
+  { kind: "value-strip", cat: "Układ", desc: "Pas osobnych wartości z wybieranymi ikonami.", Thumb: () => <T><L gold /><L w="80%" /></T> },
   { kind: "text", cat: "Podstawowe", desc: "Nagłówek, akapity i opcjonalne zdjęcie z boku.", Thumb: () => <T><L w="50%" gold /><L /><L w="80%" /></T> },
   { kind: "quote", cat: "Podstawowe", desc: "Wyróżniony cytat z autorem, opcjonalnie na tle zdjęcia.", Thumb: () => <T><L w="20%" gold /><L w="90%" /><L w="40%" gold /></T> },
   { kind: "image", cat: "Podstawowe", desc: "Zdjęcie na pełną szerokość, w kolumnie lub jako wyróżniony blok.", Thumb: () => <T><span className="block h-6 w-full bg-foreground/20" /><L w="60%" /></T> },
@@ -19,7 +22,7 @@ export const canInsert = (kind: SectionKind, at: number) => kind !== "hero" || a
 
 export const COVERAGE: { area: string; ok: boolean; note: string }[] = [
   { area: "Strony CMS (O TNB, Moja historia, /strony/…)", ok: true, note: "Treść, kolejność, zdjęcia, przyciski, ukrywanie sekcji, szkic, wersje i publikacja." },
-  { area: "Strona główna", ok: false, note: "Układ zapisany w kodzie. Proponowany etap 40.3." },
+  { area: "Strona główna", ok: true, note: "Filmowe otwarcie, sceny, pas wartości i wariant nagłówka; szkic, wersje i jawna publikacja. Pozostałe sekcje dynamiczne w swoich modułach." },
   { area: "Nagłówek i menu", ok: false, note: "Stałe w kodzie. Proponowany etap 40.4." },
   { area: "Stopka", ok: false, note: "Stała w kodzie. Proponowany etap 40.4." },
   { area: "Strony prawne", ok: true, note: "Treść i wersje w CMS; publikacja wymaga treści i osobnego zatwierdzenia dokumentu." },

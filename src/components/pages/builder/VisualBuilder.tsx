@@ -16,7 +16,7 @@ import { PageView, type Sel } from "@/components/pages/PageView";
 import {
   adminCreatePageUpload, adminGetPage, adminListVersions, adminPageImageUrls, adminPublishDraft, adminRestoreVersion, adminSaveDraft,
 } from "@/lib/pages.functions";
-import { SECTION_KINDS, SYSTEM_PAGES, newSection, normalizeSections, pagePath, type PageDraft, type PageSection, type PageVersion, type SectionKind } from "@/lib/pages";
+import { SECTION_KINDS, SYSTEM_PAGES, newSection, normalizeSections, pagePath, pageImageNames, type PageDraft, type PageSection, type PageVersion, type SectionKind } from "@/lib/pages";
 import { Frame } from "./Frame";
 import { SaveTemplateDialog, TemplatesPanel, useTemplates } from "./Templates";
 import { adminInstantiateTemplate, type BuilderTemplate } from "@/lib/templates.functions";
@@ -73,7 +73,7 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
     return () => { live = false; };
   }, [id]);
 
-  const names = (d?.sections ?? []).map((s) => s.image).filter(Boolean) as string[];
+  const names = pageImageNames(d?.sections);
   useEffect(() => {
     const missing = names.filter((n) => !urls[n]);
     if (missing.length) urlsFn({ data: { id, names: missing } }).then((u) => setUrls((o) => ({ ...o, ...u }))).catch(() => {});
@@ -156,14 +156,14 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
     } catch (e) { toast.error(errMsg(e)); }
   }
 
-  async function upload(i: number, file: File) {
+  async function upload(i: number, file: File, item?: number) {
     setSaveState((s) => ({ ...s, busy: true }));
     try {
       const { path, token, name } = await upFn({ data: { id, type: file.type, size: file.size } });
       const { error } = await supabase.storage.from("page-images").uploadToSignedUrl(path, token, file, { contentType: file.type });
       if (error) throw new Error("Nie udało się wgrać zdjęcia.");
       setUrls((o) => ({ ...o, [name]: URL.createObjectURL(file) }));
-      setSections((a) => a.map((s, j) => (j === i ? { ...s, image: name } : s)));
+      setSections((a) => a.map((s, j) => j !== i ? s : item === undefined ? { ...s, image: name } : { ...s, items: s.items.map((it,k) => k === item ? { ...it, image: name, asset: null } : it) }));
       toast.message("Zdjęcie wymienione. Reszta treści sekcji została bez zmian.");
     } catch (e) { toast.error(errMsg(e)); } finally { setSaveState((s) => ({ ...s, busy: false })); }
   }
@@ -355,7 +355,7 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
                   </div>
                   <Inspector s={selSection} el={sel.el} busy={saveState.busy} imageUrl={selSection.image ? urls[selSection.image] : undefined}
                     onPatch={(patch, key) => setSections((a) => a.map((x, j) => (j === sel.i ? { ...x, ...patch } : x)), key && `${sel.i}:${key}`)}
-                    onSelectEl={(el) => setSel({ i: sel.i, el })} onUpload={(f) => upload(sel.i, f)} />
+                    onSelectEl={(el) => setSel({ i: sel.i, el })} onUpload={(f, item) => upload(sel.i, f, item)} />
                 </>
               ) : (
                 <PagePanel d={d} system={system ? system.path : null} onPatch={(patch, key) => change((o) => ({ ...o, ...patch }), key)} />

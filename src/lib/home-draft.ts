@@ -1,0 +1,18 @@
+import { newSection, type PageDraft } from "./pages";
+export function homeDraft(): PageDraft {
+  return { slug: "home", title: "Tata Na Baczności", intro: "", seo_title: "Tata Na Baczności — Różne drogi. Ten sam kierunek.", seo_description: "Historie, rozmowy, doświadczenia i wsparcie mężczyzn w służbie, w rodzinie i na kolejnych etapach życia.", sections: [
+    { ...newSection("home-nav"), items: [
+      { title: "HISTORIE", body: "", href: "/moja-historia" }, { title: "PODCAST", body: "", href: "/podcast" }, { title: "BIBLIOTEKA", body: "", href: "/biblioteka" }, { title: "SPOŁECZNOŚĆ", body: "", href: "/spolecznosc" }, { title: "SPOTKANIA", body: "", href: "/spotkania" }, { title: "O TNB", body: "", href: "/o-tnb" },
+    ], buttons: [{ label: "ZALOGUJ SIĘ", href: "/auth", variant: "outline" }, { label: "DOŁĄCZ", href: "/auth?tryb=rejestracja", variant: "solid" }], appearance: { height: 76, gap: 22, tone: "copper" } },
+    { ...newSection("cinematic"), heading: "RÓŻNE DROGI.", caption: "TEN SAM KIERUNEK.", body: "Tata Na Baczności to przestrzeń mężczyzn, którzy mierzą się z prawdziwym życiem — w służbie, w rodzinie, na starcie nowej drogi i po niej. Historie, rozmowy, doświadczenia i wsparcie ludzi, którzy naprawdę rozumieją, przez co przechodzisz.", appearance: { height: 410, padding: 32, gap: 0, width: 820, overlay: 65, tone: "copper", align: "center" }, items: [
+      { title: "ZANIM\nZAŁOŻYSZ MUNDUR", body: "Pytania. Obawy. Pierwsze decyzje. Nowy etap życia.", asset: "before", imageAlt: "Mężczyzna przed rozpoczęciem służby", href: "/moja-historia", align: "center", focalX: 50, focalY: 30 },
+      { title: "KIEDY MASZ\nZOSTAĆ OJCEM", body: "Radość. Lęk. Odpowiedzialność. Czego nikt nie mówi.", asset: "expecting", imageAlt: "Przyszły ojciec trzymający dziecięce ubranko", href: "/artykuly", align: "center", focalX: 50, focalY: 35 },
+      { title: "KIEDY WSZYSCY\nNA TOBIE POLEGAJĄ", body: "Służba. Presja. Rodzina. Równowaga, która nie zawsze jest możliwa.", asset: "duty", imageAlt: "Żołnierz patrzący na jezioro o zachodzie słońca", href: "/artykuly", align: "center", focalX: 50, focalY: 25 },
+      { title: "GDY JESTEŚ\nOJCEM", body: "Obecność. Relacje. Prawdziwe wyzwania. To, co zostaje.", asset: "father", imageAlt: "Ojciec siedzący z dwójką dzieci nad jeziorem", href: "/spolecznosc", align: "center", focalX: 50, focalY: 40 },
+      { title: "KIEDY ZDEJMUJESZ\nMUNDUR", body: "Nowa tożsamość. Doświadczenia, które zostają. Co dalej?", asset: "after", imageAlt: "Mężczyzna w warsztacie rozmyślający nad kolejnym etapem życia", href: "/moja-historia", align: "center", focalX: 50, focalY: 35 },
+    ], buttons: [{ label: "DOŁĄCZ DO SPOŁECZNOŚCI", href: "/spolecznosc", variant: "solid", icon: "arrow" }, { label: "ZOBACZ, CZYM JEST TNB", href: "/o-tnb", variant: "outline", icon: "play" }] },
+    { ...newSection("value-strip"), appearance: { padding: 28, gap: 24, tone: "copper" }, items: [
+      { title: "PRAWDZIWI\nLUDZIE", body: "Historie z życia, nie z teorii.", icon: "users" }, { title: "ROZMOWY\nBEZ OCENY", body: "Trudne tematy, które naprawdę mają znaczenie.", icon: "book" }, { title: "RÓŻNE\nPERSPEKTYWY", body: "Wojsko, Policja, Straż, Służba Celna, Straż Graniczna i inni.", icon: "shield" }, { title: "RODZINA\nTEŻ JEST WAŻNA", body: "Bo siła zaczyna się w domu.", icon: "family" }, { title: "ROZWÓJ\nNA KAŻDYM ETAPIE", body: "Niezależnie od tego, gdzie aktualnie jesteś.", icon: "target" },
+    ] },
+  ] };
+}
