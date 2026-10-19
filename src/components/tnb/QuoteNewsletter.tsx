@@ -64,8 +64,7 @@ export function QuoteNewsletter({ s, a = noA, imageSrc }: HomeBlockProps) {
         />
         <div className="border-l-2 border-gold pl-7">
           <p {...a("f:quote")} className="font-display text-[1.2rem] leading-[1.7] text-foreground sm:text-[1.45rem]">
-            {f("quote").split("
-").map((l, i) => <span key={i}>{i > 0 && <br />}{l}</span>)}
+            {f("quote").split("\n").map((l, i) => <span key={i}>{i > 0 && <br />}{l}</span>)}
           </p>
           {f("sign") && <p {...a("f:sign")} className="eyebrow mt-5 text-gold">{f("sign")}</p>}
         </div>
