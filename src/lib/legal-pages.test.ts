@@ -36,10 +36,11 @@ const call = (fn: any, data: any) => fn({ data, context: ctx() });
 beforeEach(() => { m.rows = []; m.versions = []; m.logs = []; m.approved = false; m.race = false; m.versionError = false; m.auth.mockReset(); m.events.mockReset(); m.events.mockImplementation(async (e: any) => { m.logs.push({ id: crypto.randomUUID(), type: e.type, actor: e.actor, object_kind: e.objectKind, object_id: e.objectId, result: e.result ?? "ok", detail: e.detail }); }); });
 describe("Legal CMS integration (in-memory data only)", () => {
  it("versions the additive home draft without deleting content, publishing or changing other pages", async () => {
-   const d = homeDraft(); const nav = d.sections.find(s => s.kind === "home-nav"); if (!nav) throw new Error("missing nav");
+   const d = homeDraft(); d.sections = d.sections.map(s => ({ ...s, optional: false })); const nav = d.sections.find(s => s.kind === "home-nav"); if (!nav) throw new Error("missing nav");
    const oldNav = structuredClone(nav); nav.hidden = true;
    const cinematic = d.sections.find(s => s.kind === "cinematic"); if (!cinematic) throw new Error("missing cinematic");
-   cinematic.items[0] = { ...cinematic.items[0], title: "Własna zachowana historia", focalX: 27 };
+   const item = cinematic.items[0]; if (!item) throw new Error("missing scene item");
+   cinematic.items[0] = { ...item, title: "Własna zachowana historia", focalX: 27 };
    const original = { id, system_key: "home", status: "draft", published_at: null, ...draft("home", []) };
    const other = { id: "other", system_key: "o-tnb", status: "published", ...draft("o-tnb") };
    m.rows = [structuredClone(original), structuredClone(other)];
