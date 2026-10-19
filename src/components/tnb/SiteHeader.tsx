@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/account/UserAvatar";
 import { HeaderSearch } from "./HeaderSearch";
 import { isSafeHref, type PageSection } from "@/lib/pages";
+import { RichText } from "@/components/pages/RichText";
 
 const HEADER_SIZES: Record<string, string> = {
   small: "h-12 w-12 shrink-0 object-contain",
@@ -107,7 +108,7 @@ export function SiteHeader({ homeSection, editing = false }: { homeSection?: Pag
           </span>
         </Link>
 
-        {homeNav && <nav aria-label="Nawigacja strony głównej" className="home-header-nav hidden xl:flex" style={{ gap: homeSection?.appearance?.gap ?? 22 }}>{homeNav.filter(item => (editing || !item.hidden) && (editing || visiblePath(item.to, "menu"))).map(item => <a key={item.i} data-el={editing ? `item-${item.i}` : undefined} href={isSafeHref(item.to) ? item.to : undefined} className={`nav-link ${item.hidden ? "opacity-40" : ""}`}>{item.label}</a>)}</nav>}
+        {homeNav && <nav aria-label="Nawigacja strony głównej" className="home-header-nav hidden xl:flex" style={{ gap: homeSection?.appearance?.gap ?? 22 }}>{homeNav.filter(item => (editing || !item.hidden) && (editing || visiblePath(item.to, "menu"))).map(item => <a key={item.i} data-el={editing ? `item-${item.i}-title` : undefined} href={isSafeHref(item.to) ? item.to : undefined} className={`nav-link ${item.hidden ? "opacity-40" : ""}`}><RichText format={homeSection?.textFormats?.[`item-${item.i}-title`]} fallback={item.label} inline /></a>)}</nav>}
         <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-3 lg:gap-4">
           <Button ref={searchRef} variant="ghost" size="icon" type="button"
             aria-label="Szukaj"
@@ -118,14 +119,14 @@ export function SiteHeader({ homeSection, editing = false }: { homeSection?: Pag
             <Search className="h-5 w-5" strokeWidth={1.5} />
           </Button>
           {auth.status === "loading" && <span aria-hidden className="hidden h-[42px] w-[230px] lg:block" />}
-          {auth.status === "signed-out" && (<>
-             {(!loginButton?.hidden || editing) && <a data-el={editing ? "button-0" : undefined} href={loginButton && isSafeHref(loginButton.href) ? loginButton.href : "/auth"} className={`hidden whitespace-nowrap px-4 py-3 text-foreground lg:block ${homeSection ? `home-cta home-cta-${loginButton?.variant ?? "outline"}` : outline}`}>{loginButton?.label ?? "Zaloguj się"}</a>}
+          {(auth.status === "signed-out" || editing) && (<>
+             {(!loginButton?.hidden || editing) && <a data-el={editing ? "button-0" : undefined} href={loginButton && isSafeHref(loginButton.href) ? loginButton.href : "/auth"} className={`hidden whitespace-nowrap px-4 py-3 text-foreground lg:block ${homeSection ? `home-cta home-cta-${loginButton?.variant ?? "outline"}` : outline}`}><RichText format={homeSection?.textFormats?.["button-0"]} fallback={loginButton?.label ?? "Zaloguj się"} inline /></a>}
              {(!joinButton?.hidden || editing) && <a data-el={editing ? "button-1" : undefined} href={joinButton && isSafeHref(joinButton.href) ? joinButton.href : "/auth?tryb=rejestracja"} className={`hidden items-center gap-2 px-4 py-3 lg:flex ${homeSection ? `home-cta home-cta-${joinButton?.variant ?? "solid"}` : solid}`}>
               <UserRound className="h-4 w-4" strokeWidth={1.75} />
-               {joinButton?.label ?? "Dołącz"}
+               <RichText format={homeSection?.textFormats?.["button-1"]} fallback={joinButton?.label ?? "Dołącz"} inline />
              </a>}
           </>)}
-          {auth.status === "signed-in" && (<>
+          {auth.status === "signed-in" && !editing && (<>
             <Button variant="ghost" type="button" onClick={signOut} className={`hidden h-auto rounded-none whitespace-nowrap px-6 py-3 text-foreground lg:block ${outline}`}>Wyloguj</Button>
             <Link to="/moje-tnb" aria-label="Moje TNB" className="flex items-center gap-2 whitespace-nowrap text-gold">
               <UserAvatar own name={auth.user?.user_metadata?.['first_name'] ?? ""} className="size-9" />
