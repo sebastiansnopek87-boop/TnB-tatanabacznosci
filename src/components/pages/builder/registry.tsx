@@ -4,7 +4,7 @@ import { SECTION_KINDS, type PageDraft, type SectionKind } from "@/lib/pages";
 const T = ({ children }: { children: React.ReactNode }) => <span aria-hidden className="flex h-11 w-14 shrink-0 flex-col justify-center gap-1 border border-border/60 bg-background p-1.5">{children}</span>;
 const L = ({ w = "100%", gold }: { w?: string; gold?: boolean }) => <span className={`block h-1 ${gold ? "bg-gold" : "bg-foreground/30"}`} style={{ width: w }} />;
 
-export const CATEGORIES = ["Podstawowe", "Układ", "Akcje"] as const;
+export const CATEGORIES = ["Strona główna", "Podstawowe", "Układ", "Akcje"] as const;
 export const BLOCKS: { kind: SectionKind; cat: (typeof CATEGORIES)[number]; desc: string; Thumb: () => React.JSX.Element }[] = [
   { kind: "text", cat: "Podstawowe", desc: "Nagłówek, akapity i opcjonalne zdjęcie z boku.", Thumb: () => <T><L w="50%" gold /><L /><L w="80%" /></T> },
   { kind: "quote", cat: "Podstawowe", desc: "Wyróżniony cytat z autorem, opcjonalnie na tle zdjęcia.", Thumb: () => <T><L w="20%" gold /><L w="90%" /><L w="40%" gold /></T> },
@@ -15,11 +15,22 @@ export const BLOCKS: { kind: SectionKind; cat: (typeof CATEGORIES)[number]; desc
   { kind: "cta", cat: "Akcje", desc: "Ramka z zachętą i przyciskami (np. dołącz, napisz).", Thumb: () => <T><span className="flex h-7 flex-col items-center justify-center gap-1 border border-gold/60"><L w="60%" /><span className="block h-1.5 w-5 bg-gold" /></span></T> },
 ];
 
+const HT = () => <T><L w="45%" gold /><span className="block h-3 w-full bg-foreground/25" /></T>;
+BLOCKS.unshift(
+  { kind: "home_hero", cat: "Strona główna", desc: "Otwarcie z nagłówkiem, opisem, przyciskiem i prawą kolumną.", Thumb: HT },
+  { kind: "home_articles", cat: "Strona główna", desc: "Wyróżnione artykuły z modułu „Artykuły”.", Thumb: HT },
+  { kind: "home_community", cat: "Strona główna", desc: "Najnowsze rozmowy społeczności i zaproszenie.", Thumb: HT },
+  { kind: "home_quicknav", cat: "Strona główna", desc: "Pasek skrótów do działów.", Thumb: HT },
+  { kind: "home_pillars", cat: "Strona główna", desc: "Duże numerowane karty ze zdjęciami.", Thumb: HT },
+  { kind: "home_tiles", cat: "Strona główna", desc: "Poziome kafelki ze zdjęciem.", Thumb: HT },
+  { kind: "home_quote_newsletter", cat: "Strona główna", desc: "Cytat na zdjęciu i zapis do newslettera.", Thumb: HT },
+);
+
 export const canInsert = (kind: SectionKind, at: number) => kind !== "hero" || at === 0;
 
 export const COVERAGE: { area: string; ok: boolean; note: string }[] = [
   { area: "Strony CMS (O TNB, Moja historia, /strony/…)", ok: true, note: "Treść, kolejność, zdjęcia, przyciski, ukrywanie sekcji, szkic, wersje i publikacja." },
-  { area: "Strona główna", ok: false, note: "Układ zapisany w kodzie. Proponowany etap 40.3." },
+  { area: "Strona główna", ok: true, note: "Wszystkie sekcje między nagłówkiem a stopką: teksty, zdjęcia, linki, kolejność, ukrywanie i odstępy. Treści artykułów i rozmów pochodzą z ich modułów." },
   { area: "Nagłówek i menu", ok: false, note: "Stałe w kodzie. Proponowany etap 40.4." },
   { area: "Stopka", ok: false, note: "Stała w kodzie. Proponowany etap 40.4." },
   { area: "Strony prawne", ok: true, note: "Treść i wersje w CMS; publikacja wymaga treści i osobnego zatwierdzenia dokumentu." },
@@ -55,7 +66,7 @@ export function findEmpty(sections: PageDraft["sections"]): EmptyIssue[] {
   const out: EmptyIssue[] = [];
   const t = (v?: string | null) => !!v && v.trim().length > 0;
   sections.forEach((s, i) => {
-    if (s.hidden || s.optional) return;
+    if (s.hidden || s.optional || s.kind.startsWith("home_")) return;
     const where = `sekcja ${i + 1} (${SECTION_KINDS[s.kind]})`;
     const any = t(s.heading) || t(s.body) || t(s.eyebrow) || !!s.image || s.buttons.length > 0 || s.items.some((it) => t(it.title) || t(it.body));
     if (s.kind === "image" ? !s.image : s.kind === "quote" ? !t(s.body) : !any) { out.push({ i, el: "section", label: `Pusta sekcja — ${where}` }); return; }

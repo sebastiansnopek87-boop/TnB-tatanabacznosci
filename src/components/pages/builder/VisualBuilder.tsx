@@ -16,8 +16,11 @@ import { PageView, type Sel } from "@/components/pages/PageView";
 import {
   adminCreatePageUpload, adminGetPage, adminListVersions, adminPageImageUrls, adminPublishDraft, adminRestoreVersion, adminSaveDraft,
 } from "@/lib/pages.functions";
-import { SECTION_KINDS, SYSTEM_PAGES, newSection, normalizeSections, pagePath, type PageDraft, type PageSection, type PageVersion, type SectionKind } from "@/lib/pages";
+import { isHomeKind, SECTION_KINDS, SYSTEM_PAGES, newSection, normalizeSections, pagePath, type PageDraft, type PageSection, type PageVersion, type SectionKind } from "@/lib/pages";
 import { Frame } from "./Frame";
+import { HomeInspector } from "./HomeInspector";
+import { PreviewContext, type PreviewViewer } from "@/hooks/preview-viewer";
+import { HOME_FIELDS, newHomeSection } from "@/lib/home-content";
 import { SaveTemplateDialog, TemplatesPanel, useTemplates } from "./Templates";
 import { adminInstantiateTemplate, type BuilderTemplate } from "@/lib/templates.functions";
 import { Inspector, PagePanel } from "./Inspector";
@@ -42,6 +45,7 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
   const last = useRef({ key: "", t: 0 });
   const [sel, setSel] = useState<Sel | null>(null);
   const [device, setDevice] = useState<Device>("desktop");
+  const [viewer, setViewer] = useState<PreviewViewer>("guest");
   const [left, setLeft] = useState<"elements" | "structure" | null>("elements");
   const [rightOpen, setRightOpen] = useState(true);
   const [q, setQ] = useState("");
@@ -73,7 +77,7 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
     return () => { live = false; };
   }, [id]);
 
-  const names = (d?.sections ?? []).map((s) => s.image).filter(Boolean) as string[];
+  const names = (d?.sections ?? []).flatMap((s) => [s.image, ...s.items.map((it) => it.image)]).filter((n): n is string => !!n && !n.startsWith("asset:"));
   useEffect(() => {
     const missing = names.filter((n) => !urls[n]);
     if (missing.length) urlsFn({ data: { id, names: missing } }).then((u) => setUrls((o) => ({ ...o, ...u }))).catch(() => {});
@@ -168,9 +172,21 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
     } catch (e) { toast.error(errMsg(e)); } finally { setSaveState((s) => ({ ...s, busy: false })); }
   }
 
+  async function uploadItem(i: number, k: number, file: File) {
+    setSaveState((s) => ({ ...s, busy: true }));
+    try {
+      const { path, token, name } = await upFn({ data: { id, type: file.type, size: file.size } });
+      const { error } = await supabase.storage.from("page-images").uploadToSignedUrl(path, token, file, { contentType: file.type });
+      if (error) throw new Error("Nie udało się wgrać zdjęcia.");
+      setUrls((o) => ({ ...o, [name]: URL.createObjectURL(file) }));
+      setSections((a) => a.map((s, j) => (j === i ? { ...s, items: s.items.map((it, m) => (m === k ? { ...it, image: name } : it)) } : s)));
+      toast.message("Zdjęcie wymienione.");
+    } catch (e) { toast.error(errMsg(e)); } finally { setSaveState((s) => ({ ...s, busy: false })); }
+  }
+
   const insert = (at: number, kind: SectionKind) => {
     if (!canInsert(kind, at)) { toast.error("Otwarcie strony można wstawić tylko na samej górze."); return; }
-    setSections((a) => [...a.slice(0, at), newSection(kind), ...a.slice(at)]);
+    setSections((a) => [...a.slice(0, at), isHomeKind(kind) ? newHomeSection(kind) : newSection(kind), ...a.slice(at)]);
     setSel({ i: at, el: "section" }); setPlacing(null); if (window.innerWidth >= 1024) setRightOpen(true);
   };
   // Templates are inserted as independent copies (new ids, own image files) — never linked.
@@ -214,7 +230,7 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
   if (!d || !meta) return <div className="fixed inset-0 z-50 flex items-center justify-center bg-background text-sm text-muted-foreground">Wczytywanie edytora…</div>;
   const unpublished = !same(d, meta.live) || meta.status !== "published";
   const system = meta.system_key ? SYSTEM_PAGES[meta.system_key] : null;
-  const blocks = BLOCKS.filter((b) => !q || (SECTION_KINDS[b.kind] + b.desc).toLowerCase().includes(q.toLowerCase()));
+  const blocks = BLOCKS.filter((b) => (isHomeKind(b.kind) ? meta.system_key === "home" : true)).filter((b) => !q || (SECTION_KINDS[b.kind] + b.desc).toLowerCase().includes(q.toLowerCase()));
   const selSection = sel ? d.sections[sel.i] : undefined;
   const timeStr = saveState.at ? new Date(saveState.at).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" }) : null;
 
@@ -234,6 +250,11 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
         <div className="mx-auto flex border border-border/60">
           {([["desktop", Monitor, "Komputer"], ["tablet", Tablet, "Tablet"], ["phone", Smartphone, "Telefon"]] as const).map(([k, I, l]) => (
             <button key={k} aria-label={l} title={l} onClick={() => setDevice(k)} className={`px-2.5 py-1.5 ${device === k ? "bg-gold text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}><I className="h-4 w-4" /></button>
+          ))}
+        </div>
+        <div className="flex border border-border/60 text-[0.65rem] uppercase tracking-wide" role="group" aria-label="Podgląd jako">
+          {([["guest", "Niezalogowany"], ["user", "Zalogowany"]] as const).map(([k, l]) => (
+            <button key={k} aria-pressed={viewer === k} title="Symulacja widoku — nie zmienia Twojej sesji ani uprawnień" onClick={() => setViewer(k)} className={`px-2 py-1.5 ${viewer === k ? "bg-gold text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>{l}</button>
           ))}
         </div>
         <Button size="icon" variant="ghost" aria-label="Cofnij" title="Cofnij (Ctrl+Z)" disabled={!past.length} onClick={undo}><Undo2 className="h-4 w-4" /></Button>
@@ -325,12 +346,15 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
               Uwaga: sekcja {overflow.map((x) => x + 1).join(", ")} wychodzi poza ekran w tym widoku.
             </div>
           )}
+          <div className="absolute bottom-3 left-1/2 z-10 -translate-x-1/2 border border-border/60 bg-background/90 px-3 py-1 text-[0.65rem] uppercase tracking-wide text-muted-foreground">Podgląd symulowany: {viewer === "user" ? "zalogowany użytkownik" : "niezalogowany odwiedzający"}</div>
           <Frame width={WIDTH[device]} onOverflow={onOverflow}>
+            <PreviewContext.Provider value={{ viewer, editing: true }}>
             <PageView eyebrow="Tata Na Baczności" title={d.title || "(bez tytułu)"} intro={d.intro} sections={d.sections} imageSrc={(f) => urls[f]}
               edit={{ sel, zone, onSelect: (s, locked) => {
                 if (locked) { toast.message("Nagłówek i stopka nie są jeszcze edytowalne wizualnie — działają normalnie."); return; }
                 setSel(s); if (s) { setRightOpen(true); setLeft((l) => (window.innerWidth < 1024 ? null : l)); }
               } }} />
+            </PreviewContext.Provider>
           </Frame>
         </main>
 
@@ -353,9 +377,12 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
                     <Button size="icon" variant="ghost" aria-label="Usuń sekcję" onClick={() => remove(sel.i)}><Trash2 className="h-4 w-4" /></Button>
                     <Button size="sm" variant="outline" onClick={() => setSaveTpl(true)}><BookmarkPlus className="mr-1 h-4 w-4" />Zapisz jako szablon</Button>
                   </div>
+                  {isHomeKind(selSection.kind) ? <HomeInspector s={selSection} el={sel.el} busy={saveState.busy} urls={urls}
+                    onPatch={(patch, key) => setSections((a) => a.map((x, j) => (j === sel.i ? { ...x, ...patch } : x)), key && `${sel.i}:${key}`)}
+                    onSelectEl={(el) => setSel({ i: sel.i, el })} onUpload={(f) => upload(sel.i, f)} onUploadItem={(k, f) => uploadItem(sel.i, k, f)} /> :
                   <Inspector s={selSection} el={sel.el} busy={saveState.busy} imageUrl={selSection.image ? urls[selSection.image] : undefined}
                     onPatch={(patch, key) => setSections((a) => a.map((x, j) => (j === sel.i ? { ...x, ...patch } : x)), key && `${sel.i}:${key}`)}
-                    onSelectEl={(el) => setSel({ i: sel.i, el })} onUpload={(f) => upload(sel.i, f)} />
+                    onSelectEl={(el) => setSel({ i: sel.i, el })} onUpload={(f) => upload(sel.i, f)} />}
                 </>
               ) : (
                 <PagePanel d={d} system={system ? system.path : null} onPatch={(patch, key) => change((o) => ({ ...o, ...patch }), key)} />
@@ -427,6 +454,12 @@ function ChangeList({ items }: { items: string[] }) {
 
 function elementsOf(s: PageSection): [string, string][] {
   const out: [string, string][] = [];
+  if (isHomeKind(s.kind)) {
+    (HOME_FIELDS[s.kind] ?? []).filter((f) => !f.options && s.settings?.[f.key]).forEach((f) => out.push([`f:${f.key}`, f.label]));
+    if (s.kind === "home_hero" || s.kind === "home_quote_newsletter") out.push(["image", "Zdjęcie"]);
+    s.items.forEach((it, k) => out.push([`item-${k}`, `Element: ${it.title || k + 1}`]));
+    return out;
+  }
   if (s.eyebrow) out.push(["eyebrow", "Nadtytuł"]);
   if (s.heading) out.push(["heading", "Nagłówek"]);
   if (s.body) out.push(["body", s.kind === "quote" ? "Cytat" : "Tekst"]);
