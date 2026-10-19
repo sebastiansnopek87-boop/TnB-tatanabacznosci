@@ -2,5 +2,5 @@ import { defineConfig } from "vitest/config";
 import { fileURLToPath } from "node:url";
 export default defineConfig({
   resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
-  test: { include: ["src/lib/home-content.test.ts", "src/lib/legal-pages.test.ts"] },
+  test: { include: ["src/lib/home-content.test.ts", "src/lib/home-cta.test.ts", "src/lib/legal-pages.test.ts"] },
 });

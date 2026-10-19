@@ -8,6 +8,7 @@ import tileSpotkania from "@/assets/tile-spotkania.jpg.asset.json";
 import tileTworczosc from "@/assets/tile-tworczosc.jpg.asset.json";
 import { newSection, type HomeKind, type PageItem, type PageSection } from "./pages";
 import { CINEMATIC_ASSETS, newCinematicSection } from "./cinematic-content";
+import { HOME_CTA_DEFAULTS } from "./home-cta";
 
 // Built-in photos of the home page. Sections reference them as "asset:<name>" until an admin uploads a replacement.
 export const HOME_ASSETS: Record<string, string> = {
@@ -17,7 +18,7 @@ export const HOME_ASSETS: Record<string, string> = {
 };
 export const assetUrl = (v: string | null | undefined) => (v?.startsWith("asset:") ? HOME_ASSETS[v.slice(6)] : undefined);
 
-export type Field = { key: string; label: string; multiline?: boolean; hint?: string; options?: [string, string][] };
+export type Field = { key: string; label: string; multiline?: boolean; hint?: string; defaultValue?: string; options?: [string, string][] };
 const SPACING: Field = { key: "spacing", label: "Odstępy sekcji", options: [["", "Standardowe"], ["compact", "Mniejsze"], ["loose", "Większe"]] };
 const FOCUS: Field = { key: "focus", label: "Kadrowanie zdjęcia", options: [["", "Środek"], ["top", "Góra"], ["bottom", "Dół"], ["left", "Lewa strona"], ["right", "Prawa strona"]] };
 const GOLD = "Słowa w *gwiazdkach* są złote.";
@@ -27,7 +28,12 @@ export const HOME_FIELDS: Record<HomeKind, Field[]> = {
   home_cinematic: [
     { key: "line1", label: "Nagłówek — część jasna" }, { key: "line2", label: "Nagłówek — część miedziana" },
     { key: "body", label: "Główny opis", multiline: true },
-    { key: "ctaLabel", label: "Pierwszy przycisk — tekst" }, { key: "ctaHref", label: "Pierwszy przycisk — adres" },
+    { key: "ctaLabel", label: "Pierwszy przycisk — tekst" },
+    { key: "ctaMode", label: "Pierwszy przycisk — działanie", defaultValue: HOME_CTA_DEFAULTS.ctaMode, options: [["session", "Według statusu logowania"], ["fixed", "Stały adres dla wszystkich"]] },
+    { key: "ctaGuestHref", label: "Pierwszy przycisk — adres dla niezalogowanych", defaultValue: HOME_CTA_DEFAULTS.ctaGuestHref },
+    { key: "ctaMemberHref", label: "Pierwszy przycisk — adres dla zalogowanych", defaultValue: HOME_CTA_DEFAULTS.ctaMemberHref },
+    { key: "ctaHref", label: "Pierwszy przycisk — stały adres" },
+    { key: "ctaVisible", label: "Pierwszy przycisk — widoczność", defaultValue: HOME_CTA_DEFAULTS.ctaVisible, options: [["on", "Widoczny"], ["off", "Ukryty"]] },
     { key: "secondaryLabel", label: "Drugi przycisk — tekst" }, { key: "secondaryHref", label: "Drugi przycisk — adres" },
     ...Array.from({ length: 5 }, (_, i): Field[] => [
       { key: `value${i + 1}Title`, label: `Wartość ${i + 1} — nagłówek` },
