@@ -3,7 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { DraftSection as DraftSectionSchema } from "./pages.functions";
-import { newSection, pageImageNames, type PageSection } from "./pages";
+import { newSection, type PageSection } from "./pages";
 
 // "Moje szablony": saved copies of existing builder sections. Images are copied into
 // templates/<id>/ on save and copied again into the target page on insert, so pages and
@@ -19,13 +19,17 @@ const ext = (n: string) => n.split(".").pop() ?? "jpg";
 
 async function copyImages(sections: PageSection[], fromDir: string, toDir: string, rename: boolean) {
   const st = (await admin()).storage.from(BUCKET);
-  const copied = new Map<string, string | null>();
-  for (const image of pageImageNames(sections)) {
+  const out: PageSection[] = [];
+  for (const s of sections) {
+    let image = s.image;
+    if (image) {
       const target = rename ? imgName(ext(image)) : image;
       const { error } = await st.copy(`${fromDir}/${image}`, `${toDir}/${target}`);
-      copied.set(image, error ? null : target);
+      image = error ? null : target; // a missing source file never blocks the template
+    }
+    out.push({ ...s, image });
   }
-  return sections.map(s => ({ ...s, image: s.image ? copied.get(s.image) ?? null : null, items: s.items.map(it => ({ ...it, ...(it.image ? { image: copied.get(it.image) ?? null } : {}) })) }));
+  return out;
 }
 
 export const adminListTemplates = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
@@ -82,7 +86,7 @@ export const adminDeleteTemplate = createServerFn({ method: "POST" }).middleware
     const { error } = await context.supabase.from("builder_templates").delete().eq("id", data.id);
     if (error) throw new Error("Nie udało się usunąć szablonu.");
     // Only the template's own image copies are removed; pages hold their own copies.
-    const files = pageImageNames(t.sections).map(n => `templates/${data.id}/${n}`);
+    const files = (t.sections as PageSection[]).map((s) => s.image).filter(Boolean).map((n) => `templates/${data.id}/${n}`);
     if (files.length) await (await admin()).storage.from(BUCKET).remove(files);
     await logEvent({ type: "builder_template_deleted", actor: context.userId, objectKind: "builder_template", objectId: data.id });
     return { ok: true };

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { errMsg } from "@/components/admin/format";
 import { PageSections } from "@/components/pages/PageView";
-import { normalizeSections, pageImageNames, type PageSection } from "@/lib/pages";
+import { normalizeSections, type PageSection } from "@/lib/pages";
 import {
   adminCreateTemplate, adminDeleteTemplate, adminDuplicateTemplate, adminListTemplates, adminTemplateImageUrls, adminUpdateTemplate, type BuilderTemplate,
 } from "@/lib/templates.functions";
@@ -44,7 +44,7 @@ export function useTemplates() {
   const reload = async () => {
     try {
       const l = await listFn(); setList(l);
-      const files = l.flatMap(t => pageImageNames(t.sections).map(n => ({ t: t.id, n }))).filter(f => !urls[`${f.t}/${f.n}`]);
+      const files = l.flatMap((t) => (t.sections ?? []).map((s) => s.image).filter(Boolean).map((n) => ({ t: t.id, n: n as string }))).filter((f) => !urls[`${f.t}/${f.n}`]);
       if (files.length) setUrls({ ...urls, ...(await urlsFn({ data: { files } })) });
     } catch (e) { toast.error(errMsg(e)); setList([]); }
   };

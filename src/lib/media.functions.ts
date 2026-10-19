@@ -2,7 +2,6 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertAdmin, logEvent } from "./admin-auth.server";
-import { pageImageNames } from "./pages";
 
 // Central, read-mostly view over the existing private buckets. Files stay where
 // their module put them; usage is computed live from the module tables.
@@ -36,17 +35,15 @@ async function admin() {
 // Builds "bucket/path" -> usages from every table that stores file paths.
 async function buildUsage(): Promise<Map<string, Usage[]>> {
   const db = await admin();
-  const [li, lc, pe, me, sp, avatars, versions, templates] = await Promise.all([
+  const [li, lc, pe, me, sp, avatars] = await Promise.all([
     db.from("library_items").select("id, title, status, cover_url"),
     db.from("library_item_content").select("item_id, file_path"),
     db.from("podcast_episodes").select("id, title, status, cover_path, audio_path"),
     db.from("meetings").select("id, title, status, image_url"),
-    db.from("site_pages").select("id, title, status, sections, draft"),
+    db.from("site_pages").select("id, title, status, sections"),
     db.from("user_avatars").select("object_path"),
-    db.from("site_page_versions").select("page_id, snapshot"),
-    db.from("builder_templates").select("id, name, sections"),
   ]);
-  const err = li.error || lc.error || pe.error || me.error || sp.error || avatars.error || versions.error || templates.error;
+  const err = li.error || lc.error || pe.error || me.error || sp.error || avatars.error;
   if (err) throw new Error("Nie udało się ustalić powiązań plików.");
   const map = new Map<string, Usage[]>();
   const add = (key: string | null | undefined, u: Usage) => { if (!key) return; map.set(key, [...(map.get(key) ?? []), u]); };
@@ -63,13 +60,11 @@ async function buildUsage(): Promise<Map<string, Usage[]>> {
   }
   for (const r of me.data ?? []) add(r.image_url && `meeting-images/${r.image_url}`, { module: "meetings", label: "Grafika spotkania", title: r.title, status: r.status, published: r.status === "published" });
   for (const p of sp.data ?? []) {
-    const draft = p.draft as { sections?: unknown } | null;
-    for (const n of new Set([...pageImageNames(p.sections), ...pageImageNames(draft?.sections)])) {
+    const secs = Array.isArray(p.sections) ? (p.sections as Array<{ image?: unknown }>) : [];
+    for (const n of new Set(secs.map((s) => s?.image).filter((x): x is string => typeof x === "string" && !!x))) {
       add(`page-images/${p.id}/${n}`, { module: "pages", label: "Zdjęcie w sekcji strony", title: p.title, status: p.status, published: p.status === "published" });
     }
   }
-  for (const v of versions.data ?? []) { const snapshot = v.snapshot as { sections?: unknown }; for (const n of pageImageNames(snapshot?.sections)) add(`page-images/${v.page_id}/${n}`, { module: "pages", label: "Historia wersji strony", title: "Wersja CMS", status: "version", published: false }); }
-  for (const t of templates.data ?? []) for (const n of pageImageNames(t.sections)) add(`page-images/templates/${t.id}/${n}`, { module: "pages", label: "Szablon edytora", title: t.name, status: "template", published: false });
   for (const a of avatars.data ?? []) add(`media/${a.object_path}`, { module: "account", label: "Avatar użytkownika", title: "Zdjęcie profilowe", status: "active", published: false });
   return map;
 }

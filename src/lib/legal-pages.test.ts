@@ -7,8 +7,7 @@ vi.mock("./admin-auth.server", () => ({ assertAdmin: m.auth, logEvent: m.events 
 vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin: { from: (table: string) => query(table) } }));
 import { LEGAL_KEYS, assertLegalPublication, legalReady } from "./legal-pages";
 import { approvalDetail, legalDigest } from "./legal-approval";
-import { newSection, pagePath, pageImageNames, reorderItems, SYSTEM_PAGES } from "./pages";
-import { homeDraft } from "./home-draft";
+import { newSection, pagePath, SYSTEM_PAGES } from "./pages";
 import { adminSavePage, adminSetPageStatus, adminPublishDraft, adminSaveDraft, adminListVersions, adminRestoreVersion, getPublicPage } from "./pages.functions";
 const id = "11111111-1111-4111-8111-111111111111";
 function query(table: string) {
@@ -35,53 +34,6 @@ const draft = (key: string, s = sections()) => ({ slug: key, title: SYSTEM_PAGES
 const call = (fn: any, data: any) => fn({ data, context: ctx() });
 beforeEach(() => { m.rows = []; m.versions = []; m.logs = []; m.approved = false; m.race = false; m.versionError = false; m.auth.mockReset(); m.events.mockReset(); m.events.mockImplementation(async (e: any) => { m.logs.push({ id: crypto.randomUUID(), type: e.type, actor: e.actor, object_kind: e.objectKind, object_id: e.objectId, result: e.result ?? "ok", detail: e.detail }); }); });
 describe("Legal CMS integration (in-memory data only)", () => {
- it("versions the additive home draft without deleting content, publishing or changing other pages", async () => {
-   const d = homeDraft(); d.sections = d.sections.map(s => ({ ...s, optional: false })); const nav = d.sections.find(s => s.kind === "home-nav"); if (!nav) throw new Error("missing nav");
-   const oldNav = structuredClone(nav); nav.hidden = true;
-   const cinematic = d.sections.find(s => s.kind === "cinematic"); if (!cinematic) throw new Error("missing cinematic");
-   const item = cinematic.items[0]; if (!item) throw new Error("missing scene item");
-   cinematic.items[0] = { ...item, title: "Własna zachowana historia", focalX: 27 };
-   const original = { id, system_key: "home", status: "draft", published_at: null, ...draft("home", []) };
-   const other = { id: "other", system_key: "o-tnb", status: "published", ...draft("o-tnb") };
-   m.rows = [structuredClone(original), structuredClone(other)];
-   await call(adminSaveDraft, { id, draft: d, version: true });
-   expect(m.rows[0].sections).toEqual(original.sections);
-   expect(m.rows[0].status).toBe("draft"); expect(m.rows[0].published_at).toBeNull();
-   expect(m.rows[0].draft.sections.map((s: any) => s.kind)).toEqual(["home-nav", "cinematic", "value-strip"]);
-   expect(m.rows[0].draft.sections[0]).toEqual({ ...oldNav, hidden: true });
-   expect(m.rows[0].draft.sections[1].items[0]).toMatchObject({ title: "Własna zachowana historia", focalX: 27 });
-   expect(m.rows[1]).toEqual(other); expect(m.versions[0].snapshot).toEqual(d);
-   expect(await call(getPublicPage, { key: "home" })).toBeNull();
- });
- it("home persists individual scene settings through draft, publish, public read and restore", async () => {
-   const d = homeDraft(); d.sections = d.sections.map(s => ({ ...s, optional: false })); const scene = d.sections[1]; if (!scene) throw new Error("missing scene");
-   scene.items[0] = { ...scene.items[0], title: "Indywidualna scena", body: "Indywidualny opis", image: "img-scene.jpg", imageAlt: "Opis testowy", href: "/artykuly", hidden: true, focalX: 27, focalY: 63, align: "right" };
-   await call(adminSavePage, { ...d, sections: [], id: null, system_key: "home" });
-   expect(await call(getPublicPage, { key: "home" })).toBeNull();
-   await call(adminSaveDraft, { id, draft: d, version: true });
-   expect(m.rows[0].draft).toEqual(d); expect(m.rows[0].status).toBe("draft");
-   await call(adminPublishDraft, { id });
-   expect((await call(getPublicPage, { key: "home" })).sections).toEqual(d.sections);
-   const live = JSON.stringify(m.rows[0].sections);
-   await call(adminRestoreVersion, { id, versionId: id });
-   expect(m.rows[0].draft).toEqual(d); expect(JSON.stringify(m.rows[0].sections)).toBe(live);
-   expect(pagePath({ slug: "home", system_key: "home" })).toBe("/");
- });
- it("rejects unsafe scene links and out-of-range cropping", async () => {
-   m.rows = [{ id, system_key: "home", status: "draft", ...homeDraft() }];
-   const d = homeDraft(); const s = d.sections[1]; if (!s) throw new Error("missing");
-   s.items[0] = { title: "test", body: "test", href: "javascript:alert(1)", focalX: 101 };
-   expect(() => call(adminSaveDraft, { id, draft: d })).toThrow();
- });
- it("item reordering keeps formatting and independent copies with the correct scene", () => {
-   const s = { ...newSection("cinematic"), items: [{ title: "A", body: "a", image: "a.jpg" }, { title: "B", body: "b", image: "b.jpg" }], textFormats: { "item-0-title": { doc: { type: "doc", content: [] }, width: 65 } } };
-   const moved = reorderItems(s,[1,0,0]);
-   expect(moved.items?.map(x => x.title)).toEqual(["B","A","A"]);
-   expect(moved.textFormats?.["item-1-title"]?.width).toBe(65);
-   if (moved.items?.[1]) moved.items[1].title = "Changed";
-   expect(s.items[0]?.title).toBe("A"); expect(moved.items?.[2]?.title).toBe("A");
-   expect(pageImageNames([s])).toEqual(["a.jpg","b.jpg"]);
- });
  it.each(LEGAL_KEYS)("maps and reads only the published system document %s", async key => {
    expect(pagePath({ slug: "other", system_key: key })).toBe(`/${key}`);
    m.rows = LEGAL_KEYS.map(k => ({ id: k, system_key: k, status: "published", ...draft(k) }));

@@ -1,21 +1,15 @@
 import { Link } from "@tanstack/react-router";
 import type { MouseEvent, ReactNode } from "react";
 import { PageHeading, PageShell } from "@/components/tnb/PageShell";
-import { SECTION_KINDS, isLegacyHomeKind, normalizeSections, shownFor, type PageSection } from "@/lib/pages";
-import { useDisplaySignedIn } from "@/lib/preview-audience";
+import { normalizeSections, type PageSection } from "@/lib/pages";
 
 import { RichText } from "./RichText";
 import type { TextFormat } from "@/lib/rich-text";
-import { HomeSection } from "./HomeSections";
-import { SiteHeader } from "@/components/tnb/SiteHeader";
-import { SiteFooter } from "@/components/tnb/SiteFooter";
-import { HomeLayout, LegacyHomeBlock, isFullHome } from "@/components/tnb/HomeLayout";
 
 type Props = {
   eyebrow: string; title: string; intro: string; sections: PageSection[];
   imageSrc: (file: string) => string | undefined; preview?: boolean;
   edit?: EditApi | undefined;
-  homePage?: boolean;
 };
 // Visual Builder hooks: only set inside the admin builder; public rendering is unchanged.
 export type Sel = { i: number; el: string };
@@ -183,61 +177,44 @@ function Section({ s, src, first, sel }: { s: PageSection; src?: string | undefi
   }
 }
 
-const isFx = (k: string) => k === "cinematic" || k === "value-strip" || k === "home-nav";
-function Block({ s, i, first, imageSrc, sel }: { s: PageSection; i: number; first: boolean; imageSrc: (f: string) => string | undefined; sel?: string | null | undefined }) {
-  void i;
-  if (isLegacyHomeKind(s.kind)) return <LegacyHomeBlock s={s} sel={sel} imageSrc={imageSrc} />;
-  if (isFx(s.kind)) return <HomeSection s={s} imageSrc={imageSrc} sel={sel} />;
-  return <Section s={s} first={first} src={s.image ? imageSrc(s.image) : undefined} sel={sel} />;
-}
-const AUD = { guest: "niezalogowanych", member: "zalogowanych" } as const;
-
 // One renderer for public pages, the admin preview and the Visual Builder, so all look identical.
-export function PageView({ eyebrow, title, intro, sections: raw, imageSrc, preview, edit, homePage = false }: Props) {
+export function PageView({ eyebrow, title, intro, sections: raw, imageSrc, preview, edit }: Props) {
   const all = normalizeSections(raw);
-  const signedIn = useDisplaySignedIn();
-  const sections = edit ? all : all.filter((s) => !s.hidden && shownFor(s, signedIn));
-  const full = homePage && isFullHome(all);
-  const home = all.some(s => s.kind === "home-nav" || s.kind === "cinematic");
-  const hasHero = home || sections[0]?.kind === "hero";
+  const sections = edit ? all : all.filter((s) => !s.hidden);
+  const hasHero = sections[0]?.kind === "hero";
   const onClick = (e: MouseEvent<HTMLDivElement>) => {
     if (!edit) return;
     const t = e.target as HTMLElement;
-    if (t.closest("[data-zone]")) return;
-    // Preview links/buttons/forms never act (no navigation, sign-out or newsletter sign-up from the editor).
-    if (t.closest("a,button,input,label")) { e.preventDefault(); e.stopPropagation(); }
+    if (t.closest("a,button")) e.preventDefault();
     const sec = t.closest<HTMLElement>("[data-sec]");
+    if (t.closest("[data-zone]")) return;
     if (!sec) { edit.onSelect(null, !!t.closest("header,footer")); return; }
     e.stopPropagation();
     edit.onSelect({ i: Number(sec.dataset["sec"]), el: t.closest<HTMLElement>("[data-el]")?.dataset["el"] ?? "section" });
   };
-  const skip = (s: PageSection) => homePage && !full && s.kind === "home-nav";
-  const content = <div className="overflow-x-hidden">
+  return (
+    <div onClickCapture={edit ? onClick : undefined}>
+    <PageShell>
+      {preview && <div className="bg-gold px-5 py-2 text-center text-[0.72rem] uppercase tracking-[0.14em] text-primary-foreground">Podgląd — ta wersja nie jest jeszcze widoczna publicznie</div>}
+      {!hasHero && <PageHeading eyebrow={eyebrow} title={title} intro={intro} />}
+      <div className="overflow-x-hidden">
         {edit?.zone?.(0)}
-        {sections.map((s, i) => skip(s) ? null : edit ? (
+        {sections.map((s, i) => edit ? (
           <div key={s.id}>
             <div data-sec={i} {...(edit.sel?.i === i && edit.sel.el === "section" ? { "data-sec-on": "" } : {})} className={s.hidden ? "opacity-40" : ""}>
-              {shownFor(s, signedIn) ? <Block s={s} i={i} first={i === 0 && !hasHero} imageSrc={imageSrc} sel={edit.sel?.i === i ? edit.sel.el : null} />
-                : <section className="border-y border-dashed border-gold/40 px-5 py-3 text-center text-xs text-muted-foreground">{SECTION_KINDS[s.kind]} — widoczna tylko dla {AUD[s.audience as "guest" | "member"]}. Przełącz podgląd, żeby ją edytować.</section>}
+              <Section s={s} first={i === 0 && !hasHero} src={s.image ? imageSrc(s.image) : undefined} sel={edit.sel?.i === i ? edit.sel.el : null} />
             </div>
             {edit.zone?.(i + 1)}
           </div>
-        ) : <Block key={s.id} s={s} i={i} first={i === 0 && !hasHero} imageSrc={imageSrc} />)}
-      </div>;
-  return <div onClickCapture={edit ? onClick : undefined}>
-    {homePage ? <HomeLayout sections={all} editing={!!edit}>{content}</HomeLayout> : <div className="flex min-h-screen flex-col bg-background">
-      {!home && <SiteHeader />}
-      {preview && <div className="bg-gold px-5 py-2 text-center text-[0.72rem] uppercase tracking-[0.14em] text-primary-foreground">Podgląd — ta wersja nie jest jeszcze widoczna publicznie</div>}
-      {!hasHero && <PageHeading eyebrow={eyebrow} title={title} intro={intro} />}
-      {content}
-      <SiteFooter />
-    </div>}
-  </div>;
+        ) : <Section key={s.id} s={s} first={i === 0 && !hasHero} src={s.image ? imageSrc(s.image) : undefined} />)}
+      </div>
+    </PageShell>
+    </div>
+  );
 }
 
-// Sections only, without the page shell — used inside article pages and the public home page.
+// Sections only, without the page shell — used inside article pages.
 export function PageSections({ sections: raw, imageSrc }: { sections: PageSection[]; imageSrc: (file: string) => string | undefined }) {
-  const signedIn = useDisplaySignedIn();
-  const sections = normalizeSections(raw).filter((s) => !s.hidden && shownFor(s, signedIn));
-  return <>{sections.map((s, i) => <Block key={s.id} s={s} i={i} first={i === 0} imageSrc={imageSrc} />)}</>;
+  const sections = normalizeSections(raw).filter((s) => !s.hidden);
+  return <>{sections.map((s, i) => <Section key={s.id} s={s} first={i === 0} src={s.image ? imageSrc(s.image) : undefined} />)}</>;
 }

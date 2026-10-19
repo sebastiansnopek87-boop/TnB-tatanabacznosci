@@ -2,9 +2,7 @@ import { useRef, useState, type FormEvent } from "react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowRight, Loader2, Lock, Mail } from "lucide-react";
-import { HOME_ASSETS } from "@/lib/home-assets";
-import { legacySection } from "@/lib/home-legacy";
-import { Txt, editAttrs, type BlockProps } from "./home-edit";
+import banner from "@/assets/banner-opt.jpg.asset.json";
 import { useModuleVisibility } from "@/hooks/use-module-visibility";
 import { NEWSLETTER_CONSENT_TEXT, newsletterSchema, subscribeNewsletter } from "@/lib/newsletter.functions";
 
@@ -15,9 +13,7 @@ const MESSAGES = {
   pending: "Sprawdź skrzynkę i potwierdź zapis, klikając link w wiadomości.",
 } as const;
 
-export function QuoteNewsletter({ s = legacySection("quote-newsletter"), sel, imageSrc }: BlockProps) {
-  const a = editAttrs(sel);
-  const src = (s.image && imageSrc?.(s.image)) || HOME_ASSETS["banner"]!.src;
+export function QuoteNewsletter() {
   const { visible } = useModuleVisibility();
   const send = useServerFn(subscribeNewsletter);
   const [email, setEmail] = useState("");
@@ -52,7 +48,7 @@ export function QuoteNewsletter({ s = legacySection("quote-newsletter"), sel, im
   return (
     <section className={`grid gap-px bg-border/40 ${visible("newsletter") ? "lg:grid-cols-[1.55fr_1fr]" : ""}`}>
       <div className="relative isolate flex items-center overflow-hidden px-5 py-16 sm:py-20 lg:px-14 lg:py-28">
-        <img {...a("image")} src={src} loading="lazy" decoding="async" alt={s.decorative ? "" : s.imageAlt} className="absolute inset-0 -z-20 h-full w-full object-cover" />
+        <img src={banner.url} loading="lazy" decoding="async" alt="Panorama gór o zachodzie słońca" className="absolute inset-0 -z-20 h-full w-full object-cover" />
         <div
           className="absolute inset-0 -z-10"
           style={{
@@ -61,16 +57,22 @@ export function QuoteNewsletter({ s = legacySection("quote-newsletter"), sel, im
           }}
         />
         <div className="border-l-2 border-gold pl-7">
-          <p {...a("body")} className="whitespace-pre-line font-display text-[1.2rem] leading-[1.7] text-foreground sm:text-[1.45rem]"><Txt s={s} k="body" text={s.body} /></p>
-          {s.quoteAuthor && <p {...a("quoteAuthor")} className="eyebrow mt-5 text-gold"><Txt s={s} k="quoteAuthor" text={s.quoteAuthor} /></p>}
+          <p className="font-display text-[1.2rem] leading-[1.7] text-foreground sm:text-[1.45rem]">
+            Nie musisz być żołnierzem, żeby być człowiekiem z zasadami.
+            <br />
+            Nie musisz mieć za sobą wyjątkowej historii, żeby mieć coś wartościowego do przekazania.
+          </p>
+          <p className="eyebrow mt-5 text-gold">Tata Na Baczności</p>
         </div>
       </div>
 
       {visible("newsletter") && <div className="flex items-center gap-6 bg-surface-deep px-5 py-14 lg:px-14 lg:py-28">
         <Mail className="hidden h-10 w-10 shrink-0 text-foreground/80 sm:block" strokeWidth={1} />
         <div className="w-full">
-          <h2 {...a("heading")} className="text-[0.82rem] uppercase tracking-[0.16em] text-gold"><Txt s={s} k="heading" text={s.heading} /></h2>
-          {s.caption && <p {...a("caption")} className="mt-2 text-[0.82rem] leading-[1.6] text-muted-foreground"><Txt s={s} k="caption" text={s.caption} /></p>}
+          <h2 className="text-[0.82rem] uppercase tracking-[0.16em] text-gold">Bądź na bieżąco</h2>
+          <p className="mt-2 text-[0.82rem] leading-[1.6] text-muted-foreground">
+            Otrzymuj nowe materiały, zapowiedzi podcastów i ważne informacje.
+          </p>
           <form onSubmit={handleSubmit} noValidate className="mt-4">
             <div className="flex flex-wrap gap-3">
               <input
