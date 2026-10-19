@@ -5,6 +5,7 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { usePreviewAudience } from "@/lib/preview-audience";
 import logo from "@/assets/logo-384.webp.asset.json";
 import { useModuleVisibility } from "@/hooks/use-module-visibility";
 import { brandSrc, getBrandSlogan, useBrand } from "@/hooks/use-brand-settings";
@@ -72,12 +73,16 @@ export function SiteHeader({ homeSection, editing = false }: { homeSection?: Pag
     return () => document.removeEventListener("keydown", close);
   }, [open, searchOpen]);
   const isActive = (to: string) => to !== "/" && (path === to || path.startsWith(to + "/"));
-  const auth = useAuth();
+  const realAuth = useAuth();
+  const preview = usePreviewAudience();
+  // Builder preview: render the chosen variant without the admin's real account data.
+  const auth = preview ? { status: preview === "member" ? "signed-in" as const : "signed-out" as const, user: null } : realAuth;
   const qc = useQueryClient();
   const navigate = useNavigate();
   const imgSrc = (brand?.header_image && brandSrc(brand.header_image)) || (brand?.logo && brandSrc(brand.logo)) || logo.url;
   const imgCls = brand?.header_size ? HEADER_SIZES[brand.header_size] ?? DEFAULT_HEADER : DEFAULT_HEADER;
   async function signOut() {
+    if (preview) return;
     setOpen(false);
     await qc.cancelQueries();
     qc.clear();
@@ -119,17 +124,17 @@ export function SiteHeader({ homeSection, editing = false }: { homeSection?: Pag
             <Search className="h-5 w-5" strokeWidth={1.5} />
           </Button>
           {auth.status === "loading" && <span aria-hidden className="hidden h-[42px] w-[230px] lg:block" />}
-          {(auth.status === "signed-out" || editing) && (<>
+          {(auth.status === "signed-out" || (editing && !preview)) && (<>
              {(!loginButton?.hidden || editing) && <a data-el={editing ? "button-0" : undefined} href={loginButton && isSafeHref(loginButton.href) ? loginButton.href : "/auth"} className={`hidden whitespace-nowrap px-4 py-3 text-foreground lg:block ${homeSection ? `home-cta home-cta-${loginButton?.variant ?? "outline"}` : outline}`}><RichText format={homeSection?.textFormats?.["button-0"]} fallback={loginButton?.label ?? "Zaloguj się"} inline /></a>}
              {(!joinButton?.hidden || editing) && <a data-el={editing ? "button-1" : undefined} href={joinButton && isSafeHref(joinButton.href) ? joinButton.href : "/auth?tryb=rejestracja"} className={`hidden items-center gap-2 px-4 py-3 lg:flex ${homeSection ? `home-cta home-cta-${joinButton?.variant ?? "solid"}` : solid}`}>
               <UserRound className="h-4 w-4" strokeWidth={1.75} />
                <RichText format={homeSection?.textFormats?.["button-1"]} fallback={joinButton?.label ?? "Dołącz"} inline />
              </a>}
           </>)}
-          {auth.status === "signed-in" && !editing && (<>
+          {auth.status === "signed-in" && (!editing || !!preview) && (<>
             <Button variant="ghost" type="button" onClick={signOut} className={`hidden h-auto rounded-none whitespace-nowrap px-6 py-3 text-foreground lg:block ${outline}`}>Wyloguj</Button>
             <Link to="/moje-tnb" aria-label="Moje TNB" className="flex items-center gap-2 whitespace-nowrap text-gold">
-              <UserAvatar own name={auth.user?.user_metadata?.['first_name'] ?? ""} className="size-9" />
+              {preview ? <UserRound aria-hidden className="size-9 border border-gold/50 p-1.5" /> : <UserAvatar own name={auth.user?.user_metadata?.['first_name'] ?? ""} className="size-9" />}
               <span className="hidden lg:inline">Moje TNB</span>
             </Link>
           </>)}

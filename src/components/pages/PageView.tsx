@@ -1,14 +1,15 @@
 import { Link } from "@tanstack/react-router";
 import type { MouseEvent, ReactNode } from "react";
 import { PageHeading, PageShell } from "@/components/tnb/PageShell";
-import { normalizeSections, type PageSection } from "@/lib/pages";
+import { SECTION_KINDS, isLegacyHomeKind, normalizeSections, shownFor, type PageSection } from "@/lib/pages";
+import { useDisplaySignedIn } from "@/lib/preview-audience";
 
 import { RichText } from "./RichText";
 import type { TextFormat } from "@/lib/rich-text";
 import { HomeSection } from "./HomeSections";
 import { SiteHeader } from "@/components/tnb/SiteHeader";
 import { SiteFooter } from "@/components/tnb/SiteFooter";
-import { HomeLayout } from "@/components/tnb/HomeLayout";
+import { HomeLayout, LegacyHomeBlock, isFullHome } from "@/components/tnb/HomeLayout";
 
 type Props = {
   eyebrow: string; title: string; intro: string; sections: PageSection[];
@@ -63,7 +64,6 @@ function Img({ s, src, className, eager, a = noA }: { s: PageSection; src: strin
 function Section({ s, src, first, sel }: { s: PageSection; src?: string | undefined; first: boolean; sel?: string | null | undefined }) {
   const a: A = sel === undefined ? noA : (el) => (sel === el ? { "data-el": el, "data-on": "" } : { "data-el": el });
   const imgLeft = s.layout === "left";
-  if (["cinematic", "value-strip", "home-nav"].includes(s.kind)) return <HomeSection s={s} imageSrc={f => f === s.image ? src : undefined} sel={sel} />;
   switch (s.kind) {
     case "hero":
       return (
@@ -183,35 +183,49 @@ function Section({ s, src, first, sel }: { s: PageSection; src?: string | undefi
   }
 }
 
+const isFx = (k: string) => k === "cinematic" || k === "value-strip" || k === "home-nav";
+function Block({ s, i, first, imageSrc, sel }: { s: PageSection; i: number; first: boolean; imageSrc: (f: string) => string | undefined; sel?: string | null | undefined }) {
+  void i;
+  if (isLegacyHomeKind(s.kind)) return <LegacyHomeBlock s={s} sel={sel} imageSrc={imageSrc} />;
+  if (isFx(s.kind)) return <HomeSection s={s} imageSrc={imageSrc} sel={sel} />;
+  return <Section s={s} first={first} src={s.image ? imageSrc(s.image) : undefined} sel={sel} />;
+}
+const AUD = { guest: "niezalogowanych", member: "zalogowanych" } as const;
+
 // One renderer for public pages, the admin preview and the Visual Builder, so all look identical.
 export function PageView({ eyebrow, title, intro, sections: raw, imageSrc, preview, edit, homePage = false }: Props) {
   const all = normalizeSections(raw);
-  const sections = edit ? all : all.filter((s) => !s.hidden);
+  const signedIn = useDisplaySignedIn();
+  const sections = edit ? all : all.filter((s) => !s.hidden && shownFor(s, signedIn));
+  const full = homePage && isFullHome(all);
   const home = all.some(s => s.kind === "home-nav" || s.kind === "cinematic");
   const hasHero = home || sections[0]?.kind === "hero";
   const onClick = (e: MouseEvent<HTMLDivElement>) => {
     if (!edit) return;
     const t = e.target as HTMLElement;
-    if (t.closest("a,button")) e.preventDefault();
-    const sec = t.closest<HTMLElement>("[data-sec]");
     if (t.closest("[data-zone]")) return;
+    // Preview links/buttons/forms never act (no navigation, sign-out or newsletter sign-up from the editor).
+    if (t.closest("a,button,input,label")) { e.preventDefault(); e.stopPropagation(); }
+    const sec = t.closest<HTMLElement>("[data-sec]");
     if (!sec) { edit.onSelect(null, !!t.closest("header,footer")); return; }
     e.stopPropagation();
     edit.onSelect({ i: Number(sec.dataset["sec"]), el: t.closest<HTMLElement>("[data-el]")?.dataset["el"] ?? "section" });
   };
+  const skip = (s: PageSection) => homePage && !full && s.kind === "home-nav";
   const content = <div className="overflow-x-hidden">
         {edit?.zone?.(0)}
-        {sections.map((s, i) => homePage && s.kind === "home-nav" ? null : edit ? (
+        {sections.map((s, i) => skip(s) ? null : edit ? (
           <div key={s.id}>
             <div data-sec={i} {...(edit.sel?.i === i && edit.sel.el === "section" ? { "data-sec-on": "" } : {})} className={s.hidden ? "opacity-40" : ""}>
-              {["cinematic", "value-strip", "home-nav"].includes(s.kind) ? <HomeSection s={s} imageSrc={imageSrc} sel={edit.sel?.i === i ? edit.sel.el : null} /> : <Section s={s} first={i === 0 && !hasHero} src={s.image ? imageSrc(s.image) : undefined} sel={edit.sel?.i === i ? edit.sel.el : null} />}
+              {shownFor(s, signedIn) ? <Block s={s} i={i} first={i === 0 && !hasHero} imageSrc={imageSrc} sel={edit.sel?.i === i ? edit.sel.el : null} />
+                : <section className="border-y border-dashed border-gold/40 px-5 py-3 text-center text-xs text-muted-foreground">{SECTION_KINDS[s.kind]} — widoczna tylko dla {AUD[s.audience as "guest" | "member"]}. Przełącz podgląd, żeby ją edytować.</section>}
             </div>
             {edit.zone?.(i + 1)}
           </div>
-        ) : ["cinematic", "value-strip", "home-nav"].includes(s.kind) ? <HomeSection key={s.id} s={s} imageSrc={imageSrc} /> : <Section key={s.id} s={s} first={i === 0 && !hasHero} src={s.image ? imageSrc(s.image) : undefined} />)}
+        ) : <Block key={s.id} s={s} i={i} first={i === 0 && !hasHero} imageSrc={imageSrc} />)}
       </div>;
   return <div onClickCapture={edit ? onClick : undefined}>
-    {homePage ? <HomeLayout>{content}</HomeLayout> : <div className="flex min-h-screen flex-col bg-background">
+    {homePage ? <HomeLayout sections={all} editing={!!edit}>{content}</HomeLayout> : <div className="flex min-h-screen flex-col bg-background">
       {!home && <SiteHeader />}
       {preview && <div className="bg-gold px-5 py-2 text-center text-[0.72rem] uppercase tracking-[0.14em] text-primary-foreground">Podgląd — ta wersja nie jest jeszcze widoczna publicznie</div>}
       {!hasHero && <PageHeading eyebrow={eyebrow} title={title} intro={intro} />}
@@ -221,8 +235,9 @@ export function PageView({ eyebrow, title, intro, sections: raw, imageSrc, previ
   </div>;
 }
 
-// Sections only, without the page shell — used inside article pages.
+// Sections only, without the page shell — used inside article pages and the public home page.
 export function PageSections({ sections: raw, imageSrc }: { sections: PageSection[]; imageSrc: (file: string) => string | undefined }) {
-  const sections = normalizeSections(raw).filter((s) => !s.hidden);
-  return <>{sections.map((s, i) => ["cinematic", "value-strip", "home-nav"].includes(s.kind) ? <HomeSection key={s.id} s={s} imageSrc={imageSrc} /> : <Section key={s.id} s={s} first={i === 0} src={s.image ? imageSrc(s.image) : undefined} />)}</>;
+  const signedIn = useDisplaySignedIn();
+  const sections = normalizeSections(raw).filter((s) => !s.hidden && shownFor(s, signedIn));
+  return <>{sections.map((s, i) => <Block key={s.id} s={s} i={i} first={i === 0} imageSrc={imageSrc} />)}</>;
 }
