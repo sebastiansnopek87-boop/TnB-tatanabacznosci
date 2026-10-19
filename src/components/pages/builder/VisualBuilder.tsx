@@ -326,7 +326,7 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
             </div>
           )}
           <Frame width={WIDTH[device]} onOverflow={onOverflow}>
-            <PageView eyebrow="Tata Na Baczności" title={d.title || "(bez tytułu)"} intro={d.intro} sections={d.sections} imageSrc={(f) => urls[f]}
+            <PageView homePage={meta?.system_key === "home"} eyebrow="Tata Na Baczności" title={d.title || "(bez tytułu)"} intro={d.intro} sections={d.sections} imageSrc={(f) => urls[f]}
               edit={{ sel, zone, onSelect: (s, locked) => {
                 if (locked) { toast.message("Nagłówek i stopka nie są jeszcze edytowalne wizualnie — działają normalnie."); return; }
                 setSel(s); if (s) { setRightOpen(true); setLeft((l) => (window.innerWidth < 1024 ? null : l)); }
