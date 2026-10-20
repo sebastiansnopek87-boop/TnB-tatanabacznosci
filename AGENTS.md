@@ -38,4 +38,4 @@
 - Cinematic home blocks are draft-only until explicit CMS publication; why: preserve public home. See src/lib/AGENTS.md.
 
 
-- Admin UI uses .admin-panel tokens; keep routes/auth/queries unchanged to isolate styling.
+- Admin UI uses .admin-panel tokens; preserve routes/auth/queries to isolate styling.
