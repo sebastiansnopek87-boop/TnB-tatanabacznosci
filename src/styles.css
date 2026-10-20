@@ -144,6 +144,22 @@
   --color-cinematic-background: oklch(0.13 0.003 65);
   --color-cinematic-foreground: oklch(0.96 0.006 80);
   --color-cinematic-copper: oklch(0.74 0.105 59);
+  --color-admin-background: oklch(0.155 0.004 75);
+  --color-admin-sidebar: oklch(0.185 0.005 75);
+  --color-admin-surface: oklch(0.215 0.006 75);
+  --color-admin-hover: oklch(0.265 0.009 75);
+  --color-admin-border: oklch(0.35 0.008 75);
+  --color-admin-label: oklch(0.82 0.01 80);
+  --color-admin-copper: oklch(0.76 0.075 57);
+}
+
+.admin-panel {
+  --background: var(--color-admin-background);
+  --card: var(--color-admin-surface);
+  --border: var(--color-admin-border);
+  --input: var(--color-admin-border);
+  --muted-foreground: var(--color-admin-label);
+  letter-spacing: 0;
 }
 
 .cinematic-hero { letter-spacing: 0; }
