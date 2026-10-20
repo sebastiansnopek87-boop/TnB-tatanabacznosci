@@ -9,8 +9,8 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 
-- Admin server functions use assertAdmin and logEvent; RLS repeats access rules. Why: defense in depth.
-- Signup open (email+confirmation, Google, Apple) -> /moje-tnb; roles granted only manually in user_roles.
+- Admin functions use assertAdmin/logEvent; RLS repeats access rules for defense in depth.
+- Open signup (confirmed email, Google, Apple) -> /moje-tnb; user_roles granted manually.
 - Private buckets only; public media served via /api/public/* after access checks. Read subdirectory AGENTS.md before changing files there; module rules: src/lib/AGENTS.md.
 - Roles: user_roles enum (superadmin, admin, moderator, editor, support, premium); panel access = admin; only superadmin changes roles (src/lib/users.functions.ts), last superadmin protected; why: reuse existing has_role/RLS.
 - Platform settings: singleton platform_settings (public read of safe columns); writes only via server fn after assertSuperadmin; maintenance screen is a UI gate in __root, /admin and /auth exempt. Why: config editable, admins never locked out.
@@ -32,8 +32,10 @@
 - Głos TNB social media (YouTube videos, Instagram media) come only from one admin-connected source each, synced server-side (youtube.server.ts / instagram.server.ts, official OAuth for Instagram) when >30 min old or manually; keys/tokens stay server-only, no manual entries or placeholders. Why: no duplicate catalogue, secrets never reach the browser.
 - Visual effects: platform_settings.visual_effects (public flags) -> data-fx-* attributes on <html> via VisualEffects in __root + CSS in styles.css; content visible unless JS adds fx-ready, reduced-motion always wins. Why: one source, no animation library, no hidden content on failure.
 
-- Account forms stay on a protected settings route; Moje TNB reuses collections and bookings. Why: separate maintenance without changing access.
+- Protected account settings are separate; Moje TNB reuses collections/bookings without changing access.
 - Avatars use owner-scoped server functions, private media and user_avatars; shared UserAvatar serves own or visible-community context; media usage protects referenced avatars. Why: one view without external URLs or public account IDs.
 - Admin order/user deep links validate optional UUID `record` and open existing details; why: exact navigation without a second editor.
 - Cinematic home blocks are draft-only until explicit CMS publication; why: preserve public home. See src/lib/AGENTS.md.
 
+
+- Admin UI uses scoped .admin-panel tokens; preserve routes, auth and data queries to isolate presentation changes.
