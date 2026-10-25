@@ -172,12 +172,10 @@
 @media (min-width: 640px) and (max-width: 1023px) {
   .cinematic-scene:last-child { grid-column: 1 / -1; }
 }
-/* Phones: scenes stack vertically, so keep each one shorter than the screen. */
+/* Phones: compact two-column cards; the fifth card is centred on its own row. */
 @media (max-width: 639px) {
-  .cinematic-scene, .cinematic-hero[data-height] .cinematic-scene { min-height: 0; height: clamp(340px, 62svh, 460px); }
-  .cinematic-hero[data-height="compact"] .cinematic-scene { height: clamp(300px, 52svh, 400px); }
-  .cinematic-hero[data-height="tall"] .cinematic-scene { height: clamp(380px, 72svh, 540px); }
-  .cinematic-scene > div:last-child { padding-bottom: 1.25rem; }
+  .cinematic-scene, .cinematic-hero[data-height] .cinematic-scene { min-height: 0; height: clamp(230px, 72vw, 300px); }
+  .cinematic-scene:last-child { grid-column: 1 / -1; justify-self: center; width: calc(50% - 0.125rem); }
 }
 
 .tnb-menu { overscroll-behavior: contain; }
