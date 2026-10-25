@@ -199,7 +199,7 @@ export function PageView({ eyebrow, title, intro, sections: raw, imageSrc, previ
     <PageShell>
       {preview && <div className="bg-gold px-5 py-2 text-center text-[0.72rem] uppercase tracking-[0.14em] text-primary-foreground">Podgląd — ta wersja nie jest jeszcze widoczna publicznie</div>}
       {!hasHero && <PageHeading eyebrow={eyebrow} title={title} intro={intro} />}
-      <div className="overflow-x-hidden">
+      <div className="overflow-x-clip">
         {edit?.zone?.(0)}
         {sections.map((s, i) => edit ? (
           <div key={s.id}>
