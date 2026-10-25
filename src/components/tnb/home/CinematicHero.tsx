@@ -16,20 +16,20 @@ export function CinematicHero({ s, a = noA, imageSrc }: HomeBlockProps) {
   const allowed = (href: string) => (href !== "/spolecznosc" || visible("community")) && (href !== "/o-tnb" || visible("about"));
   return (
     <section data-cinematic-hero data-height={f("sceneHeight")} data-contrast={f("contrast")} className="cinematic-hero bg-cinematic-background text-cinematic-foreground">
-      <div className="cinematic-scenes grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="cinematic-scenes grid grid-cols-2 gap-1 sm:gap-0 lg:grid-cols-5">
         {s.items.slice(0, 5).map((scene, i) => (
           <article key={i} {...a(`item-${i}`)} className="cinematic-scene relative isolate flex min-w-0 items-end justify-center overflow-hidden">
             <img src={assetUrl(scene.image) ?? (scene.image ? imageSrc?.(scene.image) : undefined)} alt={scene.alt ?? ""} width={768} height={1024} fetchPriority={i === 0 ? "high" : "auto"} decoding="async" className={`absolute inset-0 -z-20 h-full w-full object-cover ${focusClass(f(`scene${i + 1}Focus`))}`} />
             <div className="cinematic-scene-shade absolute inset-0 -z-10" />
-            <div className="w-full px-5 pb-7 text-center">
-              <h3 className="mx-auto max-w-60 whitespace-pre-line break-words font-display text-xl font-semibold uppercase leading-tight text-cinematic-copper">{scene.title}</h3>
-              <p className="mx-auto mt-3 max-w-64 whitespace-pre-line break-words font-display text-base leading-snug text-cinematic-foreground/85">{scene.body}</p>
+            <div className="w-full px-2.5 pb-4 text-center sm:px-5 sm:pb-7">
+              <h3 className="mx-auto max-w-60 whitespace-pre-line break-words font-display text-[0.95rem] font-semibold uppercase leading-tight sm:text-xl text-cinematic-copper">{scene.title}</h3>
+              <p className="mx-auto mt-1.5 max-w-64 whitespace-pre-line break-words font-display text-[0.8rem] leading-snug sm:mt-3 sm:text-base text-cinematic-foreground/85">{scene.body}</p>
             </div>
           </article>
         ))}
       </div>
-      <div className="mx-auto max-w-6xl px-5 pb-10 pt-4 text-center lg:pb-9">
-        <h2 className="font-display text-4xl font-medium uppercase leading-[1.05] sm:text-5xl lg:text-6xl">
+      <div className="mx-auto max-w-6xl px-4 pb-8 pt-5 text-center sm:px-5 sm:pb-10 sm:pt-4 lg:pb-9">
+        <h2 className="font-display text-[2rem] font-medium uppercase leading-[1.05] sm:text-5xl lg:text-6xl">
           <span {...a("f:line1")}>{f("line1")}</span>{" "}<span {...a("f:line2")} className="text-cinematic-copper">{f("line2")}</span>
         </h2>
         <p {...a("f:body")} className="mx-auto mt-4 max-w-4xl whitespace-pre-line font-display text-lg leading-relaxed text-cinematic-foreground/85">{f("body")}</p>
