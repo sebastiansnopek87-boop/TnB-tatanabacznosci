@@ -3,7 +3,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { createLibraryOrder, getCheckoutOptions, recoverAccess } from "@/lib/orders.functions";
 import { fmtPrice } from "@/lib/library";
-import { BANK_METHOD, type PaymentMethodId } from "@/config/payments";
+import { BANK_METHOD, bankConfigured, type PaymentMethodId } from "@/config/payments";
 import { useAuth } from "@/hooks/use-auth";
 
 const input = "w-full border border-border/60 bg-background px-3 py-2.5 text-sm text-foreground focus:border-gold focus:outline-none";
@@ -27,7 +27,8 @@ export function BuyPanel({ slug, title, price }: { slug: string; title: string; 
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const opts = useQuery({ queryKey: ["checkout-options"], queryFn: () => getCheckoutOptions(), enabled: open });
-  const methods = [...(opts.data?.providers ?? []).map((p) => ({ id: p.id as PaymentMethodId, label: `Płatność online — ${p.label}`, note: p.test ? "Tryb testowy operatora: nie zostaną pobrane prawdziwe środki." : "Zostaniesz przekierowany do bezpiecznej płatności u operatora.", isDefault: p.isDefault })), { ...BANK_METHOD, isDefault: false }];
+  const methods = [...(opts.data?.providers ?? []).map((p) => ({ id: p.id as PaymentMethodId, label: `Płatność online — ${p.label}`, note: p.test ? "Tryb testowy operatora: nie zostaną pobrane prawdziwe środki." : "Zostaniesz przekierowany do bezpiecznej płatności u operatora.", isDefault: p.isDefault })), ...(bankConfigured() ? [{ ...BANK_METHOD, isDefault: false }] : [])];
+  const noMethods = !!opts.data && methods.length === 0;
   const label = methods.find((m) => m.id === method)?.label ?? "";
 
   useEffect(() => {
@@ -41,7 +42,8 @@ export function BuyPanel({ slug, title, price }: { slug: string; title: string; 
   }, [open, user]);
   useEffect(() => {
     if (method || !opts.data) return;
-    setMethod((opts.data.providers.find((p) => p.isDefault) ?? opts.data.providers[0])?.id ?? "bank_transfer");
+    const def = (opts.data.providers.find((p) => p.isDefault) ?? opts.data.providers[0])?.id ?? (bankConfigured() ? "bank_transfer" : null);
+    if (def) setMethod(def);
   }, [opts.data, method]);
 
   function review(e: React.FormEvent) {
@@ -52,6 +54,7 @@ export function BuyPanel({ slug, title, price }: { slug: string; title: string; 
     if (email.trim().toLowerCase() !== email2.trim().toLowerCase()) return setErr("Adresy e-mail nie są takie same.");
     if (!dataOk) return setErr("Potwierdź, że dane odbiorcy i adres e-mail są prawidłowe.");
     if (phone.trim() && !/^\+?[0-9 ()-]{7,20}$/.test(phone.trim())) return setErr("Podaj poprawny numer telefonu.");
+    if (noMethods) return setErr("Zakup jest chwilowo niedostępny — brak dostępnej metody płatności.");
     if (!method || !methods.some((m) => m.id === method)) return setErr("Wybierz dostępną metodę płatności.");
     if (!consent) return setErr("Zaakceptuj warunki zakupu i politykę prywatności.");
     setStep("review");
@@ -114,7 +117,7 @@ export function BuyPanel({ slug, title, price }: { slug: string; title: string; 
       </div>
       <fieldset>
         <legend className="text-sm text-foreground/85">Metoda płatności *</legend>
-        {opts.isLoading ? <p className="mt-2 text-xs text-muted-foreground">Wczytywanie metod płatności…</p> : (
+        {opts.isLoading ? <p className="mt-2 text-xs text-muted-foreground">Wczytywanie metod płatności…</p> : noMethods ? <p role="status" className="mt-2 text-sm text-destructive">Zakup jest chwilowo niedostępny. Żadna metoda płatności nie jest obecnie skonfigurowana — spróbuj później.</p> : (
           <div className="mt-2 space-y-2">
             {methods.map((m) => (
               <label key={m.id} className={`flex cursor-pointer items-start gap-3 border p-3 ${method === m.id ? "border-gold" : "border-border/60"}`}>
@@ -137,7 +140,7 @@ export function BuyPanel({ slug, title, price }: { slug: string; title: string; 
       <p className="text-xs text-muted-foreground">Konto nie jest wymagane. {user ? "Zakup zostanie przypisany do Twojego konta." : "Jeśli później założysz konto na ten sam adres e-mail, zakup pojawi się w Moim TNB."}</p>
       {err && <p role="alert" className="text-sm text-destructive">{err}</p>}
       <div className="flex flex-wrap gap-3">
-        <button type="submit" className={btn}>Przejdź do podsumowania</button>
+        <button type="submit" className={btn} disabled={noMethods || opts.isLoading}>Przejdź do podsumowania</button>
         <button type="button" onClick={() => setOpen(false)} className={btn2}>Anuluj</button>
       </div>
     </form>

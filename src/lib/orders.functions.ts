@@ -45,6 +45,10 @@ export const createLibraryOrder = createServerFn({ method: "POST" })
       return { error: "Ten materiał nie jest obecnie dostępny do zakupu." };
     const user = await optionalUser();
     const online = data.method !== "bank_transfer";
+    if (!online) {
+      const { bankConfigured } = await import("@/config/payments");
+      if (!bankConfigured()) return { error: "Płatność przelewem bankowym jest obecnie niedostępna." };
+    }
     let provider: any = null;
     if (online) {
       const { configStatus } = await import("./payments/providers.server");
