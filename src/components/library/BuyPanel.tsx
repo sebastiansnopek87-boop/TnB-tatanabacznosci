@@ -3,7 +3,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { createLibraryOrder, getCheckoutOptions, recoverAccess } from "@/lib/orders.functions";
 import { fmtPrice } from "@/lib/library";
-import { BANK_METHOD, type PaymentMethodId } from "@/config/payments";
+import { BANK_METHOD, bankConfigured, type PaymentMethodId } from "@/config/payments";
 import { useAuth } from "@/hooks/use-auth";
 
 const input = "w-full border border-border/60 bg-background px-3 py-2.5 text-sm text-foreground focus:border-gold focus:outline-none";
@@ -27,7 +27,8 @@ export function BuyPanel({ slug, title, price }: { slug: string; title: string; 
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const opts = useQuery({ queryKey: ["checkout-options"], queryFn: () => getCheckoutOptions(), enabled: open });
-  const methods = [...(opts.data?.providers ?? []).map((p) => ({ id: p.id as PaymentMethodId, label: `Płatność online — ${p.label}`, note: p.test ? "Tryb testowy operatora: nie zostaną pobrane prawdziwe środki." : "Zostaniesz przekierowany do bezpiecznej płatności u operatora.", isDefault: p.isDefault })), { ...BANK_METHOD, isDefault: false }];
+  const methods = [...(opts.data?.providers ?? []).map((p) => ({ id: p.id as PaymentMethodId, label: `Płatność online — ${p.label}`, note: p.test ? "Tryb testowy operatora: nie zostaną pobrane prawdziwe środki." : "Zostaniesz przekierowany do bezpiecznej płatności u operatora.", isDefault: p.isDefault })), ...(bankConfigured() ? [{ ...BANK_METHOD, isDefault: false }] : [])];
+  const noMethods = !!opts.data && methods.length === 0;
   const label = methods.find((m) => m.id === method)?.label ?? "";
 
   useEffect(() => {
@@ -41,7 +42,8 @@ export function BuyPanel({ slug, title, price }: { slug: string; title: string; 
   }, [open, user]);
   useEffect(() => {
     if (method || !opts.data) return;
-    setMethod((opts.data.providers.find((p) => p.isDefault) ?? opts.data.providers[0])?.id ?? "bank_transfer");
+    const def = (opts.data.providers.find((p) => p.isDefault) ?? opts.data.providers[0])?.id ?? (bankConfigured() ? "bank_transfer" : null);
+    if (def) setMethod(def);
   }, [opts.data, method]);
 
   function review(e: React.FormEvent) {
