@@ -76,7 +76,11 @@ export const setPaymentEnvironment = createServerFn({ method: "POST" })
       if (!cur || !configStatus(cur as any).configured) throw new Error("Nie można uruchomić produkcji bez kompletnej konfiguracji.");
       if (!cur.last_test_ok) throw new Error("Najpierw wykonaj udany test połączenia.");
     }
-    const { error } = await s.from("payment_providers").update({ environment: data.environment, last_test_at: null, last_test_ok: null, last_test_detail: null, updated_at: new Date().toISOString(), updated_by: context.userId }).eq("id", data.id);
+    // Switching to LIVE always deactivates the operator: a sandbox test is only an entry
+    // condition, never proof of a working production connection. The operator stays
+    // disabled and non-default until a successful LIVE test in updatePaymentProvider.
+    const liveReset = data.environment === "live" ? { enabled: false, is_default: false } : {};
+    const { error } = await s.from("payment_providers").update({ environment: data.environment, ...liveReset, last_test_at: null, last_test_ok: null, last_test_detail: null, updated_at: new Date().toISOString(), updated_by: context.userId }).eq("id", data.id);
     if (error) throw new Error("Nie udało się zmienić środowiska.");
     await logEvent({ type: data.environment === "live" ? "payment_live_on" : "payment_live_off", actor: context.userId, objectKind: "payment", objectId: data.id });
     return { ok: true };
