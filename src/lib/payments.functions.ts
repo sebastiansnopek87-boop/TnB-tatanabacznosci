@@ -37,14 +37,26 @@ export const updatePaymentProvider = createServerFn({ method: "POST" })
   }).parse(d))
   .handler(async ({ data, context }) => {
     await assertSuperadmin(context, `payment_${data.id}`);
-    const { configStatus } = await import("./payments/providers.server");
+    const { ADAPTERS, configStatus } = await import("./payments/providers.server");
     const s = await admin();
     const { data: cur } = await s.from("payment_providers").select("*").eq("id", data.id).single();
     const next = { ...cur, merchant_id: data.merchant_id || null, pos_id: data.pos_id || null, client_id: data.client_id || null };
     if (data.enabled && !configStatus(next as any).configured) throw new Error("Nie można włączyć operatora bez kompletnej konfiguracji.");
     if (data.isDefault && !data.enabled) throw new Error("Operator domyślny musi być włączony.");
+    // Enabling a LIVE operator requires a fresh, successful connection test against
+    // the production endpoint BEFORE any activation write or default-operator change.
+    let liveTest: { ok: boolean; detail: string } | null = null;
+    if (data.enabled && cur?.environment === "live") {
+      liveTest = await ADAPTERS[data.id].test(next as any).catch(() => ({ ok: false, detail: "Brak odpowiedzi od operatora." }));
+      if (!liveTest.ok) throw new Error(`Nie można włączyć operatora w trybie produkcyjnym: ${liveTest.detail}`);
+    }
+    // Changed identifiers invalidate any earlier test result unless a fresh test just passed.
+    const idsChanged = next.merchant_id !== cur?.merchant_id || next.pos_id !== cur?.pos_id || next.client_id !== cur?.client_id;
+    const testFields = liveTest
+      ? { last_test_at: new Date().toISOString(), last_test_ok: liveTest.ok, last_test_detail: liveTest.detail }
+      : idsChanged ? { last_test_at: null, last_test_ok: null, last_test_detail: null } : {};
     if (data.isDefault) await s.from("payment_providers").update({ is_default: false }).neq("id", data.id);
-    const { error } = await s.from("payment_providers").update({ enabled: data.enabled, is_default: data.isDefault, merchant_id: next.merchant_id, pos_id: next.pos_id, client_id: next.client_id, updated_at: new Date().toISOString(), updated_by: context.userId }).eq("id", data.id);
+    const { error } = await s.from("payment_providers").update({ enabled: data.enabled, is_default: data.isDefault, merchant_id: next.merchant_id, pos_id: next.pos_id, client_id: next.client_id, ...testFields, updated_at: new Date().toISOString(), updated_by: context.userId }).eq("id", data.id);
     if (error) throw new Error("Nie udało się zapisać konfiguracji.");
     await logEvent({ type: "payment_config", actor: context.userId, objectKind: "payment", objectId: data.id, detail: `${data.enabled ? "włączony" : "wyłączony"}${data.isDefault ? ", domyślny" : ""}` });
     return { ok: true };
