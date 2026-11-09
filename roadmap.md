@@ -52,8 +52,9 @@
 - [x] Strona główna w Visual Builderze: wspólny renderer, 7 edytowalnych sekcji, przełącznik Niezalogowany/Zalogowany, szkic bez publikacji.
 - [ ] Nagłówek, menu i stopka w edytorze wizualnym (globalne) — osobny etap.
 ## ETAP 1 — Hardening platform_settings (2026-11-09)
-- [ ] getPlatformSettings: odczyt danych administracyjnych przez serwerowy klient po assertAdmin
-- [ ] Przygotować (nie stosować) migrację ograniczającą odczyt anon/authenticated do publicznych kolumn
-- [ ] Testy: lokalna próba migracji z rolami, panel admina, zapis, strona publiczna; raport i czekanie na akceptację
+- [x] getPlatformSettings: odczyt danych administracyjnych przez serwerowy klient po assertAdmin
+- [x] Przygotować (nie stosować) migrację ograniczającą odczyt anon/authenticated do publicznych kolumn — db-proposals/platform_settings_least_privilege.sql
+- [x] Testy: lokalna próba migracji z rolami, panel admina, zapis, strona publiczna
+- [ ] Zastosowanie migracji w bazie projektu — czeka na akceptację właściciela
 
 - [x] Filmowa sekcja „pięć etapów życia”: jeden blok na początku istniejącego szkicu home, pięć obrazów i edytowalne pola; 33 testy stron i 19 regresji PASS, build OK, zapis/odczyt i przywrócenie próbnego nagłówka PASS; 7 dotychczasowych sekcji oraz publiczna / niezmienione, bez publikacji. Przesyłanie nowych zdjęć w tym etapie nie było testowane.
