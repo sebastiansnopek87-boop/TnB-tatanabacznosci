@@ -49,4 +49,19 @@ describe("pola publiczne", () => {
     expect(cols).toContain("contact_phone");
     expect(cols).toContain("footer_description");
   });
+
+  it("proponowana migracja przyznaje odczyt tylko kolumnom z PUBLIC_COLS (oraz id)", async () => {
+    const { PUBLIC_COLS } = await import("./platform.functions");
+    const fs = await import("node:fs/promises");
+    const sql = await fs.readFile(new URL("../../db-proposals/platform_settings_least_privilege.sql", import.meta.url), "utf8");
+    const m = sql.match(/GRANT SELECT \(([^)]+)\) ON public\.platform_settings TO anon, authenticated;/);
+    expect(m).toBeTruthy();
+    const granted = (m?.[1] ?? "").split(",").map((c) => c.trim()).sort();
+    const expected = ["id", ...PUBLIC_COLS.split(",").map((c) => c.trim())].sort();
+    expect(granted).toEqual(expected);
+    for (const hidden of ["billing_name", "billing_nip", "billing_address", "billing_same_as_company", "updated_at", "updated_by"]) {
+      expect(granted).not.toContain(hidden);
+    }
+    expect(sql).toContain("REVOKE ALL PRIVILEGES ON TABLE public.platform_settings FROM anon, authenticated, PUBLIC;");
+  });
 });
