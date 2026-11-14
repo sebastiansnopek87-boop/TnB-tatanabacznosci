@@ -64,3 +64,24 @@ Nietknięte w każdym etapie: baza, dane, RLS, role, storage, sekrety (tylko dod
 
 ## Szacunek
 Duży. Największe ryzyko: zamówienia/webhooki, dostarczanie PDF, obrazy prywatne, utrata SEO, zgodność z podglądem Lovable.
+
+## G. Uzupełnienie: logowanie i sesje w SPA
+| Element | Dziś | W SPA | Status |
+|---|---|---|---|
+| Rejestracja, ponowna aktywacja | `supabase.auth.signUp/resend`, powrót na `/auth` (auth.tsx) | bez zmian, działa z przeglądarki | OK — wymaga dodania `https://tatanabacznosci.pl/auth` do adresów powrotu |
+| Reset hasła | `resetPasswordForEmail` -> `/reset-password` | bez zmian | OK — jw. dla `/reset-password` |
+| Google / Apple | broker Lovable (`lovable.auth.signInWithOAuth`) | broker działa tylko na hostingu Lovable | **BLOCKER** — na zwykłym hostingu potrzebne własne dane Google/Apple i zwykłe logowanie OAuth backendu |
+| Sesja | w przeglądarce (localStorage), jeden `useAuth()` | bez zmian | OK |
+| Guard tras | `_authenticated/route.tsx` (tylko w przeglądarce) | komponent `RequireAuth` w layoutach React Router, przekierowanie na `/auth` | OK |
+| Role (admin, superadmin) | sprawdzane serwerowo w każdej funkcji + RLS | sprawdzane w każdej funkcji backendowej (JWT + has_role) + RLS; UI tylko ukrywa | OK, bez osłabienia |
+
+## H. Uzupełnienie: funkcje backendowe Lovable Cloud
+- Dziś istniejących funkcji brzegowych: **0** (`supabase/functions` nie istnieje).
+- Lovable Cloud pozwala tworzyć i wdrażać funkcje brzegowe; mają dostęp do już ustawionych sekretów (service role, LOVABLE_API_KEY, YOUTUBE_API_KEY, LOVABLE_CRON_SECRET); brakujące (INSTAGRAM_*, klucze operatorów, PUBLIC_SITE_URL) dodaje się w ustawieniach sekretów.
+- Operacje możliwe wprost z przeglądarki (RLS): publiczne odczyty artykułów, biblioteki, podcastu, spotkań, społeczności (`community_feed*`, `article_stats`), własne posty/komentarze/reakcje, `ensure_my_identity`, `set_my_display_mode`. Wszystko inne — przez funkcje backendowe z macierzy C.
+
+## I. Test wycieku sekretów
+Po `vite build`: przeszukać `dist/` pod kątem nazw i wartości SUPABASE_SERVICE_ROLE_KEY, LOVABLE_API_KEY, YOUTUBE_API_KEY, INSTAGRAM_APP_SECRET, kluczy operatorów, oraz ciągów `service_role`, `client.server`; wynik musi być pusty. Dozwolony tylko klucz publiczny.
+
+## J. Rekomendacja końcowa
+Migracja bez utraty funkcji i bez zmian w bazie jest możliwa, pod warunkiem: (1) pracy w kopii projektu, (2) utworzenia ok. 15 funkcji backendowych obejmujących 217 obecnych funkcji, (3) rozwiązania logowania Google/Apple poza brokerem Lovable, (4) akceptacji utraty SEO z SSR, (5) zmiany adresów webhooków, callbacku Instagram, obrazów i cronów.
