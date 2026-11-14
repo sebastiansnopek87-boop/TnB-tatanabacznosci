@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { adminCheckInstagramConfig, adminDisconnectInstagram, adminGetInstagram, adminSaveInstagramOptions, adminStartInstagramConnect, adminSyncInstagram } from "@/lib/voice.functions";
+import { adminCheckInstagramConfig, adminDisconnectInstagram, adminGetInstagram, adminSaveInstagramOptions, adminStartInstagramConnect, adminSyncInstagram } from "@/lib/api/voice";
 import { errMsg } from "@/components/admin/format";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

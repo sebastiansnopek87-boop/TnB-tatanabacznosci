@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { listMedia, getMediaDetail, createMediaUpload, finalizeMediaUpload, deleteMedia } from "@/lib/media.functions";
+import { listMedia, getMediaDetail, createMediaUpload, finalizeMediaUpload, deleteMedia } from "@/lib/api/media";
 import { errMsg, fmtDate } from "@/components/admin/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

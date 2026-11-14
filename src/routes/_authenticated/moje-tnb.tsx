@@ -2,7 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { useServerFn } from '@tanstack/react-start';
 import { useQuery } from '@tanstack/react-query';
 import { BookOpen, FolderOpen, CalendarDays, MessageCircle, Settings, ArrowUpRight, Shield } from 'lucide-react';
-import { getAdminStatus } from '@/lib/admin.functions';
+import { getAdminStatus } from '@/lib/api/admin';
 import { PageShell } from '@/components/tnb/PageShell';
 import { Button } from '@/components/ui/button';
 import { MyMeetings } from '@/components/consult/MyMeetings';

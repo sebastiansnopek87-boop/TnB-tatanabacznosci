@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
-import { listAdminEvents } from "@/lib/admin.functions";
+import { listAdminEvents } from "@/lib/api/admin";
 import { errMsg, fmtDate } from "@/components/admin/format";
 import { EVENT_CATEGORIES, OBJECT_KIND, RESULT, actorName, eventLabel, typesMatching } from "@/components/admin/events";
 import { Button } from "@/components/ui/button";

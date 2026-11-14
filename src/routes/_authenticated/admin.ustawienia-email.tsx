@@ -3,13 +3,13 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
-import { getEmailSettings, updateEmailSettings } from "@/lib/admin.functions";
+import { getEmailSettings, updateEmailSettings } from "@/lib/api/admin";
 import { fmtDate , errMsg } from "@/components/admin/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { getNotificationOverview, runDuplicateCheck, sendTestMessage, updateDeliveryConfig } from "@/lib/notifications.functions";
+import { getNotificationOverview, runDuplicateCheck, sendTestMessage, updateDeliveryConfig } from "@/lib/api/notifications";
 
 export const Route = createFileRoute("/_authenticated/admin/ustawienia-email")({ component: EmailSettings });
 

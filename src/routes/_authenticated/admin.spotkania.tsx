@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import {
   adminCancelMeeting, adminGetMeeting, adminListMeetings, adminListRegistrations, adminRemoveMeetingImage, adminSaveMeeting,
   adminSetMeetingStatus, adminUpdateRegistration, adminUploadMeetingImage,
-} from "@/lib/meetings.functions";
+} from "@/lib/api/meetings";
 import { DIFFICULTY, MEETING_KINDS, MEETING_STATUS, REG_STATUS, type MeetingKind, type MeetingStatus, type RegStatus } from "@/lib/meetings";
 import { slugify } from "@/lib/library";
 import { errMsg, fmtDate } from "@/components/admin/format";

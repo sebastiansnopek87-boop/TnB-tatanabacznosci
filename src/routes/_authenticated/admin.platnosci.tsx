@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { listPaymentProviders, setPaymentEnvironment, testPaymentProvider, updatePaymentProvider } from "@/lib/payments.functions";
+import { listPaymentProviders, setPaymentEnvironment, testPaymentProvider, updatePaymentProvider } from "@/lib/api/payments";
 import { errMsg, fmtDate } from "@/components/admin/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

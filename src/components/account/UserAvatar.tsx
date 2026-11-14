@@ -4,7 +4,7 @@ import { useServerFn } from '@tanstack/react-start';
 import { UserRound } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
-import { getMyAvatar } from '@/lib/avatar.functions';
+import { getMyAvatar } from '@/lib/api/avatar';
 
 export function UserAvatar({ name = '', own = false, kind, id, className = 'size-10' }: { name?: string; own?: boolean; kind?: 'post' | 'comment'; id?: string; className?: string }) {
   const auth = useAuth();

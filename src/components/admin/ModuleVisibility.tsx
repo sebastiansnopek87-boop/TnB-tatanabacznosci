@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { MODULES, type ModuleVisibility } from "@/config/modules";
-import { setModuleVisibility } from "@/lib/platform.functions";
+import { setModuleVisibility } from "@/lib/api/platform";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 

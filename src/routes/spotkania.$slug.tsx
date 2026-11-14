@@ -7,7 +7,7 @@ import { MeetingBadges } from "@/components/meetings/MeetingBadges";
 import { MyRegBox } from "@/components/meetings/MyRegBox";
 import { PageShell } from "@/components/tnb/PageShell";
 import { supabase } from "@/integrations/supabase/client";
-import { getMeeting, getMyRegistration, registerForMeeting } from "@/lib/meetings.functions";
+import { getMeeting, getMyRegistration, registerForMeeting } from "@/lib/api/meetings";
 import { DIFFICULTY, MEETING_KINDS, fmtTime, fmtWhen, freeSeats, meetingImage, regState, type MeetingDetail } from "@/lib/meetings";
 
 export const Route = createFileRoute("/spotkania/$slug")({

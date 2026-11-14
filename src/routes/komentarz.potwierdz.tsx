@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { PageHeading, PageShell } from "@/components/tnb/PageShell";
 import { Button } from "@/components/ui/button";
-import { confirmGuestComment, resendGuestComment } from "@/lib/guest-comments.functions";
+import { confirmGuestComment, resendGuestComment } from "@/lib/api/guest-comments";
 
 export const Route = createFileRoute("/komentarz/potwierdz")({
   validateSearch: z.object({ t: z.string().max(100).optional().catch(undefined) }),

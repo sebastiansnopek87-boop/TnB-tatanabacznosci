@@ -6,13 +6,13 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { errMsg } from "@/components/admin/format";
 import { CreateArticle, MaterialsTab } from "@/components/admin/ai/Materials";
-import { listMaterials } from "@/lib/editor-materials.functions";
+import { listMaterials } from "@/lib/api/editor-materials";
 import { stageOf } from "@/lib/editor-materials";
 import { MATERIAL_RULES } from "@/lib/editor-materials";
 import {
   addNoteSource, addWebSource, deleteSource, developProposal, getEditorDashboard, getEditorSettings, listAnalyses, listProposals, listSources,
   previewAnalysisData, runAnalysis, saveEditorSettings, testAiConnection, updateProposal, updateSource,
-} from "@/lib/editor-ai.functions";
+} from "@/lib/api/editor-ai";
 
 export const Route = createFileRoute("/_authenticated/admin/asystent-ai")({
   head: () => ({ meta: [{ title: "Asystent redakcyjny AI — Panel TNB" }, { name: "description", content: "Prywatny asystent redakcyjny TNB." }, { name: "robots", content: "noindex, nofollow" }] }),

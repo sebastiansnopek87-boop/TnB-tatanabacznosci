@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { listCommunity, listReports, moderateCommunity, resolveReport } from "@/lib/admin.functions";
+import { listCommunity, listReports, moderateCommunity, resolveReport } from "@/lib/api/admin";
 import { fmtDate, errMsg } from "@/components/admin/format";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

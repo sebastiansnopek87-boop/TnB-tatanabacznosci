@@ -10,7 +10,7 @@ import { PageSections } from "@/components/pages/PageView";
 import { normalizeSections, type PageSection } from "@/lib/pages";
 import {
   adminCreateTemplate, adminDeleteTemplate, adminDuplicateTemplate, adminListTemplates, adminTemplateImageUrls, adminUpdateTemplate, type BuilderTemplate,
-} from "@/lib/templates.functions";
+} from "@/lib/api/templates";
 
 export const TEMPLATE_CATEGORIES = ["Otwarcia", "Treść", "Wartości", "Cytaty", "Zdjęcia", "Wezwania do działania", "Inne"];
 export const SCOPE_LABEL = { element: "Element", section: "Sekcja", sections: "Kilka sekcji" } as const;

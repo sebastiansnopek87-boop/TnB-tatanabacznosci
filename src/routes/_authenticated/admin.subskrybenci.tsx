@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { getDashboard, listSubscribers } from "@/lib/admin.functions";
+import { getDashboard, listSubscribers } from "@/lib/api/admin";
 import { fmtDate, SUB_STATUS , errMsg } from "@/components/admin/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

@@ -6,8 +6,8 @@ import { z } from "zod";
 import { PageShell } from "@/components/tnb/PageShell";
 import { useUid } from "@/lib/community";
 import { KINDS, accessLabel, fmtPrice, coverSrc, fmtDay, getLibraryItem, listCategories } from "@/lib/library";
-import { getLibraryFileUrl, adminLibraryCoverUrl } from "@/lib/library.functions";
-import { listMyPurchases } from "@/lib/orders.functions";
+import { getLibraryFileUrl, adminLibraryCoverUrl } from "@/lib/api/library";
+import { listMyPurchases } from "@/lib/api/orders";
 import { BuyPanel } from "@/components/library/BuyPanel";
 import { FreeMaterialPanel } from "@/components/library/FreeMaterialPanel";
 

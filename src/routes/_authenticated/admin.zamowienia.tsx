@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { adminGetOrder, adminListOrders, adminResendDelivery, adminSalesSummary, adminSetOrderStatus } from "@/lib/orders.functions";
+import { adminGetOrder, adminListOrders, adminResendDelivery, adminSalesSummary, adminSetOrderStatus } from "@/lib/api/orders";
 import { fmtDate, errMsg } from "@/components/admin/format";
 import { fmtPrice } from "@/lib/library";
 import { Button } from "@/components/ui/button";

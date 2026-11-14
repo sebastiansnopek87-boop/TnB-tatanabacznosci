@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { adminAddManualVideo, adminGetYoutubeSource, adminListVideos, adminSaveYoutubeSource, adminSetVideoStatus, adminSyncIfStale, adminSyncYoutube, adminUpdateVideo, type AdminVideo } from "@/lib/voice.functions";
+import { adminAddManualVideo, adminGetYoutubeSource, adminListVideos, adminSaveYoutubeSource, adminSetVideoStatus, adminSyncIfStale, adminSyncYoutube, adminUpdateVideo, type AdminVideo } from "@/lib/api/voice";
 import { VIDEO_STATUS, ytThumb } from "@/lib/voice";
 import { errMsg } from "@/components/admin/format";
 import { Button } from "@/components/ui/button";

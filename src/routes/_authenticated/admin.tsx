@@ -2,7 +2,7 @@ import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tan
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { getAdminStatus } from "@/lib/admin.functions";
+import { getAdminStatus } from "@/lib/api/admin";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { ChevronDown, ChevronRight, LayoutDashboard, Users, FileText, Mail, Settings, Menu, X, LogOut } from "lucide-react";

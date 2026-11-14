@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { setVisualEffects, type VisualEffects } from "@/lib/platform.functions";
+import { setVisualEffects, type VisualEffects } from "@/lib/api/platform";
 import { FX_DEFAULT, fxAttrs, normalizeFx } from "@/lib/visual-effects";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";

@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Sparkles } from "lucide-react";
-import { recommendLibrary } from "@/lib/recommend.functions";
+import { recommendLibrary } from "@/lib/api/recommend";
 type Recommendation = { slug: string; title: string; reason: string };
 
 export function AiRecommender() {

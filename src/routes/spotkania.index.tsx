@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarDays, MapPin, Video, MessageCircle } from "lucide-react";
 import { PageShell } from "@/components/tnb/PageShell";
-import { listMeetings } from "@/lib/meetings.functions";
+import { listMeetings } from "@/lib/api/meetings";
 import { MeetingBadges } from "@/components/meetings/MeetingBadges";
 import { fmtWhen, isPast, meetingImage, regState, type PublicMeeting } from "@/lib/meetings";
 

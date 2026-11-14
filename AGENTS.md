@@ -39,3 +39,4 @@
 
 
 - Admin UI uses .admin-panel tokens; preserve routes/auth/queries to isolate styling.
+- UI imports backend operations only via src/lib/api/* (never *.functions directly); why: SPA migration swaps the implementation in one place.

@@ -4,10 +4,10 @@ import { useMemo, useState } from "react";
 import { Clock, Headphones, Lock, Search } from "lucide-react";
 import { PageShell } from "@/components/tnb/PageShell";
 import { ChannelsSection, InstagramSection, StorySection, WatchSection } from "@/components/voice/VoiceSections";
-import { listEpisodes } from "@/lib/podcast.functions";
+import { listEpisodes } from "@/lib/api/podcast";
 import { coverUrl, fmtDay, fmtDuration, type PublicEpisode } from "@/lib/podcast";
-import { getPodcastLayout } from "@/lib/platform.functions";
-import { listInstagram, listVideos } from "@/lib/voice.functions";
+import { getPodcastLayout } from "@/lib/api/platform";
+import { listInstagram, listVideos } from "@/lib/api/voice";
 import { buildMedia, SOURCE_LABEL, type MediaItem, type MediaSource } from "@/lib/voice-media";
 
 const TITLE = "Głos TNB — historie, rozmowy i głosy ludzi w drodze";

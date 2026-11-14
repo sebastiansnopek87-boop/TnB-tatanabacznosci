@@ -15,14 +15,14 @@ import { errMsg } from "@/components/admin/format";
 import { PageView, type Sel } from "@/components/pages/PageView";
 import {
   adminCreatePageUpload, adminGetPage, adminStartHomeDraft, adminListVersions, adminPageImageUrls, adminPublishDraft, adminRestoreVersion, adminSaveDraft,
-} from "@/lib/pages.functions";
+} from "@/lib/api/pages";
 import { isHomeKind, SECTION_KINDS, SYSTEM_PAGES, newSection, normalizeSections, pagePath, type PageDraft, type PageSection, type PageVersion, type SectionKind } from "@/lib/pages";
 import { Frame } from "./Frame";
 import { HomeInspector } from "./HomeInspector";
 import { PreviewContext, type PreviewViewer } from "@/hooks/preview-viewer";
 import { HOME_FIELDS, homeDefaultSections, newHomeSection, usableHome } from "@/lib/home-content";
 import { SaveTemplateDialog, TemplatesPanel, useTemplates } from "./Templates";
-import { adminInstantiateTemplate, type BuilderTemplate } from "@/lib/templates.functions";
+import { adminInstantiateTemplate, type BuilderTemplate } from "@/lib/api/templates";
 import { Inspector, PagePanel } from "./Inspector";
 import { BLOCKS, CATEGORIES, COVERAGE, canInsert, diffDrafts, findEmpty } from "./registry";
 

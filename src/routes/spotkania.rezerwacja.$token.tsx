@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { CheckCircle2 } from "lucide-react";
 import { PageShell } from "@/components/tnb/PageShell";
-import { getBookingByToken } from "@/lib/consult.functions";
+import { getBookingByToken } from "@/lib/api/consult";
 import { BOOKING_STATUS, fmtDate, fmtHm, type BookingStatus } from "@/lib/consult";
 
 export const Route = createFileRoute("/spotkania/rezerwacja/$token")({

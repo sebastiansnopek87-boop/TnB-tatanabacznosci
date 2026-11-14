@@ -9,7 +9,7 @@ import { ArticleView } from "@/components/articles/ArticleView";
 import {
   aiEditFragment, aiEditWhole, approveAndHandoff, finishMaterial, generateMaterialImage, getMaterial, listMaterials, materialImageUrls, previewCreateMaterial,
   restoreMaterialVersion, saveMaterial, setMaterialStatus, startMaterial, updateMaterialImage, writeMaterial,
-} from "@/lib/editor-materials.functions";
+} from "@/lib/api/editor-materials";
 import { CONTRIB, HANDOFF_LABEL, HANDOFF_PATH, USAGE_LABEL, VERIFY, handoffTarget, stageOf, type ArticleMeta, type MaterialImage, type MaterialSection } from "@/lib/editor-materials";
 import { articleCategoriesQuery } from "@/lib/articles";
 import { newSection, type PageSection } from "@/lib/pages";

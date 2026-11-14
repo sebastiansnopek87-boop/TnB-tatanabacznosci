@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { cancelMyBooking, listMyBookings } from "@/lib/consult.functions";
+import { cancelMyBooking, listMyBookings } from "@/lib/api/consult";
 import { BOOKING_STATUS, CANCEL_REASONS, canUserCancel, fmtDate, fmtHm, type BookingStatus } from "@/lib/consult";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";

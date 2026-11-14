@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { getNotificationOverview, getTemplate, previewTemplate, resetTemplate, saveTemplate, sendTestMessage } from "@/lib/notifications.functions";
+import { getNotificationOverview, getTemplate, previewTemplate, resetTemplate, saveTemplate, sendTestMessage } from "@/lib/api/notifications";
 import { EVENTS, MODULE_LABEL, VARIABLES } from "@/lib/notify/registry";
 import { errMsg } from "@/components/admin/format";
 import { MailPreview } from "@/components/admin/MailPreview";

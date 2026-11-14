@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { getPodcastLayout, setPodcastLayout, type PodcastLayout } from "@/lib/platform.functions";
+import { getPodcastLayout, setPodcastLayout, type PodcastLayout } from "@/lib/api/platform";
 import { errMsg } from "@/components/admin/format";
 
 const OPTIONS: { value: PodcastLayout; title: string; desc: string }[] = [

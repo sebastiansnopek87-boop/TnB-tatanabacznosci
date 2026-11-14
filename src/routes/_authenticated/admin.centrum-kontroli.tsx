@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { controlCenterSearch, controlCenterHistory } from "@/lib/control-center.functions";
+import { controlCenterSearch, controlCenterHistory } from "@/lib/api/control-center";
 import { type ReadState, type HistoryEvent } from "@/lib/control-center";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

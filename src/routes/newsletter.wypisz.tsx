@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { PageHeading, PageShell } from "@/components/tnb/PageShell";
-import { unsubscribeNewsletter } from "@/lib/newsletter.functions";
+import { unsubscribeNewsletter } from "@/lib/api/newsletter";
 
 const TITLE = "Wypisz się z newslettera — Tata Na Baczności";
 const DESC = "Wycofaj zgodę na otrzymywanie newslettera Tata Na Baczności.";

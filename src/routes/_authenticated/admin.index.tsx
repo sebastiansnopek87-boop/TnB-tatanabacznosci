@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { errMsg, fmtDate } from "@/components/admin/format";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getDashboard } from "@/lib/admin.functions";
+import { getDashboard } from "@/lib/api/admin";
 import { OBJECT_KIND, RESULT, actorName, eventLabel } from "@/components/admin/events";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, ArrowUpRight, ArrowRight, CircleAlert } from "lucide-react";

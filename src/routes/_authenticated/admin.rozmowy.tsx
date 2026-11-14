@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
   adminBlockDate, adminGetAvailability, adminGetBooking, adminListBookings, adminSaveAvailability, adminUpdateBooking,
-} from "@/lib/consult.functions";
+} from "@/lib/api/consult";
 import { BOOKING_STATUS, MAIL_STATUS, WEEKDAYS, fmtDate, fmtHm, type BookingStatus } from "@/lib/consult";
 import { errMsg, fmtDate as fmtDT } from "@/components/admin/format";
 import { Button } from "@/components/ui/button";

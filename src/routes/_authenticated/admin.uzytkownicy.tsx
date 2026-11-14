@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Fragment, useState, useEffect } from "react";
 import { toast } from "sonner";
-import { listUsers, getUserDetail, setUserRole, ROLE_VALUES } from "@/lib/users.functions";
+import { listUsers, getUserDetail, setUserRole, ROLE_VALUES } from "@/lib/api/users";
 import { errMsg, fmtDate } from "@/components/admin/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

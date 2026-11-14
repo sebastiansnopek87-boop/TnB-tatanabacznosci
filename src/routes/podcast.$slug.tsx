@@ -5,7 +5,7 @@ import { PageShell } from "@/components/tnb/PageShell";
 import { AudioPlayer } from "@/components/podcast/AudioPlayer";
 import { EpisodeNavigation } from "@/components/podcast/EpisodeNavigation";
 import { useAuth } from "@/hooks/use-auth";
-import { getEpisode, getEpisodeMedia, listEpisodes } from "@/lib/podcast.functions";
+import { getEpisode, getEpisodeMedia, listEpisodes } from "@/lib/api/podcast";
 import { listCategories } from "@/lib/library";
 import { EP_ACCESS, coverUrl, fmtDay, fmtDuration, type EpisodeDetail } from "@/lib/podcast";
 

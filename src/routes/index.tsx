@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageView } from "@/components/pages/PageView";
-import { getPublicPage } from "@/lib/pages.functions";
+import { getPublicPage } from "@/lib/api/pages";
 import { pageImageUrl } from "@/lib/pages";
 import { homeDefaultSections, usableHome } from "@/lib/home-content";
 

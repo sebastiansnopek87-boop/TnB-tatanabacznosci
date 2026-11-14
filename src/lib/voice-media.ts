@@ -2,7 +2,7 @@
 // instagram_media). Nothing is copied into another table; TikTok/Spotify are not sources (links only).
 import type { PublicEpisode } from "./podcast";
 import { coverUrl } from "./podcast";
-import type { PublicReel, PublicVideo } from "./voice.functions";
+import type { PublicReel, PublicVideo } from "@/lib/api/voice";
 import { ytThumb } from "./voice";
 
 export type MediaSource = "podcast" | "youtube" | "manual" | "instagram";

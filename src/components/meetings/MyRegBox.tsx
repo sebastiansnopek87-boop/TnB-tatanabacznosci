@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
-import { cancelMyRegistration } from "@/lib/meetings.functions";
+import { cancelMyRegistration } from "@/lib/api/meetings";
 import { REG_STATUS, countdown, endOf, fmtTime, type RegStatus } from "@/lib/meetings";
 
 const btn = "bg-gold px-6 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-primary-foreground hover:bg-gold-bright disabled:opacity-60";

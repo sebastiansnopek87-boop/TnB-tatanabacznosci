@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { errMsg } from "@/components/admin/format";
 import {
   getArticleNewsletter, prepareArticleNewsletter, saveArticleNewsletter, sendArticleNewsletter, sendArticleNewsletterTest, unmarkArticleNewsletter,
-} from "@/lib/article-newsletter.functions";
+} from "@/lib/api/article-newsletter";
 
 export const NL_STATUS: Record<string, string> = {
   none: "NIE PRZEZNACZONY DO NEWSLETTERA", prepared: "PRZYGOTOWANY", pending_approval: "DO ZATWIERDZENIA", approved: "ZATWIERDZONY DO WYSYŁKI",

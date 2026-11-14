@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Copy, X } from "lucide-react";
-import { getBrandSettings, saveBrandSettings, createBrandUpload, finalizeBrandUpload } from "@/lib/brand.functions";
+import { getBrandSettings, saveBrandSettings, createBrandUpload, finalizeBrandUpload } from "@/lib/api/brand";
 import { errMsg } from "./format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getPublicPage } from "@/lib/pages.functions";
+import { getPublicPage } from "@/lib/api/pages";
 import { LegalPageView, legalHead } from "@/components/tnb/LegalPageView";
 
 export const Route = createFileRoute("/polityka-prywatnosci")({

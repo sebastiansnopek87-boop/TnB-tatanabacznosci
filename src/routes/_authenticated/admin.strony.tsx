@@ -14,7 +14,7 @@ import { SectionsEditor } from "@/components/pages/SectionsEditor";
 import { VisualBuilder } from "@/components/pages/builder/VisualBuilder";
 import {
   adminCheckSlug, adminCreatePageUpload, adminGetPage, adminListPages, adminPageImageUrls, adminSavePage, adminSetPageStatus,
-} from "@/lib/pages.functions";
+} from "@/lib/api/pages";
 import { LEGAL_KEYS, isLegalKey } from "@/lib/legal-pages";
 import { homeDefaultSections } from "@/lib/home-content";
 import { PAGE_STATUS, SYSTEM_PAGES, normalizeSections, pagePath, type PageSection } from "@/lib/pages";

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getPublicPage } from "@/lib/pages.functions";
+import { getPublicPage } from "@/lib/api/pages";
 import { CmsPage, cmsHead } from "@/components/pages/CmsPageRoute";
 
 const DESC = "Historia, która stoi za Tata Na Baczności — osobista opowieść Sebastiana.";

@@ -5,7 +5,7 @@ import { CalendarDays, ChevronLeft, ChevronRight, Clock, Lock, UserRound, Wallet
 import { PageShell } from "@/components/tnb/PageShell";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { createConsultBooking, getConsultSlots } from "@/lib/consult.functions";
+import { createConsultBooking, getConsultSlots } from "@/lib/api/consult";
 import { fmtDate, fmtHm, warsawYmd } from "@/lib/consult";
 
 const TITLE = "Rozmowa 1:1 — Spotkania TNB";

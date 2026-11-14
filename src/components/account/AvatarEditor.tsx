@@ -3,7 +3,7 @@ import { useServerFn } from '@tanstack/react-start';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { UserAvatar } from './UserAvatar';
-import { saveMyAvatar, removeMyAvatar } from '@/lib/avatar.functions';
+import { saveMyAvatar, removeMyAvatar } from '@/lib/api/avatar';
 import { AVATAR_SIZE, validateAvatarSource } from '@/lib/avatar-rules';
 
 export function AvatarEditor({ name }: { name: string }) {

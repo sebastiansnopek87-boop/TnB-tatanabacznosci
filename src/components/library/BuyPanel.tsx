@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { createLibraryOrder, getCheckoutOptions, recoverAccess } from "@/lib/orders.functions";
+import { createLibraryOrder, getCheckoutOptions, recoverAccess } from "@/lib/api/orders";
 import { fmtPrice } from "@/lib/library";
 import { BANK_METHOD, bankConfigured, type PaymentMethodId } from "@/config/payments";
 import { useAuth } from "@/hooks/use-auth";

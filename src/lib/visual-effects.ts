@@ -1,4 +1,4 @@
-import type { VisualEffects } from "@/lib/platform.functions";
+import type { VisualEffects } from "@/lib/api/platform";
 
 export const FX_DEFAULT: VisualEffects = { enabled: true, intensity: "subtle", speed: "standard", reveal: true, interactive: true, panels: true };
 

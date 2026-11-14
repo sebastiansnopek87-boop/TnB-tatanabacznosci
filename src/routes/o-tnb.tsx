@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getPublicPage } from "@/lib/pages.functions";
+import { getPublicPage } from "@/lib/api/pages";
 import { CmsPage, cmsHead } from "@/components/pages/CmsPageRoute";
 
 const DESC = "Czym jest Tata Na Baczności — społeczność ojców, mężów i mężczyzn, którzy wspierają się nawzajem.";

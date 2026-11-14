@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   adminAttachFile, adminCreateUpload, adminGetEpisode, adminListEpisodes, adminPreviewAudio, adminRemoveFile,
   adminSaveEpisode, adminSetEpisodeStatus,
-} from "@/lib/podcast.functions";
+} from "@/lib/api/podcast";
 import { EP_ACCESS, EP_STATUS, fmtDuration, parseDuration, type EpAccess, type EpStatus } from "@/lib/podcast";
 import { listCategories, slugify } from "@/lib/library";
 import { errMsg, fmtDate } from "@/components/admin/format";

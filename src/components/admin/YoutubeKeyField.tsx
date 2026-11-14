@@ -3,7 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
-import { adminSaveYoutubeKey, adminTestYoutubeKey } from "@/lib/voice.functions";
+import { adminSaveYoutubeKey, adminTestYoutubeKey } from "@/lib/api/voice";
 import { errMsg } from "@/components/admin/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

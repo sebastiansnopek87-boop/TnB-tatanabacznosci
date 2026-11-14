@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useRef, useState } from "react";
-import { requestFreeMaterial, redeemFreeMaterial } from "@/lib/library-delivery.functions";
+import { requestFreeMaterial, redeemFreeMaterial } from "@/lib/api/library-delivery";
 import { FREE_CONSENT_TEXT, type FreeDelivery } from "@/lib/library";
 
 const input = "mt-1 w-full border border-border/70 bg-background px-3 py-2.5 text-sm text-foreground focus:border-gold focus:outline-none";

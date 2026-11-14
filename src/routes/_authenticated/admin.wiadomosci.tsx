@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { listMessages, setMessageStatus } from "@/lib/admin.functions";
+import { listMessages, setMessageStatus } from "@/lib/api/admin";
 import { fmtDate, MSG_STATUS , errMsg } from "@/components/admin/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

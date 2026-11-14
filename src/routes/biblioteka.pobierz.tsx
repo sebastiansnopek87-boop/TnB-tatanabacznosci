@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { PageShell } from "@/components/tnb/PageShell";
-import { redeemFreeMaterial } from "@/lib/library-delivery.functions";
+import { redeemFreeMaterial } from "@/lib/api/library-delivery";
 
 export const Route = createFileRoute("/biblioteka/pobierz")({
   validateSearch: (s) => z.object({ t: z.string().max(100).optional() }).parse(s),

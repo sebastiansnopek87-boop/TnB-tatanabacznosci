@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ARTICLE_COMMENT_MAX } from "@/lib/article-interactions";
-import { GUEST_COMMENT_RULES, submitGuestComment } from "@/lib/guest-comments.functions";
+import { GUEST_COMMENT_RULES, submitGuestComment } from "@/lib/api/guest-comments";
 import type { Article } from "@/lib/articles";
 
 // Comment form for visitors without an account. Nothing is published until the e-mail link is confirmed.

@@ -16,7 +16,7 @@ import {
   adminArticleImageUrls, adminCheckArticleSlug, adminCreateArticleUpload, adminDeleteCategory, adminGetArticle, adminListArticles,
   adminSaveArticle, adminSaveCategory, adminSetArticleStatus, adminSetFeatured, adminSetHomeMode, adminTrashArticle,
   adminArticleInteractions, adminSavePoll, adminDeletePoll, adminListArticleComments, adminModerateArticleComment,
-} from "@/lib/articles.functions";
+} from "@/lib/api/articles";
 import { REACTIONS } from "@/lib/article-interactions";
 import { ARTICLE_KINDS, ARTICLE_STATUS, HOME_MODE, articleCategoriesQuery, fmtArticleDate, readingMinutes, type HomeMode } from "@/lib/articles";
 import { newSection, normalizeSections, type PageSection } from "@/lib/pages";

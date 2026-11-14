@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
-import { listMyPurchases } from "@/lib/orders.functions";
+import { listMyPurchases } from "@/lib/api/orders";
 import { listMySaved, setSaved } from "@/lib/article-interactions";
 import { articleImageUrl, fmtArticleDate, articleCategoriesQuery } from "@/lib/articles";
 export function MyPurchases() {

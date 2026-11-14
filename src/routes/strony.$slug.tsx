@@ -1,5 +1,5 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import { getPublicPage } from "@/lib/pages.functions";
+import { getPublicPage } from "@/lib/api/pages";
 import { CmsPage, cmsHead } from "@/components/pages/CmsPageRoute";
 import { PageHeading, PageShell } from "@/components/tnb/PageShell";
 

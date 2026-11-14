@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { getNotificationOverview, setEventEnabled } from "@/lib/notifications.functions";
+import { getNotificationOverview, setEventEnabled } from "@/lib/api/notifications";
 import { INTEGRATION_LABEL, MODULE_LABEL, type Module } from "@/lib/notify/registry";
 import { errMsg } from "@/components/admin/format";
 import { Badge } from "@/components/ui/badge";

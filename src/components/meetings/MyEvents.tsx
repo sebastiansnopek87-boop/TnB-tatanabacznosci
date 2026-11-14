@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { listMyRegistrations } from "@/lib/meetings.functions";
+import { listMyRegistrations } from "@/lib/api/meetings";
 import { MEETING_KINDS, fmtWhen, type MeetingKind } from "@/lib/meetings";
 import { MyRegBox } from "./MyRegBox";
 

@@ -6,7 +6,7 @@ import { usePreview } from "@/hooks/preview-viewer";
 import { assetUrl, focusClass, HOME_ASSETS } from "@/lib/home-content";
 import { noA, setting, type HomeBlockProps } from "./home/util";
 import { useModuleVisibility } from "@/hooks/use-module-visibility";
-import { NEWSLETTER_CONSENT_TEXT, newsletterSchema, subscribeNewsletter } from "@/lib/newsletter.functions";
+import { NEWSLETTER_CONSENT_TEXT, newsletterSchema, subscribeNewsletter } from "@/lib/api/newsletter";
 
 const MESSAGES = {
   subscribed: "Dziękujemy! Twój adres został zapisany do newslettera.",

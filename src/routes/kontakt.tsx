@@ -6,7 +6,7 @@ import { PageHeading, PageShell } from "@/components/tnb/PageShell";
 import { SocialIcon } from "@/components/tnb/SocialIcon";
 import { getSiteSettings, type SocialLink } from "@/config/site-settings";
 import { usePlatformSettings } from "@/hooks/use-platform-settings";
-import { contactSchema, submitContact } from "@/lib/contact.functions";
+import { contactSchema, submitContact } from "@/lib/api/contact";
 
 const DESC = "Napisz do Tata Na Baczności — pytania, historie, propozycje współpracy.";
 

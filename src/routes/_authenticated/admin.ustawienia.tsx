@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
-import { getPlatformSettings, updatePlatformSettings } from "@/lib/platform.functions";
+import { getPlatformSettings, updatePlatformSettings } from "@/lib/api/platform";
 import { fmtDate, errMsg } from "@/components/admin/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

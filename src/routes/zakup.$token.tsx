@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { PageShell } from "@/components/tnb/PageShell";
-import { getPurchasedMaterial } from "@/lib/orders.functions";
+import { getPurchasedMaterial } from "@/lib/api/orders";
 import { fmtDay, fmtPrice } from "@/lib/library";
 import { BANK_TRANSFER, bankConfigured } from "@/config/payments";
 
