@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { listMedia, getMediaDetail, createMediaUpload, finalizeMediaUpload, deleteMedia } from "@/lib/api/media";
@@ -37,9 +36,9 @@ function uploadWithProgress(bucket: string, path: string, token: string, file: F
 }
 
 function MediaPage() {
-  const fn = useServerFn(listMedia);
-  const startFn = useServerFn(createMediaUpload);
-  const finFn = useServerFn(finalizeMediaUpload);
+  const fn = listMedia;
+  const startFn = createMediaUpload;
+  const finFn = finalizeMediaUpload;
   const qc = useQueryClient();
   const [q, setQ] = useState(""); const [applied, setApplied] = useState("");
   const [kind, setKind] = useState(""); const [mod, setMod] = useState(""); const [sort, setSort] = useState("date_desc"); const [page, setPage] = useState(0);
@@ -124,8 +123,8 @@ function MediaPage() {
 }
 
 function Detail({ target, onDeleted }: { target: { bucket: string; path: string }; onDeleted: () => void }) {
-  const fn = useServerFn(getMediaDetail);
-  const delFn = useServerFn(deleteMedia);
+  const fn = getMediaDetail;
+  const delFn = deleteMedia;
   const [confirm, setConfirm] = useState(false); const [busy, setBusy] = useState(false);
   const { data: d, error } = useQuery({ queryKey: ["admin-media-detail", target.bucket, target.path], queryFn: () => fn({ data: target as never }), staleTime: 0 });
   async function del() {
