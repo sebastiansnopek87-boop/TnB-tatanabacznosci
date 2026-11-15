@@ -1,3 +1,4 @@
+import { tnbPublicFunctionUrl } from "@/lib/public-edge-url";
 // Browser-safe model + public reads for the editorial "Artykuły" section.
 // Public reads go through RLS: only published rows with published_at <= now() are visible.
 import { queryOptions } from "@tanstack/react-query";
@@ -20,7 +21,7 @@ export const ARTICLE_KINDS: SectionKind[] = ["text", "quote", "image", "cta"];
 const CARD = "id, slug, title, excerpt, category, cover, cover_alt, author_name, reading_minutes, published_at, updated_at";
 
 export const articleImageUrl = (id: string, file: string, v?: string) =>
-  `/api/public/article-image/${id}/${encodeURIComponent(file)}${v ? `?v=${encodeURIComponent(v)}` : ""}`;
+  tnbPublicFunctionUrl("tnb-media", { kind: "article-image", id, name: file, ...(v ? { v } : {}) });
 
 export const fmtArticleDate = (s: string | null) =>
   s ? new Date(s).toLocaleDateString("pl-PL", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Warsaw" }) : "";
