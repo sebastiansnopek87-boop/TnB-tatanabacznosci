@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { PageHeading, PageShell } from "@/components/tnb/PageShell";
@@ -35,8 +34,8 @@ const TEXT: Record<R["status"], { title: string; body: string }> = {
 
 function Confirm() {
   const { t } = Route.useSearch();
-  const confirm = useServerFn(confirmGuestComment);
-  const resend = useServerFn(resendGuestComment);
+  const confirm = confirmGuestComment;
+  const resend = resendGuestComment;
   const [r, setR] = useState<R | null>(null);
   const [resent, setResent] = useState(false);
   const ran = useRef(false);
