@@ -188,7 +188,7 @@ async function recordContactNotification(db: ReturnType<typeof createAdminClient
     reason,
     recipient,
     payload,
-    retryable: status === "sending",
+    retryable: recipient !== null,
     ...(status === "failed" && rendered ? {
       rendered_subject: null,
       rendered_html: null,
