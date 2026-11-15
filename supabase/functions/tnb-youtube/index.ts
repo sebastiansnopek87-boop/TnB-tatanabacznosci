@@ -367,7 +367,7 @@ async function runSync(db: Db, actor: string | null) {
       last_error: message.slice(0, 500),
       last_sync_report: { at: now, fatal: message.slice(0, 500) },
     }).eq("id", 1);
-    throw error instanceof YtError ? error : new YtError(message);
+    throw error instanceof YtError || error instanceof HttpError ? error : new YtError(message);
   }
 }
 
