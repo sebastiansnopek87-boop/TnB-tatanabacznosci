@@ -31,7 +31,7 @@ export function publicArticleAssetUrl(id: string, file: string, version?: string
 
 /** Avatar assets are private in Storage and are checked against the caller and post visibility by tnb-assets. */
 export function publicAvatarUrl(scope: "own" | "post" | "comment", id: string, version?: string | null): string {
-  const base = String(import.meta.env["VITE_SUPABASE_URL"] ?? "").replace(/\\/+$/, "");
+  const base = String(import.meta.env["VITE_SUPABASE_URL"] ?? "").replace(/\/+$/, "");
   const url = base
     ? base + "/functions/v1/tnb-assets?kind=avatar&scope=" + scope + "&id=" + encodeURIComponent(id)
     : "/api/public/avatar/" + scope + "/" + encodeURIComponent(id);
