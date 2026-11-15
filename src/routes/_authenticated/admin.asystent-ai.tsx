@@ -12,6 +12,7 @@ import { MATERIAL_RULES } from "@/lib/editor-materials";
 import {
   addNoteSource, addWebSource, deleteSource, developProposal, getEditorDashboard, getEditorSettings, listAnalyses, listProposals, listSources,
   previewAnalysisData, runAnalysis, saveEditorSettings, testAiConnection, updateProposal, updateSource,
+  type EditorScope, type EditorSource, type EditorSourcePatch, type AiProposal, type AiProposalEvent, type AiAnalysis, type ProposalRef, type ProposalData,
 } from "@/lib/api/editor-ai";
 
 export const Route = createFileRoute("/_authenticated/admin/asystent-ai")({
@@ -33,7 +34,7 @@ const input = "w-full border border-border/60 bg-background p-2 text-sm";
 function EditorAi() {
   const [tab, setTab] = useState<Tab>("pulpit");
   const [matId, setMatId] = useState<string | null>(null);
-  const dash = useServerFn(getEditorDashboard);
+  const dash = getEditorDashboard;
   const q = useQuery({ queryKey: ["ai-ed", "dash"], queryFn: () => dash(), retry: false });
   if (q.isLoading) return <p className="text-muted-foreground">Ładowanie…</p>;
   if (q.error) return <div className="max-w-xl"><h1 className="font-display text-3xl font-semibold uppercase">Asystent redakcyjny AI</h1><p role="alert" className="mt-4 text-sm text-destructive">{errMsg(q.error)}</p></div>;
@@ -59,10 +60,11 @@ function Dashboard({ d, go, open }: { d: Awaited<ReturnType<typeof getEditorDash
   const list = useServerFn(listMaterials);
   const mq = useQuery({ queryKey: ["ai-ed", "materials"], queryFn: () => list() });
   const [creating, setCreating] = useState(false);
-  const rows = (mq.data ?? []) as any[];
+  type MaterialListRow = { id: string; title: string; status: string; created_at: string; updated_at: string; handoff_id: string | null; imagesPending?: number; notes?: number };
+  const rows = (mq.data ?? []) as MaterialListRow[];
   const active = rows.filter((m) => !m.handoff_id && !["rejected", "archived", "published"].includes(m.status));
   const attention = active.filter((m) => m.imagesPending || ["draft", "review", "editing"].includes(m.status));
-  const Row = ({ m }: { m: any }) => <li className="flex flex-wrap items-center justify-between gap-2 border-t border-border/40 py-2 text-sm">
+  const Row = ({ m }: { m: MaterialListRow }) => <li className="flex flex-wrap items-center justify-between gap-2 border-t border-border/40 py-2 text-sm">
     <span className="min-w-0"><span className="font-medium">{m.title}</span><span className="block text-xs text-muted-foreground">{stageOf(m).label}{m.imagesPending ? ` · obrazy do decyzji: ${m.imagesPending}` : ""}{m.notes ? ` · uwagi redakcyjne: ${m.notes}` : ""} · {fmt(m.updated_at)}</span></span>
     <Button size="sm" variant="outline" onClick={() => open(m.id)}>Otwórz</Button></li>;
   return (
@@ -88,7 +90,7 @@ function Dashboard({ d, go, open }: { d: Awaited<ReturnType<typeof getEditorDash
 
 function Sources() {
   const qc = useQueryClient();
-  const list = useServerFn(listSources), addWeb = useServerFn(addWebSource), addNote = useServerFn(addNoteSource), upd = useServerFn(updateSource), del = useServerFn(deleteSource);
+  const list = listSources, addWeb = addWebSource, addNote = addNoteSource, upd = updateSource, del = deleteSource;
   const q = useQuery({ queryKey: ["ai-ed", "sources"], queryFn: () => list() });
   const [url, setUrl] = useState(""), [comment, setComment] = useState(""), [busy, setBusy] = useState(false);
   const [note, setNote] = useState({ kind: "note" as "note" | "idea", title: "", content: "" });
@@ -114,8 +116,8 @@ function Sources() {
         <Button size="sm">Dodaj</Button>
       </form>
       <div className="flex flex-wrap gap-2">{[["all", "Wszystkie"], ...Object.entries(SRC_STATUS)].map(([k, l]) => <Button key={k} size="sm" variant={filter === k ? "default" : "outline"} onClick={() => setFilter(k!)}>{l}</Button>)}</div>
-      {q.isLoading ? <p className="text-muted-foreground">Ładowanie…</p> : (q.data ?? []).filter((s: any) => filter === "all" || s.status === filter).length === 0 ? <p className="text-sm text-muted-foreground">Brak źródeł w tym widoku. Artykuły i materiały Biblioteki są uwzględniane automatycznie i nie trzeba ich tu dodawać.</p> : (
-        <ul className="space-y-3">{(q.data ?? []).filter((s: any) => filter === "all" || s.status === filter).map((s: any) => (
+      {q.isLoading ? <p className="text-muted-foreground">Ładowanie…</p> : (q.data ?? []).filter((source) => filter === "all" || source.status === filter).length === 0 ? <p className="text-sm text-muted-foreground">Brak źródeł w tym widoku. Artykuły i materiały Biblioteki są uwzględniane automatycznie i nie trzeba ich tu dodawać.</p> : (
+        <ul className="space-y-3">{(q.data ?? []).filter((s: any) => filter === "all" || s.status === filter).map((s) => (
           <li key={s.id} className={box}>
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div className="min-w-0"><p className="font-medium break-words">{s.title || s.url || "Bez tytułu"}</p>
@@ -136,7 +138,7 @@ function Sources() {
   );
 }
 
-function SourceEditor({ s, save }: { s: any; save: (p: any) => void }) {
+function SourceEditor({ s, save }: { s: EditorSource; save: (patch: EditorSourcePatch) => void }) {
   const [f, setF] = useState({ title: s.title ?? "", author: s.author ?? "", published_on: s.published_on ?? "", admin_comment: s.admin_comment ?? "", content: s.content ?? "" });
   return (
     <div className="mt-3 space-y-2 border-t border-border/60 pt-3">
@@ -155,12 +157,12 @@ function SourceEditor({ s, save }: { s: any; save: (p: any) => void }) {
 
 function Analysis({ aiOn, go }: { aiOn: boolean; go: (t: Tab) => void }) {
   const qc = useQueryClient();
-  const preview = useServerFn(previewAnalysisData), run = useServerFn(runAnalysis);
-  const [scopes, setScopes] = useState<string[]>(["articles", "library", "web", "notes"]);
+  const preview = previewAnalysisData, run = runAnalysis;
+  const [scopes, setScopes] = useState<EditorScope[]>(["articles", "library", "web", "notes"]);
   const [from, setFrom] = useState(""), [to, setTo] = useState(""), [focus, setFocus] = useState("");
   const [pv, setPv] = useState<Awaited<ReturnType<typeof previewAnalysisData>> | null>(null);
   const [busy, setBusy] = useState(false);
-  const payload = () => ({ scopes: scopes as any, from: from || null, to: to || null });
+  const payload = () => ({ scopes, from: from || null, to: to || null });
   useEffect(() => { setPv(null); }, [scopes, from, to]);
   return (
     <div className="space-y-4">
@@ -198,20 +200,20 @@ function RefList({ refs }: { refs: Array<{ ref: string; kind: string; title: str
 
 function Proposals({ aiOn, onCreated }: { aiOn: boolean; onCreated: (id: string) => void }) {
   const qc = useQueryClient();
-  const list = useServerFn(listProposals), upd = useServerFn(updateProposal), dev = useServerFn(developProposal);
+  const list = listProposals, upd = updateProposal, dev = developProposal;
   const q = useQuery({ queryKey: ["ai-ed", "proposals"], queryFn: () => list() });
   const [filter, setFilter] = useState("active"), [open, setOpen] = useState<string | null>(null), [busy, setBusy] = useState<string | null>(null);
   const refresh = () => qc.invalidateQueries({ queryKey: ["ai-ed"] });
   const act = async (p: Promise<{ ok: boolean; error?: string }>, msg: string) => { const r = await p; r.ok ? (toast.success(msg), refresh()) : toast.error(r.error ?? "Błąd"); };
   if (q.isLoading) return <p className="text-muted-foreground">Ładowanie…</p>;
-  const all = q.data?.proposals ?? [];
-  const shown = all.filter((p: any) => filter === "all" || (filter === "active" ? !["rejected", "done"].includes(p.status) : p.status === filter));
+  const all: AiProposal[] = q.data?.proposals ?? [];
+  const shown = all.filter((p) => filter === "all" || (filter === "active" ? !["rejected", "done"].includes(p.status) : p.status === filter));
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2">{[["active", "Aktywne"], ["all", "Wszystkie"], ...Object.entries(STATUS)].map(([k, l]) => <Button key={k} size="sm" variant={filter === k ? "default" : "outline"} onClick={() => setFilter(k!)}>{l}</Button>)}</div>
       {!shown.length && <p className="text-sm text-muted-foreground">{all.length ? "Brak propozycji w tym widoku." : "Nie ma jeszcze propozycji. Przeprowadź pierwszą analizę."}</p>}
-      <ul className="space-y-3">{shown.map((p: any) => {
-        const d = p.data ?? {}; const ev = (q.data?.events ?? []).filter((e: any) => e.proposal_id === p.id);
+      <ul className="space-y-3">{shown.map((p) => {
+        const d = p.data ?? {}; const ev: AiProposalEvent[] = (q.data?.events ?? []).filter((event) => event.proposal_id === p.id);
         return (
           <li key={p.id} className={box}>
             <div className="flex flex-wrap items-start justify-between gap-2">
@@ -230,7 +232,7 @@ function Proposals({ aiOn, onCreated }: { aiOn: boolean; onCreated: (id: string)
                 <div><dt className="text-xs uppercase text-muted-foreground">Powiązane materiały TNB</dt><dd><RefList refs={d.related} /></dd></div>
                 <div><dt className="text-xs uppercase text-muted-foreground">Źródła użyte do propozycji</dt><dd><RefList refs={d.sources} /></dd></div>
               </dl>
-              <div className="border-l-2 border-gold pl-3"><p className="text-xs uppercase text-gold">Fakty ze źródeł</p>{(d.facts ?? []).length ? <ul className="list-disc pl-5">{d.facts.map((f: any, i: number) => <li key={i}>{f.text} <span className="text-xs text-muted-foreground">— {f.source?.title}</span></li>)}</ul> : <p className="text-muted-foreground">Brak faktów przypisanych do źródeł.</p>}</div>
+              <div className="border-l-2 border-gold pl-3"><p className="text-xs uppercase text-gold">Fakty ze źródeł</p>{(d.facts ?? []).length ? <ul className="list-disc pl-5">{d.facts.map((fact, i: number) => <li key={i}>{fact.text} <span className="text-xs text-muted-foreground">— {fact.source?.title}</span></li>)}</ul> : <p className="text-muted-foreground">Brak faktów przypisanych do źródeł.</p>}</div>
               <div className="border-l-2 border-border pl-3"><p className="text-xs uppercase text-muted-foreground">Sugestie AI (nie fakty)</p><ul className="list-disc pl-5">{(d.suggestions ?? []).map((t: string, i: number) => <li key={i}>{t}</li>)}</ul></div>
               {d.duplicate_warning && <p className="text-gold">Możliwe powtórzenie: {d.duplicate_warning}</p>}
               <div><p className="text-xs uppercase text-muted-foreground">Kolejne kroki</p><ul className="list-disc pl-5">{(d.next_steps ?? []).map((t: string, i: number) => <li key={i}>{t}</li>)}</ul></div>
@@ -249,10 +251,10 @@ function Proposals({ aiOn, onCreated }: { aiOn: boolean; onCreated: (id: string)
               </div></details>
               <label className="block text-xs">Powiąż z istniejącym materiałem
                 <select className={input} value={p.linked_id ? `${p.linked_kind}:${p.linked_id}` : ""} onChange={(e) => { const [k, id] = e.target.value.split(":"); act(upd({ data: { id: p.id, link: k && id ? { kind: k as "article" | "library", id } : null } }), "Zapisano powiązanie"); }}>
-                  <option value="">— brak —</option>{(q.data?.materials ?? []).map((m: any) => <option key={m.id} value={`${m.kind}:${m.id}`}>{m.kind === "article" ? "Artykuł" : "Biblioteka"}: {m.title}</option>)}
+                  <option value="">— brak —</option>{(q.data?.materials ?? []).map((m) => <option key={m.id} value={`${m.kind}:${m.id}`}>{m.kind === "article" ? "Artykuł" : "Biblioteka"}: {m.title}</option>)}
                 </select></label>
               {p.reject_reason && <p className="text-xs text-muted-foreground">Powód odrzucenia: {p.reject_reason}</p>}
-              <div><p className="text-xs uppercase text-muted-foreground">Historia decyzji</p><ul className="text-xs text-muted-foreground">{ev.map((e: any, i: number) => <li key={i}>{fmt(e.created_at)} — {e.action === "status" ? `${STATUS[e.from_status] ?? e.from_status} → ${STATUS[e.to_status] ?? e.to_status}` : e.note ?? e.action}{e.action === "status" && e.note ? ` (${e.note})` : ""}</li>)}</ul></div>
+              <div><p className="text-xs uppercase text-muted-foreground">Historia decyzji</p><ul className="text-xs text-muted-foreground">{ev.map((e, i: number) => <li key={i}>{fmt(e.created_at)} — {e.action === "status" ? `${STATUS[e.from_status] ?? e.from_status} → ${STATUS[e.to_status] ?? e.to_status}` : e.note ?? e.action}{e.action === "status" && e.note ? ` (${e.note})` : ""}</li>)}</ul></div>
             </div>}
           </li>);
       })}</ul>
@@ -260,13 +262,13 @@ function Proposals({ aiOn, onCreated }: { aiOn: boolean; onCreated: (id: string)
   );
 }
 
-function EditTitle({ p, save }: { p: any; save: (t: string, d: string) => void }) {
+function EditTitle({ p, save }: { p: AiProposal; save: (title: string, description: string) => void }) {
   const [t, setT] = useState(p.title), [d, setD] = useState(p.description ?? "");
   return <div className="space-y-2"><input className={input} value={t} maxLength={300} onChange={(e) => setT(e.target.value)} aria-label="Tytuł roboczy" /><textarea className={input} rows={2} value={d} maxLength={3000} onChange={(e) => setD(e.target.value)} aria-label="Opis" /><Button size="sm" variant="outline" onClick={() => save(t, d)}>Zapisz tytuł i opis</Button></div>;
 }
 
 function History() {
-  const list = useServerFn(listAnalyses);
+  const list = listAnalyses;
   const q = useQuery({ queryKey: ["ai-ed", "analyses"], queryFn: () => list() });
   const [open, setOpen] = useState<string | null>(null);
   if (q.isLoading) return <p className="text-muted-foreground">Ładowanie…</p>;
@@ -274,13 +276,13 @@ function History() {
   return (
     <div className="space-y-3">
       <p className="text-xs text-muted-foreground">Analiza pokazuje sygnały z dostępnych treści, a nie badanie opinii wszystkich użytkowników.</p>
-      {q.data.map((a: any) => (
+      {q.data.map((a: AiAnalysis) => (
         <div key={a.id} className={box + " text-sm"}>
           <div className="flex flex-wrap justify-between gap-2"><p>{fmt(a.created_at)} · {a.status === "done" ? "zakończona" : a.status === "failed" ? "błąd" : "w toku"} · {a.source_count} źródeł · zakres: {(a.scope ?? []).map((s: string) => SCOPES.find(([k]) => k === s)?.[1] ?? s).join(", ")}{a.period_from || a.period_to ? ` · okres ${a.period_from ?? "…"}–${a.period_to ?? "…"}` : ""}</p>
             <Button size="sm" variant="outline" onClick={() => setOpen(open === a.id ? null : a.id)}>{open === a.id ? "Zwiń" : "Wyniki"}</Button></div>
           {a.error && <p className="mt-1 text-destructive">{a.error}</p>}
           {open === a.id && <div className="mt-3 space-y-3">
-            {Object.entries(FINDINGS).map(([k, l]) => (a.findings?.[k] ?? []).length ? <div key={k}><p className="text-xs uppercase text-gold">{l}</p><ul className="list-disc pl-5">{a.findings[k].map((f: any, i: number) => <li key={i}>{f.text}{f.refs?.length ? <span className="text-xs text-muted-foreground"> — {f.refs.map((r: any) => r.title).join("; ")}</span> : null}</li>)}</ul></div> : null)}
+            {Object.entries(FINDINGS).map(([k, l]) => (a.findings?.[k] ?? []).length ? <div key={k}><p className="text-xs uppercase text-gold">{l}</p><ul className="list-disc pl-5">{a.findings[k].map((finding: AiAnalysis["findings"][string][number], i: number) => <li key={i}>{finding.text}{f.refs?.length ? <span className="text-xs text-muted-foreground"> — {finding.refs.map((ref) => ref.title).join("; ")}</span> : null}</li>)}</ul></div> : null)}
             {(a.findings?.skipped ?? []).length > 0 && <div><p className="text-xs uppercase text-muted-foreground">Pominięte jako powtórzenia ocenionych tematów</p><ul className="list-disc pl-5 text-xs">{a.findings.skipped.map((s: string, i: number) => <li key={i}>{s}</li>)}</ul></div>}
             <div><p className="text-xs uppercase text-muted-foreground">Źródła użyte</p><RefList refs={a.sources_used} /></div>
           </div>}
@@ -291,7 +293,7 @@ function History() {
 
 function Settings({ d }: { d: Awaited<ReturnType<typeof getEditorDashboard>> }) {
   const qc = useQueryClient();
-  const get = useServerFn(getEditorSettings), save = useServerFn(saveEditorSettings), test = useServerFn(testAiConnection);
+  const get = getEditorSettings, save = saveEditorSettings, test = testAiConnection;
   const q = useQuery({ queryKey: ["ai-ed", "settings"], queryFn: () => get() });
   const [f, setF] = useState<{ guidelines: string; community_enabled: boolean; community_decision_note: string } | null>(null);
   const [testing, setTesting] = useState(false);
