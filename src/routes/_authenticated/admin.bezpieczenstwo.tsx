@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { getSecurityStatus } from "@/lib/api/platform";
 import { fmtDate, errMsg } from "@/components/admin/format";
 import { EVENT_LABELS, RESULT, actorName } from "@/components/admin/events";
@@ -14,8 +13,7 @@ const STATE = {
 } as const;
 
 function Security() {
-  const fn = useServerFn(getSecurityStatus);
-  const { data, error, isLoading } = useQuery({ queryKey: ["admin-security"], queryFn: () => fn() });
+  const { data, error, isLoading } = useQuery({ queryKey: ["admin-security"], queryFn: getSecurityStatus });
   if (error) return <p className="text-sm text-destructive">{errMsg(error)}</p>;
   if (isLoading || !data) return <p className="text-sm text-muted-foreground">Ładowanie…</p>;
   return (
