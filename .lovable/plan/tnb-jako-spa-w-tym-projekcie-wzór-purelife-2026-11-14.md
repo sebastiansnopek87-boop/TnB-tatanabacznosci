@@ -5,7 +5,7 @@ Aktualizacja: 15.11.2026
 
 - Repozytorium produkcyjne: `sebastiansnopek87-boop/TnB-tatanabacznosci`, gałąź `main`.
 - Jedyny aktywny projekt Supabase TNB: `pmdfiipontreuclfumdh`, region `eu-west-3`.
-- `supabase/config.toml` wskazuje prawidłowy projekt i jawnie ustawia tryb JWT dla wszystkich jedenastu aktywnych funkcji Edge.
+- `supabase/config.toml` wskazuje prawidłowy projekt i jawnie ustawia tryb JWT dla wszystkich dwunastu aktywnych funkcji Edge.
 - Źródła jedenastu aktywnych funkcji Edge w repozytorium są zgodne z wdrożeniami Supabase: `tnb-health`, `tnb-users`, `tnb-platform`, `tnb-brand`, `tnb-pages`, `tnb-templates`, `tnb-assets`, `tnb-contact`, `tnb-articles`, `tnb-media`, `tnb-avatar`.
 - Typy `src/integrations/supabase/types.ts` odpowiadają typom wygenerowanym z bieżącej bazy (PostgREST 14.18).
 - Frontend nadal korzysta z TanStack Start, TanStack Router i Nitro. Wygenerowane drzewo tras obejmuje 72 trasy.
@@ -58,11 +58,11 @@ Dopiero po zakończeniu etapów 1–2:
 ## Prace wykonane 15.11.2026
 
 - Naprawiono `project_id` w `supabase/config.toml` na `pmdfiipontreuclfumdh`.
-- Dodano jawne ustawienia `verify_jwt` dla wszystkich jedenastu aktywnych usług Edge: health, users, platform, brand, pages, templates, assets, contact, articles, media i avatar.
+- Dodano jawne ustawienia `verify_jwt` dla wszystkich dwunastu aktywnych usług Edge: health, users, platform, brand, pages, templates, assets, contact, articles, media i avatar.
 - Moduł administracji użytkownikami korzysta teraz z `tnb-users` przez `supabase.functions.invoke`; usunięto z tej trasy `useServerFn`.
 - Funkcja `tnb-users` używa nagłówków CORS z aktualnego SDK Supabase, przy zachowaniu listy dozwolonych domen. Wdrożenie: wersja 4, `verify_jwt=true`; źródło i `deno.json` porównane z GitHubem.
 - Publiczny odczyt ustawień platformy przeniesiono na klienta Supabase z dokładną projekcją 28 kolumn. Zapytanie przeszło kontrolę na roli `anon`; nie odczytuje kolumn rozliczeniowych.
-- Wszystkie jedenaście aktywnych funkcji Edge i ich pliki pomocnicze porównano z wdrożeniami; zgodność treści potwierdzono.
+- Wszystkie dwanaście aktywnych funkcji Edge i ich pliki pomocnicze porównano z wdrożeniami; zgodność treści potwierdzono.
 
 ## Blokady i status weryfikacji
 
@@ -107,7 +107,7 @@ Dopiero po zakończeniu etapów 1–2:
 
 ### Stan po kolejnej iteracji — 15.11.2026, 20:20
 
-- W Supabase działa 11 funkcji Edge: `tnb-health`, `tnb-users`, `tnb-platform`, `tnb-brand`, `tnb-pages`, `tnb-templates`, `tnb-assets`, `tnb-contact`, `tnb-articles`, `tnb-media`, `tnb-avatar`. Źródła wszystkich 11 funkcji i ich manifesty zależności są obecne w GitHubie; zgodność wdrożonych plików została sprawdzona dla funkcji migracyjnych.
+- W Supabase działa 12 funkcji Edge: `tnb-health`, `tnb-users`, `tnb-platform`, `tnb-brand`, `tnb-pages`, `tnb-templates`, `tnb-assets`, `tnb-contact`, `tnb-articles`, `tnb-media`, `tnb-avatar`, `tnb-media-admin`. Źródła wszystkich 12 funkcji i ich manifesty zależności są obecne w GitHubie; porównano wdrożone `index.ts` ze źródłami w repozytorium bajt w bajt.
 - `tnb-media` odpowiada za kontrolowany odczyt obrazów i avatarów. `tnb-avatar` obsługuje zapis i usuwanie avatara, wymaga JWT i waliduje WebP po stronie serwera. `UserAvatar` pobiera obraz z tokenem użytkownika, a `AvatarEditor` wywołuje funkcję bezpośrednio przez adapter API.
 - Administracyjny widok artykułów korzysta bezpośrednio z adaptera `src/lib/api/articles.ts`; wywołania Edge Function nie są już opakowane przez `useServerFn` w tym widoku.
 - Naprawiono skan sekretów: rozpoznaje rzeczywiste wzorce kluczy Supabase/Google, JWT z rolą `service_role` i jawne odwołania do sekretów serwerowych. Raport nie wypisuje wartości sekretów. Wcześniejsze trafienia `YOUTUBE_API_KEY` i samego prefiksu `sb_secret_` były nazwami/prefiksami w kodzie, nie wartościami kluczy.
