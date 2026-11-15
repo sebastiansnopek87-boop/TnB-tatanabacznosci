@@ -282,7 +282,7 @@ function History() {
             <Button size="sm" variant="outline" onClick={() => setOpen(open === a.id ? null : a.id)}>{open === a.id ? "Zwiń" : "Wyniki"}</Button></div>
           {a.error && <p className="mt-1 text-destructive">{a.error}</p>}
           {open === a.id && <div className="mt-3 space-y-3">
-            {Object.entries(FINDINGS).map(([k, l]) => (a.findings?.[k] ?? []).length ? <div key={k}><p className="text-xs uppercase text-gold">{l}</p><ul className="list-disc pl-5">{a.findings[k].map((finding: AiAnalysis["findings"][string][number], i: number) => <li key={i}>{finding.text}{f.refs?.length ? <span className="text-xs text-muted-foreground"> — {finding.refs.map((ref) => ref.title).join("; ")}</span> : null}</li>)}</ul></div> : null)}
+            {Object.entries(FINDINGS).map(([k, l]) => (a.findings?.[k] ?? []).length ? <div key={k}><p className="text-xs uppercase text-gold">{l}</p><ul className="list-disc pl-5">{a.findings[k].map((finding: AiAnalysis["findings"][string][number], i: number) => <li key={i}>{finding.text}{finding.refs?.length ? <span className="text-xs text-muted-foreground"> — {finding.refs.map((ref) => ref.title).join("; ")}</span> : null}</li>)}</ul></div> : null)}
             {(a.findings?.skipped ?? []).length > 0 && <div><p className="text-xs uppercase text-muted-foreground">Pominięte jako powtórzenia ocenionych tematów</p><ul className="list-disc pl-5 text-xs">{a.findings.skipped.map((s: string, i: number) => <li key={i}>{s}</li>)}</ul></div>}
             <div><p className="text-xs uppercase text-muted-foreground">Źródła użyte</p><RefList refs={a.sources_used} /></div>
           </div>}
