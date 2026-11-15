@@ -41,7 +41,7 @@ async function invokePages<T>(body: Record<string, unknown>): Promise<T> {
 
   const { data, error } = await supabase.functions.invoke<T>("tnb-pages", {
     body,
-    headers: { Authorization: \`Bearer \${accessToken}\` },
+    headers: { Authorization: "Bearer " + accessToken },
   });
 
   if (error) {
