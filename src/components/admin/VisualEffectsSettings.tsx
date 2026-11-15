@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { setVisualEffects, type VisualEffects } from "@/lib/api/platform";
@@ -16,7 +15,6 @@ export function VisualEffectsSettings({ value, canEdit }: { value: Partial<Visua
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [replay, setReplay] = useState(0);
-  const save = useServerFn(setVisualEffects);
   const qc = useQueryClient();
   useEffect(() => { setD(normalizeFx(value)); }, [value]);
   const set = <K extends keyof VisualEffects>(k: K, v: VisualEffects[K]) => setD((p) => ({ ...p, [k]: v }));
@@ -26,7 +24,7 @@ export function VisualEffectsSettings({ value, canEdit }: { value: Partial<Visua
   async function submit() {
     setBusy(true); setError(null);
     try {
-      await save({ data: { effects: d } });
+      await setVisualEffects({ data: { effects: d } });
       await Promise.all([qc.invalidateQueries({ queryKey: ["admin-platform-settings"] }), qc.invalidateQueries({ queryKey: ["platform-settings-public"] })]);
       toast.success("Ustawienia efektów zapisane.");
     } catch (e) { setError(e instanceof Error ? e.message : "Nie udało się zapisać."); }
