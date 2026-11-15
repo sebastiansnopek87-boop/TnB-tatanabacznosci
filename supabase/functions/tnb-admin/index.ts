@@ -391,13 +391,8 @@ async function ccRead<T>(query: PromiseLike<{ data: T | null; error: unknown }>)
 function ccReadState(error: unknown, count: number, limit: number, incomplete = false) {
   return { error: error ? "Nie udało się pobrać danych. Spróbuj ponownie." : null, limited: !error && count > limit, incomplete };
 }
-function ccFilterValue(value: string) {
-  return '"' + value.replace(/\\/g, "\\\\").replace(/"/g, '\\"') + '"';
-}
+function ccFilterValue(value: string) { return `"${v.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`; }
 function ccSearchParts(query: string) {
-  const safe = query.replace(/[%,()*\\\"\\r\\n]/g, " ").replace(/\\s+/g, " ").trim();
-  return { safe, words: safe.split(" ").filter(Boolean) };
-}
 function ccHasAccess(order: { status: string; paid_at: string | null; access_revoked_at: string | null }) {
   return !!order.paid_at && !order.access_revoked_at && ["paid", "refund_pending", "refunded"].includes(order.status);
 }
@@ -536,10 +531,13 @@ async function controlCenterSearch(db: Db, query: string) {
   };
 }
 
-async function controlCenterHistory(db: Db, input: z.infer<typeof RequestSchema> extends never ? never : {
-  kind: "order" | "user" | "library_request" | "actor"; id: string;
-  offsets: { order: number; admin: number; mail: number }; before?: string;
-}) {
+type CCHistoryInput = {
+  kind: "order" | "user" | "library_request" | "actor";
+  id: string;
+  offsets: { order: number; admin: number; mail: number };
+  before?: string;
+};
+async function controlCenterHistory(db: Db, input: CCHistoryInput) {
   const before = input.before ?? new Date().toISOString();
   const empty = { data: [], error: null };
   let adminQuery = db.from("admin_events")
