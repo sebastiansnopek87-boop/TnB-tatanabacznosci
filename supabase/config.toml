@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.tnb-contact]
 verify_jwt = false
+
+[functions.tnb-articles]
+verify_jwt = false
