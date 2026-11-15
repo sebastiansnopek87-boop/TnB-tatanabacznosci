@@ -101,25 +101,25 @@ async function invokeYoutube<T>(
 }
 
 export function listVideos(): Promise<PublicVideo[]> {
-  return invokeYoutube("listVideos", undefined, { allowAnonymous: true });
+  return invokeYoutube<PublicVideo[]>("listVideos", undefined, { allowAnonymous: true });
 }
 
 export function getPublicChannel(): Promise<{ url: string | null; title: string | null }> {
-  return invokeYoutube("getPublicChannel", undefined, { allowAnonymous: true });
+  return invokeYoutube<{ url: string | null; title: string | null }>("getPublicChannel", undefined, { allowAnonymous: true });
 }
 
 export function adminGetYoutubeSource(): Promise<YoutubeSource> {
-  return invokeYoutube("adminGetYoutubeSource");
+  return invokeYoutube<YoutubeSource>("adminGetYoutubeSource");
 }
 
 export function adminSaveYoutubeKey({ data }: { data: { key: string } }): Promise<
   { ok: true; masked: string } | { ok: false; error: string }
 > {
-  return invokeYoutube("adminSaveYoutubeKey", data);
+  return invokeYoutube<{ ok: true; masked: string } | { ok: false; error: string }>("adminSaveYoutubeKey", data);
 }
 
 export function adminTestYoutubeKey(): Promise<{ ok: true } | { ok: false; error: string }> {
-  return invokeYoutube("adminTestYoutubeKey");
+  return invokeYoutube<{ ok: true } | { ok: false; error: string }>("adminTestYoutubeKey");
 }
 
 export function adminSaveYoutubeSource({ data }: { data: { input: string } }): Promise<{
@@ -129,19 +129,19 @@ export function adminSaveYoutubeSource({ data }: { data: { input: string } }): P
   channel_url: string;
   uploads_playlist: string;
 }> {
-  return invokeYoutube("adminSaveYoutubeSource", data);
+  return invokeYoutube<{ channel_id: string; channel_title: string; channel_thumb: string | null; channel_url: string; uploads_playlist: string }>("adminSaveYoutubeSource", data);
 }
 
 export function adminSyncYoutube(): Promise<YoutubeSyncResult> {
-  return invokeYoutube("adminSyncYoutube");
+  return invokeYoutube<YoutubeSyncResult>("adminSyncYoutube");
 }
 
 export function adminSyncIfStale(): Promise<{ ok: true }> {
-  return invokeYoutube("adminSyncIfStale");
+  return invokeYoutube<{ ok: true }>("adminSyncIfStale");
 }
 
 export function adminListVideos(): Promise<AdminVideo[]> {
-  return invokeYoutube("adminListVideos");
+  return invokeYoutube<AdminVideo[]>("adminListVideos");
 }
 
 export function adminSetVideoStatus({
@@ -149,7 +149,7 @@ export function adminSetVideoStatus({
 }: {
   data: { id: string; status: "draft" | "published" | "hidden" | "archived" };
 }): Promise<{ ok: true }> {
-  return invokeYoutube("adminSetVideoStatus", data);
+  return invokeYoutube<{ ok: true }>("adminSetVideoStatus", data);
 }
 
 export type AdminVideoUpdate = {
@@ -166,7 +166,7 @@ export type AdminVideoUpdate = {
 };
 
 export function adminUpdateVideo({ data }: { data: AdminVideoUpdate }): Promise<{ ok: true }> {
-  return invokeYoutube("adminUpdateVideo", data);
+  return invokeYoutube<{ ok: true }>("adminUpdateVideo", data);
 }
 
 export type AdminManualVideoInput = {
@@ -180,5 +180,5 @@ export type AdminManualVideoInput = {
 };
 
 export function adminAddManualVideo({ data }: { data: AdminManualVideoInput }): Promise<{ id: string }> {
-  return invokeYoutube("adminAddManualVideo", data);
+  return invokeYoutube<{ id: string }>("adminAddManualVideo", data);
 }
