@@ -17,6 +17,7 @@ export type EditorSourcePatch = {
   title?: string; author?: string | null; published_on?: string | null; admin_comment?: string; content?: string; status?: "pending" | "approved" | "rejected";
 };
 export type EditorSettings = { guidelines: string; community_enabled: boolean; community_decision_note: string; updated_at: string | null };
+export type EditorSettingsInput = Pick<EditorSettings, "guidelines" | "community_enabled" | "community_decision_note">;
 export type AnalysisPreview = {
   docs: Array<{ ref: string; kind: string; title: string; chars: number }>;
   communityCount: number; communityBlocked: boolean; totalChars: number;
@@ -79,7 +80,7 @@ export function deleteSource({ data }: { data: { id: string } }): Promise<{ ok: 
   return invokeEditorAi("deleteSource", data);
 }
 export function getEditorSettings(): Promise<EditorSettings> { return invokeEditorAi("getEditorSettings"); }
-export function saveEditorSettings({ data }: { data: EditorSettings }): Promise<{ ok: boolean; error?: string }> {
+export function saveEditorSettings({ data }: { data: EditorSettingsInput }): Promise<{ ok: boolean; error?: string }> {
   return invokeEditorAi("saveEditorSettings", data);
 }
 export function testAiConnection(): Promise<{ ok: boolean; reply?: string; error?: string }> { return invokeEditorAi("testAiConnection"); }
