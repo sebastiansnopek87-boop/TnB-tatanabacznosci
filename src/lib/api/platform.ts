@@ -23,7 +23,7 @@ type EmailRow = Database["public"]["Tables"]["email_settings"]["Row"];
 type AdminEventRow = Database["public"]["Tables"]["admin_events"]["Row"];
 
 export type AdminPlatformSettings = {
-  settings: Omit<PlatformRow, "id" | "updated_by">;
+  settings: PublicPlatformSettings & BillingSettings & { updated_at: string };
   email: Pick<
     EmailRow,
     | "notification_recipient"
