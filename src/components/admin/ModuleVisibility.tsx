@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { MODULES, type ModuleVisibility } from "@/config/modules";
@@ -11,13 +10,12 @@ export function ModuleVisibilitySettings({ value, canEdit }: { value: ModuleVisi
   const [draft, setDraft] = useState<ModuleVisibility>(value ?? {});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const save = useServerFn(setModuleVisibility);
   const qc = useQueryClient();
   useEffect(() => { setDraft(value ?? {}); }, [value]);
   async function submit() {
     setBusy(true); setError(null);
     try {
-      await save({ data: { visibility: draft } });
+      await setModuleVisibility({ visibility: draft });
       await Promise.all([qc.invalidateQueries({ queryKey: ["admin-platform-settings"] }), qc.invalidateQueries({ queryKey: ["platform-settings-public"] })]);
       toast.success("Widoczność modułów zapisana.");
     } catch (e) { setError(e instanceof Error ? e.message : "Nie udało się zapisać widoczności."); }
