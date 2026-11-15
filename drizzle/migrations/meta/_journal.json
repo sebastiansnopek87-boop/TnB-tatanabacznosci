@@ -442,6 +442,13 @@
       "when": 1794756752000,
       "tag": "0062_revoke_client_access_from_server_only_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1794768300000,
+      "tag": "0063_restrict_public_platform_settings_columns",
+      "breakpoints": true
     }
   ]
 }
