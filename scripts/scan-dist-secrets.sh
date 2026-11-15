@@ -19,7 +19,7 @@ fi
 # Variable names (for example YOUTUBE_API_KEY) and key-prefix handling code
 # are not credentials; detect actual values instead.
 
-markers=
+markers=(
   service_role
   SUPABASE_SERVICE_ROLE_KEY
   LOVABLE_API_KEY
