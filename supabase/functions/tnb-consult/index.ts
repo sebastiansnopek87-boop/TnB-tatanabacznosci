@@ -175,6 +175,7 @@ const txt = (min: number, max: number, msg: string) => z.string().trim().min(min
 const dateYmd = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const timeHm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d(:00)?$/, "Godzina w formacie GG:MM.");
 const RequestSchema = z.discriminatedUnion("action", [
+  z.object({ action: z.literal("processReminders") }),
   z.object({ action: z.literal("getConsultSlots") }),
   z.object({ action: z.literal("createConsultBooking"), data: z.object({
     startsAt: z.string().datetime(), first_name: txt(1,60,"Podaj imię."), last_name: txt(1,80,"Podaj nazwisko."),
@@ -197,8 +198,51 @@ const RequestSchema = z.discriminatedUnion("action", [
 ]);
 const ADMIN_ACTIONS = new Set(["adminListBookings","adminGetBooking","adminUpdateBooking","adminGetAvailability","adminSaveAvailability","adminBlockDate"]);
 const AUTH_ACTIONS = new Set(["listMyBookings","cancelMyBooking"]);
+
+async function requireCron(req: Request) {
+  const token = (req.headers.get("authorization") ?? "").match(/^Bearer ([^\s,]+)$/)?.[1] ?? "";
+  if (!token) throw new HttpError(401, "Unauthorized");
+  const secrets = ["LOVABLE_CRON_SECRET", "TNB_CRON_SECRET", "LOVABLE_CRON_SECRET_PREVIOUS", "TNB_CRON_SECRET_PREVIOUS"]
+    .map((name) => envKey(name)).filter((value): value is string => !!value);
+  if (!secrets.length) throw new HttpError(503, "Zadanie cykliczne nie jest skonfigurowane.");
+  const digest = async (value: string) => new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value)));
+  const provided = await digest(token);
+  let matched = false;
+  for (const secret of secrets) {
+    const expected = await digest(secret);
+    let diff = token.length ^ secret.length;
+    for (let i = 0; i < expected.length; i++) diff |= provided[i]! ^ expected[i]!;
+    matched = matched || diff === 0;
+  }
+  if (!matched) throw new HttpError(401, "Unauthorized");
+}
+async function processReminders(s: Db, now = new Date()) {
+  const { data, error } = await s.from("consult_bookings")
+    .select("id, booking_number, first_name, email, starts_at, meeting_link, access_token, user_id")
+    .eq("status", "booked").eq("reminder_status", "pending")
+    .gt("starts_at", now.toISOString())
+    .lte("starts_at", new Date(now.getTime() + 24 * 3600_000).toISOString())
+    .limit(100);
+  if (error) throw new HttpError(500, "Nie udało się pobrać rezerwacji do przypomnienia.");
+  let sent = 0, skipped = 0;
+  for (const booking of data ?? []) {
+    const result = await sendBookingMail(s, "reminder", booking);
+    const status = result.ok ? "sent" : "skipped";
+    await s.from("consult_bookings").update({
+      reminder_status: status, reminder_error: result.ok ? null : result.reason, reminder_at: now.toISOString()
+    }).eq("id", booking.id).eq("status", "booked");
+    await logEvent(s, booking.id, result.ok ? "reminder_sent" : "reminder_skipped", result.ok ? null : result.reason);
+    if (result.ok) sent++; else skipped++;
+  }
+  return { checked: data?.length ?? 0, sent, skipped };
+}
+
 async function handle(s: Db, req: Request, raw: unknown) {
   const input = RequestSchema.parse(raw);
+  if (input.action === "processReminders") {
+    await requireCron(req);
+    return await processReminders(s);
+  }
   const actor = ADMIN_ACTIONS.has(input.action) ? await requireAdmin(s, req) : AUTH_ACTIONS.has(input.action) ? await requireUser(s, req) : null;
   switch (input.action) {
     case "getConsultSlots": return await computeSlots(s);
