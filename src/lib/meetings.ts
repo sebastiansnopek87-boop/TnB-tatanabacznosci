@@ -1,3 +1,4 @@
+import { tnbPublicFunctionUrl } from "@/lib/public-edge-url";
 // Shared, browser-safe constants and helpers for the Spotkania module.
 export type MeetingKind = "online" | "live";
 export type MeetingStatus = "draft" | "published" | "archived";
@@ -21,7 +22,7 @@ export type MeetingDetail = PublicMeeting & {
   user_can_cancel: boolean; join_open_minutes: number;
 };
 
-export const meetingImage = (m: { id: string; has_image: boolean }) => (m.has_image ? `/api/public/meeting-image/${m.id}` : null);
+export const meetingImage = (m: { id: string; has_image: boolean }) => (m.has_image ? tnbPublicFunctionUrl("tnb-media", { kind: "meeting-image", id: m.id }) : null);
 /** Effective end: explicit end or start + 2h. */
 export const endOf = (m: { starts_at: string; ends_at: string | null }) => (m.ends_at ? new Date(m.ends_at).getTime() : new Date(m.starts_at).getTime() + 2 * 3600_000);
 export const isPast = (m: { starts_at: string; ends_at: string | null }) => endOf(m) < Date.now();
