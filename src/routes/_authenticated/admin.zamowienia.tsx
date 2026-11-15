@@ -1,7 +1,6 @@
 import { adminRecordSearch } from "@/lib/admin-record-search";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { adminGetOrder, adminListOrders, adminResendDelivery, adminSalesSummary, adminSetOrderStatus } from "@/lib/api/orders";
@@ -22,7 +21,7 @@ const field = "h-10 border border-border/60 bg-background px-3 text-sm";
 
 function Orders() {
   const { record } = Route.useSearch();
-  const list = useServerFn(adminListOrders); const summary = useServerFn(adminSalesSummary);
+  const list = adminListOrders; const summary = adminSalesSummary;
   const [q, setQ] = useState(""); const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all"); const [provider, setProvider] = useState("all"); const [from, setFrom] = useState(""); const [to, setTo] = useState(""); const [kind, setKind] = useState("all");
   const [openId, setOpenId] = useState<string | null>(record ?? null);
@@ -91,7 +90,7 @@ function Orders() {
 type Action = "paid" | "delivered" | "cancelled" | "refund_start" | "refund_complete" | "review_paid" | "review_failed";
 
 function OrderDetail({ id, onClose }: { id: string; onClose: () => void }) {
-  const get = useServerFn(adminGetOrder); const resend = useServerFn(adminResendDelivery); const setSt = useServerFn(adminSetOrderStatus);
+  const get = adminGetOrder; const resend = adminResendDelivery; const setSt = adminSetOrderStatus;
   const qc = useQueryClient();
   const [reason, setReason] = useState(""); const [revoke, setRevoke] = useState(false);
   const { data, isLoading, error } = useQuery({ queryKey: ["admin-order", id], queryFn: () => get({ data: { id } }) });
