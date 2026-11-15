@@ -7,7 +7,7 @@ import { PageHeading, PageShell } from "@/components/tnb/PageShell";
 export const Route = createFileRoute("/strony/$slug")({
   loader: async ({ params }) => {
     if (!/^[a-z0-9-]{1,120}$/.test(params.slug)) throw notFound();
-    const p = await getPublicPage({ data: { slug: params.slug } });
+    const p = await getPublicPage({ slug: params.slug });
     if (!p) throw notFound();
     return p;
   },
