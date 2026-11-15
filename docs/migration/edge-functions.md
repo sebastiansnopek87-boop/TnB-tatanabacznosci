@@ -47,4 +47,3 @@ The `tnb-brand` Edge Function replaces server-side branding operations and the d
 - Branding assets remain in the private `media` bucket. Upload URLs are signed, upload metadata is checked after transfer, and unreferenced replaced files are removed.
 - Platform settings mutations require a verified Supabase session and the superadmin role. The public image GET requires no session but cannot enumerate or read arbitrary storage objects.
 - Gateway JWT verification is disabled only because public image requests from `<img>` cannot send an Authorization header. Every administrative POST independently verifies the user's access token with Supabase Auth and checks roles before accessing the service-role client.
-

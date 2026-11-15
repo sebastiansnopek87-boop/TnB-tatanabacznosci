@@ -11,4 +11,3 @@ verify_jwt = true
 
 [functions.tnb-brand]
 verify_jwt = false
-
