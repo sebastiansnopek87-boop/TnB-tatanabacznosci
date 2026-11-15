@@ -16,8 +16,8 @@ export const Route = createFileRoute("/_authenticated/admin/ustawienia-email")({
 type Form = { notification_recipient: string; sender_name: string; sender_local_part: string; sender_domain: string; admin_inbox_url: string; contact_notifications_enabled: boolean; newsletter_notifications_enabled: boolean; newsletter_double_opt_in: boolean };
 
 function EmailSettings() {
-  const get = useServerFn(getEmailSettings);
-  const save = useServerFn(updateEmailSettings);
+  const get = getEmailSettings;
+  const save = updateEmailSettings;
   const qc = useQueryClient();
   const { data, error } = useQuery({ queryKey: ["admin-email-settings"], queryFn: () => get() });
   const [f, setF] = useState<Form | null>(null);
