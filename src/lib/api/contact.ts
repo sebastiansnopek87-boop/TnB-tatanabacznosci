@@ -6,9 +6,9 @@ export function submitContact({ data }: { data: {
   email: string;
   subject: string;
   message: string;
-  privacy: true;
+  privacy: boolean;
   website: string;
   elapsedMs: number;
 } }): Promise<{ ok: true }> {
-  return invokeTnbFunction<{ ok: true }>("tnb-contact", data);
+  return invokeTnbFunction<{ ok: true }>("tnb-contact", { ...data });
 }
