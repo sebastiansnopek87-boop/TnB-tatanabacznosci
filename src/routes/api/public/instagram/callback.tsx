@@ -1,11 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { finishInstagramOAuth } from "@/lib/api/voice";
 
 export const Route = createFileRoute("/api/public/instagram/callback")({ component: InstagramCallback });
 
 function InstagramCallback() {
-  const [message, setMessage] = useState("Kończymy autoryzację konta Instagram…");
+  const message = "Kończymy autoryzację konta Instagram…";
   useEffect(() => {
     let active = true;
     const params = new URLSearchParams(window.location.search);
