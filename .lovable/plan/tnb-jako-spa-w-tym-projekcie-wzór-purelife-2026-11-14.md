@@ -37,12 +37,15 @@ Nie wolno przełączyć projektu na statyczne SPA przed przeniesieniem wszystkic
 - Callback OAuth, cron, synchronizacje i proxy plików muszą zachować dotychczasowe zabezpieczenia, limity i obsługę błędów.
 - Nie publikować sekretów dostawców ani service-role w kodzie frontendowym.
 
-### 3. Przebudowa frontendowa do React SPA
+### 3. Przebudowa frontendowa do statycznego React SPA
 Dopiero po zakończeniu etapów 1–2:
-- Usunąć `@tanstack/react-start`, Nitro i `@lovable.dev/vite-tanstack-config`; przejść na standardowy Vite + React.
-- Dodać `index.html` i wejście `src/main.tsx`.
-- Zachować 72 adresy, parametry, query, guardy logowania/admina, metadane SEO, 404 i wygląd istniejących komponentów.
-- Pozostałe wywołania serwerowe nie mogą już istnieć. Nie zostawiać tras API, które wymagałyby procesu Node.
+- Zachować `@tanstack/react-router`, istniejące pliki `src/routes/*` i generowane `src/routeTree.gen.ts`. Nie przepisywać 72 tras na React Router bez wykazanego problemu technicznego.
+- Usunąć `@tanstack/react-start`, Nitro i `@lovable.dev/vite-tanstack-config`; przejść na standardowy Vite z `@tanstack/router-plugin/vite` (przed `@vitejs/plugin-react`), `@tailwindcss/vite` i `vite-tsconfig-paths`.
+- Dodać `index.html` i wejście `src/main.tsx`, które tworzy router z `src/router.tsx` i montuje `RouterProvider`.
+- W `src/routes/__root.tsx` usunąć Start-owy `shellComponent` i powłokę serwerową; zachować `HeadContent`, `Scripts`, QueryClientProvider, globalny layout, 404 i obsługę błędów w wersji klientowej.
+- Zachować 72 adresy, parametry, query, guardy logowania/admina, metadane SEO i wygląd istniejących komponentów.
+- Potwierdzić, że po migracji nie ma importów z `@tanstack/react-start`, `createServerFn`, `useServerFn`, `client.server` ani tras API wymagających Node.
+- Dokumentacja: [TanStack Router — Vite](https://tanstack.com/router/latest/docs/installation/with-vite) oraz [Document Head Management — SPA](https://tanstack.com/router/latest/docs/guide/document-head-management).
 
 ### 4. Build i Cyberfolks
 - Używać `bun.lock` jako lockfile; nie generować równoległego `package-lock.json`.
