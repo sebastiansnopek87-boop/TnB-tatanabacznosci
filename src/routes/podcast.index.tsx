@@ -7,7 +7,8 @@ import { ChannelsSection, InstagramSection, StorySection, WatchSection } from "@
 import { listEpisodes } from "@/lib/api/podcast";
 import { coverUrl, fmtDay, fmtDuration, type PublicEpisode } from "@/lib/podcast";
 import { getPodcastLayout } from "@/lib/api/platform";
-import { listInstagram, listVideos } from "@/lib/api/voice";
+import { listVideos } from "@/lib/api/youtube";
+import { listInstagram } from "@/lib/api/voice";
 import { buildMedia, SOURCE_LABEL, type MediaItem, type MediaSource } from "@/lib/voice-media";
 
 const TITLE = "Głos TNB — historie, rozmowy i głosy ludzi w drodze";
