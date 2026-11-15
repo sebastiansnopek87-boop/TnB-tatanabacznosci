@@ -1,3 +1,4 @@
+import { tnbPublicFunctionUrl } from "@/lib/api/client";
 import type { TextFormat } from "./rich-text";
 // Shared, browser-safe model for CMS pages (O TNB, Moja historia and future subpages).
 export type PageButton = { label: string; href: string };
@@ -64,7 +65,7 @@ export const newSection = (kind: SectionKind = "text"): PageSection => ({
 export const normalizeSections = (raw: unknown): PageSection[] =>
   (Array.isArray(raw) ? raw : []).map((s: any) => ({ ...newSection(s?.kind ?? "text"), ...s, items: Array.isArray(s?.items) ? s.items : [], buttons: Array.isArray(s?.buttons) ? s.buttons : [] }));
 
-export const pageImageUrl = (pageId: string, file: string) => `/api/public/page-image/${pageId}/${encodeURIComponent(file)}`;
+export const pageImageUrl = (pageId: string, file: string) => tnbPublicFunctionUrl("tnb-pages", { image: `${pageId}/${file}` });
 
 // Internal links start with "/", external must be https; anything else is rejected.
 export const isSafeHref = (h: string) => /^\/(?!\/)[\w\-/#?=&.%]*$/.test(h) || /^https:\/\/\S+$/.test(h) || /^mailto:\S+$/.test(h);
