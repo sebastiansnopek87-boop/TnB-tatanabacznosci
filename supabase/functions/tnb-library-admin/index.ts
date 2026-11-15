@@ -72,7 +72,7 @@ async function watermarkPdf(bytes: Uint8Array) {
     if (width < 60 * MM) throw new HttpError(400, "Strony są zbyt małe, by bezpiecznie umieścić znak wodny.");
     page.drawImage(logo, { x: x + width - WATERMARK.rightMm * MM - size, y: y + WATERMARK.bottomMm * MM, width: size, height: size });
   }
-  doc.setProducer("TATA NA BACZNOŚĆ — znak wodny TNB");
+  doc.setProducer("TATA NA BACZNOŚCI — znak wodny TNB");
   return await doc.save();
 }
 async function processPdf(s: Db, itemId: string, input: { originalPath: string; name: string; premarked: boolean }) {
