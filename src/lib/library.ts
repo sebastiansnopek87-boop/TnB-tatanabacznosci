@@ -1,3 +1,4 @@
+import { tnbPublicFunctionUrl } from "@/lib/public-edge-url";
 import { supabase } from "@/integrations/supabase/client";
 
 export const KINDS = { article: "Artykuł", guide: "Poradnik", pdf: "PDF do pobrania", video: "Materiał wideo", audio: "Nagranie audio", link: "Link zewnętrzny" } as const;
@@ -25,7 +26,7 @@ export type LibraryContent = { body: string; file_path: string | null; file_name
 const COLS = "id, slug, title, summary, category, kind, cover_url, access, author_name, published_at, updated_at, price_amount, currency, delivery_method, purchasable, free_delivery, subtitle, sales_description, audience, reader_value";
 
 export const coverSrc = (it: { id: string; cover_url: string | null; updated_at: string }) =>
-  it.cover_url ? `/api/public/library-cover/${it.id}?v=${encodeURIComponent(it.updated_at)}` : null;
+  it.cover_url ? tnbPublicFunctionUrl("tnb-media", { kind: "library-cover", id: it.id, v: it.updated_at }) : null;
 
 export const fmtPrice = (amount: number | null) =>
   amount == null ? null : `${(amount / 100).toLocaleString("pl-PL", { minimumFractionDigits: amount % 100 ? 2 : 0, maximumFractionDigits: 2 })} zł`;
