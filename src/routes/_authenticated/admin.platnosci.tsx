@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { listPaymentProviders, setPaymentEnvironment, testPaymentProvider, updatePaymentProvider } from "@/lib/api/payments";
@@ -11,7 +10,7 @@ import { Input } from "@/components/ui/input";
 export const Route = createFileRoute("/_authenticated/admin/platnosci")({ component: Payments });
 
 function Payments() {
-  const list = useServerFn(listPaymentProviders);
+  const list = listPaymentProviders;
   const { data, isLoading, error } = useQuery({ queryKey: ["admin-payments"], queryFn: () => list() });
   return (
     <div className="space-y-6">
@@ -27,7 +26,7 @@ function Payments() {
 
 function ProviderCard({ p, canEdit }: { p: any; canEdit: boolean }) {
   const qc = useQueryClient();
-  const save = useServerFn(updatePaymentProvider); const setEnv = useServerFn(setPaymentEnvironment); const test = useServerFn(testPaymentProvider);
+  const save = updatePaymentProvider; const setEnv = setPaymentEnvironment; const test = testPaymentProvider;
   const [f, setF] = useState({ enabled: p.enabled, isDefault: p.is_default, merchant_id: p.merchant_id ?? "", pos_id: p.pos_id ?? "", client_id: p.client_id ?? "" });
   useEffect(() => { setF({ enabled: p.enabled, isDefault: p.is_default, merchant_id: p.merchant_id ?? "", pos_id: p.pos_id ?? "", client_id: p.client_id ?? "" }); }, [p]);
   const done = () => qc.invalidateQueries({ queryKey: ["admin-payments"] });
