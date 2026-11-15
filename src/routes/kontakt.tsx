@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useRef, useState, type FormEvent } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { ArrowRight, CheckCircle2, Loader2, Mail, Phone } from "lucide-react";
 import { PageHeading, PageShell } from "@/components/tnb/PageShell";
 import { SocialIcon } from "@/components/tnb/SocialIcon";
@@ -54,7 +53,6 @@ function ContactPage() {
   ].filter(Boolean) as string[];
   const hasData = !!email || !!support || !!phone || !!hours || social.length > 0 || registry.length > 0;
 
-  const send = useServerFn(submitContact);
   const [f, setF] = useState<Fields>(EMPTY);
   const [errors, setErrors] = useState<Partial<Record<keyof Fields, string>>>({});
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
@@ -80,7 +78,7 @@ function ContactPage() {
     }
     setStatus("sending");
     try {
-      await send({ data: { ...parsed.data, website: honeypot, elapsedMs: Date.now() - startedAt.current } });
+      await submitContact({ data: { ...parsed.data, website: honeypot, elapsedMs: Date.now() - startedAt.current } });
       setStatus("sent");
       setF(EMPTY);
     } catch {
