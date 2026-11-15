@@ -1,8 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 
-type PublicAssetKind = "library" | "meeting" | "podcast";
+type PublicAssetKind = "article" | "library" | "meeting" | "podcast";
 type PublicAsset = {
-  bucket: "library-files" | "meeting-images" | "podcast-files";
+  bucket: "article-images" | "library-files" | "meeting-images" | "podcast-files";
   path: string;
   contentType: string;
 };
@@ -89,7 +89,26 @@ async function findPublicAsset(
   db: ReturnType<typeof createAdminClient>,
   kind: PublicAssetKind,
   id: string,
+  file?: string,
 ): Promise<PublicAsset | null> {
+  if (kind === "article") {
+    if (!file || !/^[a-z0-9-]+\\.(jpg|png|webp)$/.test(file)) return null;
+    const { data, error } = await db
+      .from("articles")
+      .select("status, published_at, cover, sections")
+      .eq("id", id)
+      .maybeSingle();
+    const publishedAt = typeof data?.published_at === "string" ? Date.parse(data.published_at) : NaN;
+    if (error || !data || data.status !== "published" || !Number.isFinite(publishedAt) || publishedAt > Date.now()) return null;
+    const used = data.cover === file || (Array.isArray(data.sections) && data.sections.some((section: unknown) => {
+      if (!section || typeof section !== "object") return false;
+      return (section as Record<string, unknown>).image === file;
+    }));
+    if (!used) return null;
+    const image = safeImagePath(`${id}/${file}`);
+    return image ? { bucket: "article-images", ...image } : null;
+  }
+
   if (kind === "library") {
     const { data, error } = await db
       .from("library_items")
@@ -146,17 +165,19 @@ Deno.serve(async (request: Request) => {
   const url = new URL(request.url);
   const kind = url.searchParams.get("kind");
   const id = url.searchParams.get("id");
+  const file = url.searchParams.get("file") ?? undefined;
   if (
-    (kind !== "library" && kind !== "meeting" && kind !== "podcast") ||
+    (kind !== "article" && kind !== "library" && kind !== "meeting" && kind !== "podcast") ||
     !id ||
-    !UUID.test(id)
+    !UUID.test(id) ||
+    (kind === "article" && (!file || !/^[a-z0-9-]+\\.(jpg|png|webp)$/.test(file)))
   ) {
     return notFound();
   }
 
   try {
     const db = createAdminClient();
-    const asset = await findPublicAsset(db, kind, id);
+    const asset = await findPublicAsset(db, kind, id, file);
     if (!asset) return notFound();
 
     const { data: blob, error } = await db.storage.from(asset.bucket).download(asset.path);
