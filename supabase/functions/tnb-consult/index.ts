@@ -168,7 +168,7 @@ async function sendBookingMail(s: Db, kind: BookingMail, b: any) {
     : kind === "reminder" ? { ...base, link_do_spotkania: b.meeting_link || origin + "/spotkania/rezerwacja/" + b.access_token }
     : base;
   const r = await dispatch(s, { event, to: b.email, vars, idempotencyKey: kind + "-" + b.id, relatedId: b.id });
-  return r.status === "simulated" ? { ok: true } : { ok: false, reason: r.reason ?? r.status };
+  return r.status === "sent" ? { ok: true } : { ok: false, reason: r.status === "simulated" ? "simulated" : r.reason ?? r.status };
 }
 const txt = (min: number, max: number, msg: string) => z.string().trim().min(min, msg).max(max, "Maksymalnie " + max + " znaków.");
 const dateYmd = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
