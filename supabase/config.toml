@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.tnb-articles]
 verify_jwt = false
+
+[functions.tnb-media]
+verify_jwt = false
