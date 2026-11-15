@@ -337,7 +337,9 @@ function toRow(object: MediaObject, usage: Map<string, Usage[]>) {
   };
 }
 
-async function listMedia(ctx: Context, data: z.infer<typeof RequestSchema> & { action: "listMedia" }) {
+type ListMediaRequest = Extract<z.infer<typeof RequestSchema>, { action: "listMedia" }>;
+
+async function listMedia(ctx: Context, data: ListMediaRequest) {
   await requireAdmin(ctx);
   const [objects, usage] = await Promise.all([allObjects(ctx), buildUsage(ctx)]);
   const query = data.data.q.trim().toLowerCase();
