@@ -18,7 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { MaintenanceGate } from "@/components/tnb/MaintenanceGate";
 import { VisualEffects } from "@/components/tnb/VisualEffects";
 import { ModuleGate } from "@/components/tnb/ModuleGate";
-import { useBrand } from "@/hooks/use-brand-settings";
+import { brandSrc, useBrand } from "@/hooks/use-brand-settings";
 
 // Applies admin-set branding (favicon, share image, homepage SEO) to the document head.
 // Favicon and og:image point to /api/public/brand/<file>, which serves the image only
@@ -28,7 +28,7 @@ function BrandHead() {
   const path = useRouterState({ select: (s) => s.location.pathname });
   useEffect(() => {
     if (!brand) return;
-    const src = (v: string) => `/api/public/brand/${v.replace(/^brand\//, "")}`;
+    const src = (v: string) => brandSrc(v) ?? "";
     if (brand.favicon) {
       let link = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
       if (!link) { link = document.createElement("link"); link.rel = "icon"; document.head.appendChild(link); }
