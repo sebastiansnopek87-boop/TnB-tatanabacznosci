@@ -3,6 +3,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizeSections, type PageSection, type SectionKind } from "./pages";
+import { publicArticleAssetUrl } from "@/lib/public-assets";
 
 export type ArticleCard = {
   id: string; slug: string; title: string; excerpt: string; category: string | null; cover: string | null; cover_alt: string;
@@ -19,8 +20,7 @@ export const ARTICLE_KINDS: SectionKind[] = ["text", "quote", "image", "cta"];
 
 const CARD = "id, slug, title, excerpt, category, cover, cover_alt, author_name, reading_minutes, published_at, updated_at";
 
-export const articleImageUrl = (id: string, file: string, v?: string) =>
-  `/api/public/article-image/${id}/${encodeURIComponent(file)}${v ? `?v=${encodeURIComponent(v)}` : ""}`;
+export const articleImageUrl = publicArticleAssetUrl;
 
 export const fmtArticleDate = (s: string | null) =>
   s ? new Date(s).toLocaleDateString("pl-PL", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Warsaw" }) : "";
