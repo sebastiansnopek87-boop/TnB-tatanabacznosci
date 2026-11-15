@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
 import { listNotificationLog } from "@/lib/api/admin";
@@ -19,8 +18,8 @@ type St = "all" | "pending" | "sending" | "sent" | "delivered" | "failed" | "can
 
 function Log() {
   const list = listNotificationLog;
-  const retry = useServerFn(retryNotification);
-  const preview = useServerFn(getLogPreview);
+  const retry = retryNotification;
+  const preview = getLogPreview;
   const qc = useQueryClient();
   const [kind, setKind] = useState("all");
   const [status, setStatus] = useState<St>("all");
