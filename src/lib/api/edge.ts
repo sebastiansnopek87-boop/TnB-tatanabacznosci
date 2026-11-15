@@ -11,7 +11,7 @@ export async function invokeEdge<T>(
   if (error) {
     const response = (error as { context?: unknown }).context;
     if (response instanceof Response) {
-      const failure = await response.clone().json().catch(() => null) as EdgeFailure | null;
+      const failure = (await response.clone().json().catch(() => null)) as EdgeFailure | null;
       if (typeof failure?.message === "string") throw new Error(failure.message);
     }
     throw error;
