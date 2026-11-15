@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import type { HistoryEvent, ReadState } from "@/lib/control-center";
 
 type MessageFilter = { status?: "all" | "new" | "read" | "archived" | "inbox"; q?: string; sort?: "desc" | "asc" };
 type SubscriberFilter = { status?: "all" | "pending" | "active" | "unsubscribed"; q?: string; from?: string; to?: string };
@@ -144,4 +145,45 @@ export function listAdminEvents({ data }: { data: EventFilter }): Promise<{
   rows: AdminEvent[]; total: number; pageSize: number; actors: Array<{ id: string; email: string }>;
 }> {
   return invokeAdmin("listAdminEvents", data);
+}
+
+export type ControlCenterSearchResult = {
+  states: { users: ReadState; materials: ReadState; orders: ReadState; requests: ReadState };
+  users: Array<{
+    id: string; email: string | null; name: string | null; tnbId: string | null;
+    roles: string[] | null; confirmed: boolean | null; createdAt: string | null;
+  }>;
+  materials: Array<{ id: string; slug: string; title: string }>;
+  orders: Array<{
+    id: string; orderNumber: string; itemId: string; itemTitle: string; itemSlug: string | null;
+    createdAt: string; status: string; amount: number; currency: string; isTest: boolean;
+    paidAt: string | null; buyerEmail: string; userId: string | null;
+    access: { allowed: boolean; expired: boolean; label: string };
+    accessExpiresAt: string | null; accessRevokedAt: string | null;
+    matches: Array<{ userId: string; kind: "user_id" | "email" }>; warnings: string[];
+  }>;
+  requests: Array<{
+    id: string; itemId: string; itemTitle: string; mode: string; status: string;
+    userId: string | null; name: string | null; email: string | null; createdAt: string;
+    downloadedAt: string | null; downloadCount: number; notificationStatus: string | null;
+    matches: Array<{ userId: string; kind: "user_id" | "email" }>; warnings: string[];
+  }>;
+};
+export type ControlCenterHistoryResult = {
+  rows: HistoryEvent[];
+  next: { order: number; admin: number; mail: number };
+  hasMore: boolean;
+  error: string | null;
+  before: string;
+};
+export function controlCenterSearch({ data }: { data: { q: string } }): Promise<ControlCenterSearchResult> {
+  return invokeAdmin("controlCenterSearch", data);
+}
+export function controlCenterHistory({ data }: { data: {
+  kind: "order" | "user" | "library_request" | "actor";
+  id: string;
+  offsets?: { order: number; admin: number; mail?: number };
+  before?: string;
+} }): Promise<ControlCenterHistoryResult> {
+  return invokeAdmin("controlCenterHistory", data);
 }
