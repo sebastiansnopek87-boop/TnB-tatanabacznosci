@@ -35,3 +35,6 @@ verify_jwt = true
 
 [functions.tnb-media-admin]
 verify_jwt = true
+
+[functions.tnb-podcast]
+verify_jwt = false
