@@ -4,6 +4,7 @@ import { HOME_KINDS, isSafeHref, normalizeSections, type PageDraft, type PageVer
 import { assertLegalPublication, isLegalKey, LEGAL_KEYS } from "./_shared/legal-pages.ts";
 import { approvalDetail, legalDigest, legalSnapshot } from "./_shared/legal-approval.ts";
 import { TextFormatsSchema } from "./_shared/rich-text.ts";
+import { corsHeaders as supabaseCorsHeaders } from "npm:@supabase/supabase-js@2.117.2/cors";
 
 type Context = { supabase: any; supabaseAdmin: any; userId: string };
 class ApiError extends Error {
@@ -143,12 +144,11 @@ async function requireAdmin(ctx: Context): Promise<void> {
   }
 }
 function corsHeaders(origin: string | null, publicRead = false): Headers {
-  const headers = new Headers({
-    "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
-    "Access-Control-Allow-Headers": "authorization, apikey, x-client-info, content-type",
-    "Access-Control-Max-Age": "86400",
-    "Vary": "Origin",
-  });
+  const headers = new Headers(supabaseCorsHeaders);
+  headers.set("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+  headers.set("Access-Control-Max-Age", "86400");
+  headers.set("Vary", "Origin");
+  headers.delete("Access-Control-Allow-Origin");
   if (publicRead) headers.set("Access-Control-Allow-Origin", "*");
   else if (origin && ALLOWED_ORIGINS.has(origin)) headers.set("Access-Control-Allow-Origin", origin);
   return headers;
