@@ -62,7 +62,15 @@ export const newSection = (kind: SectionKind = "text"): PageSection => ({
 
 // Older rows lack the newer fields — fill defaults so every renderer can rely on them.
 export const normalizeSections = (raw: unknown): PageSection[] =>
-  (Array.isArray(raw) ? raw : []).map((s: any) => ({ ...newSection(s?.kind ?? "text"), ...s, items: Array.isArray(s?.items) ? s.items : [], buttons: Array.isArray(s?.buttons) ? s.buttons : [] }));
+  (Array.isArray(raw) ? raw : []).map((value) => {
+    const section = value as Partial<PageSection> | null;
+    return {
+      ...newSection(section?.kind ?? "text"),
+      ...section,
+      items: Array.isArray(section?.items) ? section.items : [],
+      buttons: Array.isArray(section?.buttons) ? section.buttons : [],
+    };
+  });
 
 export const pageImageUrl = (pageId: string, file: string) => {
   const base = String(import.meta.env["VITE_SUPABASE_URL"] ?? "").replace(/\/+$/, "");
