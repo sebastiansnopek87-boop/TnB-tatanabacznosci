@@ -15,20 +15,24 @@ if ! find "$DIR" -type f -print -quit | grep -q .; then
   exit 2
 fi
 
-markers=(
+# Scan client output for server-only identifiers and credential-shaped values.
+# Variable names (for example YOUTUBE_API_KEY) and key-prefix handling code
+# are not credentials; detect actual values instead.
+
+markers=
   service_role
   SUPABASE_SERVICE_ROLE_KEY
   LOVABLE_API_KEY
   LOVABLE_CRON_SECRET
   INSTAGRAM_APP_SECRET
-  YOUTUBE_API_KEY
   client.server
-  sb_secret_
+  sb_secret_[A-Za-z0-9_-]{20,}
+  AIza[0-9A-Za-z_-]{30,}
 )
 
 failed=0
 for marker in "${markers[@]}"; do
-  if matches="$(grep -rIl -- "$marker" "$DIR" 2>&1)"; then
+  if matches="$(grep -rIlE -- "$marker" "$DIR" 2>&1)"; then
     echo "FOUND: $marker"
     printf '%s\n' "$matches"
     failed=1
