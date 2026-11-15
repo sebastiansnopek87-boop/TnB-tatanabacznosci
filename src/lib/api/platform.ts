@@ -69,7 +69,7 @@ export const platformSchema = z.object({
   message: "Podaj nazwę nabywcy na fakturze albo włącz kopiowanie danych podmiotu.", path: ["billing_name"],
 });
 
-export type PlatformSettingsInput = z.infer<typeof platformSchema>;
+export type PlatformSettingsInput = z.input<typeof platformSchema>;
 export type PodcastLayout = "list" | "grid";
 export type VisualEffects = {
   enabled: boolean;
