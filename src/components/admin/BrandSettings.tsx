@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useServerFn } from "@/lib/api/useServerFn";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Copy, X } from "lucide-react";
