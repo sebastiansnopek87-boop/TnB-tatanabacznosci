@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -57,7 +56,7 @@ function EditorAi() {
 }
 
 function Dashboard({ d, go, open }: { d: Awaited<ReturnType<typeof getEditorDashboard>>; go: (t: Tab) => void; open: (id: string) => void }) {
-  const list = useServerFn(listMaterials);
+  const list = listMaterials;
   const mq = useQuery({ queryKey: ["ai-ed", "materials"], queryFn: () => list() });
   const [creating, setCreating] = useState(false);
   type MaterialListRow = { id: string; title: string; status: string; created_at: string; updated_at: string; handoff_id: string | null; imagesPending?: number; notes?: number };
