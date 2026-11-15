@@ -463,7 +463,7 @@ async function adminTestYoutubeKey(db: Db) {
   const { key } = await currentKey(db);
   if (!key) return { ok: false as const, error: "Brak zapisanego klucza." };
   try {
-    await testKey(key);
+    await testKey(db, key);
     return { ok: true as const };
   } catch (error) {
     return { ok: false as const, error: error instanceof Error ? error.message : "Błąd" };
