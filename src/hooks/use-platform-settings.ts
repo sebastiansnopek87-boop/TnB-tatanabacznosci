@@ -1,8 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { getPublicPlatformSettings } from "@/lib/api/platform";
 
 export function usePlatformSettings() {
-  const fn = useServerFn(getPublicPlatformSettings);
-  return useQuery({ queryKey: ["platform-settings-public"], queryFn: () => fn(), staleTime: 60_000 });
+  return useQuery({ queryKey: ["platform-settings-public"], queryFn: getPublicPlatformSettings, staleTime: 60_000 });
 }
