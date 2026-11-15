@@ -1,9 +1,8 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Copy, X } from "lucide-react";
-import { getBrandSettings, saveBrandSettings, createBrandUpload, finalizeBrandUpload } from "@/lib/api/brand";
+import { getBrandSettings, saveBrandSettings, createBrandUpload, finalizeBrandUpload, brandImageUrl } from "@/lib/api/brand";
 import { errMsg } from "./format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,7 +36,7 @@ function putFile(bucket: string, path: string, token: string, file: File) {
 function ImageField({ label, hint, accept, value, preview, busy, canEdit, onPick, onClear }:
   { label: string; hint?: string; accept: string; value: string; preview: string | null; busy: boolean; canEdit: boolean; onPick: (f: File) => void; onClear: () => void }) {
   const ref = useRef<HTMLInputElement>(null);
-  const src = preview ?? (value ? `/api/public/brand/${value.replace(/^brand\//, "")}` : null);
+  const src = preview ?? brandImageUrl(value);
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
@@ -57,12 +56,8 @@ function ImageField({ label, hint, accept, value, preview, busy, canEdit, onPick
 }
 
 export function BrandSettings({ canEdit }: { canEdit: boolean }) {
-  const get = useServerFn(getBrandSettings);
-  const save = useServerFn(saveBrandSettings);
-  const start = useServerFn(createBrandUpload);
-  const fin = useServerFn(finalizeBrandUpload);
   const qc = useQueryClient();
-  const { data, error } = useQuery({ queryKey: ["admin-brand-settings"], queryFn: () => get() });
+  const { data, error } = useQuery({ queryKey: ["admin-brand-settings"], queryFn: () => getBrandSettings() });
   const [f, setF] = useState<Form | null>(null);
   const [previews, setPreviews] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
@@ -84,9 +79,9 @@ export function BrandSettings({ canEdit }: { canEdit: boolean }) {
   async function upload(key: string, file: File) {
     setBusy(true);
     try {
-      const t = await start({ data: { name: file.name, type: file.type, size: file.size } });
+      const t = await createBrandUpload({ data: { name: file.name, type: file.type, size: file.size } });
       await putFile(t.bucket, t.path, t.token, file);
-      await fin({ data: { path: t.path } });
+      await finalizeBrandUpload({ data: { path: t.path } });
       setF((p) => p ? { ...p, [key]: t.path } : p);
       setPreviews((p) => ({ ...p, [key]: URL.createObjectURL(file) }));
       toast.success("Plik gotowy. Zapisz zmiany, aby zastosować.");
@@ -97,7 +92,7 @@ export function BrandSettings({ canEdit }: { canEdit: boolean }) {
   async function onSave() {
     setSaving(true);
     try {
-      await save({ data: f });
+      await saveBrandSettings({ data: f });
       setPreviews((p) => { for (const u of Object.values(p)) URL.revokeObjectURL(u); return {}; });
       toast.success("Ustawienia marki zapisane.");
       qc.invalidateQueries({ queryKey: ["admin-brand-settings"] });
@@ -163,7 +158,7 @@ export function BrandSettings({ canEdit }: { canEdit: boolean }) {
         <div className="space-y-2"><Label htmlFor="bs-name">Nazwa witryny (napis obok logo w lewym górnym rogu)</Label>
           <Input id="bs-name" disabled={ro} value={f.site_name} maxLength={200} onChange={(e) => set("site_name", e.target.value)} placeholder="Tata Na Baczności" />
           <div className="flex items-center gap-3 border border-border/60 bg-surface-deep p-3">
-            <img src={previews["header_image"] ?? previews["logo"] ?? (f.header_image || f.logo ? `/api/public/brand/${(f.header_image || f.logo).replace(/^brand\//, "")}` : logo.url)} alt="" className="h-12 w-12 object-contain" />
+            <img src={previews["header_image"] ?? previews["logo"] ?? brandImageUrl(f.header_image || f.logo) ?? logo.url} alt="" className="h-12 w-12 object-contain" />
             <span className="text-copper font-display text-xl font-bold uppercase tracking-[0.12em]">{f.site_name || "Tata Na Baczności"}</span>
           </div></div>
         <div className="space-y-2"><Label htmlFor="bs-title">Publiczny tytuł strony głównej</Label>

@@ -19,24 +19,25 @@ import { MaintenanceGate } from "@/components/tnb/MaintenanceGate";
 import { VisualEffects } from "@/components/tnb/VisualEffects";
 import { ModuleGate } from "@/components/tnb/ModuleGate";
 import { useBrand } from "@/hooks/use-brand-settings";
+import { brandImageUrl } from "@/lib/api/brand";
 
 // Applies admin-set branding (favicon, share image, homepage SEO) to the document head.
-// Favicon and og:image point to /api/public/brand/<file>, which serves the image only
-// when platform_settings.brand_settings references it.
+// Favicon and og:image use the public image mode of the tnb-brand Edge Function.
+// It returns images only when platform_settings.brand_settings references the file.
 function BrandHead() {
   const brand = useBrand();
   const path = useRouterState({ select: (s) => s.location.pathname });
   useEffect(() => {
     if (!brand) return;
-    const src = (v: string) => `/api/public/brand/${v.replace(/^brand\//, "")}`;
-    if (brand.favicon) {
+    const faviconUrl = brand.favicon ? brandImageUrl(brand.favicon) : null;
+    if (faviconUrl) {
       let link = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
       if (!link) { link = document.createElement("link"); link.rel = "icon"; document.head.appendChild(link); }
-      link.href = src(brand.favicon);
+      link.href = faviconUrl;
     }
     if (brand.og_image) {
-      const abs = new URL(src(brand.og_image), window.location.origin).href;
-      if (!document.querySelector('meta[property="og:image"]')) {
+      const abs = brandImageUrl(brand.og_image);
+      if (abs && !document.querySelector('meta[property="og:image"]')) {
         const add = (attr: string, key: string, content: string) => {
           const m = document.createElement("meta");
           m.setAttribute(attr, key);

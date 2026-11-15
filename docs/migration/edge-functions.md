@@ -38,3 +38,13 @@ The authenticated `tnb-platform` endpoint handles admin settings and security st
 
 Public non-billing settings are read directly by the browser through the database column allowlist. The four billing columns are not granted to `anon` or `authenticated`; they are read only by this Edge Function after authorization.
 
+## tnb-brand
+
+The `tnb-brand` Edge Function replaces server-side branding operations and the dynamic public brand-image route.
+
+- Admin POST actions: `getBrandSettings`, `createBrandUpload`, `finalizeBrandUpload`, and `saveBrandSettings`.
+- Public GET action: `?file=<uuid>.<ext>` returns an image only when the exact file path is currently referenced by one of the public brand image fields.
+- Branding assets remain in the private `media` bucket. Upload URLs are signed, upload metadata is checked after transfer, and unreferenced replaced files are removed.
+- Platform settings mutations require a verified Supabase session and the superadmin role. The public image GET requires no session but cannot enumerate or read arbitrary storage objects.
+- Gateway JWT verification is disabled only because public image requests from `<img>` cannot send an Authorization header. Every administrative POST independently verifies the user's access token with Supabase Auth and checks roles before accessing the service-role client.
+
