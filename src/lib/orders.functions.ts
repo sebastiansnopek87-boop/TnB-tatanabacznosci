@@ -70,7 +70,7 @@ export const createLibraryOrder = createServerFn({ method: "POST" })
     const r = await ADAPTERS[data.method as (typeof PROVIDERS)[number]].create(provider, {
       orderId: order.id, orderNumber: order.order_number, amount: item.price_amount, currency: "PLN", email: data.email, name: data.name,
       description: `${order.order_number} — ${item.title}`, returnUrl: `${origin}/zakup/${order.access_token}?powrot=1`,
-      notifyUrl: `${origin}/api/public/payments/${data.method}`, customerIp: getRequestIP({ xForwardedFor: true }) ?? "",
+      notifyUrl: `${process.env["SUPABASE_URL"]}/functions/v1/tnb-payments?provider=${data.method}`, customerIp: getRequestIP({ xForwardedFor: true }) ?? "",
     }).catch((e) => ({ ok: false as const, reason: e instanceof Error ? e.message : "error" }));
     if (!r.ok) {
       await core.logOrderEvent(order.id, "checkout_error", `Operator nie utworzył transakcji: ${r.reason}`);
