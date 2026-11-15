@@ -1,12 +1,10 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
 import { Sparkles } from "lucide-react";
-import { recommendLibrary } from "@/lib/api/recommend";
-type Recommendation = { slug: string; title: string; reason: string };
+import { recommendLibrary, type Recommendation } from "@/lib/api/recommend";
 
 export function AiRecommender() {
-  const run = useServerFn(recommendLibrary);
+  const run = recommendLibrary;
   const [need, setNeed] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
