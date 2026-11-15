@@ -25,6 +25,7 @@ export class TnbApiError extends Error {
 export async function invokeTnbFunction<TResult>(
   functionName: string,
   body: Record<string, unknown>,
+  options: { allowNull?: boolean } = {},
 ): Promise<TResult> {
   const { data, error } = await supabase.functions.invoke<TResult>(functionName, { body });
 
@@ -42,11 +43,11 @@ export async function invokeTnbFunction<TResult>(
     throw new TnbApiError(error.message || "Nie udało się połączyć z usługą.");
   }
 
-  if (data === null) {
+  if (data === null && !options.allowNull) {
     throw new TnbApiError("Usługa zwróciła pustą odpowiedź.");
   }
 
-  return data;
+  return data as TResult;
 }
 
 /** Public URLs for Edge endpoints that validate references before returning private-bucket assets. */
