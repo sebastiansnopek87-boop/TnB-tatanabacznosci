@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 import type { EpisodeDetail, EpisodeMedia, EpAccess, EpStatus, PublicEpisode } from "@/lib/podcast";
 
 type PodcastErrorBody = { message?: unknown };
@@ -74,7 +75,7 @@ export function adminListEpisodes(): Promise<Array<{
   return invokePodcast("adminListEpisodes");
 }
 
-export function adminGetEpisode({ data }: { data: { id: string } }): Promise<Record<string, unknown>> {
+export function adminGetEpisode({ data }: { data: { id: string } }): Promise<Tables<"podcast_episodes">> {
   return invokePodcast("adminGetEpisode", data);
 }
 
