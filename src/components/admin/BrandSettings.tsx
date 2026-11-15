@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Copy, X } from "lucide-react";
-import { getBrandSettings, saveBrandSettings, createBrandUpload, finalizeBrandUpload } from "@/lib/api/brand";
+import { brandImageUrl, getBrandSettings, saveBrandSettings, createBrandUpload, finalizeBrandUpload } from "@/lib/api/brand";
 import { errMsg } from "./format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,7 +36,7 @@ function putFile(bucket: string, path: string, token: string, file: File) {
 function ImageField({ label, hint, accept, value, preview, busy, canEdit, onPick, onClear }:
   { label: string; hint?: string; accept: string; value: string; preview: string | null; busy: boolean; canEdit: boolean; onPick: (f: File) => void; onClear: () => void }) {
   const ref = useRef<HTMLInputElement>(null);
-  const src = preview ?? (value ? `/api/public/brand/${value.replace(/^brand\//, "")}` : null);
+  const src = preview ?? brandImageUrl(value);
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
@@ -158,7 +158,7 @@ export function BrandSettings({ canEdit }: { canEdit: boolean }) {
         <div className="space-y-2"><Label htmlFor="bs-name">Nazwa witryny (napis obok logo w lewym górnym rogu)</Label>
           <Input id="bs-name" disabled={ro} value={f.site_name} maxLength={200} onChange={(e) => set("site_name", e.target.value)} placeholder="Tata Na Baczności" />
           <div className="flex items-center gap-3 border border-border/60 bg-surface-deep p-3">
-            <img src={previews["header_image"] ?? previews["logo"] ?? (f.header_image || f.logo ? `/api/public/brand/${(f.header_image || f.logo).replace(/^brand\//, "")}` : logo.url)} alt="" className="h-12 w-12 object-contain" />
+            <img src={previews["header_image"] ?? previews["logo"] ?? brandImageUrl(f.header_image || f.logo) ?? logo.url alt="" className="h-12 w-12 object-contain" />
             <span className="text-copper font-display text-xl font-bold uppercase tracking-[0.12em]">{f.site_name || "Tata Na Baczności"}</span>
           </div></div>
         <div className="space-y-2"><Label htmlFor="bs-title">Publiczny tytuł strony głównej</Label>
