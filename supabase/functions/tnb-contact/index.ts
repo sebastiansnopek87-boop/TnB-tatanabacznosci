@@ -162,10 +162,10 @@ async function recordContactNotification(db: ReturnType<typeof createAdminClient
     reason = "notification_disabled";
   } else {
     const to = (settings.notification_recipient ?? "").trim();
+    recipient = to || null;
     if (!/^[^\s@<>"]+@[^\s@<>"]+\.[a-z]{2,}$/i.test(to)) {
       reason = "recipient_not_configured";
     } else {
-      recipient = to;
       const { data: custom } = await db.from("email_templates")
         .select("subject, html, text_body").eq("key", "contact_message").maybeSingle();
       const template = custom
