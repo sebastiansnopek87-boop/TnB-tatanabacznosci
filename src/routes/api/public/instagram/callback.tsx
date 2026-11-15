@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { finishInstagramOAuth } from "@/lib/api/voice";
 
 export const Route = createFileRoute("/api/public/instagram/callback")({ component: InstagramCallback });
+const finishRequests = new Map<string, Promise<void>>();
 
 function InstagramCallback() {
   const message = "Kończymy autoryzację konta Instagram…";
@@ -19,7 +20,10 @@ function InstagramCallback() {
       back("anulowano");
       return () => { active = false; };
     }
-    finishInstagramOAuth({ data: { state, code } })
+    if (!finishRequests.has(state)) {
+      finishRequests.set(state, finishInstagramOAuth({ data: { state, code } }).then(() => undefined));
+    }
+    finishRequests.get(state)!
       .then(() => back("polaczono"))
       .catch((failure: unknown) => {
         console.error("Instagram OAuth callback failed", failure);
