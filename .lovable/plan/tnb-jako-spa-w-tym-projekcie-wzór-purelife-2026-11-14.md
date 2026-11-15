@@ -62,12 +62,12 @@ Dopiero po zakończeniu etapów 1–2:
 - Moduł administracji użytkownikami korzysta teraz z `tnb-users` przez `supabase.functions.invoke`; usunięto z tej trasy `useServerFn`.
 - Funkcja `tnb-users` używa nagłówków CORS z aktualnego SDK Supabase, przy zachowaniu listy dozwolonych domen. Wdrożenie: wersja 4, `verify_jwt=true`; źródło i `deno.json` porównane z GitHubem.
 - Publiczny odczyt ustawień platformy przeniesiono na klienta Supabase z dokładną projekcją 28 kolumn. Zapytanie przeszło kontrolę na roli `anon`; nie odczytuje kolumn rozliczeniowych.
-- Wszystkie osiem aktywnych funkcji Edge i ich pliki pomocnicze porównano plik po pliku z wdrożeniami — zgodność treści potwierdzona.
+- Wszystkie jedenaście aktywnych funkcji Edge i ich pliki pomocnicze porównano z wdrożeniami; zgodność treści potwierdzono.
 
 ## Blokady i status weryfikacji
 
 - 64 wpisy historii migracji istnieją w Supabase, ale pliki SQL nie zostały odnalezione w GitHubie. To nadal blokuje odtwarzalność bazy z czystego środowiska.
-- Nie wykonano jeszcze pełnego builda ani testów end-to-end. Próba pobrania repozytorium do lokalnego środowiska zakończyła się błędem połączenia z GitHubem; statusy CI dla ostatnich commitów są puste.
+- Produkcyjny build aplikacji przechodzi w CI. Testy end-to-end i rzeczywista weryfikacja przepływów po zalogowaniu nadal nie zostały wykonane.
 - Nie wdrażano statycznego frontendu na Cyberfolks. Aplikacja nadal wymaga serwera TanStack Start w nieprzeniesionych obszarach.
 
 ## Zasady bezpieczeństwa
@@ -92,15 +92,26 @@ Dopiero po zakończeniu etapów 1–2:
 
 - Ujednolicono nagłówki CORS z aktualnego SDK Supabase w ośmiu funkcjach Edge. Zachowano metody HTTP, listy originów lub publiczny wildcard zgodnie z przeznaczeniem każdej funkcji.
 - Uruchomiono nową publiczną funkcję `tnb-contact` (v5, `verify_jwt=false`). Formularz kontaktowy wywołuje ją przez `supabase.functions.invoke`; trasa `/kontakt` nie używa już `useServerFn`. Walidacja pól, honeypot i minimalny czas wypełniania są sprawdzane po stronie Edge. Zachowano zapis `contact_messages` oraz idempotentny dziennik powiadomienia w trybie testowym; nie wysyła się prawdziwej poczty, bo adapter dostawcy pozostaje niepodłączony.
-- Zsynchronizowano `tnb-assets` z wdrożonym źródłem, które obsługuje również obrazy artykułów. Wcześniej repozytorium zawierało starszą wersję bez obsługi artykułów. Po synchronizacji i zmianie CORS wdrożenie jest aktywne jako v3.
+- Zsynchronizowano `tnb-assets` z wdrożonym źródłem, które obsługuje również obrazy artykułów. Wdrożenie jest aktywne jako v4.
 - Artykuły korzystają teraz z `publicArticleAssetUrl`, który kieruje obrazy przez `tnb-assets?kind=article...` i zachowuje stary endpoint jako fallback dla środowiska bez `VITE_SUPABASE_URL`. Publiczne okładki biblioteki, spotkań i podcastu już korzystają z tego samego Edge Function.
-- Potwierdzono zgodność kodu i plików pomocniczych wszystkich ośmiu aktywnych Edge Functions z GitHubem: `tnb-health` v3, `tnb-users` v4, `tnb-platform` v4, `tnb-brand` v4, `tnb-pages` v4, `tnb-templates` v4, `tnb-assets` v3, `tnb-contact` v5.
-- CI ma kontrolować instalację z `bun.lock`, build, skan katalogu wyjściowego oraz lint zmienionych plików. Nie mam jeszcze potwierdzonego wyniku uruchomienia — endpointy statusów commitów nie zwracają checków.
+- Potwierdzono zgodność kodu i plików pomocniczych aktywnych Edge Functions z GitHubem; lista została rozszerzona o artykuły, media i avatary. Bieżący wykaz znajduje się w najnowszym addendum poniżej.
+- CI kontroluje instalację z `bun.lock`, build, skan katalogu wyjściowego i lint zmienionych plików. Pełny przebieg zakończył się sukcesem na commicie `04c78872fabef9bbded0b224360c3df61b54d015`.
 
 ### Nadal otwarte przed przełączeniem do SPA
 
 - Wciąż działa TanStack Start + Nitro; `vite.config.ts` nadal używa `@lovable.dev/vite-tanstack-config`. Nie ma jeszcze potwierdzonego statycznego buildu.
-- Większość adapterów `src/lib/api/*` nadal deleguje część operacji do `*.functions.ts`. Artykuły wymagają osobnego backendowego endpointu dla zapisów, moderacji, kosza, podpisanych URL-i i obrazów publicznych.
+- W `src/lib/api/*` istnieje 26 adapterów; część jest już bezpośrednio połączona z Supabase lub Edge Functions, pozostałe nadal wymagają migracji z `*.functions.ts`. Operacje artykułów są już obsługiwane przez `tnb-articles`.
 - Trzynaście tras `src/routes/api/public/*` wymaga przeniesienia lub zastąpienia przed usunięciem serwera Start — szczególnie webhooki płatności, callback OAuth, cron i prywatne obrazy.
-- Nie potwierdzono jeszcze wyniku CI dla ostatnich commitów; endpoint statusów zwraca pustą listę. Nie oznaczamy builda jako PASS.
+- Build, skan artefaktów i lint zmienionych plików przechodzą w CI; potwierdzenie: run `43757512670`, commit `04c7887`. Nie oznacza to jeszcze gotowości SPA ani testów E2E.
 - Migracja SQL nadal nie ma odtworzonej historii 64 migracji. Nie wolno uruchamiać resetu ani generować plików SQL z samych nazw wpisów migracji.
+
+### Stan po kolejnej iteracji — 15.11.2026, 20:20
+
+- W Supabase działa 11 funkcji Edge: `tnb-health`, `tnb-users`, `tnb-platform`, `tnb-brand`, `tnb-pages`, `tnb-templates`, `tnb-assets`, `tnb-contact`, `tnb-articles`, `tnb-media`, `tnb-avatar`. Źródła wszystkich 11 funkcji i ich manifesty zależności są obecne w GitHubie; zgodność wdrożonych plików została sprawdzona dla funkcji migracyjnych.
+- `tnb-media` odpowiada za kontrolowany odczyt obrazów i avatarów. `tnb-avatar` obsługuje zapis i usuwanie avatara, wymaga JWT i waliduje WebP po stronie serwera. `UserAvatar` pobiera obraz z tokenem użytkownika, a `AvatarEditor` wywołuje funkcję bezpośrednio przez adapter API.
+- Administracyjny widok artykułów korzysta bezpośrednio z adaptera `src/lib/api/articles.ts`; wywołania Edge Function nie są już opakowane przez `useServerFn` w tym widoku.
+- Naprawiono skan sekretów: rozpoznaje rzeczywiste wzorce kluczy Supabase/Google, JWT z rolą `service_role` i jawne odwołania do sekretów serwerowych. Raport nie wypisuje wartości sekretów. Wcześniejsze trafienia `YOUTUBE_API_KEY` i samego prefiksu `sb_secret_` były nazwami/prefiksami w kodzie, nie wartościami kluczy.
+- CI dla `main` na commicie `04c78872fabef9bbded0b224360c3df61b54d015` zakończyło się sukcesem: build, skan publicznego outputu i lint zmienionych plików.
+- Aktualny audyt drzewa repozytorium: 26 adapterów `src/lib/api/*.ts`, 26 modułów `src/lib/*.functions.ts` i 13 tras `src/routes/api/*`. W repo nadal nie ma `index.html` ani `src/main.tsx`; aplikacja nie została jeszcze przełączona na SPA.
+- Nadal trzeba przenieść pozostałe operacje serwerowe (m.in. podcast/YouTube, płatności, dostarczanie plików, OAuth i cron), usunąć lub zastąpić trasy API po potwierdzeniu braku zależności i przygotować czysty statyczny build. Historia 64 migracji SQL nadal wymaga odtworzenia z wiarygodnego źródła.
+- Nie zmieniano schematu, polityk RLS ani danych produkcyjnych. Nie przełączano hostingu Cyberfolks na katalog statyczny.
