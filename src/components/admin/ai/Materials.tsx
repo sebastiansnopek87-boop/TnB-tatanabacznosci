@@ -94,7 +94,7 @@ export function CreateArticle({ proposal, topic: topic0 = "", aiOn, onCreated, o
       <dl className="grid gap-2 sm:grid-cols-2">
         <div><dt className="text-xs uppercase text-muted-foreground">Temat</dt><dd className="font-medium">{info.topic}</dd></div>
         <div><dt className="text-xs uppercase text-muted-foreground">Format</dt><dd><select className={input} value={format} onChange={(e) => setFormat(e.target.value)}>{FORMATS.map((f) => <option key={f}>{f}</option>)}</select></dd></div>
-        <div><dt className="text-xs uppercase text-muted-foreground">Liczba źródeł</dt><dd>{info.sources.filter((s: any) => s.usage !== "skipped").length} użytych{info.sources.some((s: any) => s.usage === "skipped") ? `, ${info.sources.filter((s: any) => s.usage === "skipped").length} pominiętych` : ""}</dd></div>
+        <div><dt className="text-xs uppercase text-muted-foreground">Liczba źródeł</dt><dd>{info.sources.filter((source) => source.usage !== "skipped").length} użytych{info.sources.some((source) => source.usage === "skipped") ? `, ${info.sources.filter((source) => source.usage === "skipped").length} pominiętych` : ""}</dd></div>
         <div><dt className="text-xs uppercase text-muted-foreground">Przewidywana objętość wejścia</dt><dd>ok. {info.chars.toLocaleString("pl-PL")} znaków (~{info.tokens.toLocaleString("pl-PL")} tokenów)</dd></div>
         <div className="sm:col-span-2"><dt className="text-xs uppercase text-muted-foreground">Przewidywany koszt</dt><dd>Koszt zostanie określony po wykonaniu operacji (pokażemy rzeczywiste zużycie tokenów i liczbę obrazów).</dd></div>
       </dl>
