@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { getNotificationOverview, getTemplate, previewTemplate, resetTemplate, saveTemplate, sendTestMessage } from "@/lib/api/notifications";
@@ -21,12 +20,12 @@ export const Route = createFileRoute("/_authenticated/admin/szablony")({
 type Draft = { subject: string; html: string; text: string };
 
 function Templates() {
-  const overview = useServerFn(getNotificationOverview);
-  const get = useServerFn(getTemplate);
-  const prev = useServerFn(previewTemplate);
-  const save = useServerFn(saveTemplate);
-  const reset = useServerFn(resetTemplate);
-  const test = useServerFn(sendTestMessage);
+  const overview = getNotificationOverview;
+  const get = getTemplate;
+  const prev = previewTemplate;
+  const save = saveTemplate;
+  const reset = resetTemplate;
+  const test = sendTestMessage;
   const qc = useQueryClient();
   const [key, setKey] = useState(EVENTS[0]!.key);
   const ov = useQuery({ queryKey: ["admin-notif-overview"], queryFn: () => overview() });
