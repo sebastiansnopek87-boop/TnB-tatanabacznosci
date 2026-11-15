@@ -18,7 +18,7 @@ const EV_NAME = Object.fromEntries(EVENTS.map((e) => [e.key, e.name]));
 type St = "all" | "pending" | "sending" | "sent" | "delivered" | "failed" | "cancelled" | "skipped" | "suppressed" | "simulated";
 
 function Log() {
-  const list = useServerFn(listNotificationLog);
+  const list = listNotificationLog;
   const retry = useServerFn(retryNotification);
   const preview = useServerFn(getLogPreview);
   const qc = useQueryClient();
