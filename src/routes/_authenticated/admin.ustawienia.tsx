@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { getPlatformSettings, updatePlatformSettings } from "@/lib/api/platform";
@@ -40,10 +39,8 @@ function Section({ title, hint, children }: { title: string; hint?: string; chil
 }
 
 function PlatformSettings() {
-  const get = useServerFn(getPlatformSettings);
-  const save = useServerFn(updatePlatformSettings);
   const qc = useQueryClient();
-  const { data, error } = useQuery({ queryKey: ["admin-platform-settings"], queryFn: () => get() });
+  const { data, error } = useQuery({ queryKey: ["admin-platform-settings"], queryFn: () => getPlatformSettings() });
   const [f, setF] = useState<Form | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -69,7 +66,7 @@ function PlatformSettings() {
       !window.confirm("Włączyć tryb konserwacji? Odwiedzający zobaczą ekran przerwy technicznej. Panel i logowanie pozostaną dostępne.")) return;
     setBusy(true); setErr(null);
     try {
-      await save({ data: f });
+      await updatePlatformSettings({ data: f });
       toast.success("Zmiany zapisane.");
       qc.invalidateQueries({ queryKey: ["admin-platform-settings"] });
       qc.invalidateQueries({ queryKey: ["platform-settings-public"] });
