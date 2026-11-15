@@ -1,6 +1,6 @@
 // Pure template renderer. Never returns output containing a raw {{marker}}:
 // any unresolved or invalid variable makes the render fail instead.
-import { AUTO_VARS, VAR_MAP } from "./registry";
+import { AUTO_VARS, VAR_MAP } from "./registry.ts";
 
 export type Vars = Record<string, string | null | undefined>;
 export type RenderInput = { subject: string; html: string; text: string };
