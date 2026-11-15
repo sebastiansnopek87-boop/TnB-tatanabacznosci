@@ -1,3 +1,4 @@
+import { tnbPublicFunctionUrl } from "@/lib/public-edge-url";
 export const EP_ACCESS = { public: "Publiczny", members: "Dla zalogowanych", premium: "Premium" } as const;
 export type EpAccess = keyof typeof EP_ACCESS;
 export const EP_STATUS = { draft: "Szkic", published: "Opublikowany", archived: "Archiwalny" } as const;
@@ -15,7 +16,7 @@ export type EpisodeMedia =
   | { allowed: false; reason: "login" | "premium" };
 
 export const coverUrl = (e: Pick<PublicEpisode, "id" | "has_cover" | "updated_at">) =>
-  e.has_cover ? `/api/public/podcast-cover/${e.id}?v=${encodeURIComponent(e.updated_at)}` : null;
+  e.has_cover ? tnbPublicFunctionUrl("tnb-media", { kind: "podcast-cover", id: e.id, v: e.updated_at }) : null;
 
 export const fmtDuration = (s: number | null | undefined) => {
   if (!s || !isFinite(s)) return null;
