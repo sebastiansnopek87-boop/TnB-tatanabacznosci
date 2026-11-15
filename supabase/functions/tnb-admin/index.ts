@@ -393,6 +393,9 @@ function ccReadState(error: unknown, count: number, limit: number, incomplete = 
 }
 const ccFilterValue = (v: string) => `"${v.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
 function ccSearchParts(query: string) {
+  const safe = query.replace(/[%,()*\\"\r\n]/g, " ").replace(/\s+/g, " ").trim();
+  return { safe, words: safe.split(" ").filter(Boolean) };
+}
 function ccHasAccess(order: { status: string; paid_at: string | null; access_revoked_at: string | null }) {
   return !!order.paid_at && !order.access_revoked_at && ["paid", "refund_pending", "refunded"].includes(order.status);
 }
