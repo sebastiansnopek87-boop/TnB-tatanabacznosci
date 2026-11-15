@@ -188,8 +188,8 @@ async function currentKey(db: Db): Promise<{ key: string; source: "panel" | "env
   return { key: fallback, source: fallback ? "env" : null };
 }
 
-async function youtubeCall(path: string, params: Record<string, string>, override?: string) {
-  const key = override ?? (await currentKey(dbForYoutube)).key;
+async function youtubeCall(db: Db, path: string, params: Record<string, string>, override?: string) {
+  const key = override ?? (await currentKey(db)).key;
   if (!key) throw new YtError("Brak klucza YouTube API — synchronizacja z YouTube nie jest skonfigurowana.");
   const url = new URL(API + "/" + path);
   for (const [name, value] of Object.entries(params)) url.searchParams.set(name, value);
@@ -208,11 +208,8 @@ async function youtubeCall(path: string, params: Record<string, string>, overrid
   return payload;
 }
 
-// Assigned once per request handler, before any action is dispatched.
-let dbForYoutube: Db;
-
-async function testKey(key: string) {
-  await youtubeCall("i18nRegions", { part: "snippet", hl: "pl" }, key);
+async function testKey(db: Db, key: string) {
+  await youtubeCall(db, "i18nRegions", { part: "snippet", hl: "pl" }, key);
 }
 
 function parseChannelInput(input: string): { id?: string; handle?: string } | null {
@@ -235,10 +232,10 @@ function bestThumb(thumbs?: Record<string, { url: string }>) {
   return thumbs?.maxres?.url ?? thumbs?.standard?.url ?? thumbs?.high?.url ?? thumbs?.medium?.url ?? thumbs?.default?.url ?? null;
 }
 
-async function resolveChannel(input: string) {
+async function resolveChannel(db: Db, input: string) {
   const parsed = parseChannelInput(input);
   if (!parsed) throw new YtError("Nie rozpoznano kanału. Podaj adres kanału, handle (@nazwa) albo Channel ID (UC…).");
-  const payload = await youtubeCall("channels", {
+  const payload = await youtubeCall(db, "channels", {
     part: "snippet,contentDetails",
     ...(parsed.id ? { id: parsed.id } : { forHandle: parsed.handle! }),
   });
@@ -266,11 +263,11 @@ function isoDuration(value?: string) {
     + Number(match[3] ?? 0) * 60 + Number(match[4] ?? 0);
 }
 
-async function fetchUploads(playlist: string): Promise<YoutubeVideo[]> {
+async function fetchUploads(db: Db, playlist: string): Promise<YoutubeVideo[]> {
   const ids: string[] = [];
   let page: string | undefined;
   for (let index = 0; index < MAX_PAGES; index++) {
-    const payload = await youtubeCall("playlistItems", {
+    const payload = await youtubeCall(db, "playlistItems", {
       part: "contentDetails", playlistId: playlist, maxResults: "50",
       ...(page ? { pageToken: page } : {}),
     });
@@ -282,7 +279,7 @@ async function fetchUploads(playlist: string): Promise<YoutubeVideo[]> {
   }
   const output: YoutubeVideo[] = [];
   for (let offset = 0; offset < ids.length; offset += 50) {
-    const payload = await youtubeCall("videos", {
+    const payload = await youtubeCall(db, "videos", {
       part: "snippet,contentDetails,status",
       id: ids.slice(offset, offset + 50).join(","),
     });
@@ -313,7 +310,7 @@ async function runSync(db: Db, actor: string | null) {
   if (sourceError || !source?.uploads_playlist) throw new YtError("Najpierw zapisz i sprawdź kanał YouTube.");
   await db.from("youtube_source").update({ last_attempt_at: now }).eq("id", 1);
   try {
-    const videos = await fetchUploads(source.uploads_playlist);
+    const videos = await fetchUploads(db, source.uploads_playlist);
     const { data: existing, error: existingError } = await db.from("podcast_videos")
       .select("id, youtube_id, title, description, thumbnail_url, published_at, duration_seconds, is_custom_title, is_custom_description");
     if (existingError) throw new HttpError(500, "Nie udało się odczytać obecnych materiałów.");
@@ -448,7 +445,7 @@ async function adminGetYoutubeSource(db: Db) {
 async function adminSaveYoutubeKey(db: Db, actor: string, rawKey: string) {
   const key = rawKey.trim();
   try {
-    await testKey(key);
+    await testKey(db, key);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Błąd";
     await logEvent(db, { type: "youtube_key_save", actor, objectKind: "youtube_secret", result: "failed", detail: message.slice(0, 260) });
@@ -476,7 +473,7 @@ async function adminTestYoutubeKey(db: Db) {
 async function adminSaveYoutubeSource(db: Db, actor: string, input: string) {
   if (!parseChannelInput(input)) throw new HttpError(400, "Nie rozpoznano kanału. Podaj adres kanału, handle (@nazwa) albo Channel ID (UC…).");
   try {
-    const channel = await resolveChannel(input);
+    const channel = await resolveChannel(db, input);
     const { error } = await db.from("youtube_source").update({
       ...channel, channel_input: input, status: "ok", last_error: null,
       updated_at: new Date().toISOString(), updated_by: actor,
@@ -575,7 +572,6 @@ Deno.serve(async (req: Request) => {
   let db: Db;
   try {
     db = adminClient();
-    dbForYoutube = db;
     const body = await req.json().catch(() => null);
     const parsed = RequestSchema.safeParse(body);
     if (!parsed.success) return json({ message: "Nieprawidłowe żądanie." }, 400);
