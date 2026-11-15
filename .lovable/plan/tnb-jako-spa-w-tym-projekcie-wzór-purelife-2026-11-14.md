@@ -77,3 +77,21 @@ Dopiero po zakończeniu etapów 1–2:
 - Ostatni superadministrator musi pozostać chroniony atomowo w bazie.
 - Zamówienia testowe pozostają wyłączone ze statystyk przychodów.
 - Bez resetu bazy, zmian produkcyjnych płatności ani wysyłki realnej poczty bez uzasadnionego testu i osobnej akceptacji.
+
+
+### Dalszy postęp — 15.11.2026, kontynuacja
+
+- Uzupełniono brakujące źródła wdrożonych funkcji: `tnb-pages/deno.json`, `tnb-pages/_shared/rich-text.ts` oraz komplet `tnb-templates` (`index.ts`, `deno.json`, dwa pliki `_shared`). Dodane pliki porównano bajt w bajt z aktywnymi wdrożeniami Supabase.
+- Moduł marki korzysta z `tnb-brand` przez `supabase.functions.invoke`; upload, finalizacja i zapis ustawień nie wymagają już `useServerFn`. Favicon, obraz Open Graph i podglądy w panelu korzystają z publicznego GET funkcji `tnb-brand`.
+- CMS stron i Visual Builder korzystają z `tnb-pages`; szablony Visual Buildera korzystają z `tnb-templates`. Publiczne obrazy stron są adresowane przez GET `tnb-pages?image=...`.
+- W artykułach przeniesiono odczyt pojedynczego rekordu i walidację dostępności slugu do klienta Supabase. Przed zmianą sprawdzono aktywne polityki: odczyt wszystkich kolumn tabeli `articles` dla roli `authenticated` jest ograniczony RLS do `has_role(auth.uid(),'admin')`. Zapisy, kosz, moderacja, uploady i log audytowy nadal wymagają backendu.
+- Usunięto nieużywany, śledzony plik `.env.development` z tokenem, którego nie znaleziono w użyciu w kodzie. `.env` jest wykluczony z repo, a `.env.example` zawiera publiczne ustawienia połączenia z aktywnym projektem TNB i placeholder klucza.
+- Nie wykonano zmian tabel, polityk RLS ani danych produkcyjnych.
+
+### Nadal otwarte przed przełączeniem do SPA
+
+- Wciąż działa TanStack Start + Nitro; `vite.config.ts` nadal używa `@lovable.dev/vite-tanstack-config`. Nie ma jeszcze potwierdzonego statycznego buildu.
+- Większość adapterów `src/lib/api/*` nadal deleguje część operacji do `*.functions.ts`. Artykuły wymagają osobnego backendowego endpointu dla zapisów, moderacji, kosza, podpisanych URL-i i obrazów publicznych.
+- Trzynaście tras `src/routes/api/public/*` wymaga przeniesienia lub zastąpienia przed usunięciem serwera Start — szczególnie webhooki płatności, callback OAuth, cron i prywatne obrazy.
+- Nie potwierdzono jeszcze wyniku CI dla ostatnich commitów; endpoint statusów zwraca pustą listę. Nie oznaczamy builda jako PASS.
+- Migracja SQL nadal nie ma odtworzonej historii 64 migracji. Nie wolno uruchamiać resetu ani generować plików SQL z samych nazw wpisów migracji.
