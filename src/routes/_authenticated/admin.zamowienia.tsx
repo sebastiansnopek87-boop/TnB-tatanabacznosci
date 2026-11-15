@@ -107,7 +107,7 @@ function OrderDetail({ id, onClose }: { id: string; onClose: () => void }) {
   });
   if (error) return <p role="alert" className="text-sm text-destructive">{errMsg(error)}</p>;
   if (isLoading || !data) return <p className="text-sm text-muted-foreground">Ładowanie szczegółów…</p>;
-  const o: any = data.order;
+  const o = data.order;
   const confirmDo = (a: Action, msg: string) => { if (window.confirm(msg)) act.mutate({ action: a }); };
   const typed = (a: Action, msg: string) => { const n = window.prompt(`${msg}\n\nAby potwierdzić, wpisz numer zamówienia: ${o.order_number}`); if (n) act.mutate({ action: a, confirmNumber: n }); };
   const row = (k: string, v: React.ReactNode) => <div className="flex flex-wrap justify-between gap-2 border-b border-border/40 py-2"><span className="text-muted-foreground">{k}</span><span className="break-all text-right">{v ?? "—"}</span></div>;
