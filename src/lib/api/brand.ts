@@ -93,5 +93,5 @@ export const brandSchema = z.object({
   site_url: optUrl,
 }).strict();
 
-export const saveBrandSettings = ({ data }: { data: z.infer<typeof brandSchema> }): Promise<{ ok: true }> =>
+export const saveBrandSettings = ({ data }: { data: BrandSettings }): Promise<{ ok: true }> =>
   invokeBrand({ action: "saveBrandSettings", settings: data });
