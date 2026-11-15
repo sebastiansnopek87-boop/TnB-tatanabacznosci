@@ -16,7 +16,10 @@ function isEdgeErrorPayload(value: unknown): value is EdgeErrorPayload {
 
 /** Invoke a TNB Edge Function with the current Supabase session. Never uses a service key in the browser. */
 export async function invokeEdge<T>(name: string, body: Record<string, unknown>): Promise<T> {
-  const { data, error } = await supabase.functions.invoke(name, { body });
+  const functions = supabase.functions as unknown as {
+    invoke<T>(functionName: string, options: { body: Record<string, unknown> }): Promise<{ data: T | null; error: Error | null }>;
+  };
+  const { data, error } = await functions.invoke<T>(name, { body });
 
   if (error instanceof FunctionsHttpError) {
     let payload: EdgeErrorPayload | undefined;
