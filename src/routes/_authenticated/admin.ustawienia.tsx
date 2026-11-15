@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useServerFn } from "@/lib/api/useServerFn";
 import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { getPlatformSettings, updatePlatformSettings } from "@/lib/api/platform";
