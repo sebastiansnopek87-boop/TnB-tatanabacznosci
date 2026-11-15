@@ -32,7 +32,8 @@ const RequestSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("adminSyncInstagram") }),
   z.object({ action: z.literal("adminDisconnectInstagram") }),
   z.object({ action: z.literal("adminSaveInstagramOptions"), data: z.object({ show_reels: z.boolean(), show_posts: z.boolean(), show_carousels: z.boolean(), display_count: z.number().int().min(1).max(12) }) }),
-  z.object({ action: z.literal("finishInstagramOAuth"), data: z.object({ state: z.string().min(20).max(200), code: z.string().min(1).max(2000) }) })
+  z.object({ action: z.literal("finishInstagramOAuth"), data: z.object({ state: z.string().min(20).max(200), code: z.string().min(1).max(2000) }) }),
+  z.object({ action: z.literal("cronInstagramSync") })
 ]);
 
 class HttpError extends Error { constructor(public status: number, message: string) { super(message); } }
@@ -249,8 +250,32 @@ async function syncIfStale(s: Db) {
   if (data.last_sync_at && Date.now() - new Date(data.last_sync_at).getTime() < STALE_MS) return;
   await syncInstagram(s).catch(() => {});
 }
+
+async function requireCron(req: Request) {
+  const token = (req.headers.get("authorization") ?? "").match(/^Bearer ([^\s,]+)$/)?.[1] ?? "";
+  if (!token) throw new HttpError(401, "Unauthorized");
+  const secrets = ["LOVABLE_CRON_SECRET", "TNB_CRON_SECRET", "LOVABLE_CRON_SECRET_PREVIOUS", "TNB_CRON_SECRET_PREVIOUS"]
+    .map((name) => envSecret(name)).filter((value): value is string => !!value);
+  if (!secrets.length) throw new HttpError(503, "Zadanie cykliczne nie jest skonfigurowane.");
+  const digest = async (value: string) => new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value)));
+  const provided = await digest(token);
+  let matched = false;
+  for (const secret of secrets) {
+    const expected = await digest(secret);
+    let diff = token.length ^ secret.length;
+    for (let i = 0; i < expected.length; i++) diff |= provided[i]! ^ expected[i]!;
+    matched = matched || diff === 0;
+  }
+  if (!matched) throw new HttpError(401, "Unauthorized");
+}
+
 async function handle(s: Db, req: Request, raw: unknown) {
   const input = RequestSchema.parse(raw);
+  if (input.action === "cronInstagramSync") {
+    await requireCron(req);
+    await syncIfStale(s);
+    return { ok: true as const };
+  }
   const adminActions = new Set(["adminListSubmissions","adminUpdateSubmission","adminGetInstagram","adminCheckInstagramConfig","adminStartInstagramConnect","adminSyncInstagram","adminDisconnectInstagram","adminSaveInstagramOptions"]);
   const actor = adminActions.has(input.action) ? await requireAdmin(s, req) : null;
   switch (input.action) {
