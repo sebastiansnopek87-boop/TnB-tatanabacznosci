@@ -110,7 +110,12 @@ function renderContactTemplate(template: ContactTemplate, vars: Record<string, s
   const combined = `${template.subject}\n${template.html}\n${template.text}`;
   const used = Array.from(new Set(Array.from(combined.matchAll(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g), (m) => m[1]!)));
   const required = ["imie", "email", "temat_wiadomosci", "link_do_panelu"];
-  const missing = Array.from(new Set([...used, ...required])).filter((key) => !vars[key]?.trim());
+  const missing = Array.from(new Set([...used, ...required])).filter((key) => {
+    const value = vars[key]?.trim();
+    if (!value) return true;
+    if (key === "link_do_panelu" && !/^https?:\\/\\/[^\\s"<>]+$/i.test(value)) return true;
+    return false;
+  });
   const replace = (source: string, html: boolean) => source.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_match, key: string) => {
     const value = vars[key] ?? "";
     return html ? escapeHtml(value) : value;
