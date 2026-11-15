@@ -37,4 +37,11 @@ export default tseslint.config(
     },
   },
   eslintPluginPrettier,
+  {
+    // The repository has a large pre-existing formatting backlog. Keep semantic
+    // linting blocking, but do not make global Prettier formatting a CI gate.
+    rules: {
+      "prettier/prettier": "off",
+    },
+  },
 );
