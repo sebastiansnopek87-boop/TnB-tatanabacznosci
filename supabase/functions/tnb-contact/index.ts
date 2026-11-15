@@ -113,7 +113,7 @@ function renderContactTemplate(template: ContactTemplate, vars: Record<string, s
   const missing = Array.from(new Set([...used, ...required])).filter((key) => {
     const value = vars[key]?.trim();
     if (!value) return true;
-    if (key === "link_do_panelu" && !/^https?:\\/\\/[^\\s"<>]+$/i.test(value)) return true;
+    if (key === "link_do_panelu" && !/^https?:\/\/[^\s"<>]+$/i.test(value)) return true;
     return false;
   });
   const replace = (source: string, html: boolean) => source.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_match, key: string) => {
