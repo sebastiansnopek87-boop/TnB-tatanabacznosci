@@ -36,9 +36,8 @@ function ItemPage() {
   const coverFn = useServerFn(adminLibraryCoverUrl);
   const draftCover = useQuery({ queryKey: ["library-preview-cover", q.data?.item.id], queryFn: () => coverFn({ data: { id: q.data!.item.id } }),
     enabled: preview && !!q.data && q.data.item.status !== "published" && !!q.data.item.cover_url });
-  const purchasesFn = useServerFn(listMyPurchases);
   const isPremium = q.data?.item.access === "premium" && !!q.data?.content;
-  const mine = useQuery({ queryKey: ["my-purchases", uid], queryFn: () => purchasesFn(), enabled: !!uid && isPremium });
+  const mine = useQuery({ queryKey: ["my-purchases", uid], queryFn: () => listMyPurchases(), enabled: !!uid && isPremium });
   const [fileErr, setFileErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
