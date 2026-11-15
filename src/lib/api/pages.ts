@@ -22,7 +22,7 @@ export function getPublicPage({ data }: ServerCall<{ key?: string; slug?: string
   return invokeTnbFunction<PublicPage | null>("tnb-pages", {
     action: "getPublicPage",
     data,
-  });
+  }, { allowNull: true });
 }
 
 export function adminListPages(): Promise<AdminPageListItem[]> {
