@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
-import { SUBMISSION_STATUSES, type SubmissionStatus } from "@/lib/voice";
+import type { SubmissionStatus } from "@/lib/voice";
 
 export const storySchema = z.object({
   name: z.string().trim().min(1, "Podaj imię i nazwisko").max(120, "Maksymalnie 120 znaków"),
