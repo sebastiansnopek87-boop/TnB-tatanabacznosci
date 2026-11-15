@@ -168,8 +168,8 @@ function Categories() {
 function Editor({ id, onClose }: { id: string | null; onClose: () => void }) {
   const qc = useQueryClient();
   const cats = useQuery(articleCategoriesQuery());
-  const getFn = useServerFn(adminGetArticle); const saveFn = useServerFn(adminSaveArticle); const statusFn = useServerFn(adminSetArticleStatus);
-  const slugFn = useServerFn(adminCheckArticleSlug); const upFn = useServerFn(adminCreateArticleUpload); const urlsFn = useServerFn(adminArticleImageUrls);
+  const getFn = adminGetArticle; const saveFn = useServerFn(adminSaveArticle); const statusFn = useServerFn(adminSetArticleStatus);
+  const slugFn = adminCheckArticleSlug; const upFn = useServerFn(adminCreateArticleUpload); const urlsFn = useServerFn(adminArticleImageUrls);
   const [d, setD] = useState<Draft>(EMPTY);
   const [artId, setArtId] = useState<string | null>(id);
   const [loading, setLoading] = useState(!!id);
