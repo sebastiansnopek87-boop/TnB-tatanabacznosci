@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 
 type ProviderId = "p24" | "tpay" | "payu";
 type PaymentMethod = "bank_transfer" | ProviderId;
@@ -19,7 +20,7 @@ type AdminOrderRow = {
   library_items: { title: string };
 };
 type OrderDetail = {
-  order: Record<string, any> & { id: string; order_number: string };
+  order: Tables<"library_orders"> & { library_items: { title: string; slug: string } | null };
   access: boolean;
   events: Array<{ type: string; detail: string | null; created_at: string }>;
   mails: Array<{ kind: string; template_key: string | null; status: string; reason: string | null; created_at: string }>;
