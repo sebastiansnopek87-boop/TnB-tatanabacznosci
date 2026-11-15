@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
+import { useServerFn } from "@/lib/api/useServerFn";
 import { toast } from "sonner";
 import { Copy, Eye, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
