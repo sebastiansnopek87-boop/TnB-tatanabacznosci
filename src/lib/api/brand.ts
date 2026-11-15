@@ -2,15 +2,6 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type BrandSettings = Record<string, string | boolean>;
 
-export function brandImageUrl(value?: string): string | null {
-  if (!value) return null;
-  const file = value.replace(/^brand\\//, "");
-  const base = String(import.meta.env["VITE_SUPABASE_URL"] ?? "").replace(/\\/+$/, "");
-  return base
-    ? `${base}/functions/v1/tnb-brand?file=${encodeURIComponent(file)}`
-    : `/api/public/brand/${encodeURIComponent(file)}`;
-}
-
 export type BrandSettingsResult = {
   settings: BrandSettings;
   canEdit: boolean;
@@ -48,7 +39,7 @@ async function invokeBrand<T>(body: Record<string, unknown>): Promise<T> {
 
   const { data, error } = await supabase.functions.invoke<T>("tnb-brand", {
     body,
-    headers: { Authorization: `Bearer ${accessToken}` },
+    headers: { Authorization: \`Bearer \${accessToken}\` },
   });
 
   if (error) {
@@ -69,6 +60,15 @@ async function invokeBrand<T>(body: Record<string, unknown>): Promise<T> {
   }
 
   return data;
+}
+
+export function brandImageUrl(value?: string): string | null {
+  if (!value) return null;
+  const file = value.replace(/^brand\//, "");
+  const base = String(import.meta.env["VITE_SUPABASE_URL"] ?? "").replace(/\/+$/, "");
+  return base
+    ? base + "/functions/v1/tnb-brand?file=" + encodeURIComponent(file)
+    : "/api/public/brand/" + encodeURIComponent(file);
 }
 
 export async function getBrandSettings(): Promise<BrandSettingsResult> {
