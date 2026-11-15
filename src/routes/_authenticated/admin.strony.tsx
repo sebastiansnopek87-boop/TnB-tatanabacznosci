@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -25,12 +24,12 @@ type Draft = { draft_updated_at?: string | null; id: string | null; slug: string
 const EMPTY: Draft = { id: null, slug: "", system_key: null, title: "", intro: "", sections: [], seo_title: "", seo_description: "", status: "draft" };
 
 function PagesAdmin() {
-  const listFn = useServerFn(adminListPages);
+  const listFn = adminListPages;
   const list = useQuery({ queryKey: ["admin-pages"], queryFn: () => listFn() });
   const [editing, setEditing] = useState<string | "new" | null>(null);
   const [newLegal, setNewLegal] = useState<string | null>(null);
   const [visual, setVisual] = useState<string | null>(null);
-  const saveFn = useServerFn(adminSavePage);
+  const saveFn = adminSavePage;
   const [creatingHome, setCreatingHome] = useState(false);
   // Copies today's home page into a new draft record; nothing becomes public until "Opublikuj".
   async function createHome() {
@@ -83,8 +82,8 @@ function PagesAdmin() {
 
 function Editor({ id, systemKey, onClose, onVisual }: { id: string | null; systemKey: string | null; onClose: () => void; onVisual: (id: string) => void }) {
   const qc = useQueryClient();
-  const getFn = useServerFn(adminGetPage); const saveFn = useServerFn(adminSavePage); const statusFn = useServerFn(adminSetPageStatus);
-  const slugFn = useServerFn(adminCheckSlug); const upFn = useServerFn(adminCreatePageUpload); const urlsFn = useServerFn(adminPageImageUrls);
+  const getFn = adminGetPage; const saveFn = adminSavePage; const statusFn = adminSetPageStatus;
+  const slugFn = adminCheckSlug; const upFn = adminCreatePageUpload; const urlsFn = adminPageImageUrls;
   const [d, setD] = useState<Draft>(() => systemKey ? { ...EMPTY, system_key: systemKey, slug: systemKey, title: SYSTEM_PAGES[systemKey]?.label ?? "" } : EMPTY);
   const [pageId, setPageId] = useState<string | null>(id);
   const [loading, setLoading] = useState(!!id);
