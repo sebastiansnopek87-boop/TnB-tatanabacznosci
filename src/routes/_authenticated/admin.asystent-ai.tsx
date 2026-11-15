@@ -117,7 +117,7 @@ function Sources() {
       </form>
       <div className="flex flex-wrap gap-2">{[["all", "Wszystkie"], ...Object.entries(SRC_STATUS)].map(([k, l]) => <Button key={k} size="sm" variant={filter === k ? "default" : "outline"} onClick={() => setFilter(k!)}>{l}</Button>)}</div>
       {q.isLoading ? <p className="text-muted-foreground">Ładowanie…</p> : (q.data ?? []).filter((source) => filter === "all" || source.status === filter).length === 0 ? <p className="text-sm text-muted-foreground">Brak źródeł w tym widoku. Artykuły i materiały Biblioteki są uwzględniane automatycznie i nie trzeba ich tu dodawać.</p> : (
-        <ul className="space-y-3">{(q.data ?? []).filter((s: any) => filter === "all" || s.status === filter).map((s) => (
+        <ul className="space-y-3">{(q.data ?? []).filter((source) => filter === "all" || source.status === filter).map((s) => (
           <li key={s.id} className={box}>
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div className="min-w-0"><p className="font-medium break-words">{s.title || s.url || "Bez tytułu"}</p>
