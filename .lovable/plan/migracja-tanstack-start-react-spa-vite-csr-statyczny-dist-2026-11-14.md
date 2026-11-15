@@ -2,12 +2,12 @@ Plan techniczny migracji do statycznego React SPA (Vite, CSR, dist/) i uporządk
 
 **Stan zweryfikowany: 15.11.2026.** Źródłem kodu jest repozytorium `sebastiansnopek87-boop/TnB-tatanabacznosci`, gałąź `main`. Źródłem działającego backendu jest Supabase `pmdfiipontreuclfumdh`. Nie używać repozytorium `purelifecenter` jako źródła dla TNB.
 
-- W Supabase działa 6 Edge Functions: `tnb-health`, `tnb-users`, `tnb-platform`, `tnb-brand`, `tnb-pages`, `tnb-templates`. Ich aktywne wersje i pliki źródłowe zostały porównane z repozytorium; treść plików jest zgodna.
+- W Supabase działa 8 Edge Functions: `tnb-health`, `tnb-users`, `tnb-platform`, `tnb-brand`, `tnb-pages`, `tnb-templates`, `tnb-assets` i `tnb-contact`. Aktywne pliki wszystkich funkcji zostały porównane z repozytorium; treść jest zgodna.
 - Repozytorium zawiera `supabase/config.toml`, kompletne katalogi źródłowe tych funkcji i wspólne pliki zależności. Migracje bazy są śledzone w `drizzle/migrations`; Supabase raportuje zastosowanie migracji do `0064_community_post_visible_authenticated`.
-- Bezpośrednie adaptery przeglądarkowe są wdrożone dla `users`, `platform`, `brand`, `pages` i `templates`. Część operacji platformy (np. publiczny odczyt ustawień) korzysta bezpośrednio z kontrolowanego RLS/column grants.
+- Bezpośrednie adaptery przeglądarkowe są wdrożone dla `users`, `platform`, `brand`, `pages`, `templates` i `contact`. Wspólny helper `src/lib/public-assets.ts` kieruje okładki biblioteki, spotkań i podcastów do `tnb-assets`; obrazy CMS obsługuje `tnb-pages`. Część odczytów publicznych i wybrane odczyty artykułów korzystają z jawnie ograniczonego RLS/column grants.
 - Pozostałe moduły nadal korzystają z funkcji TanStack Start. Aplikacja **nie jest jeszcze statycznym React SPA**.
 - `.htaccess` i `scripts/scan-dist-secrets.sh` istnieją. Nie ma jeszcze gotowego, zaakceptowanego `dist/` do hostingu Cyberfolks.
-- CI: ostatni znany błąd składni w adapterze CMS i adresie obrazów został poprawiony. Najnowsze uruchomienie Build zakończyło się jako `cancelled`, więc po tych poprawkach nie ma potwierdzonego zielonego builda.
+- CI: Build dla commita `2485d8ff` zakończył się statusem `success` 15.11.2026. Wcześniejszy błąd składni adaptera CMS i URL obrazów został poprawiony.
 
 Liczby z inwentaryzacji 14.11 (72 trasy, 13 tras API, 28 modułów `.functions.ts`, 217 funkcji serwerowych i 8 modułów `.server.ts`) są punktem bazowym audytu, a nie potwierdzeniem aktualnej liczby po migracji.
 ## 1. Wybór routera: TanStack Router (samodzielny), nie React Router
@@ -39,13 +39,15 @@ Lockfile: `bun.lock`, instalacja `bun install --frozen-lockfile`.
 
 - Wcześniejsza blokada tworzenia Edge Functions już nie obowiązuje. W projekcie Supabase TNB działają funkcje brzegowe i są wdrożone.
 - Aktywne funkcje i polityka JWT:
-  - `tnb-health` — `verify_jwt = true`
-  - `tnb-users` — `verify_jwt = true`
-  - `tnb-platform` — `verify_jwt = true`
-  - `tnb-brand` — `verify_jwt = false`; funkcja realizuje własną weryfikację sesji dla operacji chronionych
-  - `tnb-pages` — `verify_jwt = false`; odczyt publiczny jest jawnie oddzielony od operacji administratora
-  - `tnb-templates` — `verify_jwt = false`; operacje administracyjne wymagają sesji i roli
-- Wszystkie powyższe funkcje mają zapisane w GitHubie pliki `index.ts`, `deno.json` i zależności współdzielone; porównanie treści z wdrożonymi wersjami Supabase zakończyło się zgodnością.
+  - `tnb-health` v3 — `verify_jwt = true`
+  - `tnb-users` v4 — `verify_jwt = true`
+  - `tnb-platform` v4 — `verify_jwt = true`
+  - `tnb-brand` v4 — `verify_jwt = false`; funkcja realizuje własną weryfikację sesji dla operacji chronionych
+  - `tnb-pages` v4 — `verify_jwt = false`; odczyt publiczny jest jawnie oddzielony od operacji administratora
+  - `tnb-templates` v4 — `verify_jwt = false`; operacje administracyjne wymagają sesji i roli
+  - `tnb-assets` v1 — `verify_jwt = false`; funkcja udostępnia wskazane obrazy publicznych, opublikowanych rekordów
+  - `tnb-contact` v4 — `verify_jwt = false`; publiczny formularz ma walidację danych, allowlistę originów, ograniczenie metody i filtr antyspamowy
+- Wszystkie funkcje mają zapisane w GitHubie pliki `index.ts`, `deno.json` i zależności współdzielone; porównanie treści z wdrożonymi wersjami Supabase zakończyło się zgodnością.
 - Klucz service role pozostaje wyłącznie po stronie Edge Functions/serwera. Nie wolno przenosić go do `VITE_*`, kodu klienta ani paczki `dist/`.
 - Nie wolno usuwać TanStack Start, tras API ani modułów `.server.ts`, dopóki wszystkie zależne operacje nie mają kompletnego odpowiednika backendowego i testów regresji.
 - Zmiany schematu bazy wykonujemy przez kontrolowane migracje zapisane w repozytorium. Nie uznajemy ręcznej zmiany w Supabase za odtwarzalną, dopóki jej SQL i wpis w historii migracji nie są w GitHubie.
@@ -58,15 +60,17 @@ Lockfile: `bun.lock`, instalacja `bun install --frozen-lockfile`.
 | Użytkownicy (lista, szczegóły, role) | `tnb-users` | wdrożone i podłączone przez `src/lib/api/users.ts`; pozostałe operacje admin/auth wciąż wymagają audytu |
 | Ustawienia platformy | `tnb-platform`; publiczne, jawnie dozwolone kolumny bezpośrednio przez RLS | wdrożone i podłączone przez `src/lib/api/platform.ts` |
 | Marka / logo / favicon | `tnb-brand` | wdrożone i podłączone przez `src/lib/api/brand.ts` |
-| CMS stron, publikacja prawna, historia i obrazy | `tnb-pages` | wdrożone i podłączone przez `src/lib/api/pages.ts`; publiczne obrazy są serwowane przez Edge Function |
+| CMS stron, publikacja prawna, historia i obrazy | `tnb-pages` | wdrożone i podłączone przez `src/lib/api/pages.ts`; publiczne obrazy CMS są serwowane przez Edge Function |
 | Szablony Visual Buildera | `tnb-templates` | wdrożone i podłączone przez `src/lib/api/templates.ts` |
+| Obrazy publiczne biblioteki, spotkań i podcastu | `tnb-assets` | wdrożone; używane przez `src/lib/public-assets.ts` |
+| Formularz kontaktowy | `tnb-contact` | wdrożone i podłączone przez `src/lib/api/contact.ts`; rekord wiadomości i log powiadomienia są zapisywane w Supabase |
 | Control Center | osobna funkcja read-only | nadal TanStack Start |
 | Artykuły, ankiety i moderacja komentarzy | `articles` / CMS artykułów | nadal TanStack Start |
 | Zamówienia i płatności | `orders`, `payments-admin` | nadal TanStack Start; nie zmieniać bez osobnego testu przepływów płatniczych |
 | Webhooki P24/Tpay/PayU | odrębne endpointy z weryfikacją podpisu, kwoty i idempotencji | nadal trasy serwerowe; wymagają osobnego testu z dostawcami |
 | Biblioteka, dostarczanie plików i PDF/znak wodny | `library-delivery` | nadal TanStack Start |
-| Obrazy publiczne (artykuły, avatary, podcast, biblioteka, spotkania, marka, CMS) | funkcje public-media z kontrolą publikacji i uprawnień | tylko obrazy CMS są już obsłużone przez `tnb-pages`; pozostałe trasy API pozostają |
-| Formularze: kontakt, newsletter, komentarze | `public-forms`, `newsletter` | nadal TanStack Start |
+| Obrazy publiczne (artykuły, avatary, podcast, biblioteka, spotkania, marka, CMS) | `tnb-pages`, `tnb-assets` i pozostałe funkcje media | CMS, biblioteka, spotkania i podcast przeniesione; pozostałe obrazy wymagają audytu |
+| Formularze: kontakt, newsletter, komentarze | `tnb-contact`, `public-forms`, `newsletter` | kontakt wdrożony; newsletter i komentarze nadal TanStack Start |
 | Spotkania i konsultacje | `meetings`, `consult` | nadal TanStack Start |
 | Powiadomienia i wysyłka e-mail | `notifications` | nadal TanStack Start; zachować tryb testowy i logowanie dostaw |
 | Edytor AI i materiały | `ai-editor` | nadal TanStack Start; AI tylko po autoryzowanym wywołaniu backendowym |
@@ -109,9 +113,9 @@ Rollback każdego modułu: przywrócenie poprzedniego adaptera i UI z osobnego c
 
 ## Podział dalszych prac
 
-**A. Zamknięte:** utworzenie i zapis źródeł sześciu Edge Functions, synchronizacja ich plików z Supabase, konfiguracja JWT, migracje 0059–0064 w historii repozytorium oraz przełączenie adapterów users/platform/brand/pages/templates.
+**A. Zamknięte:** osiem Edge Functions zapisanych w GitHubie i zsynchronizowanych z Supabase, konfiguracja JWT, migracje 0059–0064 w historii repozytorium, adaptery users/platform/brand/pages/templates/contact, helper public-assets oraz zielony build CI dla commita `2485d8ff`.
 
-**B. Najbliższe:** potwierdzić zielony build CI po poprawkach składni i CORS; następnie migrować backend modułami o jasno określonym kontrakcie. Priorytet: artykuły, biblioteka/dostarczanie plików, spotkania i formularze. Płatności/webhooki migrować jako osobny etap z testami podpisu i idempotencji.
+**B. Najbliższe:** kontynuować backend modułami o jasno określonym kontrakcie. Priorytet: pozostałe operacje artykułów, biblioteka/dostarczanie plików, spotkania i konsultacje, newsletter i komentarze, powiadomienia oraz avatary. Płatności/webhooki migrować jako osobny etap z testami podpisu, kwoty i idempotencji. Każda zmiana ma kończyć się zielonym buildem i porównaniem źródła GitHub z wdrożonym Supabase.
 
 **C. Przed SPA i Cyberfolks:** usunąć zależność od Lovable w OAuth (własne klucze Google/Apple i adresy powrotu), potwierdzić wszystkie zewnętrzne callbacki i webhooki, a potem wykonać pełny test CSR na `vite preview` i Apache.
 
