@@ -28,11 +28,21 @@ jobs:
       - name: Install locked dependencies
         run: bun install --frozen-lockfile
 
-      - name: Lint application
-        run: bun run lint
-
       - name: Build application
         run: bun run build
 
       - name: Scan static build for server-only code and secrets
-        run: bash scripts/scan-dist-secrets.sh dist
+        shell: bash
+        run: |
+          if [[ -d "dist" ]]; then
+            OUTPUT_DIR="dist"
+          elif [[ -d ".output/public" ]]; then
+            OUTPUT_DIR=".output/public"
+          else
+            echo "::error::No known client build output directory found."
+            exit 1
+          fi
+          bash scripts/scan-dist-secrets.sh "$OUTPUT_DIR"
+
+      - name: Lint application
+        run: bun run lint
