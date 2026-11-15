@@ -1,26 +1,7 @@
-import { supabase } from "@/integrations/supabase/client";
+import { invokeEdge } from "@/lib/api/edge";
 
 export const ROLE_VALUES = ["superadmin", "admin", "moderator", "editor", "support", "premium"] as const;
 export type UserRole = (typeof ROLE_VALUES)[number];
-
-type EdgeError = { error?: string; message?: string };
-
-async function invokeUsers<T>(action: string, payload: Record<string, unknown>): Promise<T> {
-  const { data, error } = await supabase.functions.invoke<T>("tnb-users", {
-    body: { action, ...payload },
-  });
-
-  if (error) {
-    const response = (error as { context?: unknown }).context;
-    if (response instanceof Response) {
-      const body = await response.clone().json().catch(() => null) as EdgeError | null;
-      if (body?.message) throw new Error(body.message);
-    }
-    throw error;
-  }
-
-  return data as T;
-}
 
 export type AdminUser = {
   id: string;
@@ -56,13 +37,13 @@ export type UserDetail = AdminUser & {
 };
 
 export function listUsers({ data }: { data: ListUsersInput }): Promise<ListUsersResult> {
-  return invokeUsers("listUsers", data);
+  return invokeEdge("tnb-users", { action: "listUsers", ...data });
 }
 
 export function getUserDetail({ data }: { data: { id: string } }): Promise<UserDetail> {
-  return invokeUsers("getUserDetail", data);
+  return invokeEdge("tnb-users", { action: "getUserDetail", ...data });
 }
 
 export function setUserRole({ data }: { data: { id: string; role: UserRole; grant: boolean } }): Promise<{ ok: true }> {
-  return invokeUsers("setUserRole", data);
+  return invokeEdge("tnb-users", { action: "setUserRole", ...data });
 }
