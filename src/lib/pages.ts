@@ -1,5 +1,5 @@
 import { tnbPublicFunctionUrl } from "@/lib/public-edge-url";
-import { tnbPublicFunctionUrl } from "@/lib/api/client";
+import { tnbPublicFunctionUrl } from "@/lib/public-edge-url";
 import type { TextFormat } from "./rich-text";
 // Shared, browser-safe model for CMS pages (O TNB, Moja historia and future subpages).
 export type PageButton = { label: string; href: string };
