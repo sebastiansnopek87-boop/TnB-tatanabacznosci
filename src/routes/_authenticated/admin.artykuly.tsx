@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { Plus, Star, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -62,7 +61,7 @@ function ArticlesAdmin() {
 }
 
 function List({ onEdit }: { onEdit: (id: string) => void }) {
-  const listFn = useServerFn(adminListArticles); const modeFn = useServerFn(adminSetHomeMode); const featFn = useServerFn(adminSetFeatured);
+  const listFn = adminListArticles; const modeFn = adminSetHomeMode; const featFn = adminSetFeatured;
   const list = useQuery({ queryKey: ["admin-articles"], queryFn: () => listFn() });
   const qc = useQueryClient();
   async function setMode(mode: HomeMode) {
@@ -71,7 +70,7 @@ function List({ onEdit }: { onEdit: (id: string) => void }) {
   async function feature(id: string, featured: boolean, home_order: number) {
     try { await featFn({ data: { id, featured, home_order } }); list.refetch(); qc.invalidateQueries({ queryKey: ["articles"] }); } catch (e) { toast.error(errMsg(e)); }
   }
-  const trashFn = useServerFn(adminTrashArticle);
+  const trashFn = adminTrashArticle;
   const active = (list.data?.items ?? []).filter((a) => !a.deleted_at);
   const bin = (list.data?.items ?? []).filter((a) => a.deleted_at);
   async function trash(id: string, action: "trash" | "restore" | "purge", title: string) {
@@ -135,7 +134,7 @@ function List({ onEdit }: { onEdit: (id: string) => void }) {
 function Categories() {
   const qc = useQueryClient();
   const cats = useQuery(articleCategoriesQuery());
-  const saveFn = useServerFn(adminSaveCategory); const delFn = useServerFn(adminDeleteCategory);
+  const saveFn = adminSaveCategory; const delFn = adminDeleteCategory;
   const [name, setName] = useState("");
   const refresh = () => qc.invalidateQueries({ queryKey: ["articles", "categories"] });
   async function add() {
@@ -168,8 +167,8 @@ function Categories() {
 function Editor({ id, onClose }: { id: string | null; onClose: () => void }) {
   const qc = useQueryClient();
   const cats = useQuery(articleCategoriesQuery());
-  const getFn = adminGetArticle; const saveFn = useServerFn(adminSaveArticle); const statusFn = useServerFn(adminSetArticleStatus);
-  const slugFn = adminCheckArticleSlug; const upFn = useServerFn(adminCreateArticleUpload); const urlsFn = useServerFn(adminArticleImageUrls);
+  const getFn = adminGetArticle; const saveFn = adminSaveArticle; const statusFn = adminSetArticleStatus;
+  const slugFn = adminCheckArticleSlug; const upFn = adminCreateArticleUpload; const urlsFn = adminArticleImageUrls;
   const [d, setD] = useState<Draft>(EMPTY);
   const [artId, setArtId] = useState<string | null>(id);
   const [loading, setLoading] = useState(!!id);
@@ -346,7 +345,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 function PollAndStats({ id }: { id: string }) {
-  const getFn = useServerFn(adminArticleInteractions); const saveFn = useServerFn(adminSavePoll); const delFn = useServerFn(adminDeletePoll);
+  const getFn = adminArticleInteractions; const saveFn = adminSavePoll; const delFn = adminDeletePoll;
   const q = useQuery({ queryKey: ["admin-article-int", id], queryFn: () => getFn({ data: { id } }) });
   const [poll, setPoll] = useState<{ question: string; options: string[]; active: boolean } | null>(null);
   useEffect(() => { if (q.data) setPoll(q.data.poll); }, [q.data]);
@@ -399,7 +398,7 @@ const COMMENT_STATUS: Record<string, string> = {
 };
 
 function CommentsModeration() {
-  const listFn = useServerFn(adminListArticleComments); const modFn = useServerFn(adminModerateArticleComment);
+  const listFn = adminListArticleComments; const modFn = adminModerateArticleComment;
   const [filter, setFilter] = useState<"all" | "reported" | "hidden" | "pending">("all");
   const q = useQuery({ queryKey: ["admin-article-comments", filter], queryFn: () => listFn({ data: { filter } }) });
   async function act(id: string, action: "hide" | "show" | "delete" | "dismiss" | "reject") {
