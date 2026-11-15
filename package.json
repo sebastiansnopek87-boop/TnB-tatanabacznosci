@@ -9,7 +9,10 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "dev:spa": "vite --config vite.spa.config.ts",
+    "build:spa": "vite build --config vite.spa.config.ts --outDir dist-spa",
+    "preview:spa": "vite preview --config vite.spa.config.ts --outDir dist-spa"
   },
   "overrides": {
     "rolldown": "1.2.1"
