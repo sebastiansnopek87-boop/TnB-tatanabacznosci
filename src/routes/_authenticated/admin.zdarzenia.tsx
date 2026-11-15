@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { getNotificationOverview, setEventEnabled } from "@/lib/api/notifications";
 import { INTEGRATION_LABEL, MODULE_LABEL, type Module } from "@/lib/notify/registry";
@@ -14,8 +13,8 @@ export const Route = createFileRoute("/_authenticated/admin/zdarzenia")({
 });
 
 function Rules() {
-  const overview = useServerFn(getNotificationOverview);
-  const setEnabled = useServerFn(setEventEnabled);
+  const overview = getNotificationOverview;
+  const setEnabled = setEventEnabled;
   const qc = useQueryClient();
   const { data, error, isLoading } = useQuery({ queryKey: ["admin-notif-overview"], queryFn: () => overview() });
 
