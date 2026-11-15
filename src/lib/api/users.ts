@@ -1,6 +1,14 @@
 import { invokeEdge } from "@/lib/api/edge";
 
-export const ROLE_VALUES = ["superadmin", "admin", "moderator", "editor", "support", "premium"] as const;
+export const ROLE_VALUES = [
+  "superadmin",
+  "admin",
+  "moderator",
+  "editor",
+  "support",
+  "premium",
+] as const;
+
 export type UserRole = (typeof ROLE_VALUES)[number];
 
 export type AdminUser = {
@@ -44,6 +52,10 @@ export function getUserDetail({ data }: { data: { id: string } }): Promise<UserD
   return invokeEdge("tnb-users", { action: "getUserDetail", ...data });
 }
 
-export function setUserRole({ data }: { data: { id: string; role: UserRole; grant: boolean } }): Promise<{ ok: true }> {
+export function setUserRole({
+  data,
+}: {
+  data: { id: string; role: UserRole; grant: boolean };
+}): Promise<{ ok: true }> {
   return invokeEdge("tnb-users", { action: "setUserRole", ...data });
 }
