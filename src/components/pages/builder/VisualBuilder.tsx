@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
   ArrowDown, ArrowUp, BookmarkPlus, Copy, Eye, EyeOff, GripVertical, History, Info, Layers, LayoutGrid, Monitor, PanelLeft, PanelRight,
@@ -35,9 +34,6 @@ const pick = (p: any): PageDraft => ({ slug: p.slug, title: p.title, intro: p.in
 const same = (a: PageDraft, b: PageDraft) => JSON.stringify(a) === JSON.stringify(b);
 
 export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose: () => void; onFormView: () => void }) {
-  const getFn = useServerFn(adminGetPage); const saveFn = useServerFn(adminSaveDraft); const pubFn = useServerFn(adminPublishDraft);
-  const verFn = useServerFn(adminListVersions); const restoreFn = useServerFn(adminRestoreVersion);
-  const upFn = useServerFn(adminCreatePageUpload); const urlsFn = useServerFn(adminPageImageUrls);
 
   const [meta, setMeta] = useState<{ system_key: string | null; status: string; live: PageDraft } | null>(null);
   const [d, setD] = useState<PageDraft | null>(null);
@@ -53,7 +49,6 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
   const [placingTpl, setPlacingTpl] = useState<BuilderTemplate | null>(null);
   const [saveTpl, setSaveTpl] = useState(false);
   const tpl = useTemplates();
-  const instFn = useServerFn(adminInstantiateTemplate);
   const [saveState, setSaveState] = useState<{ dirty: boolean; at: string | null; err: string | null; busy: boolean }>({ dirty: false, at: null, err: null, busy: false });
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [overflow, setOverflow] = useState<number[]>([]);
@@ -64,19 +59,18 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
   const onOverflow = useCallback((b: number[]) => setOverflow((o) => (o.join() === b.join() ? o : b)), []);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
-  const startHomeFn = useServerFn(adminStartHomeDraft);
   const [reload, setReload] = useState(0);
   async function startHome() {
     if (!d) return;
     if (!confirm("Utworzyć szkic z obecnej strony głównej? Poprzedni szkic zostanie zachowany w historii wersji, strona publiczna się nie zmieni.")) return;
     try {
-      await startHomeFn({ data: { id, draft: { ...d, title: d.title || "Strona główna", sections: homeDefaultSections() } } });
+      await adminStartHomeDraft({ id, draft: { ...d, title: d.title || "Strona główna", sections: homeDefaultSections() } });
       toast.success("Utworzono szkic z obecnej strony głównej."); setD(null); setReload((n) => n + 1);
     } catch (e) { toast.error(errMsg(e)); }
   }
   useEffect(() => {
     let live = true;
-    getFn({ data: { id } }).then((p) => {
+    adminGetPage({ id }).then((p) => {
       if (!live) return;
       const pub = pick(p);
       setMeta({ system_key: p.system_key, status: p.status, live: pub });
@@ -90,7 +84,7 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
   const names = (d?.sections ?? []).flatMap((s) => [s.image, ...s.items.map((it) => it.image)]).filter((n): n is string => !!n && !n.startsWith("asset:"));
   useEffect(() => {
     const missing = names.filter((n) => !urls[n]);
-    if (missing.length) urlsFn({ data: { id, names: missing } }).then((u) => setUrls((o) => ({ ...o, ...u }))).catch(() => {});
+    if (missing.length) adminPageImageUrls({ id, names: missing }).then((u) => setUrls((o) => ({ ...o, ...u }))).catch(() => {});
   }, [names.join(",")]);
 
   // Every edit goes through change(): undo history (typing coalesced per field) + autosave flag.
@@ -122,7 +116,7 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
     if (!d) return false;
     setSaveState((s) => ({ ...s, busy: true }));
     try {
-      const r = await saveFn({ data: { id, draft: d, version } });
+      const r = await adminSaveDraft({ id, draft: d, version });
       setSaveState({ dirty: false, at: r.savedAt, err: null, busy: false });
       if (version) toast.success("Zapisano wersję roboczą. Strona publiczna bez zmian.");
       return true;
@@ -148,7 +142,7 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
     if (saveState.dirty && !(await save(false))) return;
     setSaveState((s) => ({ ...s, busy: true }));
     try {
-      await pubFn({ data: { id, ...(legal ? { legalConfirmed: true, expectedDigest } : {}) } });
+      await adminPublishDraft({ id, ...(legal ? { legalConfirmed: true, expectedDigest } : {}) });
       setMeta((m) => m && d ? { ...m, status: "published", live: d } : m);
       toast.success("Opublikowano. Zmiany są widoczne na stronie publicznej.");
       setModal(null);
@@ -156,13 +150,13 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
   }
   async function openHistory() {
     setModal("history"); setVersions(null); setPreview(null);
-    try { setVersions(await verFn({ data: { id } })); } catch (e) { toast.error(errMsg(e)); }
+    try { setVersions(await adminListVersions({ id })); } catch (e) { toast.error(errMsg(e)); }
   }
   async function restore(v: PageVersion) {
     if (!confirm("Przywrócić tę wersję do szkicu? Obecny szkic zostanie zapisany w historii, strona publiczna się nie zmieni.")) return;
-    if (d) await saveFn({ data: { id, draft: d, version: true } }).catch(() => {});
+    if (d) await adminSaveDraft({ id, draft: d, version: true }).catch(() => {});
     try {
-      const r = await restoreFn({ data: { id, versionId: v.id } });
+      const r = await adminRestoreVersion({ id, versionId: v.id });
       if (d) setPast((p) => [...p, d]);
       setD({ ...d!, ...r.draft, sections: normalizeSections(r.draft.sections) }); setSel(null); setModal(null);
       setSaveState((s) => ({ ...s, dirty: false, at: new Date().toISOString() }));
@@ -173,7 +167,7 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
   async function upload(i: number, file: File) {
     setSaveState((s) => ({ ...s, busy: true }));
     try {
-      const { path, token, name } = await upFn({ data: { id, type: file.type, size: file.size } });
+      const { path, token, name } = await adminCreatePageUpload({ id, type: file.type, size: file.size });
       const { error } = await supabase.storage.from("page-images").uploadToSignedUrl(path, token, file, { contentType: file.type });
       if (error) throw new Error("Nie udało się wgrać zdjęcia.");
       setUrls((o) => ({ ...o, [name]: URL.createObjectURL(file) }));
@@ -204,7 +198,7 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
     setPlacingTpl(null);
     if (t.sections.some((x, k) => !canInsert(x.kind, at + k))) { toast.error("Ten szablon zaczyna się od otwarcia strony — można go wstawić tylko na samej górze."); return; }
     try {
-      const { sections } = await instFn({ data: { id: t.id, pageId: id } });
+      const { sections } = await adminInstantiateTemplate({ id: t.id, pageId: id });
       setSections((a) => [...a.slice(0, at), ...normalizeSections(sections), ...a.slice(at)]);
       setSel({ i: at, el: "section" }); if (window.innerWidth >= 1024) setRightOpen(true);
       toast.success(`Wstawiono szablon „${t.name}” jako zwykłe elementy strony.`);
