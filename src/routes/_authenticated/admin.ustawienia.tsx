@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { getPlatformSettings, updatePlatformSettings } from "@/lib/api/platform";
@@ -40,8 +39,8 @@ function Section({ title, hint, children }: { title: string; hint?: string; chil
 }
 
 function PlatformSettings() {
-  const get = useServerFn(getPlatformSettings);
-  const save = useServerFn(updatePlatformSettings);
+  const get = getPlatformSettings;
+  const save = updatePlatformSettings;
   const qc = useQueryClient();
   const { data, error } = useQuery({ queryKey: ["admin-platform-settings"], queryFn: () => get() });
   const [f, setF] = useState<Form | null>(null);
