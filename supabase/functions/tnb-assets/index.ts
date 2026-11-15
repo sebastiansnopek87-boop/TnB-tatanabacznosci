@@ -3,7 +3,7 @@ import { corsHeaders as supabaseCorsHeaders } from "npm:@supabase/supabase-js@2.
 
 type PublicAssetKind = "article" | "library" | "meeting" | "podcast";
 type PublicAsset = {
-  bucket: "article-images" | "library-files" | "meeting-images" | "podcast-files";
+  bucket: "article-images" | "library-files" | "meeting-images" | "podcast-files" | "media";
   path: string;
   contentType: string;
 };
@@ -143,6 +143,75 @@ async function findPublicAsset(
   return image ? { bucket: "podcast-files", ...image } : null;
 }
 
+
+async function findAvatarAsset(
+  db: ReturnType<typeof createAdminClient>,
+  scope: string | null,
+  id: string,
+  request: Request,
+): Promise<PublicAsset | null> {
+  if (scope !== "own" && scope !== "post" && scope !== "comment") return null;
+
+  let viewer: string | null = null;
+  const authorization = request.headers.get("authorization") ?? "";
+  const token = authorization.startsWith("Bearer ") ? authorization.slice(7).trim() : "";
+  if (token) {
+    const { data, error } = await db.auth.getUser(token);
+    if (error || !data.user) return null;
+    viewer = data.user.id;
+  }
+
+  let owner: string | null = null;
+  let postId = id;
+  if (scope === "own") {
+    if (viewer !== id) return null;
+    owner = viewer;
+  } else {
+    if (scope === "comment") {
+      const { data: comment, error } = await db
+        .from("community_comments")
+        .select("post_id, author_id")
+        .eq("id", id)
+        .maybeSingle();
+      if (error || !comment) return null;
+      postId = comment.post_id;
+      owner = comment.author_id;
+    }
+
+    const { data: post, error } = await db
+      .from("community_posts")
+      .select("author_id, status, visibility")
+      .eq("id", postId)
+      .maybeSingle();
+    if (error || !post) return null;
+
+    if (post.status !== "published") {
+      if (!viewer) return null;
+      const { data: isAdmin, error: roleError } = await db.rpc("has_role", {
+        _user_id: viewer,
+        _role: "admin",
+      });
+      if (roleError || (viewer !== post.author_id && isAdmin !== true)) return null;
+    } else if (post.visibility !== "public" && !viewer) {
+      return null;
+    }
+
+    if (scope === "post") owner = post.author_id;
+  }
+
+  if (!owner) return null;
+  const { data: avatar, error } = await db
+    .from("user_avatars")
+    .select("object_path")
+    .eq("user_id", owner)
+    .maybeSingle();
+  if (error || !avatar || typeof avatar.object_path !== "string" || !avatar.object_path.startsWith("avatars/" + owner + "/")) {
+    return null;
+  }
+
+  return { bucket: "media", path: avatar.object_path, contentType: "image/webp" };
+}
+
 function withCors(response: Response): Response {
   const headers = new Headers(response.headers);
   CORS_HEADERS.forEach((value, key) => headers.set(key, value));
@@ -167,18 +236,23 @@ Deno.serve(async (request: Request) => {
   const kind = url.searchParams.get("kind");
   const id = url.searchParams.get("id");
   const file = url.searchParams.get("file") ?? undefined;
+  const scope = url.searchParams.get("scope");
+  const isAvatar = kind === "avatar";
   if (
-    (kind !== "article" && kind !== "library" && kind !== "meeting" && kind !== "podcast") ||
+    (!isAvatar && kind !== "article" && kind !== "library" && kind !== "meeting" && kind !== "podcast") ||
     !id ||
     !UUID.test(id) ||
-    (kind === "article" && (!file || !/^[a-z0-9-]+\.(jpg|png|webp)$/.test(file)))
+    (kind === "article" && (!file || !/^[a-z0-9-]+\.(jpg|png|webp)$/.test(file))) ||
+    (isAvatar && scope !== "own" && scope !== "post" && scope !== "comment")
   ) {
     return notFound();
   }
 
   try {
     const db = createAdminClient();
-    const asset = await findPublicAsset(db, kind, id, file);
+    const asset = isAvatar
+      ? await findAvatarAsset(db, scope, id, request)
+      : await findPublicAsset(db, kind as PublicAssetKind, id, file);
     if (!asset) return notFound();
 
     const { data: blob, error } = await db.storage.from(asset.bucket).download(asset.path);
@@ -188,7 +262,7 @@ Deno.serve(async (request: Request) => {
       status: 200,
       headers: {
         "Content-Type": asset.contentType,
-        "Cache-Control": "public, max-age=3600, stale-while-revalidate=300",
+        "Cache-Control": isAvatar ? "no-store" : "public, max-age=3600, stale-while-revalidate=300",
         "X-Content-Type-Options": "nosniff",
       },
     }));
