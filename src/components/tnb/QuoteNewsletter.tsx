@@ -1,6 +1,5 @@
 import { useRef, useState, type FormEvent } from "react";
 import { Link } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
 import { ArrowRight, Loader2, Lock, Mail } from "lucide-react";
 import { usePreview } from "@/hooks/preview-viewer";
 import { assetUrl, focusClass, HOME_ASSETS } from "@/lib/home-content";
@@ -20,7 +19,6 @@ export function QuoteNewsletter({ s, a = noA, imageSrc }: HomeBlockProps) {
   const preview = usePreview();
   const f = (k: string) => setting(s, k);
   const src = (s.image && (assetUrl(s.image) ?? imageSrc?.(s.image))) || HOME_ASSETS["banner"];
-  const send = useServerFn(subscribeNewsletter);
   const [email, setEmail] = useState("");
   const [consent, setConsent] = useState(false);
   const [honeypot, setHoneypot] = useState("");
@@ -39,7 +37,7 @@ export function QuoteNewsletter({ s, a = noA, imageSrc }: HomeBlockProps) {
     setBusy(true);
     setMsg(null);
     try {
-      const r = await send({ data: { ...parsed.data, website: honeypot, elapsedMs: Date.now() - startedAt.current } });
+      const r = await subscribeNewsletter({ data: { ...parsed.data, website: honeypot, elapsedMs: Date.now() - startedAt.current } });
       setMsg({ ok: true, text: MESSAGES[r.status] });
       setEmail("");
       setConsent(false);
