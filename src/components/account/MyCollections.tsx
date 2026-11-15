@@ -1,14 +1,12 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { listMyPurchases } from "@/lib/api/orders";
 import { listMySaved, setSaved } from "@/lib/article-interactions";
 import { articleImageUrl, fmtArticleDate, articleCategoriesQuery } from "@/lib/articles";
 export function MyPurchases() {
-  const fn = useServerFn(listMyPurchases);
-  const q = useQuery({ queryKey: ["my-purchases"], queryFn: () => fn() });
+  const q = useQuery({ queryKey: ["my-purchases"], queryFn: listMyPurchases });
   if (q.isLoading) return <p className="text-sm text-muted-foreground">Ładowanie…</p>;
   if (q.error) return <p className="text-sm text-destructive">Nie udało się wczytać materiałów.</p>;
   if (!q.data?.length) return <div className="space-y-3"><p className="text-sm leading-relaxed text-muted-foreground">Twoja kolekcja czeka na pierwszy materiał.</p><Button asChild variant="outline" size="sm"><Link to="/biblioteka">Odkryj Bibliotekę</Link></Button></div>;
