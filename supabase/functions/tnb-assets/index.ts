@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { corsHeaders as supabaseCorsHeaders } from "npm:@supabase/supabase-js@2.117.2/cors";
 
 type PublicAssetKind = "article" | "library" | "meeting" | "podcast";
 type PublicAsset = {
@@ -16,9 +17,9 @@ const CONTENT_TYPES: Record<string, string> = {
 };
 
 const CORS_HEADERS = new Headers({
+  ...supabaseCorsHeaders,
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, OPTIONS",
-  "Access-Control-Allow-Headers": "authorization, apikey, x-client-info, content-type",
   "Access-Control-Max-Age": "86400",
   "X-Content-Type-Options": "nosniff",
 });
