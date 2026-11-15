@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { adminAddManualVideo, adminGetYoutubeSource, adminListVideos, adminSaveYoutubeSource, adminSetVideoStatus, adminSyncIfStale, adminSyncYoutube, adminUpdateVideo, type AdminVideo } from "@/lib/api/voice";
+import { adminAddManualVideo, adminGetYoutubeSource, adminListVideos, adminSaveYoutubeSource, adminSetVideoStatus, adminSyncIfStale, adminSyncYoutube, adminUpdateVideo, type AdminVideo } from "@/lib/api/youtube";
 import { VIDEO_STATUS, ytThumb } from "@/lib/voice";
 import { errMsg } from "@/components/admin/format";
 import { Button } from "@/components/ui/button";
@@ -19,9 +18,9 @@ const dt = (s?: string | null) => (s ? new Date(s).toLocaleString("pl-PL", { dat
 type SyncReport = { at?: string; fetched?: number; added?: number; updated?: number; skipped?: number; kept_custom?: number; errors?: string[]; fatal?: string } | null;
 
 export function VoiceVideos() {
-  const srcFn = useServerFn(adminGetYoutubeSource); const saveFn = useServerFn(adminSaveYoutubeSource);
-  const syncFn = useServerFn(adminSyncYoutube); const staleFn = useServerFn(adminSyncIfStale);
-  const listFn = useServerFn(adminListVideos); const stFn = useServerFn(adminSetVideoStatus);
+  const srcFn = adminGetYoutubeSource; const saveFn = adminSaveYoutubeSource;
+  const syncFn = adminSyncYoutube; const staleFn = adminSyncIfStale;
+  const listFn = adminListVideos; const stFn = adminSetVideoStatus;
   const qc = useQueryClient();
   const src = useQuery({ queryKey: ["admin-yt-source"], queryFn: () => srcFn() });
   const list = useQuery({ queryKey: ["admin-voice-videos"], queryFn: () => listFn() });
@@ -158,7 +157,7 @@ export function VoiceVideos() {
 }
 
 function EditDialog({ video, onClose, onSaved }: { video: AdminVideo | null; onClose: () => void; onSaved: () => void }) {
-  const updFn = useServerFn(adminUpdateVideo);
+  const updFn = adminUpdateVideo;
   const [f, setF] = useState({ title: "", description: "", custom_thumbnail_url: "", category: "", featured: false, sort_order: 0, published_on: "", reset_title: false, reset_description: false });
   useEffect(() => {
     if (video) setF({ title: video.title, description: video.description, custom_thumbnail_url: video.custom_thumbnail_url ?? "", category: video.category ?? "",
@@ -226,7 +225,7 @@ function EditDialog({ video, onClose, onSaved }: { video: AdminVideo | null; onC
 }
 
 function AddDialog({ open, onClose, onSaved }: { open: boolean; onClose: () => void; onSaved: () => void }) {
-  const addFn = useServerFn(adminAddManualVideo);
+  const addFn = adminAddManualVideo;
   const empty = { url: "", title: "", description: "", custom_thumbnail_url: "", category: "", published_on: new Date().toISOString().slice(0, 10), status: "draft" as "draft" | "published" };
   const [f, setF] = useState(empty);
   useEffect(() => { if (open) setF(empty); }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
