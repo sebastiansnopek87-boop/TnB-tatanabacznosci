@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { controlCenterSearch, controlCenterHistory } from "@/lib/api/control-center";
 import { type ReadState, type HistoryEvent } from "@/lib/control-center";
 import { Button } from "@/components/ui/button";
@@ -38,7 +37,7 @@ function Warnings({ rows }: { rows: string[] }) {
   return <>{rows.map((w) => <p key={w} className="flex items-center gap-1.5 text-xs text-destructive"><AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden />{w}</p>)}</>;
 }
 function History({ kind, id, title }: { kind: "order" | "user" | "library_request" | "actor"; id: string; title: string }) {
-  const fetchHistory = useServerFn(controlCenterHistory);
+  const fetchHistory = controlCenterHistory;
   const [opened, setOpened] = useState(false);
   const [busy, setBusy] = useState(false);
   const [rows, setRows] = useState<HistoryEvent[]>([]);
@@ -75,7 +74,7 @@ function History({ kind, id, title }: { kind: "order" | "user" | "library_reques
   </div>;
 }
 function ControlCenterPage() {
-  const search = useServerFn(controlCenterSearch);
+  const search = controlCenterSearch;
   const [q, setQ] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
