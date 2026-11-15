@@ -7,7 +7,7 @@ class ApiError extends Error {
   constructor(message: string, readonly status: number, readonly code: string) { super(message); }
 }
 type Context = { supabase: any; supabaseAdmin: any; userId: string };
-const BUCKET = "page-files";
+const BUCKET = "page-images";
 
 const Section = z.object({
   textFormats: TextFormatsSchema,

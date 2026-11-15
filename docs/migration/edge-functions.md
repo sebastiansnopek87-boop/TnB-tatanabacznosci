@@ -47,3 +47,21 @@ The `tnb-brand` Edge Function replaces server-side branding operations and the d
 - Branding assets remain in the private `media` bucket. Upload URLs are signed, upload metadata is checked after transfer, and unreferenced replaced files are removed.
 - Platform settings mutations require a verified Supabase session and the superadmin role. The public image GET requires no session but cannot enumerate or read arbitrary storage objects.
 - Gateway JWT verification is disabled only because public image requests from `<img>` cannot send an Authorization header. Every administrative POST independently verifies the user's access token with Supabase Auth and checks roles before accessing the service-role client.
+
+## tnb-pages
+
+The authenticated CMS API and public read endpoints live in `tnb-pages`.
+
+- Public page reads return only rows with `status = 'published'`.
+- Legal pages receive `legal_approved = true` only when the published content digest matches a stored publish snapshot and matching `legal_document_approved` audit event.
+- Admin CMS actions require a valid Supabase access token and an `admin` role before the service-role client is used.
+- It supports page list/detail, slug checks, content saves, status changes, signed upload and preview URLs, drafts, publication, version history, restoration and home-page draft initialization.
+- Public page images are served only when the page is published and the requested filename is currently referenced by that page.
+- Shared CMS validation files are stored in the function's `_shared` directory.
+
+## tnb-templates
+
+The authenticated `tnb-templates` API provides CRUD, duplication, insertion and signed image previews for Visual Builder templates. It copies image assets into each template directory and copies them into a page when inserted. Template images and page images remain independent; deleting a template does not delete images already inserted into pages.
+
+Both functions have platform JWT verification disabled because they share public read or browser image requests. Every administrative POST validates the bearer token with Supabase Auth and checks the caller's admin role before using service-role access.
+
