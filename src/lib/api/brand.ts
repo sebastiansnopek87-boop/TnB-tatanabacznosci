@@ -26,7 +26,7 @@ export const brandSchema = z.object({
   site_url: optUrl,
 }).strict();
 
-export type BrandSettingsInput = z.infer<typeof brandSchema>;
+export type BrandSettingsInput = z.input<typeof brandSchema>;
 
 export async function getBrandSettings(): Promise<{ settings: BrandSettings; canEdit: boolean }> {
   return invokeEdge("tnb-brand", { action: "getBrandSettings" });
