@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
   ArrowDown, ArrowUp, BookmarkPlus, Copy, Eye, EyeOff, GripVertical, History, Info, Layers, LayoutGrid, Monitor, PanelLeft, PanelRight,
@@ -35,9 +34,9 @@ const pick = (p: any): PageDraft => ({ slug: p.slug, title: p.title, intro: p.in
 const same = (a: PageDraft, b: PageDraft) => JSON.stringify(a) === JSON.stringify(b);
 
 export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose: () => void; onFormView: () => void }) {
-  const getFn = useServerFn(adminGetPage); const saveFn = useServerFn(adminSaveDraft); const pubFn = useServerFn(adminPublishDraft);
-  const verFn = useServerFn(adminListVersions); const restoreFn = useServerFn(adminRestoreVersion);
-  const upFn = useServerFn(adminCreatePageUpload); const urlsFn = useServerFn(adminPageImageUrls);
+  const getFn = adminGetPage; const saveFn = adminSaveDraft; const pubFn = adminPublishDraft;
+  const verFn = adminListVersions; const restoreFn = adminRestoreVersion;
+  const upFn = adminCreatePageUpload; const urlsFn = adminPageImageUrls;
 
   const [meta, setMeta] = useState<{ system_key: string | null; status: string; live: PageDraft } | null>(null);
   const [d, setD] = useState<PageDraft | null>(null);
@@ -63,7 +62,7 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
   const onOverflow = useCallback((b: number[]) => setOverflow((o) => (o.join() === b.join() ? o : b)), []);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
-  const startHomeFn = useServerFn(adminStartHomeDraft);
+  const startHomeFn = adminStartHomeDraft;
   const [reload, setReload] = useState(0);
   async function startHome() {
     if (!d) return;
