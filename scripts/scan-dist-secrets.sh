@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-# Scan only client-facing build output. For a future static SPA this is dist/;
-# while TanStack Start is still active, it is .output/public/.
+# Scan client-facing build output, not Nitro's server bundle.
+# Usage: scripts/scan-dist-secrets.sh <dist-or-.output/public>
 DIR="${1:-dist}"
 
 if [[ ! -d "$DIR" ]]; then
@@ -15,56 +15,69 @@ if ! find "$DIR" -type f -print -quit | grep -q .; then
   exit 2
 fi
 
-# These identifiers suggest server-only source was included in the client bundle.
-# Do not match public UI copy such as the name YOUTUBE_API_KEY.
-markers=(
-  service_role
-  SUPABASE_SERVICE_ROLE_KEY
-  LOVABLE_API_KEY
-  LOVABLE_CRON_SECRET
-  INSTAGRAM_APP_SECRET
-  client.server
+# Report file names and secret classes only. Never print matched values.
+python3 - "$DIR" <<'PY'
+import base64
+import json
+import re
+import sys
+from pathlib import Path
+
+root = Path(sys.argv[1])
+direct_patterns = [
+    ("Supabase secret API key", re.compile(rb"sb_secret_[A-Za-z0-9_-]{20,}")),
+    ("Google API key", re.compile(rb"AIza[0-9A-Za-z_-]{30,}")),
+    ("server-only credential variable", re.compile(
+        rb"SUPABASE_SERVICE_ROLE_KEY|SUPABASE_SECRET_KEYS?|LOVABLE_API_KEY|"
+        rb"LOVABLE_CRON_SECRET|INSTAGRAM_APP_SECRET"
+    )),
+    ("server-only module reference", re.compile(rb"client\.server")),
+]
+legacy_jwt = re.compile(
+    rb"eyJ[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}"
 )
 
-failed=0
-for marker in "${markers[@]}"; do
-  if matches="$(grep -rIlF -- "$marker" "$DIR" 2>&1)"; then
-    echo "FOUND server-only marker: $marker"
-    printf '%s\n' "$matches"
-    failed=1
-  else
-    status=$?
-    if [[ $status -gt 1 ]]; then
-      echo "ERROR: failed scanning $DIR for marker: $marker" >&2
-      printf '%s\n' "$matches" >&2
-      failed=1
-    fi
-  fi
-done
+findings = []
+scan_errors = []
 
-# Detect complete credential-shaped values; SDKs may legitimately contain key prefixes.
-credential_patterns=(
-  'sb_secret_[A-Za-z0-9_-]{20,}'
-  'AIza[0-9A-Za-z_-]{30,}'
-  'eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{10,}'
-)
-for pattern in "${credential_patterns[@]}"; do
-  if matches="$(grep -rIlE -- "$pattern" "$DIR" 2>&1)"; then
-    echo "FOUND credential-shaped value"
-    printf '%s\n' "$matches"
-    failed=1
-  else
-    status=$?
-    if [[ $status -gt 1 ]]; then
-      echo "ERROR: failed scanning $DIR for credential-shaped values." >&2
-      printf '%s\n' "$matches" >&2
-      failed=1
-    fi
-  fi
-done
+for path in root.rglob("*"):
+    if not path.is_file():
+        continue
 
-if [[ $failed -eq 0 ]]; then
-  echo "OK: no server-only markers or credential-shaped values in $DIR"
-fi
+    try:
+        data = path.read_bytes()
+    except OSError:
+        scan_errors.append(path)
+        continue
 
-exit "$failed"
+    labels = []
+    for label, pattern in direct_patterns:
+        if pattern.search(data):
+            labels.append(label)
+
+    # Detect legacy Supabase service-role JWTs by decoding only their payload.
+    for token in legacy_jwt.findall(data):
+        try:
+            payload = token.split(b".", 2)[1]
+            payload += b"=" * (-len(payload) % 4)
+            claims = json.loads(base64.urlsafe_b64decode(payload))
+            if claims.get("role") == "service_role":
+                labels.append("Supabase service-role JWT")
+                break
+        except (ValueError, TypeError, json.JSONDecodeError):
+            continue
+
+    for label in sorted(set(labels)):
+        findings.append((path, label))
+
+for path, label in findings:
+    print(f"FOUND: {label}: {path}")
+
+for path in scan_errors:
+    print(f"ERROR: cannot read build output file: {path}", file=sys.stderr)
+
+if findings or scan_errors:
+    sys.exit(1)
+
+print(f"OK: scanned client build output; no server-only credentials found in {root}")
+PY
