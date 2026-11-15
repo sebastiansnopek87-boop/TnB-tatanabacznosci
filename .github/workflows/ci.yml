@@ -33,18 +33,15 @@ jobs:
       - name: Build application
         run: bun run build
 
-      - name: Scan static build for server-only code and secrets
-        shell: bash
+      - name: Assert static React SPA build
         run: |
-          if [[ -d "dist" ]]; then
-            OUTPUT_DIR="dist"
-          elif [[ -d ".output/public" ]]; then
-            OUTPUT_DIR=".output/public"
-          else
-            echo "::error::No known client build output directory found."
-            exit 1
-          fi
-          bash scripts/scan-dist-secrets.sh "$OUTPUT_DIR"
+          test -d dist
+          test -f dist/index.html
+          test ! -d .output/server
+          test ! -f .output/nitro.json
+
+      - name: Scan static build for server-only code and secrets
+        run: bash scripts/scan-dist-secrets.sh dist
 
       - name: Lint changed source files
         env:
