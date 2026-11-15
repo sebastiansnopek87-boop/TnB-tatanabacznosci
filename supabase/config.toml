@@ -1,1 +1,19 @@
 project_id = "pmdfiipontreuclfumdh"
+
+[functions.tnb-health]
+verify_jwt = true
+
+[functions.tnb-users]
+verify_jwt = true
+
+[functions.tnb-platform]
+verify_jwt = true
+
+[functions.tnb-brand]
+verify_jwt = false
+
+[functions.tnb-pages]
+verify_jwt = false
+
+[functions.tnb-templates]
+verify_jwt = false
