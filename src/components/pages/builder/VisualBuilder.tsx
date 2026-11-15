@@ -73,9 +73,9 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
     adminGetPage({ id }).then((p) => {
       if (!live) return;
       const pub = pick(p);
-      setMeta({ system_key: p.system_key, status: p.status, live: pub });
+      setMeta({ system_key: p.system_key, status: p.status ?? "draft", live: pub });
       setD(p.draft ? { ...pub, ...pick({ ...pub, ...p.draft }) } : pub);
-      setSaveState((s) => ({ ...s, at: p.draft_updated_at }));
+      setSaveState((s) => ({ ...s, at: p.draft_updated_at ?? null }));
       if (typeof window !== "undefined" && window.innerWidth < 1024) { setLeft(null); setRightOpen(false); }
     }).catch((e) => { toast.error(errMsg(e)); onClose(); });
     return () => { live = false; };
@@ -142,7 +142,7 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
     if (saveState.dirty && !(await save(false))) return;
     setSaveState((s) => ({ ...s, busy: true }));
     try {
-      await adminPublishDraft({ id, ...(legal ? { legalConfirmed: true, expectedDigest } : {}) });
+      await adminPublishDraft({ id, ...(legal && expectedDigest ? { legalConfirmed: true, expectedDigest } : {}) });
       setMeta((m) => m && d ? { ...m, status: "published", live: d } : m);
       toast.success("Opublikowano. Zmiany są widoczne na stronie publicznej.");
       setModal(null);
@@ -179,7 +179,7 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
   async function uploadItem(i: number, k: number, file: File) {
     setSaveState((s) => ({ ...s, busy: true }));
     try {
-      const { path, token, name } = await upFn({ data: { id, type: file.type, size: file.size } });
+      const { path, token, name } = await adminCreatePageUpload({ id, type: file.type, size: file.size });
       const { error } = await supabase.storage.from("page-images").uploadToSignedUrl(path, token, file, { contentType: file.type });
       if (error) throw new Error("Nie udało się wgrać zdjęcia.");
       setUrls((o) => ({ ...o, [name]: URL.createObjectURL(file) }));
