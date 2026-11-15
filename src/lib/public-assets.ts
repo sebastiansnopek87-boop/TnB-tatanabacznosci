@@ -29,11 +29,11 @@ export function publicArticleAssetUrl(id: string, file: string, version?: string
   return version ? url + (url.includes("?") ? "&" : "?") + "v=" + encodeURIComponent(version) : url;
 }
 
-/** Avatar assets are private in Storage and are checked against the caller and post visibility by tnb-assets. */
+/** Avatar assets stay private in Storage and are served by tnb-media after checking the viewer and post visibility. */
 export function publicAvatarUrl(scope: "own" | "post" | "comment", id: string, version?: string | null): string {
   const base = String(import.meta.env["VITE_SUPABASE_URL"] ?? "").replace(/\/+$/, "");
   const url = base
-    ? base + "/functions/v1/tnb-assets?kind=avatar&scope=" + scope + "&id=" + encodeURIComponent(id)
+    ? base + "/functions/v1/tnb-media?kind=avatar&avatarKind=" + scope + "&id=" + encodeURIComponent(id)
     : "/api/public/avatar/" + scope + "/" + encodeURIComponent(id);
 
   return version ? url + (url.includes("?") ? "&" : "?") + "v=" + encodeURIComponent(version) : url;
