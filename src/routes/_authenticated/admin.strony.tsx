@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -25,18 +24,16 @@ type Draft = { draft_updated_at?: string | null; id: string | null; slug: string
 const EMPTY: Draft = { id: null, slug: "", system_key: null, title: "", intro: "", sections: [], seo_title: "", seo_description: "", status: "draft" };
 
 function PagesAdmin() {
-  const listFn = useServerFn(adminListPages);
-  const list = useQuery({ queryKey: ["admin-pages"], queryFn: () => listFn() });
+  const list = useQuery({ queryKey: ["admin-pages"], queryFn: () => adminListPages() });
   const [editing, setEditing] = useState<string | "new" | null>(null);
   const [newLegal, setNewLegal] = useState<string | null>(null);
   const [visual, setVisual] = useState<string | null>(null);
-  const saveFn = useServerFn(adminSavePage);
   const [creatingHome, setCreatingHome] = useState(false);
   // Copies today's home page into a new draft record; nothing becomes public until "Opublikuj".
   async function createHome() {
     setCreatingHome(true);
     try {
-      const r = await saveFn({ data: { id: null, system_key: "home", slug: "home", title: "Strona główna", intro: "", sections: homeDefaultSections(), seo_title: "", seo_description: "" } });
+      const r = await adminSavePage({ data: { id: null, system_key: "home", slug: "home", title: "Strona główna", intro: "", sections: homeDefaultSections(), seo_title: "", seo_description: "" } });
       toast.success("Utworzono szkic strony głównej. Strona publiczna bez zmian.");
       await list.refetch(); setVisual(r.id);
     } catch (e) { toast.error(errMsg(e)); } finally { setCreatingHome(false); }
@@ -83,8 +80,6 @@ function PagesAdmin() {
 
 function Editor({ id, systemKey, onClose, onVisual }: { id: string | null; systemKey: string | null; onClose: () => void; onVisual: (id: string) => void }) {
   const qc = useQueryClient();
-  const getFn = useServerFn(adminGetPage); const saveFn = useServerFn(adminSavePage); const statusFn = useServerFn(adminSetPageStatus);
-  const slugFn = useServerFn(adminCheckSlug); const upFn = useServerFn(adminCreatePageUpload); const urlsFn = useServerFn(adminPageImageUrls);
   const [d, setD] = useState<Draft>(() => systemKey ? { ...EMPTY, system_key: systemKey, slug: systemKey, title: SYSTEM_PAGES[systemKey]?.label ?? "" } : EMPTY);
   const [pageId, setPageId] = useState<string | null>(id);
   const [loading, setLoading] = useState(!!id);
@@ -97,13 +92,13 @@ function Editor({ id, systemKey, onClose, onVisual }: { id: string | null; syste
   useEffect(() => {
     if (!id) return;
     let live = true; // a late duplicate load must never overwrite edits already typed
-    getFn({ data: { id } }).then((p) => { if (!live) return; setD({ ...EMPTY, ...p, sections: normalizeSections(p.sections) }); setLoading(false); }).catch((e) => { if (live) { toast.error(errMsg(e)); onClose(); } });
+    adminGetPage({ data: { id } }).then((p) => { if (!live) return; setD({ ...EMPTY, ...p, sections: normalizeSections(p.sections) }); setLoading(false); }).catch((e) => { if (live) { toast.error(errMsg(e)); onClose(); } });
     return () => { live = false; };
   }, [id]);
   const names = d.sections.map((s) => s.image).filter(Boolean) as string[];
   useEffect(() => {
     const missing = names.filter((n) => !urls[n]);
-    if (pageId && missing.length) urlsFn({ data: { id: pageId, names: missing } }).then((u) => setUrls((o) => ({ ...o, ...u }))).catch(() => {});
+    if (pageId && missing.length) adminPageImageUrls({ data: { id: pageId, names: missing } }).then((u) => setUrls((o) => ({ ...o, ...u }))).catch(() => {});
   }, [pageId, names.join(",")]);
 
   const set = (patch: Partial<Draft>) => { setD((o) => ({ ...o, ...patch })); setDirty(true); };
@@ -113,7 +108,7 @@ function Editor({ id, systemKey, onClose, onVisual }: { id: string | null; syste
   async function save(): Promise<string | null> {
     setBusy(true);
     try {
-      const r = await saveFn({ data: { id: pageId, system_key: isLegalKey(d.system_key) ? d.system_key : null, slug: d.slug, title: d.title, intro: d.intro, sections: d.sections, seo_title: d.seo_title, seo_description: d.seo_description } });
+      const r = await adminSavePage({ data: { id: pageId, system_key: isLegalKey(d.system_key) ? d.system_key : null, slug: d.slug, title: d.title, intro: d.intro, sections: d.sections, seo_title: d.seo_title, seo_description: d.seo_description } });
       setPageId(r.id); setDirty(false); qc.invalidateQueries({ queryKey: ["admin-pages"] }); toast.success("Zapisano szkic zmian.");
       return r.id;
     } catch (e) { toast.error(errMsg(e)); return null; } finally { setBusy(false); }
@@ -122,12 +117,12 @@ function Editor({ id, systemKey, onClose, onVisual }: { id: string | null; syste
     const pid = dirty || !pageId ? await save() : pageId;
     if (!pid) return;
     setBusy(true);
-    try { await statusFn({ data: { id: pid, status } }); set({ status }); setDirty(false); toast.success(status === "published" ? "Opublikowano." : status === "archived" ? "Zarchiwizowano." : "Cofnięto publikację."); }
+    try { await adminSetPageStatus({ data: { id: pid, status } }); set({ status }); setDirty(false); toast.success(status === "published" ? "Opublikowano." : status === "archived" ? "Zarchiwizowano." : "Cofnięto publikację."); }
     catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
   }
   async function checkSlug() {
     if (!d.slug) return setSlugMsg("");
-    const r = await slugFn({ data: { slug: d.slug, id: pageId } });
+    const r = await adminCheckSlug({ data: { slug: d.slug, id: pageId } });
     setSlugMsg(r.ok ? "Adres jest wolny." : r.reason);
   }
   async function upload(i: number, file: File) {
@@ -135,7 +130,7 @@ function Editor({ id, systemKey, onClose, onVisual }: { id: string | null; syste
     if (!pid) return;
     setBusy(true);
     try {
-      const { path, token, name } = await upFn({ data: { id: pid, type: file.type, size: file.size } });
+      const { path, token, name } = await adminCreatePageUpload({ data: { id: pid, type: file.type, size: file.size } });
       const { error } = await supabase.storage.from("page-images").uploadToSignedUrl(path, token, file, { contentType: file.type });
       if (error) throw new Error("Nie udało się wgrać zdjęcia.");
       setUrls((o) => ({ ...o, [name]: URL.createObjectURL(file) }));

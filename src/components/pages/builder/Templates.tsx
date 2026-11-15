@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Copy, Eye, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -38,14 +37,13 @@ export function TemplateRender({ t, urls, width, scale, maxH }: { t: BuilderTemp
 }
 
 export function useTemplates() {
-  const listFn = useServerFn(adminListTemplates); const urlsFn = useServerFn(adminTemplateImageUrls);
   const [list, setList] = useState<BuilderTemplate[] | null>(null);
   const [urls, setUrls] = useState<Record<string, string>>({});
   const reload = async () => {
     try {
-      const l = await listFn(); setList(l);
+      const l = await adminListTemplates(); setList(l);
       const files = l.flatMap((t) => (t.sections ?? []).map((s) => s.image).filter(Boolean).map((n) => ({ t: t.id, n: n as string }))).filter((f) => !urls[`${f.t}/${f.n}`]);
-      if (files.length) setUrls({ ...urls, ...(await urlsFn({ data: { files } })) });
+      if (files.length) setUrls({ ...urls, ...(await adminTemplateImageUrls({ data: { files } })) });
     } catch (e) { toast.error(errMsg(e)); setList([]); }
   };
   useEffect(() => { reload(); }, []);
@@ -56,7 +54,6 @@ export function TemplatesPanel({ tpl, placingId, onPlace, onDragStart, onDragEnd
   tpl: ReturnType<typeof useTemplates>; placingId: string | null;
   onPlace: (t: BuilderTemplate) => void; onDragStart: (t: BuilderTemplate) => void; onDragEnd: () => void;
 }) {
-  const upd = useServerFn(adminUpdateTemplate); const dup = useServerFn(adminDuplicateTemplate); const del = useServerFn(adminDeleteTemplate);
   const [q, setQ] = useState(""); const [view, setView] = useState<BuilderTemplate | null>(null); const [edit, setEdit] = useState<BuilderTemplate | null>(null);
   const list = (tpl.list ?? []).filter((t) => !q || `${t.name} ${t.description} ${t.category}`.toLowerCase().includes(q.toLowerCase()));
   async function run(fn: () => Promise<unknown>, ok: string) { try { await fn(); toast.success(ok); await tpl.reload(); } catch (e) { toast.error(errMsg(e)); } }
@@ -81,8 +78,8 @@ export function TemplatesPanel({ tpl, placingId, onPlace, onDragStart, onDragEnd
               <Button size="sm" className="h-7 px-2 text-xs" onClick={() => onPlace(t)}><Plus className="mr-1 h-3 w-3" />Dodaj</Button>
               <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Podgląd szablonu" title="Podgląd" onClick={() => setView(t)}><Eye className="h-3.5 w-3.5" /></Button>
               <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Edytuj nazwę i opis" title="Edytuj nazwę i opis" onClick={() => setEdit(t)}><Pencil className="h-3.5 w-3.5" /></Button>
-              <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Duplikuj szablon" title="Duplikuj szablon" onClick={() => { const n = prompt("Nazwa duplikatu:", `${t.name} (kopia)`); if (n?.trim()) run(() => dup({ data: { id: t.id, name: n.trim() } }), "Zduplikowano szablon."); }}><Copy className="h-3.5 w-3.5" /></Button>
-              <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Usuń szablon" title="Usuń" onClick={() => confirm(`Usunąć szablon „${t.name}”? Strony, na których go użyto, zostaną bez zmian.`) && run(() => del({ data: { id: t.id } }), "Usunięto szablon.")}><Trash2 className="h-3.5 w-3.5" /></Button>
+              <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Duplikuj szablon" title="Duplikuj szablon" onClick={() => { const n = prompt("Nazwa duplikatu:", `${t.name} (kopia)`); if (n?.trim()) run(() => adminDuplicateTemplate({ data: { id: t.id, name: n.trim() } }), "Zduplikowano szablon."); }}><Copy className="h-3.5 w-3.5" /></Button>
+              <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Usuń szablon" title="Usuń" onClick={() => confirm(`Usunąć szablon „${t.name}”? Strony, na których go użyto, zostaną bez zmian.`) && run(() => adminDeleteTemplate({ data: { id: t.id } }), "Usunięto szablon.")}><Trash2 className="h-3.5 w-3.5" /></Button>
             </div>
           </div>
         ))}
@@ -94,13 +91,12 @@ export function TemplatesPanel({ tpl, placingId, onPlace, onDragStart, onDragEnd
           <div className="mt-3 flex gap-2"><Button onClick={() => { onPlace(view); setView(null); }}>Dodaj na stronę</Button><Button variant="outline" onClick={() => setView(null)}>Zamknij</Button></div>
         </Modal>
       )}
-      {edit && <MetaDialog title="Edytuj szablon" initial={edit} onClose={() => setEdit(null)} onSubmit={(m) => run(() => upd({ data: { id: edit.id, ...m } }), "Zapisano zmiany szablonu.").then(() => setEdit(null))} />}
+      {edit && <MetaDialog title="Edytuj szablon" initial={edit} onClose={() => setEdit(null)} onSubmit={(m) => run(() => adminUpdateTemplate({ data: { id: edit.id, ...m } }), "Zapisano zmiany szablonu.").then(() => setEdit(null))} />}
     </div>
   );
 }
 
 export function SaveTemplateDialog({ pageId, sections, sel, onClose, onSaved }: { pageId: string; sections: PageSection[]; sel: { i: number; el: string }; onClose: () => void; onSaved: () => void }) {
-  const create = useServerFn(adminCreateTemplate);
   const isEl = sel.el !== "section";
   const [scope, setScope] = useState<"element" | "section" | "sections">(isEl ? "element" : "section");
   const [to, setTo] = useState(Math.min(sel.i + 1, sections.length - 1));
@@ -116,7 +112,7 @@ export function SaveTemplateDialog({ pageId, sections, sel, onClose, onSaved }: 
           <select className="border border-border bg-background px-1" value={to} onChange={(e) => { setTo(Number(e.target.value)); setScope("sections"); }}>{sections.map((_, k) => k > sel.i && <option key={k} value={k}>{k + 1}</option>)}</select></label>}
         <p className="text-muted-foreground">Zapisuje się układ, teksty, zdjęcia, ustawienia i przyciski — bez żadnych danych użytkowników.</p>
       </div>}
-      onSubmit={async (m) => { try { await create({ data: { ...m, pageId, scope, sections: picked } }); toast.success("Zapisano szablon w „Moje szablony”."); onSaved(); onClose(); } catch (e) { toast.error(errMsg(e)); } }} />
+      onSubmit={async (m) => { try { await adminCreateTemplate({ data: { ...m, pageId, scope, sections: picked } }); toast.success("Zapisano szablon w „Moje szablony”."); onSaved(); onClose(); } catch (e) { toast.error(errMsg(e)); } }} />
   );
 }
 
