@@ -44,3 +44,6 @@ verify_jwt = true
 
 [functions.tnb-youtube]
 verify_jwt = false
+
+[functions.tnb-notifications]
+verify_jwt = true
