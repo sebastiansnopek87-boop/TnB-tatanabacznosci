@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
 import { listMessages, setMessageStatus } from "@/lib/api/admin";
@@ -16,8 +15,8 @@ type Status = "inbox" | "new" | "read" | "archived" | "all";
 type Row = Awaited<ReturnType<typeof listMessages>>[number];
 
 function Inbox() {
-  const list = useServerFn(listMessages);
-  const setStatus = useServerFn(setMessageStatus);
+  const list = listMessages;
+  const setStatus = setMessageStatus;
   const qc = useQueryClient();
   const [status, setFilter] = useState<Status>("inbox");
   const [q, setQ] = useState("");
