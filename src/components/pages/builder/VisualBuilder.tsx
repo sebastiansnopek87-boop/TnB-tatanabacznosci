@@ -53,7 +53,6 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
   const [placingTpl, setPlacingTpl] = useState<BuilderTemplate | null>(null);
   const [saveTpl, setSaveTpl] = useState(false);
   const tpl = useTemplates();
-  const instFn = useServerFn(adminInstantiateTemplate);
   const [saveState, setSaveState] = useState<{ dirty: boolean; at: string | null; err: string | null; busy: boolean }>({ dirty: false, at: null, err: null, busy: false });
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [overflow, setOverflow] = useState<number[]>([]);
@@ -204,7 +203,7 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
     setPlacingTpl(null);
     if (t.sections.some((x, k) => !canInsert(x.kind, at + k))) { toast.error("Ten szablon zaczyna się od otwarcia strony — można go wstawić tylko na samej górze."); return; }
     try {
-      const { sections } = await instFn({ data: { id: t.id, pageId: id } });
+      const { sections } = await adminInstantiateTemplate({ data: { id: t.id, pageId: id } });
       setSections((a) => [...a.slice(0, at), ...normalizeSections(sections), ...a.slice(at)]);
       setSel({ i: at, el: "section" }); if (window.innerWidth >= 1024) setRightOpen(true);
       toast.success(`Wstawiono szablon „${t.name}” jako zwykłe elementy strony.`);
