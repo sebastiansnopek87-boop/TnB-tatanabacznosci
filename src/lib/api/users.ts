@@ -60,15 +60,9 @@ async function invokeUsers<T>(body: Record<string, unknown>): Promise<T> {
   if (error) {
     const context = (error as { context?: unknown }).context;
     if (typeof Response !== "undefined" && context instanceof Response) {
-      try {
-        const payload = (await context.clone().json()) as EdgeErrorBody;
-        if (typeof payload.message === "string" && payload.message.trim()) {
-          throw new Error(payload.message);
-        }
-      } catch (parseError) {
-        if (parseError instanceof Error && parseError.message !== "Unexpected end of JSON input") {
-          throw parseError;
-        }
+      const payload = (await context.clone().json().catch(() => null)) as EdgeErrorBody | null;
+      if (payload && typeof payload.message === "string" && payload.message.trim()) {
+        throw new Error(payload.message);
       }
     }
     throw new Error(error.message || "Nie udało się połączyć z usługą użytkowników.");
