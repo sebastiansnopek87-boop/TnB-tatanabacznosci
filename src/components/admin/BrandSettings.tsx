@@ -90,6 +90,7 @@ export function BrandSettings({ canEdit }: { canEdit: boolean }) {
   }
 
   async function onSave() {
+    if (!f) return;
     setSaving(true);
     try {
       await saveBrandSettings(f);
