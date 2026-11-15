@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
+import { corsHeaders as supabaseCorsHeaders } from "npm:@supabase/supabase-js@2.117.2/cors";
 
 type Context = { supabase: any; supabaseAdmin: any; userId: string };
 
@@ -288,12 +289,11 @@ async function servePublicBrandImage(file: string): Promise<Response> {
 const allowedOrigins = new Set(["https://tatanabacznosci.pl", "https://www.tatanabacznosci.pl", "http://localhost:5173"]);
 
 function corsHeaders(origin: string | null): Headers {
-  const headers = new Headers({
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "authorization, apikey, x-client-info, content-type",
-    "Access-Control-Max-Age": "86400",
-    "Vary": "Origin",
-  });
+  const headers = new Headers(supabaseCorsHeaders);
+  headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  headers.set("Access-Control-Max-Age", "86400");
+  headers.set("Vary", "Origin");
+  headers.delete("Access-Control-Allow-Origin");
   if (origin && allowedOrigins.has(origin)) headers.set("Access-Control-Allow-Origin", origin);
   return headers;
 }
