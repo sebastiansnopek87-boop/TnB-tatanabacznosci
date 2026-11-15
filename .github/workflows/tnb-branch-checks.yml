@@ -42,4 +42,5 @@ jobs:
           src/lib/api/brand.ts
           src/lib/api/platform.ts
           src/lib/api/templates.ts
+          src/lib/api/pages.ts
           --rule 'prettier/prettier: off'
