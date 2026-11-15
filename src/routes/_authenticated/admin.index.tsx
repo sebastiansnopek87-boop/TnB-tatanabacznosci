@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { errMsg, fmtDate } from "@/components/admin/format";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { getDashboard } from "@/lib/api/admin";
 import { OBJECT_KIND, RESULT, actorName, eventLabel } from "@/components/admin/events";
 import { Button } from "@/components/ui/button";
@@ -24,7 +23,7 @@ const n = (v: number | null) => (v === null ? "Brak danych" : String(v));
 const money = (grosze: number, cur: string) => (grosze / 100).toLocaleString("pl-PL", { style: "currency", currency: cur.toUpperCase() });
 
 function Dashboard() {
-  const fn = useServerFn(getDashboard);
+  const fn = getDashboard;
   const { data, error, isFetching, refetch, dataUpdatedAt } = useQuery({
     queryKey: ["admin-dashboard"], queryFn: () => fn(), staleTime: 60_000, refetchInterval: 5 * 60_000,
   });
