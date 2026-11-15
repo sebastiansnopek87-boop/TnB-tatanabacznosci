@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.17"
+    PostgrestVersion: "14.18"
   }
   public: {
     Tables: {
@@ -2860,6 +2860,15 @@ export type Database = {
           name: string
           size: number
         }[]
+      }
+      admin_set_user_role: {
+        Args: {
+          _actor_id: string
+          _grant: boolean
+          _role: Database["public"]["Enums"]["app_role"]
+          _target_user_id: string
+        }
+        Returns: boolean
       }
       article_is_public: { Args: { _article: string }; Returns: boolean }
       article_poll_open: {
