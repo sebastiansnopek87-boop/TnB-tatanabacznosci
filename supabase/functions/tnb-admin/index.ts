@@ -155,6 +155,17 @@ const RequestSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("listReports") }),
   z.object({ action: z.literal("resolveReport"), data: z.object({ id: z.string().uuid() }) }),
   z.object({ action: z.literal("listAdminEvents"), data: eventFilter }),
+  z.object({ action: z.literal("controlCenterSearch"), data: z.object({ q: z.string().trim().min(2, "Wpisz co najmniej 2 znaki.").max(100) }) }),
+  z.object({ action: z.literal("controlCenterHistory"), data: z.object({
+    kind: z.enum(["order", "user", "library_request", "actor"]),
+    id: z.string().uuid(),
+    offsets: z.object({
+      order: z.number().int().min(0).max(1000000),
+      admin: z.number().int().min(0).max(1000000),
+      mail: z.number().int().min(0).max(1000000).default(0),
+    }).default({ order: 0, admin: 0, mail: 0 }),
+    before: z.string().datetime().optional(),
+  }) }),
 ]);
 
 async function usersIndex(db: Db) {
@@ -349,6 +360,225 @@ async function listAdminEvents(db: Db, input: z.infer<typeof eventFilter>) {
   };
 }
 
+const CC_SEARCH_LIMIT = 100;
+const CC_HISTORY_SIZE = 30;
+const CC_ORDER_COLS = "id, order_number, created_at, paid_at, delivered_at, status, delivery_status, buyer_email, buyer_name, amount, currency, payment_method, provider, environment, is_test, user_id, access_expires_at, access_revoked_at, item_id, library_items(title, slug)";
+const CC_REQUEST_COLS = "id, item_id, item_title, mode, status, user_id, first_name, last_name, email, downloaded_at, download_count, notification_status, created_at";
+type CCOrderRow = {
+  id: string; order_number: string; created_at: string; paid_at: string | null; delivered_at: string | null;
+  status: string; delivery_status: string; buyer_email: string; buyer_name: string | null; amount: number;
+  currency: string; payment_method: string; provider: string | null; environment: string; is_test: boolean;
+  user_id: string | null; access_expires_at: string | null; access_revoked_at: string | null; item_id: string;
+  library_items: { title: string; slug: string } | null;
+};
+type CCRequestRow = {
+  id: string; item_id: string; item_title: string; mode: string; status: string; user_id: string | null;
+  first_name: string | null; last_name: string | null; email: string | null; downloaded_at: string | null;
+  download_count: number; notification_status: string | null; created_at: string;
+};
+type CCAuthUser = {
+  id: string; email?: string; created_at: string; email_confirmed_at?: string | null;
+  user_metadata?: Record<string, unknown>;
+};
+type CCHistoryEvent = {
+  id: string; at: string; source: "order" | "admin" | "mail"; type: string; actor: string | null;
+  objectKind: string; objectId: string; detail: string | null; result: string | null;
+};
+
+async function ccRead<T>(query: PromiseLike<{ data: T | null; error: unknown }>): Promise<{ data: T | null; error: unknown }> {
+  try { return await query; } catch { return { data: null, error: true }; }
+}
+function ccReadState(error: unknown, count: number, limit: number, incomplete = false) {
+  return { error: error ? "Nie udało się pobrać danych. Spróbuj ponownie." : null, limited: !error && count > limit, incomplete };
+}
+function ccFilterValue(value: string) {
+  return '"' + value.replace(/\\/g, "\\\\").replace(/"/g, '\\"') + '"';
+}
+function ccSearchParts(query: string) {
+  const safe = query.replace(/[%,()*\\\"\\r\\n]/g, " ").replace(/\\s+/g, " ").trim();
+  return { safe, words: safe.split(" ").filter(Boolean) };
+}
+function ccHasAccess(order: { status: string; paid_at: string | null; access_revoked_at: string | null }) {
+  return !!order.paid_at && !order.access_revoked_at && ["paid", "refund_pending", "refunded"].includes(order.status);
+}
+function ccAccessPresentation(allowed: boolean, expiresAt: string | null, now = Date.now()) {
+  const expired = !!expiresAt && new Date(expiresAt).getTime() <= now;
+  return {
+    allowed, expired,
+    label: allowed && expired ? "Reguła dostępu spełniona — data ważności minęła, wymaga weryfikacji" : allowed ? "aktywny" : "brak",
+  };
+}
+function ccAccountMatches(userId: string | null, email: string | null, users: Array<{ id: string; email: string | null }>) {
+  return users.flatMap((user) => userId === user.id ? [{ userId: user.id, kind: "user_id" as const }]
+    : email && user.email && email.toLowerCase() === user.email.toLowerCase() ? [{ userId: user.id, kind: "email" as const }] : []);
+}
+function ccHistoryPage(order: CCHistoryEvent[], admin: CCHistoryEvent[], offsets: { order: number; admin: number; mail?: number }, mail: CCHistoryEvent[] = []) {
+  const all = [...new Map([...order, ...admin, ...mail].map((event) => [event.source + "-" + event.id, event])).values()];
+  const rows = all.sort((a, b) => b.at.localeCompare(a.at) || a.source.localeCompare(b.source) || a.id.localeCompare(b.id)).slice(0, CC_HISTORY_SIZE);
+  return {
+    rows,
+    next: {
+      order: offsets.order + rows.filter((row) => row.source === "order").length,
+      admin: offsets.admin + rows.filter((row) => row.source === "admin").length,
+      mail: (offsets.mail ?? 0) + rows.filter((row) => row.source === "mail").length,
+    },
+    hasMore: all.length > rows.length,
+  };
+}
+
+async function controlCenterSearch(db: Db, query: string) {
+  const { safe, words } = ccSearchParts(query);
+  if (safe.length < 2) throw new HttpError(400, "Wpisz co najmniej 2 znaki wyszukiwania.");
+  const pattern = ccFilterValue("%" + safe + "%");
+  const [identSearch, authResult, materials] = await Promise.all([
+    ccRead(db.from("user_identities").select("user_id, tnb_id").ilike("tnb_id", "%" + safe + "%").limit(CC_SEARCH_LIMIT + 1)),
+    ccRead<{ users: CCAuthUser[] }>(db.auth.admin.listUsers({ page: 1, perPage: 1000 })),
+    ccRead(db.from("library_items").select("id, slug, title")
+      .or("slug.eq." + ccFilterValue(safe) + ",title.ilike." + ccFilterValue("%" + safe + "%"))
+      .order("id", { ascending: true }).limit(CC_SEARCH_LIMIT + 1)),
+  ]);
+  const authUsers: CCAuthUser[] = authResult.error ? [] : authResult.data?.users ?? [];
+  const matched = new Set<string>(identSearch.error ? [] : (identSearch.data ?? []).slice(0, CC_SEARCH_LIMIT).map((row: any) => row.user_id));
+  const userName = (user: CCAuthUser) => {
+    const meta = user.user_metadata ?? {};
+    const val = (key: string) => typeof meta[key] === "string" ? (meta[key] as string).trim() : "";
+    return [val("first_name"), val("last_name")].filter(Boolean).join(" ") || val("full_name") || val("name");
+  };
+  for (const user of authUsers) {
+    if ((user.email ?? "").toLowerCase().includes(safe.toLowerCase()) || userName(user).toLowerCase().includes(safe.toLowerCase())) matched.add(user.id);
+  }
+  const itemIds = materials.error ? [] : (materials.data ?? []).slice(0, CC_SEARCH_LIMIT).map((item: any) => item.id);
+  const itemFilter = itemIds.length ? ",item_id.in.(" + itemIds.join(",") + ")" : "";
+  const fullName = words.length > 1
+    ? "and(first_name.ilike." + ccFilterValue("%" + words.slice(0, -1).join(" ") + "%") + ",last_name.ilike." + ccFilterValue("%" + words.at(-1) + "%") + ")"
+    : null;
+  const [orderSearch, requestSearch] = await Promise.all([
+    ccRead(db.from("library_orders").select(CC_ORDER_COLS)
+      .or("order_number.ilike." + pattern + ",buyer_email.ilike." + pattern + ",buyer_name.ilike." + pattern + itemFilter)
+      .order("created_at", { ascending: false }).limit(CC_SEARCH_LIMIT + 1)),
+    ccRead(db.from("library_requests").select(CC_REQUEST_COLS)
+      .or("email.ilike." + pattern + ",first_name.ilike." + pattern + ",last_name.ilike." + pattern + (fullName ? "," + fullName : "") + itemFilter)
+      .order("created_at", { ascending: false }).limit(CC_SEARCH_LIMIT + 1)),
+  ]);
+  const orders = (orderSearch.error ? [] : orderSearch.data ?? []) as unknown as CCOrderRow[];
+  const requests = (requestSearch.error ? [] : requestSearch.data ?? []) as unknown as CCRequestRow[];
+  for (const order of orders.slice(0, CC_SEARCH_LIMIT)) if (order.user_id) matched.add(order.user_id);
+  for (const request of requests.slice(0, CC_SEARCH_LIMIT)) if (request.user_id) matched.add(request.user_id);
+  const emailsFound = new Set([
+    ...orders.slice(0, CC_SEARCH_LIMIT).map((order) => order.buyer_email.toLowerCase()),
+    ...requests.slice(0, CC_SEARCH_LIMIT).flatMap((request) => request.email ? [request.email.toLowerCase()] : []),
+  ]);
+  for (const user of authUsers) if (user.email && emailsFound.has(user.email.toLowerCase())) matched.add(user.id);
+  const ids = [...matched].slice(0, CC_SEARCH_LIMIT);
+  const emails = authUsers.filter((user) => ids.includes(user.id)).flatMap((user) => user.email ? [user.email.toLowerCase()] : []);
+  const orderLinks = [...ids.map((id) => "user_id.eq." + id), ...emails.map((email) => "buyer_email.eq." + ccFilterValue(email))];
+  const requestLinks = [...ids.map((id) => "user_id.eq." + id), ...emails.map((email) => "email.eq." + ccFilterValue(email))];
+  const empty = { data: [], error: null };
+  const [roles, identities, linkedOrders, linkedRequests] = await Promise.all([
+    ids.length ? ccRead(db.from("user_roles").select("user_id, role").in("user_id", ids)) : empty,
+    ids.length ? ccRead(db.from("user_identities").select("user_id, tnb_id").in("user_id", ids)) : empty,
+    orderLinks.length ? ccRead((itemIds.length ? db.from("library_orders").select(CC_ORDER_COLS).in("item_id", itemIds) : db.from("library_orders").select(CC_ORDER_COLS))
+      .or(orderLinks.join(",")).order("created_at", { ascending: false }).limit(CC_SEARCH_LIMIT + 1)) : empty,
+    requestLinks.length ? ccRead((itemIds.length ? db.from("library_requests").select(CC_REQUEST_COLS).in("item_id", itemIds) : db.from("library_requests").select(CC_REQUEST_COLS))
+      .or(requestLinks.join(",")).order("created_at", { ascending: false }).limit(CC_SEARCH_LIMIT + 1)) : empty,
+  ]);
+  const users = ids.map((id) => {
+    const user = authUsers.find((candidate) => candidate.id === id);
+    return {
+      id, email: user?.email ?? null, name: user ? userName(user) || null : null,
+      tnbId: identities.error ? null : identities.data?.find((row: any) => row.user_id === id)?.tnb_id ?? null,
+      roles: roles.error ? null : (roles.data ?? []).filter((row: any) => row.user_id === id).map((row: any) => row.role),
+      confirmed: user ? !!user.email_confirmed_at : null, createdAt: user?.created_at ?? null,
+    };
+  });
+  const allOrders = [...new Map([
+    ...orders.slice(0, CC_SEARCH_LIMIT),
+    ...(linkedOrders.error ? [] : linkedOrders.data ?? []) as unknown as CCOrderRow[],
+  ].map((order) => [order.id, order])).values()].sort((a, b) => b.created_at.localeCompare(a.created_at));
+  const allRequests = [...new Map([
+    ...requests.slice(0, CC_SEARCH_LIMIT),
+    ...(linkedRequests.error ? [] : linkedRequests.data ?? []) as unknown as CCRequestRow[],
+  ].map((request) => [request.id, request])).values()].sort((a, b) => b.created_at.localeCompare(a.created_at));
+  const sourceIncomplete = !!(identSearch.error || authResult.error || materials.error)
+    || authUsers.length >= 1000 || matched.size > CC_SEARCH_LIMIT || (materials.data?.length ?? 0) > CC_SEARCH_LIMIT;
+  return {
+    states: {
+      users: ccReadState(authResult.error || identSearch.error || roles.error || identities.error, Math.max(matched.size, identSearch.data?.length ?? 0), CC_SEARCH_LIMIT, authUsers.length >= 1000),
+      materials: ccReadState(materials.error, materials.data?.length ?? 0, CC_SEARCH_LIMIT),
+      orders: ccReadState(orderSearch.error || linkedOrders.error, Math.max(orders.length, linkedOrders.data?.length ?? 0, allOrders.length), CC_SEARCH_LIMIT, sourceIncomplete),
+      requests: ccReadState(requestSearch.error || linkedRequests.error, Math.max(requests.length, linkedRequests.data?.length ?? 0, allRequests.length), CC_SEARCH_LIMIT, sourceIncomplete),
+    },
+    users,
+    materials: materials.error ? [] : (materials.data ?? []).slice(0, CC_SEARCH_LIMIT),
+    orders: allOrders.slice(0, CC_SEARCH_LIMIT).map((order) => {
+      const access = ccAccessPresentation(ccHasAccess(order), order.access_expires_at);
+      const warnings: string[] = [];
+      if (["paid", "refund_pending", "refunded"].includes(order.status) && !order.paid_at) warnings.push("Status płatności bez daty opłacenia.");
+      if (order.paid_at && ["pending", "failed", "cancelled"].includes(order.status)) warnings.push("Data opłacenia przy statusie bez płatności.");
+      if (order.status === "paid" && order.access_revoked_at) warnings.push("Dostęp cofnięty przy statusie „Opłacone”.");
+      if (order.delivered_at && !access.allowed) warnings.push("Oznaczono jako dostarczone bez spełnienia reguły dostępu.");
+      return {
+        id: order.id, orderNumber: order.order_number, itemId: order.item_id, itemTitle: order.library_items?.title ?? "",
+        itemSlug: order.library_items?.slug ?? null, createdAt: order.created_at, status: order.status, amount: order.amount,
+        currency: order.currency, isTest: order.is_test, paidAt: order.paid_at, buyerEmail: order.buyer_email,
+        userId: order.user_id, access, accessExpiresAt: order.access_expires_at, accessRevokedAt: order.access_revoked_at,
+        matches: ccAccountMatches(order.user_id, order.buyer_email, users), warnings,
+      };
+    }),
+    requests: allRequests.slice(0, CC_SEARCH_LIMIT).map((request) => ({
+      id: request.id, itemId: request.item_id, itemTitle: request.item_title, mode: request.mode, status: request.status,
+      userId: request.user_id, name: [request.first_name, request.last_name].filter(Boolean).join(" ") || null,
+      email: request.email, createdAt: request.created_at, downloadedAt: request.downloaded_at,
+      downloadCount: request.download_count, notificationStatus: request.notification_status,
+      matches: ccAccountMatches(request.user_id, request.email, users),
+      warnings: request.download_count > 0 && !request.downloaded_at ? ["Pobrania bez daty pobrania."] : [],
+    })),
+  };
+}
+
+async function controlCenterHistory(db: Db, input: z.infer<typeof RequestSchema> extends never ? never : {
+  kind: "order" | "user" | "library_request" | "actor"; id: string;
+  offsets: { order: number; admin: number; mail: number }; before?: string;
+}) {
+  const before = input.before ?? new Date().toISOString();
+  const empty = { data: [], error: null };
+  let adminQuery = db.from("admin_events")
+    .select("id, created_at, type, actor, object_kind, object_id, result, detail")
+    .lte("created_at", before);
+  adminQuery = input.kind === "actor"
+    ? adminQuery.eq("actor", input.id)
+    : adminQuery.eq("object_kind", input.kind).eq("object_id", input.id);
+  const [orderRes, adminRes, mailRes] = await Promise.all([
+    input.kind === "order" ? ccRead(db.from("library_order_events").select("id, order_id, type, detail, created_at")
+      .eq("order_id", input.id).lte("created_at", before).order("created_at", { ascending: false })
+      .order("id", { ascending: true }).range(input.offsets.order, input.offsets.order + CC_HISTORY_SIZE)) : empty,
+    ccRead(adminQuery.order("created_at", { ascending: false }).order("id", { ascending: true })
+      .range(input.offsets.admin, input.offsets.admin + CC_HISTORY_SIZE)),
+    input.kind === "order" ? ccRead(db.from("email_notification_log")
+      .select("id, related_id, kind, template_key, status, reason, mode, created_at")
+      .eq("related_id", input.id).lte("created_at", before).order("created_at", { ascending: false })
+      .order("id", { ascending: true }).range(input.offsets.mail, input.offsets.mail + CC_HISTORY_SIZE)) : empty,
+  ]);
+  if (orderRes.error || adminRes.error || mailRes.error) {
+    return { ...ccHistoryPage([], [], input.offsets), error: "Nie udało się pobrać historii. Spróbuj ponownie.", before };
+  }
+  const orderRows: CCHistoryEvent[] = (orderRes.data ?? []).map((event: any) => ({
+    id: event.id, at: event.created_at, source: "order", type: event.type, actor: null,
+    objectKind: "order", objectId: event.order_id, detail: event.detail, result: null,
+  }));
+  const adminRows: CCHistoryEvent[] = (adminRes.data ?? []).map((event: any) => ({
+    id: event.id, at: event.created_at, source: "admin", type: event.type, actor: event.actor,
+    objectKind: event.object_kind ?? "—", objectId: event.object_id ?? "—", detail: event.detail, result: event.result,
+  }));
+  const mailRows: CCHistoryEvent[] = (mailRes.data ?? []).map((event: any) => ({
+    id: event.id, at: event.created_at, source: "mail", type: event.template_key ?? event.kind,
+    actor: null, objectKind: "order", objectId: event.related_id ?? input.id,
+    detail: "Tryb: " + event.mode + (event.reason ? " · " + event.reason : ""),
+    result: event.status === "simulated" ? "symulacja (nie wysłano)" : event.status === "sent" ? "wysłano" : event.status,
+  }));
+  return { ...ccHistoryPage(orderRows, adminRows, input.offsets, mailRows), error: null, before };
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
   if (req.method !== "POST") return json({ message: "Niedozwolona metoda." }, 405);
@@ -374,6 +604,8 @@ Deno.serve(async (req: Request) => {
       case "listReports": return json(await listReports(db));
       case "resolveReport": return json(await resolveReport(db, input.data, user.id));
       case "listAdminEvents": return json(await listAdminEvents(db, input.data));
+      case "controlCenterSearch": return json(await controlCenterSearch(db, input.data.q));
+      case "controlCenterHistory": return json(await controlCenterHistory(db, input.data));
     }
   } catch (error) {
     const status = error instanceof HttpError ? error.status : 500;
