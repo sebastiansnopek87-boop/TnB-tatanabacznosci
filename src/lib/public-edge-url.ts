@@ -2,5 +2,5 @@
 export function tnbPublicFunctionUrl(functionName: string, params: Record<string, string>): string {
   const base = import.meta.env["VITE_SUPABASE_URL"] as string | undefined;
   if (!base) return "";
-  return `${base.replace(/\\/+$/, "")}/functions/v1/${functionName}?${new URLSearchParams(params).toString()}`;
+  return `${base.replace(/\/+$/, "")}/functions/v1/${functionName}?${new URLSearchParams(params).toString()}`;
 }
