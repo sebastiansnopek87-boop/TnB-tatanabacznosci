@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { getDashboard, listSubscribers } from "@/lib/api/admin";
 import { fmtDate, SUB_STATUS , errMsg } from "@/components/admin/format";
@@ -23,12 +22,12 @@ function csvCell(v: unknown) {
 }
 
 function Subscribers() {
-  const list = useServerFn(listSubscribers);
+  const list = listSubscribers;
   const [draft, setDraft] = useState<Filters>({ status: "all", q: "", from: "", to: "" });
   const [f, setF] = useState<Filters>(draft);
   const [openId, setOpenId] = useState<string | null>(null);
   const { data, isLoading, error } = useQuery({ queryKey: ["admin-subs", f], queryFn: () => list({ data: f }) });
-  const dash = useServerFn(getDashboard);
+  const dash = getDashboard;
   const counts = useQuery({ queryKey: ["admin-dashboard"], queryFn: () => dash() });
   const open = data?.find((r) => r.id === openId);
 
