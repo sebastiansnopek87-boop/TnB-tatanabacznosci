@@ -158,7 +158,7 @@ export function BrandSettings({ canEdit }: { canEdit: boolean }) {
         <div className="space-y-2"><Label htmlFor="bs-name">Nazwa witryny (napis obok logo w lewym górnym rogu)</Label>
           <Input id="bs-name" disabled={ro} value={f.site_name} maxLength={200} onChange={(e) => set("site_name", e.target.value)} placeholder="Tata Na Baczności" />
           <div className="flex items-center gap-3 border border-border/60 bg-surface-deep p-3">
-            <img src={previews["header_image"] ?? previews["logo"] ?? brandImageUrl(f.header_image || f.logo) ?? logo.url alt="" className="h-12 w-12 object-contain" />
+            <img src={previews["header_image"] ?? previews["logo"] ?? brandImageUrl(f.header_image || f.logo) ?? logo.url} alt="" className="h-12 w-12 object-contain" />
             <span className="text-copper font-display text-xl font-bold uppercase tracking-[0.12em]">{f.site_name || "Tata Na Baczności"}</span>
           </div></div>
         <div className="space-y-2"><Label htmlFor="bs-title">Publiczny tytuł strony głównej</Label>
