@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
-import { adminSaveYoutubeKey, adminTestYoutubeKey } from "@/lib/api/voice";
+import { adminSaveYoutubeKey, adminTestYoutubeKey } from "@/lib/api/youtube";
 import { errMsg } from "@/components/admin/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +11,7 @@ import { Label } from "@/components/ui/label";
 type Result = { ok: true; text: string } | { ok: false; text: string } | null;
 
 export function YoutubeKeyField({ masked, source, onChanged }: { masked?: string | undefined; source?: "panel" | "env" | null | undefined; onChanged: () => void }) {
-  const saveFn = useServerFn(adminSaveYoutubeKey); const testFn = useServerFn(adminTestYoutubeKey);
+  const saveFn = adminSaveYoutubeKey; const testFn = adminTestYoutubeKey;
   const [val, setVal] = useState(""); const [show, setShow] = useState(false); const [res, setRes] = useState<Result>(null);
   const save = useMutation({
     mutationFn: () => saveFn({ data: { key: val.trim() } }),
