@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.tnb-templates]
 verify_jwt = false
+
+[functions.tnb-assets]
+verify_jwt = false
