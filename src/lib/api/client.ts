@@ -48,3 +48,10 @@ export async function invokeTnbFunction<TResult>(
 
   return data;
 }
+
+/** Public URLs for Edge endpoints that validate references before returning private-bucket assets. */
+export function tnbPublicFunctionUrl(functionName: string, params: Record<string, string>): string {
+  const base = import.meta.env["VITE_SUPABASE_URL"] as string | undefined;
+  if (!base) return "";
+  return `${base.replace(/\\/+$/, "")}/functions/v1/${functionName}?${new URLSearchParams(params).toString()}`;
+}
