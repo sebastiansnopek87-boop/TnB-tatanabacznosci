@@ -5,3 +5,7 @@ verify_jwt = true
 
 [functions.tnb-users]
 verify_jwt = true
+
+[functions.tnb-platform]
+verify_jwt = true
+

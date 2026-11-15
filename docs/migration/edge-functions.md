@@ -24,3 +24,17 @@ CORS allows the TNB production origins and local Vite development origin. The br
 ## Migration files
 
 The SQL files `0059`–`0062` mirror migrations already applied to the selected target project. They are kept here so the repository records the actual deployed database state. Do not run them blindly against a database that already has these migrations.
+
+## tnb-platform
+
+The authenticated `tnb-platform` endpoint handles admin settings and security status:
+
+- `getPlatformSettings`: private admin settings, including billing fields, returned only after an admin role check.
+- `updatePlatformSettings`: superadmin-only platform settings update, including maintenance mode and billing fields.
+- `setVisualEffects`: superadmin-only visual effects configuration.
+- `setModuleVisibility`: superadmin-only module visibility configuration with a server-side module allowlist.
+- `setPodcastLayout`: admin-only podcast layout update.
+- `getSecurityStatus`: admin-only security status and recent denied/failed events.
+
+Public non-billing settings are read directly by the browser through the database column allowlist. The four billing columns are not granted to `anon` or `authenticated`; they are read only by this Edge Function after authorization.
+
