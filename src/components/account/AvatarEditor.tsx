@@ -1,5 +1,4 @@
 import { useRef, useState } from 'react';
-import { useServerFn } from '@tanstack/react-start';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { UserAvatar } from './UserAvatar';
@@ -12,7 +11,7 @@ export function AvatarEditor({ name }: { name: string }) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const input = useRef<HTMLInputElement>(null);
-  const save = useServerFn(saveMyAvatar); const remove = useServerFn(removeMyAvatar); const qc = useQueryClient();
+  const qc = useQueryClient();
   async function choose(file?: File) {
     if (!file) return; setMessage(''); setBusy(true);
     try {
@@ -36,7 +35,7 @@ export function AvatarEditor({ name }: { name: string }) {
   async function commit(deleting = false) {
     setBusy(true); setMessage('');
     try {
-      if (deleting) await remove(); else { if (!image) return; const form = new FormData(); form.set('image', image, 'avatar.webp'); await save({ data: form }); }
+      if (deleting) await removeMyAvatar(); else { if (!image) return; await saveMyAvatar(image); }
       setImage(null); setPreview(null); await qc.invalidateQueries({ queryKey: ['my-avatar'] });
       setMessage(deleting ? 'Avatar został usunięty.' : 'Avatar został zapisany.');
     } catch (e) { setMessage(e instanceof Error ? e.message : 'Nie udało się zapisać.'); } finally { setBusy(false); }
