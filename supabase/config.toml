@@ -47,3 +47,6 @@ verify_jwt = false
 
 [functions.tnb-notifications]
 verify_jwt = true
+
+[functions.tnb-payments]
+verify_jwt = false
