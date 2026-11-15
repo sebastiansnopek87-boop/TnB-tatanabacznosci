@@ -53,7 +53,7 @@ export function adminCheckSlug({
   return invokeEdge("tnb-pages", { action: "adminCheckSlug", data });
 }
 
-export function adminSavePage(data: SavePageInput): Promise<{ id: string }> {
+export function adminSavePage({ data }: DataArg<SavePageInput>): Promise<{ id: string }> {
   return invokeEdge("tnb-pages", { action: "adminSavePage", data });
 }
 
