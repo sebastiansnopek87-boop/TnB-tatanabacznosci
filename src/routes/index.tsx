@@ -9,7 +9,7 @@ import { homeDefaultSections, usableHome } from "@/lib/home-content";
 export const Route = createFileRoute("/")({
   loader: async () => {
     try {
-      const p = await getPublicPage({ data: { key: "home" } });
+      const p = await getPublicPage({ key: "home" });
       return p && usableHome(p.sections) ? { id: p.id, sections: p.sections } : null;
     } catch { return null; }
   },
