@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { PageHeading, PageShell } from "@/components/tnb/PageShell";
@@ -26,7 +25,6 @@ export const Route = createFileRoute("/newsletter/wypisz")({
 
 function Unsubscribe() {
   const { token } = Route.useSearch();
-  const send = useServerFn(unsubscribeNewsletter);
   const [email, setEmail] = useState("");
   const [hp, setHp] = useState("");
   const [state, setState] = useState<"idle" | "busy" | "done" | "error">(token ? "busy" : "idle");
@@ -36,7 +34,7 @@ function Unsubscribe() {
   useEffect(() => {
     if (!token || ran.current) return;
     ran.current = true;
-    send({ data: { token } }).then(() => setState("done")).catch(() => setState("error"));
+    unsubscribeNewsletter({ data: { token } }).then(() => setState("done")).catch(() => setState("error"));
   }, [token, send]);
 
   async function onSubmit(e: FormEvent) {
@@ -44,7 +42,7 @@ function Unsubscribe() {
     if (!z.string().email().safeParse(email.trim()).success) { setErr("Podaj poprawny adres e-mail"); return; }
     setErr("");
     setState("busy");
-    try { await send({ data: { email, website: hp } }); setState("done"); } catch { setState("error"); }
+    try { await unsubscribeNewsletter({ data: { email, website: hp } }); setState("done"); } catch { setState("error"); }
   }
 
   return (
