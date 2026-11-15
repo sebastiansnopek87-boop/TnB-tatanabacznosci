@@ -179,7 +179,7 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
   async function uploadItem(i: number, k: number, file: File) {
     setSaveState((s) => ({ ...s, busy: true }));
     try {
-      const { path, token, name } = await upFn({ data: { id, type: file.type, size: file.size } });
+      const { path, token, name } = await adminCreatePageUpload({ data: { id, type: file.type, size: file.size } });
       const { error } = await supabase.storage.from("page-images").uploadToSignedUrl(path, token, file, { contentType: file.type });
       if (error) throw new Error("Nie udało się wgrać zdjęcia.");
       setUrls((o) => ({ ...o, [name]: URL.createObjectURL(file) }));
