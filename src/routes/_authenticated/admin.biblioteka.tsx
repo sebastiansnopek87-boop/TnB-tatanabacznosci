@@ -100,10 +100,6 @@ function AdminLibrary() {
   );
 }
 
-function toBase64(f: File) {
-  return new Promise<string>((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1] ?? ""); r.onerror = rej; r.readAsDataURL(f); });
-}
-
 function Editor({ id, cats, onClose, onSaved }: { id: string | null; cats: { slug: string; name: string }[]; onClose: () => void; onSaved: (id: string) => void }) {
   const getFn = adminGetLibraryItem;
   const saveFn = adminSaveLibraryItem;
