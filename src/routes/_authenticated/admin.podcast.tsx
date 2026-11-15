@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,7 +31,7 @@ function AdminPodcast() {
 }
 
 function List({ onEdit }: { onEdit: (id: string | null) => void }) {
-  const listFn = useServerFn(adminListEpisodes); const statusFn = useServerFn(adminSetEpisodeStatus);
+  const listFn = adminListEpisodes; const statusFn = adminSetEpisodeStatus;
   const qc = useQueryClient();
   const list = useQuery({ queryKey: ["admin-podcast"], queryFn: () => listFn() });
   const setSt = useMutation({
@@ -85,9 +84,9 @@ const EMPTY: Form = { subtitle: "", number: "", script: "", title: "", slug: "",
 const toLocal = (s: string | null) => { if (!s) return ""; const d = new Date(s); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); };
 
 function Editor({ id, onClose, onSaved }: { id: string | null; onClose: () => void; onSaved: (id: string) => void }) {
-  const getFn = useServerFn(adminGetEpisode); const saveFn = useServerFn(adminSaveEpisode);
-  const upFn = useServerFn(adminCreateUpload); const attachFn = useServerFn(adminAttachFile); const rmFn = useServerFn(adminRemoveFile);
-  const prevFn = useServerFn(adminPreviewAudio);
+  const getFn = adminGetEpisode; const saveFn = adminSaveEpisode;
+  const upFn = adminCreateUpload; const attachFn = adminAttachFile; const rmFn = adminRemoveFile;
+  const prevFn = adminPreviewAudio;
   const qc = useQueryClient();
   const cats = useQuery({ queryKey: ["library-categories"], queryFn: listCategories });
   const [f, setF] = useState<Form>(EMPTY); const [slugTouched, setSlugTouched] = useState(!!id);
