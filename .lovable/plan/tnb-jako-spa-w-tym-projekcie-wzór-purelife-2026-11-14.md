@@ -5,8 +5,8 @@ Aktualizacja: 15.11.2026
 
 - Repozytorium produkcyjne: `sebastiansnopek87-boop/TnB-tatanabacznosci`, gałąź `main`.
 - Jedyny aktywny projekt Supabase TNB: `pmdfiipontreuclfumdh`, region `eu-west-3`.
-- `supabase/config.toml` wskazuje prawidłowy projekt i jawnie ustawia tryb JWT dla wszystkich sześciu aktywnych funkcji Edge.
-- Źródła sześciu aktywnych funkcji Edge w repozytorium są zgodne z wdrożeniami Supabase: `tnb-health`, `tnb-users`, `tnb-platform`, `tnb-brand`, `tnb-pages`, `tnb-templates`.
+- `supabase/config.toml` wskazuje prawidłowy projekt i jawnie ustawia tryb JWT dla wszystkich dwunastu aktywnych funkcji Edge.
+- Źródła jedenastu aktywnych funkcji Edge w repozytorium są zgodne z wdrożeniami Supabase: `tnb-health`, `tnb-users`, `tnb-platform`, `tnb-brand`, `tnb-pages`, `tnb-templates`, `tnb-assets`, `tnb-contact`, `tnb-articles`, `tnb-media`, `tnb-avatar`.
 - Typy `src/integrations/supabase/types.ts` odpowiadają typom wygenerowanym z bieżącej bazy (PostgREST 14.18).
 - Frontend nadal korzysta z TanStack Start, TanStack Router i Nitro. Wygenerowane drzewo tras obejmuje 72 trasy.
 - `public/.htaccess` i skrypt `scripts/scan-dist-secrets.sh` już istnieją.
@@ -22,7 +22,7 @@ Nie wolno przełączyć projektu na statyczne SPA przed przeniesieniem wszystkic
 - Repozytorium GitHub jest kanonicznym źródłem kodu frontendowego, funkcji Edge i konfiguracji.
 - Supabase jest środowiskiem wykonawczym bazy i Edge Functions; wszystkie wdrożone źródła muszą mieć odpowiedniki w GitHubie.
 - Konfiguracja CLI musi wskazywać dokładnie projekt `pmdfiipontreuclfumdh`.
-- Odtworzyć brakującą historię SQL migracji. Obecna baza ma 64 zarejestrowane migracje, ale ich plików SQL nie ma w repozytorium. Nie generować migracji z samych nazw ani nie uruchamiać resetu bazy. Najpierw wykonać kontrolowany eksport schematu i przygotować strategię baseline bez ponownego stosowania zmian na produkcji.
+- Utrzymywać odtwarzalną historię migracji: repozytorium i aktywna baza mają obecnie 65 migracji (`0000`–`0064`); pliki SQL są w `drizzle/migrations/`, journal ma 65 wpisów, a snapshoty muszą zachować ciągłość `prevId`. Migracje zostały odzyskane z wiarygodnego źródła; nie uruchamiać ich ponownie na produkcji ani nie wykonywać resetu bazy.
 
 ### 1. Migracja backendu domenami — przy działającym TanStack Start
 - Przenosić operacje `createServerFn` do istniejących lub nowych Edge Functions, domena po domenie.
@@ -58,15 +58,15 @@ Dopiero po zakończeniu etapów 1–2:
 ## Prace wykonane 15.11.2026
 
 - Naprawiono `project_id` w `supabase/config.toml` na `pmdfiipontreuclfumdh`.
-- Dodano jawne ustawienia `verify_jwt` dla aktywnych funkcji Edge; aktualnie konfiguracja obejmuje osiem usług: health, users, platform, brand, pages, templates, assets i contact.
+- Dodano jawne ustawienia `verify_jwt` dla wszystkich dwunastu aktywnych usług Edge: health, users, platform, brand, pages, templates, assets, contact, articles, media i avatar.
 - Moduł administracji użytkownikami korzysta teraz z `tnb-users` przez `supabase.functions.invoke`; usunięto z tej trasy `useServerFn`.
 - Funkcja `tnb-users` używa nagłówków CORS z aktualnego SDK Supabase, przy zachowaniu listy dozwolonych domen. Wdrożenie: wersja 4, `verify_jwt=true`; źródło i `deno.json` porównane z GitHubem.
 - Publiczny odczyt ustawień platformy przeniesiono na klienta Supabase z dokładną projekcją 28 kolumn. Zapytanie przeszło kontrolę na roli `anon`; nie odczytuje kolumn rozliczeniowych.
-- Wszystkie jedenaście aktywnych funkcji Edge i ich pliki pomocnicze porównano z wdrożeniami; zgodność treści potwierdzono.
+- Wszystkie dwanaście aktywnych funkcji Edge i ich pliki pomocnicze porównano z wdrożeniami; zgodność treści potwierdzono.
 
 ## Blokady i status weryfikacji
 
-- 64 wpisy historii migracji istnieją w Supabase, ale pliki SQL nie zostały odnalezione w GitHubie. To nadal blokuje odtwarzalność bazy z czystego środowiska.
+- Repozytorium zawiera 65 plików SQL i 65 wpisów journalu, zgodnych kolejnością z 65 migracjami zastosowanymi w Supabase. Snapshoty 0000–0063 są obecne; snapshot 0064 jest uzupełniany w tej iteracji.
 - Produkcyjny build aplikacji przechodzi w CI. Testy end-to-end i rzeczywista weryfikacja przepływów po zalogowaniu nadal nie zostały wykonane.
 - Nie wdrażano statycznego frontendu na Cyberfolks. Aplikacja nadal wymaga serwera TanStack Start w nieprzeniesionych obszarach.
 
@@ -103,15 +103,15 @@ Dopiero po zakończeniu etapów 1–2:
 - W `src/lib/api/*` istnieje 26 adapterów; część jest już bezpośrednio połączona z Supabase lub Edge Functions, pozostałe nadal wymagają migracji z `*.functions.ts`. Operacje artykułów są już obsługiwane przez `tnb-articles`.
 - Trzynaście tras `src/routes/api/public/*` wymaga przeniesienia lub zastąpienia przed usunięciem serwera Start — szczególnie webhooki płatności, callback OAuth, cron i prywatne obrazy.
 - Build, skan artefaktów i lint zmienionych plików przechodzą w CI; potwierdzenie: run `43757512670`, commit `04c7887`. Nie oznacza to jeszcze gotowości SPA ani testów E2E.
-- Migracja SQL nadal nie ma odtworzonej historii 64 migracji. Nie wolno uruchamiać resetu ani generować plików SQL z samych nazw wpisów migracji.
+- Historia 65 migracji SQL jest odtworzona w GitHubie; nie uruchamiać migracji ponownie na produkcji. Utrzymywać komplet snapshotów Drizzle i porównywać journal z bazą.
 
 ### Stan po kolejnej iteracji — 15.11.2026, 20:20
 
-- W Supabase działa 11 funkcji Edge: `tnb-health`, `tnb-users`, `tnb-platform`, `tnb-brand`, `tnb-pages`, `tnb-templates`, `tnb-assets`, `tnb-contact`, `tnb-articles`, `tnb-media`, `tnb-avatar`. Źródła wszystkich 11 funkcji i ich manifesty zależności są obecne w GitHubie; zgodność wdrożonych plików została sprawdzona dla funkcji migracyjnych.
+- W Supabase działa 12 funkcji Edge: `tnb-health`, `tnb-users`, `tnb-platform`, `tnb-brand`, `tnb-pages`, `tnb-templates`, `tnb-assets`, `tnb-contact`, `tnb-articles`, `tnb-media`, `tnb-avatar`, `tnb-media-admin`. Źródła wszystkich 12 funkcji i ich manifesty zależności są obecne w GitHubie; porównano wdrożone `index.ts` ze źródłami w repozytorium bajt w bajt.
 - `tnb-media` odpowiada za kontrolowany odczyt obrazów i avatarów. `tnb-avatar` obsługuje zapis i usuwanie avatara, wymaga JWT i waliduje WebP po stronie serwera. `UserAvatar` pobiera obraz z tokenem użytkownika, a `AvatarEditor` wywołuje funkcję bezpośrednio przez adapter API.
 - Administracyjny widok artykułów korzysta bezpośrednio z adaptera `src/lib/api/articles.ts`; wywołania Edge Function nie są już opakowane przez `useServerFn` w tym widoku.
 - Naprawiono skan sekretów: rozpoznaje rzeczywiste wzorce kluczy Supabase/Google, JWT z rolą `service_role` i jawne odwołania do sekretów serwerowych. Raport nie wypisuje wartości sekretów. Wcześniejsze trafienia `YOUTUBE_API_KEY` i samego prefiksu `sb_secret_` były nazwami/prefiksami w kodzie, nie wartościami kluczy.
 - CI dla `main` na commicie `04c78872fabef9bbded0b224360c3df61b54d015` zakończyło się sukcesem: build, skan publicznego outputu i lint zmienionych plików.
-- Aktualny audyt drzewa repozytorium: 26 adapterów `src/lib/api/*.ts`, 26 modułów `src/lib/*.functions.ts` i 13 tras `src/routes/api/*`. W repo nadal nie ma `index.html` ani `src/main.tsx`; aplikacja nie została jeszcze przełączona na SPA.
-- Nadal trzeba przenieść pozostałe operacje serwerowe (m.in. podcast/YouTube, płatności, dostarczanie plików, OAuth i cron), usunąć lub zastąpić trasy API po potwierdzeniu braku zależności i przygotować czysty statyczny build. Historia 64 migracji SQL nadal wymaga odtworzenia z wiarygodnego źródła.
+- Aktualny audyt drzewa repozytorium: 26 adapterów `src/lib/api/*.ts`, 25 modułów `src/lib/*.functions.ts` i 13 tras `src/routes/api/*`. W repo nadal nie ma `index.html` ani `src/main.tsx`; aplikacja nie została jeszcze przełączona na SPA.
+- Nadal trzeba przenieść pozostałe operacje serwerowe (m.in. podcast/YouTube, płatności, dostarczanie plików, OAuth i cron), usunąć lub zastąpić trasy API po potwierdzeniu braku zależności i przygotować czysty statyczny build. Historia 65 migracji SQL została odtworzona z wiarygodnego źródła; brakujący snapshot 0064 jest dodawany osobno.
 - Nie zmieniano schematu, polityk RLS ani danych produkcyjnych. Nie przełączano hostingu Cyberfolks na katalog statyczny.
