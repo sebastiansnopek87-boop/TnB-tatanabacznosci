@@ -23,6 +23,9 @@ markers=(
   INSTAGRAM_APP_SECRET
   client.server
   'sb_secret_[A-Za-z0-9_-]{20,}'
+  'AIza[0-9A-Za-z_-]{35}'
+  '(sk|rk)_(live|test)_[A-Za-z0-9]{16,}'
+  '-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----'
 )
 
 failed=0
