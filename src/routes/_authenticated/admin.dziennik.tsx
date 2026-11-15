@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { listAdminEvents } from "@/lib/api/admin";
 import { errMsg, fmtDate } from "@/components/admin/format";
@@ -13,7 +12,7 @@ export const Route = createFileRoute("/_authenticated/admin/dziennik")({ compone
 const sel = "h-9 rounded-md border border-input bg-background px-2 text-sm";
 
 function Journal() {
-  const fn = useServerFn(listAdminEvents);
+  const fn = listAdminEvents;
   const [f, setF] = useState({ from: "", to: "", category: "", actor: "", result: "" as "" | "ok" | "failed" | "denied", q: "" });
   const [q, setQ] = useState("");
   const [page, setPage] = useState(0);
