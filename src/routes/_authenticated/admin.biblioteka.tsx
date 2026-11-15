@@ -122,7 +122,15 @@ function Editor({ id, cats, onClose, onSaved }: { id: string | null; cats: { slu
   useEffect(() => {
     if (!cur.data) return;
     const { item: i, content: c } = cur.data;
-    setF({ id: i.id, title: i.title, slug: i.slug, summary: i.summary, category: i.category, kind: i.kind as Kind, access: i.access as Access, status: i.status as Status, author_name: i.author_name, body: c.body ?? "", external_url: c.external_url ?? "", price: i.price_amount != null ? String(i.price_amount / 100).replace(".", ",") : "", purchasable: !!i.purchasable, payment_product_id: i.payment_product_id ?? "", delivery_method: (i.delivery_method ?? "email_link") as Delivery, free_delivery: ((i as any).free_delivery ?? "direct") as FreeDelivery });
+    const item = i as typeof i & { free_delivery?: FreeDelivery };
+    setF({
+      id: i.id, title: i.title, slug: i.slug, summary: i.summary, category: i.category,
+      kind: i.kind as Kind, access: i.access as Access, status: i.status as Status, author_name: i.author_name,
+      body: c.body ?? "", external_url: c.external_url ?? "",
+      price: i.price_amount != null ? String(i.price_amount / 100).replace(".", ",") : "",
+      purchasable: !!i.purchasable, payment_product_id: i.payment_product_id ?? "",
+      delivery_method: (i.delivery_method ?? "email_link") as Delivery, free_delivery: item.free_delivery ?? "direct",
+    });
     setSlugTouched(true);
   }, [cur.data]);
 
@@ -171,7 +179,12 @@ function Editor({ id, cats, onClose, onSaved }: { id: string | null; cats: { slu
   if (id && cur.isLoading) return <p className="text-sm text-muted-foreground">Ładowanie materiału…</p>;
   if (id && cur.error) return <p className="text-sm text-destructive">{errMsg(cur.error)}</p>;
   const needsFile = f.kind !== "link";
-  const c = cur.data?.content as any;
+  const c = cur.data?.content as {
+    body?: string | null; external_url?: string | null; file_name?: string | null;
+    file_path?: string | null; original_path?: string | null; watermark_status?: string | null;
+    watermark_error?: string | null; watermark_source?: string | null; pdf_generated_at?: string | null;
+    body_updated_at?: string | null;
+  } | undefined;
   const wm = (c?.watermark_status ?? "none") as string;
   const stale = !!(c?.pdf_generated_at && c?.body_updated_at && new Date(c.body_updated_at) > new Date(c.pdf_generated_at));
   const needsUrl = f.kind === "link" || f.kind === "video" || f.kind === "audio";
@@ -285,8 +298,8 @@ const REQ_STATUS: Record<string, string> = {
 };
 
 function History({ items }: { items: { id: string; title: string }[] }) {
-  const listFn = useServerFn(adminListLibraryRequests);
-  const eraseFn = useServerFn(adminEraseLibraryRequest);
+  const listFn = adminListLibraryRequests;
+  const eraseFn = adminEraseLibraryRequest;
   const qc = useQueryClient();
   const [itemId, setItemId] = useState<string | null>(null);
   const [emailIn, setEmailIn] = useState(""); const [email, setEmail] = useState("");
