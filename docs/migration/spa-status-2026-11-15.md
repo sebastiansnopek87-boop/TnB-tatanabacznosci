@@ -14,17 +14,19 @@ Production branch: `main` (do not deploy this work branch directly)
 
 ## Work completed on this branch
 
-- Added `src/lib/api/client.ts`, a shared `supabase.functions.invoke` client that uses the active browser session and converts Edge Function error payloads into typed application errors. It does not contain privileged credentials.
-- Migrated the user administration page to `tnb-users`: list, detail, and role update. The page no longer imports `useServerFn`. Role changes are handled by the deployed function through the atomic `admin_set_user_role` database procedure.
-- Migrated platform settings read and update in the platform settings page to `tnb-platform`. The billing fields are still returned only by the authenticated Edge Function; they are not read directly from the browser.
-- Existing Edge Functions verified during this stage: `tnb-health`, `tnb-users`, `tnb-platform`, `tnb-brand`, `tnb-pages`, and `tnb-templates`. The UI adapters for domains not yet migrated must not be assumed to call these functions yet.
+- Added `src/lib/api/client.ts`, a shared `supabase.functions.invoke` client that uses the active browser session and converts Edge Function error payloads into typed application errors. It contains no privileged credentials.
+- Migrated the user administration page to `tnb-users`: list, detail, and role update. The page no longer imports `useServerFn`. Role changes use the deployed function and atomic `admin_set_user_role` database procedure.
+- Migrated the platform settings operations to `tnb-platform`: administrative settings read/update, module visibility, visual effects, podcast layout, and security status. Public settings are now read directly through Supabase using the verified public-column allowlist and existing SELECT RLS policy. Billing columns and update metadata remain unavailable to browser roles.
+- Migrated the branding settings and upload flow to `tnb-brand`: read/save settings, signed upload creation, and server-side upload verification.
+- Snapshotted all six deployed Edge Functions and their Deno configuration into `supabase/functions/*`: `tnb-health` v1, `tnb-users` v4, `tnb-platform` v1, `tnb-brand` v1, `tnb-pages` v1, and `tnb-templates` v2. All 17 saved files were compared byte-for-byte with the current deployed snapshots.
+- Added `verify_jwt` settings for all six functions to `supabase/config.toml`. These values match the active Supabase configuration.
 
 ## Remaining blockers before static hosting
 
 - The app is still built with TanStack Start/Nitro. The current `vite.config.ts` imports `@lovable.dev/vite-tanstack-config`; there is no root `index.html` or `src/main.tsx`. The presence of `public/.htaccess` alone does not make the app a static SPA.
 - The route tree contains 72 route entries, including 13 server-only `/api/public/*` handlers. They still need client/server separation and replacement Edge Functions.
 - Most `src/lib/api/*` adapters still re-export `createServerFn` modules. Only the user administration and platform-settings operations listed above are switched to direct Edge Function calls.
-- Edge Function source files and the 64 SQL migrations are not currently tracked under `supabase/functions/*` and `supabase/migrations/*` in this repository. They must be versioned before the GitHub repository can be the complete source of truth.
+- The six currently deployed Edge Functions are now tracked. The 64 SQL migrations are still not present under `supabase/migrations/*`; restore their exact SQL history or create a reviewed baseline from the live schema before treating GitHub as the complete database source of truth.
 - No successful production build or end-to-end verification has been recorded for this branch yet. Do not merge or deploy until typecheck/build, direct endpoint tests, deep-link refresh, authentication, admin roles, and the critical payment/webhook flows pass.
 
 ## Next implementation order
