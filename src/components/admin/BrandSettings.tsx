@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Copy, X } from "lucide-react";
 import { getBrandSettings, saveBrandSettings, createBrandUpload, finalizeBrandUpload } from "@/lib/api/brand";
 import { errMsg } from "./format";
-import { tnbPublicFunctionUrl } from "@/lib/api/client";
+import { tnbPublicFunctionUrl } from "@/lib/public-edge-url";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
