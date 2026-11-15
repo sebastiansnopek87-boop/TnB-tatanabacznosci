@@ -1,7 +1,7 @@
 import { adminRecordSearch } from "@/lib/admin-record-search";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useServerFn } from "@/lib/api/useServerFn";
 import { Fragment, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { listUsers, getUserDetail, setUserRole, ROLE_VALUES } from "@/lib/api/users";
