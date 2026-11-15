@@ -3,11 +3,27 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequest, getRequestIP } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Tables } from "@/integrations/supabase/types";
+import type { ProviderRow } from "./payments/providers.server";
 
 const CONSENT = "Akceptuję Regulamin i Politykę prywatności. Wyrażam zgodę na przetwarzanie imienia, nazwiska, adresu e-mail i (opcjonalnie) numeru telefonu w celu realizacji zamówienia i dostarczenia materiału.";
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin;
 const PROVIDERS = ["p24", "tpay", "payu"] as const;
 const PROVIDER_LABEL: Record<string, string> = { p24: "Przelewy24", tpay: "Tpay", payu: "PayU" };
+
+type CheckoutProviderRow = ProviderRow;
+type PurchaseRow = Pick<Tables<"library_orders">, "id" | "paid_at" | "amount" | "access_token"> & {
+  library_items: Pick<Tables<"library_items">, "title" | "slug"> | null;
+};
+type AdminOrderRow = Pick<Tables<"library_orders">,
+  "order_number" | "buyer_email" | "buyer_name"
+> & {
+  library_items: Pick<Tables<"library_items">, "title"> | null;
+};
+type SalesRow = Pick<Tables<"library_orders">,
+  "status" | "amount" | "provider" | "environment" | "is_test" | "paid_at" | "created_at"
+>;
+
 
 async function optionalUser() {
   const auth = getRequest()?.headers.get("authorization") ?? "";
@@ -21,8 +37,9 @@ async function optionalUser() {
 export const getCheckoutOptions = createServerFn({ method: "GET" }).handler(async () => {
   const { configStatus } = await import("./payments/providers.server");
   const { data } = await (await admin()).from("payment_providers").select("id, enabled, is_default, environment, merchant_id, pos_id, client_id");
-  const list = (data ?? []).filter((p: any) => p.enabled && configStatus(p).configured)
-    .map((p: any) => ({ id: p.id as (typeof PROVIDERS)[number], label: PROVIDER_LABEL[p.id]!, isDefault: p.is_default, test: p.environment === "sandbox" }));
+  const providerRows = (data ?? []) as unknown as CheckoutProviderRow[];
+  const list = providerRows.filter((provider) => provider.enabled && configStatus(provider).configured)
+    .map((provider) => ({ id: provider.id, label: PROVIDER_LABEL[provider.id]!, isDefault: provider.is_default, test: provider.environment === "sandbox" }));
   return { providers: list };
 });
 
@@ -49,7 +66,7 @@ export const createLibraryOrder = createServerFn({ method: "POST" })
       const { bankConfigured } = await import("@/config/payments");
       if (!bankConfigured()) return { error: "Płatność przelewem bankowym jest obecnie niedostępna." };
     }
-    let provider: any = null;
+    let provider: ProviderRow | null = null;
     if (online) {
       const { configStatus } = await import("./payments/providers.server");
       provider = await core.loadProvider(data.method as (typeof PROVIDERS)[number]);
@@ -122,12 +139,17 @@ export const recoverAccess = createServerFn({ method: "POST" })
 export const listMyPurchases = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const email = String((context.claims as any)?.email ?? "").toLowerCase();
+    const emailClaim = (context.claims as { email?: unknown } | null)?.email;
+    const email = typeof emailClaim === "string" ? emailClaim.toLowerCase() : "";
     const s = await admin();
     let q = s.from("library_orders").select("id, status, paid_at, amount, access_token, access_revoked_at, library_items(title, slug)").not("paid_at", "is", null).is("access_revoked_at", null).in("status", ["paid", "refund_pending", "refunded"]);
     q = email ? q.or(`user_id.eq.${context.userId},buyer_email.eq.${email}`) : q.eq("user_id", context.userId);
     const { data } = await q.order("paid_at", { ascending: false });
-    return (data ?? []).map((o: any) => ({ id: o.id, paid_at: o.paid_at, amount: o.amount, title: o.library_items?.title ?? "", slug: o.library_items?.slug ?? "", token: o.access_token }));
+    const purchases = (data ?? []) as unknown as PurchaseRow[];
+    return purchases.map((order) => ({
+      id: order.id, paid_at: order.paid_at, amount: order.amount,
+      title: order.library_items?.title ?? "", slug: order.library_items?.slug ?? "", token: order.access_token,
+    }));
   });
 
 // ---------- admin ----------
@@ -153,7 +175,10 @@ export const adminListOrders = createServerFn({ method: "POST" })
     const { data: rows, error } = await q;
     if (error) throw new Error("Nie udało się pobrać zamówień.");
     const s = data.q.toLowerCase();
-    return (rows as any[]).filter((r) => !s || r.order_number.toLowerCase().includes(s) || r.buyer_email.toLowerCase().includes(s) || (r.buyer_name ?? "").toLowerCase().includes(s) || (r.library_items?.title ?? "").toLowerCase().includes(s));
+    const typedRows = (rows ?? []) as unknown as AdminOrderRow[];
+    return typedRows.filter((row) => !s || row.order_number.toLowerCase().includes(s)
+      || row.buyer_email.toLowerCase().includes(s) || (row.buyer_name ?? "").toLowerCase().includes(s)
+      || (row.library_items?.title ?? "").toLowerCase().includes(s));
   });
 
 // Real sales summary: only paid (incl. later refunded) orders, production environment separate from test.
@@ -162,10 +187,10 @@ export const adminSalesSummary = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     await assertAdmin(context);
     const { data } = await context.supabase.from("library_orders").select("status, amount, provider, environment, is_test, paid_at, created_at").limit(20000);
-    const rows = (data ?? []) as any[];
+    const rows = (data ?? []) as unknown as SalesRow[];
     const real = rows.filter((r) => r.environment !== "sandbox" && !r.is_test);
     const paid = real.filter((r) => r.paid_at && ["paid", "refund_pending"].includes(r.status));
-    const sum = (a: any[]) => a.reduce((t, r) => t + r.amount, 0);
+    const sum = (items: SalesRow[]) => items.reduce((total, row) => total + row.amount, 0);
     const byProvider: Record<string, { count: number; amount: number }> = {};
     for (const r of paid) { const k = r.provider ?? "manual"; byProvider[k] ??= { count: 0, amount: 0 }; byProvider[k].count++; byProvider[k].amount += r.amount; }
     const month = new Date().toISOString().slice(0, 7);
