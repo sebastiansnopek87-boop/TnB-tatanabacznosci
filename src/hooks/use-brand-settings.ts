@@ -1,4 +1,5 @@
 import { usePlatformSettings } from "./use-platform-settings";
+import { brandImageUrl } from "@/lib/api/brand";
 
 export type Brand = {
   logo?: string;
@@ -15,7 +16,7 @@ export type Brand = {
 };
 
 export function brandSrc(value?: string) {
-  return value ? `/api/public/brand/${value.replace(/^brand\//, "")}` : null;
+  return brandImageUrl(value);
 }
 
 export function getBrandSlogan(brand: Brand | null): string | null {
