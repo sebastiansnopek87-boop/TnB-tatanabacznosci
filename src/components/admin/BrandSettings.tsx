@@ -1,5 +1,4 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Copy, X } from "lucide-react";
@@ -57,12 +56,8 @@ function ImageField({ label, hint, accept, value, preview, busy, canEdit, onPick
 }
 
 export function BrandSettings({ canEdit }: { canEdit: boolean }) {
-  const get = useServerFn(getBrandSettings);
-  const save = useServerFn(saveBrandSettings);
-  const start = useServerFn(createBrandUpload);
-  const fin = useServerFn(finalizeBrandUpload);
   const qc = useQueryClient();
-  const { data, error } = useQuery({ queryKey: ["admin-brand-settings"], queryFn: () => get() });
+  const { data, error } = useQuery({ queryKey: ["admin-brand-settings"], queryFn: () => getBrandSettings() });
   const [f, setF] = useState<Form | null>(null);
   const [previews, setPreviews] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
@@ -84,9 +79,9 @@ export function BrandSettings({ canEdit }: { canEdit: boolean }) {
   async function upload(key: string, file: File) {
     setBusy(true);
     try {
-      const t = await start({ data: { name: file.name, type: file.type, size: file.size } });
+      const t = await createBrandUpload({ name: file.name, type: file.type, size: file.size });
       await putFile(t.bucket, t.path, t.token, file);
-      await fin({ data: { path: t.path } });
+      await finalizeBrandUpload({ path: t.path });
       setF((p) => p ? { ...p, [key]: t.path } : p);
       setPreviews((p) => ({ ...p, [key]: URL.createObjectURL(file) }));
       toast.success("Plik gotowy. Zapisz zmiany, aby zastosować.");
@@ -97,7 +92,7 @@ export function BrandSettings({ canEdit }: { canEdit: boolean }) {
   async function onSave() {
     setSaving(true);
     try {
-      await save({ data: f });
+      await saveBrandSettings(f);
       setPreviews((p) => { for (const u of Object.values(p)) URL.revokeObjectURL(u); return {}; });
       toast.success("Ustawienia marki zapisane.");
       qc.invalidateQueries({ queryKey: ["admin-brand-settings"] });
