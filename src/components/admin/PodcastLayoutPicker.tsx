@@ -1,5 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { getPodcastLayout, setPodcastLayout, type PodcastLayout } from "@/lib/api/platform";
 import { errMsg } from "@/components/admin/format";
@@ -11,10 +10,9 @@ const OPTIONS: { value: PodcastLayout; title: string; desc: string }[] = [
 
 export function PodcastLayoutPicker() {
   const qc = useQueryClient();
-  const setFn = useServerFn(setPodcastLayout);
   const cur = useQuery({ queryKey: ["podcast-layout"], queryFn: () => getPodcastLayout() });
   const save = useMutation({
-    mutationFn: (layout: PodcastLayout) => setFn({ data: { layout } }),
+    mutationFn: (layout: PodcastLayout) => setPodcastLayout({ layout }),
     onSuccess: () => { toast.success("Zapisano układ odcinków"); qc.invalidateQueries({ queryKey: ["podcast-layout"] }); },
     onError: (e) => toast.error(errMsg(e)),
   });
