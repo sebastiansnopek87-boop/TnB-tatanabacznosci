@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
-import { getPublicChannel, listVideos, listInstagram, submitVoiceStory, storySchema } from "@/lib/api/voice";
+import { getPublicChannel, listVideos } from "@/lib/api/youtube";
+import { listInstagram, submitVoiceStory, storySchema } from "@/lib/api/voice";
 import { ytThumb } from "@/lib/voice";
 import { fmtDay } from "@/lib/podcast";
 import { usePlatformSettings } from "@/hooks/use-platform-settings";
