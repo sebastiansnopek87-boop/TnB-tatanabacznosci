@@ -41,3 +41,6 @@ verify_jwt = false
 
 [functions.tnb-admin]
 verify_jwt = true
+
+[functions.tnb-youtube]
+verify_jwt = false
