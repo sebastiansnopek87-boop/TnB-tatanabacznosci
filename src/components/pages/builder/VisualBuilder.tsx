@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useServerFn } from "@/lib/api/useServerFn";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
   ArrowDown, ArrowUp, BookmarkPlus, Copy, Eye, EyeOff, GripVertical, History, Info, Layers, LayoutGrid, Monitor, PanelLeft, PanelRight,
@@ -53,7 +53,7 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
   const [placingTpl, setPlacingTpl] = useState<BuilderTemplate | null>(null);
   const [saveTpl, setSaveTpl] = useState(false);
   const tpl = useTemplates();
-  const instFn = useServerFn(adminInstantiateTemplate);
+  const instFn = adminInstantiateTemplate;
   const [saveState, setSaveState] = useState<{ dirty: boolean; at: string | null; err: string | null; busy: boolean }>({ dirty: false, at: null, err: null, busy: false });
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [overflow, setOverflow] = useState<number[]>([]);
