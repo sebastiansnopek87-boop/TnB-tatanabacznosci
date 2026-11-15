@@ -65,11 +65,9 @@ export const normalizeSections = (raw: unknown): PageSection[] =>
   (Array.isArray(raw) ? raw : []).map((s: any) => ({ ...newSection(s?.kind ?? "text"), ...s, items: Array.isArray(s?.items) ? s.items : [], buttons: Array.isArray(s?.buttons) ? s.buttons : [] }));
 
 export const pageImageUrl = (pageId: string, file: string) => {
-  let base = String(import.meta.env["VITE_SUPABASE_URL"] ?? "");
-  while (base.endsWith("/")) base = base.slice(0, -1);
-  return base
-    ? base + "/functions/v1/tnb-pages?image=" + encodeURIComponent(pageId + "/" + file)
-    : "/api/public/page-image/" + pageId + "/" + encodeURIComponent(file);
+  const base = String(import.meta.env["VITE_SUPABASE_URL"] ?? "").replace(/\/+$/, "");
+  if (!base) throw new Error("Brak wymaganej konfiguracji VITE_SUPABASE_URL.");
+  return base + "/functions/v1/tnb-pages?image=" + encodeURIComponent(pageId + "/" + file);
 };
 
 // Internal links start with "/", external must be https; anything else is rejected.

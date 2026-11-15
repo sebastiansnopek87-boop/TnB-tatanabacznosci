@@ -66,9 +66,7 @@ export function brandImageUrl(value?: string): string | null {
   if (!value) return null;
   const file = value.replace(/^brand\//, "");
   const base = String(import.meta.env["VITE_SUPABASE_URL"] ?? "").replace(/\/+$/, "");
-  return base
-    ? base + "/functions/v1/tnb-brand?file=" + encodeURIComponent(file)
-    : "/api/public/brand/" + encodeURIComponent(file);
+  return base ? base + "/functions/v1/tnb-brand?file=" + encodeURIComponent(file) : null;
 }
 
 export async function getBrandSettings(): Promise<BrandSettingsResult> {
