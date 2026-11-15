@@ -101,7 +101,7 @@ function Sources() {
 
   return (
     <div className="space-y-6">
-      <form className={box + " space-y-2"} onSubmit={async (e) => { e.preventDefault(); setBusy(true); try { const r = await addWeb({ data: { url, comment } }); if (r.ok) { r.fetched ? toast.success("Pobrano treść — sprawdź podgląd i zatwierdź.") : toast.warning(r.error ?? "Nie pobrano treści"); setUrl(""); setComment(""); refresh(); } else toast.error(r.error); } catch (er) { toast.error(errMsg(er)); } finally { setBusy(false); } }}>
+      <form className={box + " space-y-2"} onSubmit={async (e) => { e.preventDefault(); setBusy(true); try { const r = await addWeb({ data: { url, comment } }); if (r.ok) { if (r.fetched) toast.success("Pobrano treść — sprawdź podgląd i zatwierdź."); else toast.warning(r.error ?? "Nie pobrano treści"); setUrl(""); setComment(""); refresh(); } else toast.error(r.error); } catch (er) { toast.error(errMsg(er)); } finally { setBusy(false); } }}>
         <h2 className="font-semibold">Dodaj źródło z internetu</h2>
         <input className={input} type="url" required placeholder="https://…" value={url} onChange={(e) => setUrl(e.target.value)} aria-label="Adres URL" />
         <textarea className={input} rows={2} maxLength={2000} placeholder="Dlaczego to źródło jest istotne? (opcjonalnie)" value={comment} onChange={(e) => setComment(e.target.value)} aria-label="Komentarz" />
@@ -204,7 +204,7 @@ function Proposals({ aiOn, onCreated }: { aiOn: boolean; onCreated: (id: string)
   const q = useQuery({ queryKey: ["ai-ed", "proposals"], queryFn: () => list() });
   const [filter, setFilter] = useState("active"), [open, setOpen] = useState<string | null>(null), [busy, setBusy] = useState<string | null>(null);
   const refresh = () => qc.invalidateQueries({ queryKey: ["ai-ed"] });
-  const act = async (p: Promise<{ ok: boolean; error?: string }>, msg: string) => { const r = await p; r.ok ? (toast.success(msg), refresh()) : toast.error(r.error ?? "Błąd"); };
+  const act = async (p: Promise<{ ok: boolean; error?: string }>, msg: string) => { const r = await p; if (r.ok) { toast.success(msg); refresh(); } else { toast.error(r.error ?? "Błąd"); } };
   if (q.isLoading) return <p className="text-muted-foreground">Ładowanie…</p>;
   const all: AiProposal[] = q.data?.proposals ?? [];
   const shown = all.filter((p) => filter === "all" || (filter === "active" ? !["rejected", "done"].includes(p.status) : p.status === filter));
@@ -306,7 +306,7 @@ function Settings({ d }: { d: Awaited<ReturnType<typeof getEditorDashboard>> }) 
         <h2 className="font-semibold">Połączenie z modelem AI</h2>
         <p>Dostawca: Lovable AI (bramka platformy), model {d.model}. Klucz jest przechowywany wyłącznie na serwerze. Status: <strong>{d.aiConfigured ? "skonfigurowane" : "brak konfiguracji"}</strong>.</p>
         <p className="text-xs text-muted-foreground">Wysyłane dane: treść wybranych źródeł (artykuły, Biblioteka, zatwierdzone źródła i notatki, opcjonalnie anonimowe fragmenty publicznych wpisów), wytyczne redakcyjne i tytuły ocenionych propozycji. Każde wywołanie (test, analiza, rozwinięcie, konspekt) uruchamia się tylko po kliknięciu i zużywa kredyty AI.</p>
-        <Button size="sm" variant="outline" disabled={!d.aiConfigured || testing} onClick={async () => { setTesting(true); try { const r = await test(); r.ok ? toast.success("Połączenie działa.") : toast.error(r.error); } catch (e) { toast.error(errMsg(e)); } finally { setTesting(false); } }}>{testing ? "Sprawdzanie…" : "Sprawdź połączenie (1 krótkie wywołanie)"}</Button>
+        <Button size="sm" variant="outline" disabled={!d.aiConfigured || testing} onClick={async () => { setTesting(true); try { const r = await test(); if (r.ok) toast.success("Połączenie działa."); else toast.error(r.error); } catch (e) { toast.error(errMsg(e)); } finally { setTesting(false); } }}>{testing ? "Sprawdzanie…" : "Sprawdź połączenie (1 krótkie wywołanie)"}</Button>
       </section>
       <section className={box + " space-y-2"}>
         <h2 className="font-semibold">Pamięć redakcyjna — stałe wytyczne</h2>
