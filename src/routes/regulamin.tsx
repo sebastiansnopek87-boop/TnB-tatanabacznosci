@@ -3,7 +3,7 @@ import { getPublicPage } from "@/lib/api/pages";
 import { LegalPageView, legalHead } from "@/components/tnb/LegalPageView";
 
 export const Route = createFileRoute("/regulamin")({
-  loader: () => getPublicPage({ key: "regulamin" } }),
+  loader: () => getPublicPage({ key: "regulamin" }),
   head: ({ loaderData }) => legalHead("regulamin", loaderData),
   component: () => <LegalPageView slug="regulamin" page={Route.useLoaderData()} />,
   errorComponent: () => <LegalPageView slug="regulamin" page={null} />,
