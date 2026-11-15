@@ -42,7 +42,7 @@ export async function extractWeb(url: string): Promise<WebExtract> {
     const title = meta(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)/i) ?? meta(/<title[^>]*>([^<]+)<\/title>/i) ?? u.hostname;
     const author = meta(/<meta[^>]+name=["']author["'][^>]+content=["']([^"']+)/i);
     const date = meta(/<meta[^>]+property=["']article:published_time["'][^>]+content=["']([^"']+)/i) ?? meta(/<time[^>]+datetime=["']([^"']+)/i);
-    let body = html.replace(/<(script|style|noscript|nav|header|footer|aside|form|svg)[\s\S]*?<\/\1>/gi, " ");
+    const body = html.replace(/<(script|style|noscript|nav|header|footer|aside|form|svg)[\s\S]*?<\/\1>/gi, " ");
     const art = body.match(/<article[\s\S]*?<\/article>/i)?.[0] ?? body.match(/<main[\s\S]*?<\/main>/i)?.[0] ?? body;
     const text = plain(art.replace(/<\/(p|h\d|li|div)>/gi, "\n")).slice(0, 60000);
     if (text.length < 300) return { ok: false, error: "Nie udało się wyodrębnić tekstu (strona może wymagać logowania lub ładuje treść skryptami). Wklej fragment ręcznie." };
