@@ -64,7 +64,12 @@ export const newSection = (kind: SectionKind = "text"): PageSection => ({
 export const normalizeSections = (raw: unknown): PageSection[] =>
   (Array.isArray(raw) ? raw : []).map((s: any) => ({ ...newSection(s?.kind ?? "text"), ...s, items: Array.isArray(s?.items) ? s.items : [], buttons: Array.isArray(s?.buttons) ? s.buttons : [] }));
 
-export const pageImageUrl = (pageId: string, file: string) => `/api/public/page-image/${pageId}/${encodeURIComponent(file)}`;
+export const pageImageUrl = (pageId: string, file: string) => {
+  const base = String(import.meta.env["VITE_SUPABASE_URL"] ?? "").replace(/\/+$/, "");
+  return base
+    ? \`\${base}/functions/v1/tnb-pages?image=\${encodeURIComponent(\`\${pageId}/\${file}\`)}\`
+    : \`/api/public/page-image/\${pageId}/\${encodeURIComponent(file)}\`;
+};
 
 // Internal links start with "/", external must be https; anything else is rejected.
 export const isSafeHref = (h: string) => /^\/(?!\/)[\w\-/#?=&.%]*$/.test(h) || /^https:\/\/\S+$/.test(h) || /^mailto:\S+$/.test(h);
