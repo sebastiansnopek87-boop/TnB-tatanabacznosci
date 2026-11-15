@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
 import { listCommunity, listReports, moderateCommunity, resolveReport } from "@/lib/api/admin";
@@ -16,8 +15,8 @@ type F = "all" | "published" | "hidden";
 type Action = "hide" | "restore" | "delete_post" | "delete_comment" | "set_visibility";
 
 function Moderation() {
-  const list = useServerFn(listCommunity);
-  const mod = useServerFn(moderateCommunity);
+  const list = listCommunity;
+  const mod = moderateCommunity;
   const qc = useQueryClient();
   const [status, setStatus] = useState<F>("all");
   const { data, isLoading, error } = useQuery({ queryKey: ["admin-community", status], queryFn: () => list({ data: { status } }) });
@@ -30,8 +29,8 @@ function Moderation() {
     onError: (e) => toast.error(errMsg(e)),
   });
 
-  const reportsFn = useServerFn(listReports);
-  const resolveFn = useServerFn(resolveReport);
+  const reportsFn = listReports;
+  const resolveFn = resolveReport;
   const reports = useQuery({ queryKey: ["admin-reports"], queryFn: () => reportsFn() });
   const resolve = useMutation({
     mutationFn: (id: string) => resolveFn({ data: { id } }),
