@@ -18,3 +18,13 @@ export function publicAssetUrl(kind: PublicAssetKind, id: string, version?: stri
 
   return version ? url + (url.includes("?") ? "&" : "?") + "v=" + encodeURIComponent(version) : url;
 }
+
+/** Public article images are served only when the published article references the requested file. */
+export function publicArticleAssetUrl(id: string, file: string, version?: string | null): string {
+  const base = String(import.meta.env["VITE_SUPABASE_URL"] ?? "").replace(/\\/+$/, "");
+  const url = base
+    ? base + "/functions/v1/tnb-assets?kind=article&id=" + encodeURIComponent(id) + "&file=" + encodeURIComponent(file)
+    : "/api/public/article-image/" + encodeURIComponent(id) + "/" + encodeURIComponent(file);
+
+  return version ? url + (url.includes("?") ? "&" : "?") + "v=" + encodeURIComponent(version) : url;
+}
