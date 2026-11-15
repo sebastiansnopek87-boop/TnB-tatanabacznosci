@@ -58,11 +58,11 @@ Dopiero po zakończeniu etapów 1–2:
 ## Prace wykonane 15.11.2026
 
 - Naprawiono `project_id` w `supabase/config.toml` na `pmdfiipontreuclfumdh`.
-- Dodano jawne ustawienia `verify_jwt` zgodne z sześcioma wdrożonymi funkcjami Edge.
+- Dodano jawne ustawienia `verify_jwt` dla aktywnych funkcji Edge; aktualnie konfiguracja obejmuje osiem usług: health, users, platform, brand, pages, templates, assets i contact.
 - Moduł administracji użytkownikami korzysta teraz z `tnb-users` przez `supabase.functions.invoke`; usunięto z tej trasy `useServerFn`.
 - Funkcja `tnb-users` używa nagłówków CORS z aktualnego SDK Supabase, przy zachowaniu listy dozwolonych domen. Wdrożenie: wersja 4, `verify_jwt=true`; źródło i `deno.json` porównane z GitHubem.
 - Publiczny odczyt ustawień platformy przeniesiono na klienta Supabase z dokładną projekcją 28 kolumn. Zapytanie przeszło kontrolę na roli `anon`; nie odczytuje kolumn rozliczeniowych.
-- Wszystkie sześć funkcji Edge i ich pliki pomocnicze porównano plik po pliku z wdrożeniami — zgodność treści potwierdzona.
+- Wszystkie osiem aktywnych funkcji Edge i ich pliki pomocnicze porównano plik po pliku z wdrożeniami — zgodność treści potwierdzona.
 
 ## Blokady i status weryfikacji
 
@@ -87,6 +87,15 @@ Dopiero po zakończeniu etapów 1–2:
 - W artykułach przeniesiono odczyt pojedynczego rekordu i walidację dostępności slugu do klienta Supabase. Przed zmianą sprawdzono aktywne polityki: odczyt wszystkich kolumn tabeli `articles` dla roli `authenticated` jest ograniczony RLS do `has_role(auth.uid(),'admin')`. Zapisy, kosz, moderacja, uploady i log audytowy nadal wymagają backendu.
 - Usunięto nieużywany, śledzony plik `.env.development` z tokenem, którego nie znaleziono w użyciu w kodzie. `.env` jest wykluczony z repo, a `.env.example` zawiera publiczne ustawienia połączenia z aktywnym projektem TNB i placeholder klucza.
 - Nie wykonano zmian tabel, polityk RLS ani danych produkcyjnych.
+
+### Kontynuacja prac — 15.11.2026, dalszy ciąg
+
+- Ujednolicono nagłówki CORS z aktualnego SDK Supabase w ośmiu funkcjach Edge. Zachowano metody HTTP, listy originów lub publiczny wildcard zgodnie z przeznaczeniem każdej funkcji.
+- Uruchomiono nową publiczną funkcję `tnb-contact` (v5, `verify_jwt=false`). Formularz kontaktowy wywołuje ją przez `supabase.functions.invoke`; trasa `/kontakt` nie używa już `useServerFn`. Walidacja pól, honeypot i minimalny czas wypełniania są sprawdzane po stronie Edge. Zachowano zapis `contact_messages` oraz idempotentny dziennik powiadomienia w trybie testowym; nie wysyła się prawdziwej poczty, bo adapter dostawcy pozostaje niepodłączony.
+- Zsynchronizowano `tnb-assets` z wdrożonym źródłem, które obsługuje również obrazy artykułów. Wcześniej repozytorium zawierało starszą wersję bez obsługi artykułów. Po synchronizacji i zmianie CORS wdrożenie jest aktywne jako v3.
+- Artykuły korzystają teraz z `publicArticleAssetUrl`, który kieruje obrazy przez `tnb-assets?kind=article...` i zachowuje stary endpoint jako fallback dla środowiska bez `VITE_SUPABASE_URL`. Publiczne okładki biblioteki, spotkań i podcastu już korzystają z tego samego Edge Function.
+- Potwierdzono zgodność kodu i plików pomocniczych wszystkich ośmiu aktywnych Edge Functions z GitHubem: `tnb-health` v3, `tnb-users` v4, `tnb-platform` v4, `tnb-brand` v4, `tnb-pages` v4, `tnb-templates` v4, `tnb-assets` v3, `tnb-contact` v5.
+- CI ma kontrolować instalację z `bun.lock`, build, skan katalogu wyjściowego oraz lint zmienionych plików. Nie mam jeszcze potwierdzonego wyniku uruchomienia — endpointy statusów commitów nie zwracają checków.
 
 ### Nadal otwarte przed przełączeniem do SPA
 
