@@ -91,15 +91,15 @@ async function computeSlots(s: Db, now = new Date()) {
     s.from("consult_blocked_dates").select("day").gte("day", today).lte("day", last),
     s.from("consult_bookings").select("starts_at, ends_at").eq("status", "booked").gte("ends_at", now.toISOString())
   ]);
-  const blockedSet = new Set((blocked ?? []).map((b: any) => b.day));
-  const taken = (booked ?? []).map((b: any) => [new Date(b.starts_at).getTime(), new Date(b.ends_at).getTime()] as const);
+  const blockedSet = new Set((blocked ?? []).map((b: { day: string }) => b.day));
+  const taken = (booked ?? []).map((b: { starts_at: string; ends_at: string }) => [new Date(b.starts_at).getTime(), new Date(b.ends_at).getTime()] as const);
   const minStart = now.getTime() + MIN_NOTICE_HOURS * 3600_000;
   const out: { date: string; slots: string[] }[] = [];
   for (let i = 0; i <= HORIZON_DAYS; i++) {
     const day = addDays(today, i);
     if (blockedSet.has(day)) continue;
     const wd = isoWeekday(day), set = new Set<string>();
-    for (const a of (av ?? []).filter((x: any) => x.weekday === wd)) {
+    for (const a of (av ?? []).filter((x: { weekday: number; start_time: string; end_time: string }) => x.weekday === wd)) {
       const [sh, sm] = a.start_time.split(":").map(Number), [eh, em] = a.end_time.split(":").map(Number);
       for (let m = sh! * 60 + sm!; m + SLOT_MINUTES <= eh! * 60 + em!; m += SLOT_MINUTES) {
         const start = warsawToUtc(day, String(Math.floor(m / 60)) + ":" + String(m % 60));
@@ -159,7 +159,8 @@ async function dispatch(s: Db, input: { event: string; to?: string | null; vars:
   } catch (e) { console.error("consult notification failed", e instanceof Error ? e.message : e); return { status: "failed" as const, reason: "internal_error" }; }
 }
 type BookingMail = "confirmation" | "reminder" | "cancelled_user" | "cancelled_admin" | "admin_new" | "admin_cancelled";
-async function sendBookingMail(s: Db, kind: BookingMail, b: any) {
+type BookingMailRow = { id: string; booking_number: string; first_name: string; email: string; starts_at: string; meeting_link: string | null; access_token: string; user_id: string | null };
+async function sendBookingMail(s: Db, kind: BookingMail, b: BookingMailRow) {
   const event = ({ confirmation: "booking_created", reminder: "booking_reminder", cancelled_user: "booking_cancelled", cancelled_admin: "booking_cancelled", admin_new: "consult_request_admin", admin_cancelled: null } as Record<string, string | null>)[kind];
   if (!event) return { ok: false, reason: "event_not_integrated" };
   const origin = (Deno.env.get("PUBLIC_SITE_URL") || "https://tatanabacznosci.pl").replace(/\/+$/, "");
@@ -235,7 +236,7 @@ async function handle(s: Db, req: Request, raw: unknown) {
     case "listMyBookings": {
       const { data,error } = await s.from("consult_bookings").select("id, booking_number, starts_at, ends_at, topic, status, meeting_link, cancelled_at, cancel_reason").eq("user_id",actor!.id).order("starts_at",{ascending:false}).limit(50);
       if (error) throw new HttpError(500,"Nie udało się pobrać spotkań.");
-      return (data ?? []).map((b:any)=>({...b,meeting_link:b.status==="booked"?b.meeting_link:null}));
+      return (data ?? []).map((b: { id: string; booking_number: string; starts_at: string; ends_at: string; topic: string; status: string; meeting_link: string | null; cancelled_at: string | null; cancel_reason: string | null })=>({...b,meeting_link:b.status==="booked"?b.meeting_link:null}));
     }
     case "cancelMyBooking": {
       const d=input.data;
@@ -277,7 +278,7 @@ async function handle(s: Db, req: Request, raw: unknown) {
       }
       if(cur.status!=="booked") throw new HttpError(409,"Ta rezerwacja ma już status końcowy.");
       const status=d.action==="cancel"?"cancelled_admin":d.action;
-      const patch:any={status,status_changed_by:actor!.id,status_changed_at:now};
+      const patch: { status: string; status_changed_by: string; status_changed_at: string; cancelled_at?: string; cancelled_by?: string; cancel_reason?: string; reminder_status?: string }={status,status_changed_by:actor!.id,status_changed_at:now};
       if(status==="cancelled_admin") Object.assign(patch,{cancelled_at:now,cancelled_by:actor!.id,cancel_reason:d.reason || "Anulowane przez organizatora",reminder_status:"not_needed"});
       const {error}=await s.from("consult_bookings").update(patch).eq("id",d.id).eq("status","booked");
       await logAdminEvent(s,{type:"booking_"+status,actor:actor!.id,objectKind:"booking",objectId:d.id,result:error?"failed":"ok",detail:cur.booking_number});
