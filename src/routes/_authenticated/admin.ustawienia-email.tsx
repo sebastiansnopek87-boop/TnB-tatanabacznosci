@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { getEmailSettings, updateEmailSettings } from "@/lib/api/admin";
@@ -95,10 +94,10 @@ function Toggle({ id, label, checked, onChange }: { id: string; label: string; c
 }
 
 function ProviderSection() {
-  const overview = useServerFn(getNotificationOverview);
-  const saveCfg = useServerFn(updateDeliveryConfig);
-  const test = useServerFn(sendTestMessage);
-  const dup = useServerFn(runDuplicateCheck);
+  const overview = getNotificationOverview;
+  const saveCfg = updateDeliveryConfig;
+  const test = sendTestMessage;
+  const dup = runDuplicateCheck;
   const qc = useQueryClient();
   const { data } = useQuery({ queryKey: ["admin-notif-overview"], queryFn: () => overview() });
   const [replyTo, setReplyTo] = useState<string | null>(null);
