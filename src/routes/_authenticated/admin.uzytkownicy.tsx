@@ -1,10 +1,9 @@
 import { adminRecordSearch } from "@/lib/admin-record-search";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { Fragment, useState, useEffect } from "react";
 import { toast } from "sonner";
-import { listUsers, getUserDetail, setUserRole, ROLE_VALUES } from "@/lib/api/users";
+import { listUsers, getUserDetail, setUserRole, ROLE_VALUES, type Role, type RoleFilter, type UserStatus } from "@/lib/api/users";
 import { errMsg, fmtDate } from "@/components/admin/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,14 +19,13 @@ const sel = "h-9 rounded-md border border-input bg-background px-2 text-sm";
 
 function UsersPage() {
   const { record } = Route.useSearch();
-  const fn = useServerFn(listUsers);
   const [q, setQ] = useState(""); const [applied, setApplied] = useState("");
   const [role, setRole] = useState(""); const [status, setStatus] = useState(""); const [page, setPage] = useState(0);
   const [open, setOpen] = useState<string | null>(record ?? null);
   useEffect(() => { setOpen(record ?? null); }, [record]);
   const { data, error, isFetching } = useQuery({
     queryKey: ["admin-users", applied, role, status, page],
-    queryFn: () => fn({ data: { q: applied, role: role as never, status: status as never, page } }),
+    queryFn: () => listUsers({ q: applied, role: role as RoleFilter, status: status as UserStatus, page }),
   });
   const pages = data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : 1;
 
@@ -77,11 +75,11 @@ function UsersPage() {
 }
 
 function UserDetail({ id }: { id: string }) {
-  const fn = useServerFn(getUserDetail); const setFn = useServerFn(setUserRole); const qc = useQueryClient();
-  const { data: u, error } = useQuery({ queryKey: ["admin-user", id], queryFn: () => fn({ data: { id } }) });
+  const qc = useQueryClient();
+  const { data: u, error } = useQuery({ queryKey: ["admin-user", id], queryFn: () => getUserDetail({ id }) });
   const [confirm, setConfirm] = useState<{ role: string; grant: boolean } | null>(null);
   const m = useMutation({
-    mutationFn: (v: { role: string; grant: boolean }) => setFn({ data: { id, role: v.role as never, grant: v.grant } }),
+    mutationFn: (v: { role: string; grant: boolean }) => setUserRole({ id, role: v.role as Role, grant: v.grant }),
     onSuccess: () => { toast.success("Zapisano zmianę roli."); qc.invalidateQueries({ queryKey: ["admin-user", id] }); qc.invalidateQueries({ queryKey: ["admin-users"] }); },
     onError: (e) => toast.error(errMsg(e)),
   });
