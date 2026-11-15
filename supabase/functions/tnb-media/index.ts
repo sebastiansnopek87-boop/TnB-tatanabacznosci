@@ -1,11 +1,12 @@
 import { createClient } from "@supabase/supabase-js";
+import { corsHeaders as supabaseCorsHeaders } from "npm:@supabase/supabase-js@2.117.2/cors";
 
 const UUID = /^[0-9a-f-]{36}$/i;
 const ARTICLE_IMAGE = /^[a-z0-9-]+\.(jpg|png|webp)$/;
 const CORS = new Headers({
+  ...supabaseCorsHeaders,
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, OPTIONS",
-  "Access-Control-Allow-Headers": "authorization, apikey, x-client-info, content-type",
   "Access-Control-Max-Age": "86400",
   "X-Content-Type-Options": "nosniff",
 });
