@@ -168,7 +168,7 @@ function Editor({ id, cats, onClose, onSaved }: { id: string | null; cats: { slu
 
   async function retry() {
     if (!f.id) return; setUploading("file");
-    try { const r = await retryFn({ data: { id: f.id } }); r.status === "ready" ? toast.success("PDF oznaczony znakiem wodnym TNB.") : toast.error(`Błąd przetwarzania: ${r.error}`); }
+    try { const r = await retryFn({ data: { id: f.id } }); if (r.status === "ready") toast.success("PDF oznaczony znakiem wodnym TNB."); else toast.error(`Błąd przetwarzania: ${r.error}`); }
     catch (e) { toast.error(errMsg(e)); } finally { setUploading(null); qc.invalidateQueries({ queryKey: ["admin-library-item", f.id] }); }
   }
   async function openUrl(which: "final" | "original", download: boolean) {
