@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { HOME_KINDS, newSection, type PageSection } from "./_shared/pages.ts";
 import { TextFormatsSchema } from "./_shared/rich-text.ts";
+import { corsHeaders as supabaseCorsHeaders } from "npm:@supabase/supabase-js@2.117.2/cors";
 
 class ApiError extends Error {
   constructor(message: string, readonly status: number, readonly code: string) { super(message); }
@@ -210,7 +211,11 @@ async function imageUrls(ctx: Context, files: { t: string; n: string }[]) {
 }
 const ALLOWED_ORIGINS = new Set(["https://tatanabacznosci.pl", "https://www.tatanabacznosci.pl", "http://localhost:5173", "http://127.0.0.1:5173"]);
 function cors(origin: string | null) {
-  const headers = new Headers({ "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "authorization, apikey, x-client-info, content-type", "Access-Control-Max-Age": "86400", "Vary": "Origin" });
+  const headers = new Headers(supabaseCorsHeaders);
+  headers.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+  headers.set("Access-Control-Max-Age", "86400");
+  headers.set("Vary", "Origin");
+  headers.delete("Access-Control-Allow-Origin");
   if (origin && ALLOWED_ORIGINS.has(origin)) headers.set("Access-Control-Allow-Origin", origin);
   return headers;
 }
