@@ -1,6 +1,5 @@
 import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { getAdminStatus } from "@/lib/api/admin";
 import { Button } from "@/components/ui/button";
@@ -61,10 +60,9 @@ const GROUPS: Array<{ title: string; items: NavItem[] }> = [
 ];
 
 function AdminLayout() {
-  const fn = useServerFn(getAdminStatus);
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const { data, isLoading, error } = useQuery({ queryKey: ["admin-status"], queryFn: () => fn() });
+  const { data, isLoading, error } = useQuery({ queryKey: ["admin-status"], queryFn: getAdminStatus });
 
   const [menu, setMenu] = useState(false);
   const pathname = useRouterState({ select: (r) => r.location.pathname });
