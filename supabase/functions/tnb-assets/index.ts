@@ -92,7 +92,7 @@ async function findPublicAsset(
   file?: string,
 ): Promise<PublicAsset | null> {
   if (kind === "article") {
-    if (!file || !/^[a-z0-9-]+\\.(jpg|png|webp)$/.test(file)) return null;
+    if (!file || !/^[a-z0-9-]+\.(jpg|png|webp)$/.test(file)) return null;
     const { data, error } = await db
       .from("articles")
       .select("status, published_at, cover, sections")
@@ -170,7 +170,7 @@ Deno.serve(async (request: Request) => {
     (kind !== "article" && kind !== "library" && kind !== "meeting" && kind !== "podcast") ||
     !id ||
     !UUID.test(id) ||
-    (kind === "article" && (!file || !/^[a-z0-9-]+\\.(jpg|png|webp)$/.test(file)))
+    (kind === "article" && (!file || !/^[a-z0-9-]+\.(jpg|png|webp)$/.test(file)))
   ) {
     return notFound();
   }
