@@ -23,7 +23,7 @@ export function publicAssetUrl(kind: PublicAssetKind, id: string, version?: stri
 export function publicArticleAssetUrl(id: string, file: string, version?: string | null): string {
   const base = String(import.meta.env["VITE_SUPABASE_URL"] ?? "").replace(/\/+$/, "");
   const url = base
-    ? base + "/functions/v1/tnb-assets?kind=article&id=" + encodeURIComponent(id) + "&file=" + encodeURIComponent(file)
+    ? base + "/functions/v1/tnb-articles?image=" + encodeURIComponent(id + "/" + file)
     : "/api/public/article-image/" + encodeURIComponent(id) + "/" + encodeURIComponent(file);
 
   return version ? url + (url.includes("?") ? "&" : "?") + "v=" + encodeURIComponent(version) : url;
