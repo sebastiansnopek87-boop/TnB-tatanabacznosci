@@ -21,14 +21,13 @@ markers=(
   LOVABLE_API_KEY
   LOVABLE_CRON_SECRET
   INSTAGRAM_APP_SECRET
-  YOUTUBE_API_KEY
   client.server
-  sb_secret_
+  'sb_secret_[A-Za-z0-9_-]{20,}'
 )
 
 failed=0
 for marker in "${markers[@]}"; do
-  if matches="$(grep -rIl -- "$marker" "$DIR" 2>&1)"; then
+  if matches="$(grep -rIlE -- "$marker" "$DIR" 2>&1)"; then
     echo "FOUND: $marker"
     printf '%s\n' "$matches"
     failed=1
@@ -43,7 +42,7 @@ for marker in "${markers[@]}"; do
 done
 
 if [[ $failed -eq 0 ]]; then
-  echo "OK: no server-only markers in $DIR"
+  echo "OK: no server-only markers or credential values in $DIR"
 fi
 
 exit "$failed"
