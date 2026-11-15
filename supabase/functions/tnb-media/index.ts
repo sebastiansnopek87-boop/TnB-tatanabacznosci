@@ -11,17 +11,42 @@ const CORS = new Headers({
 });
 type MediaKind = "library-cover" | "meeting-image" | "podcast-cover" | "article-image" | "avatar";
 
+function envKey(...names: string[]): string | null {
+  for (const name of names) {
+    const raw = Deno.env.get(name);
+    if (!raw) continue;
+    try {
+      const value = JSON.parse(raw);
+      if (typeof value === "string") return value;
+      if (value && typeof value.default === "string") return value.default;
+    } catch {
+      return raw;
+    }
+  }
+  return null;
+}
+
+function createSupabaseFetch(apiKey: string): typeof fetch {
+  return (input, init) => {
+    const headers = new Headers(typeof Request !== "undefined" && input instanceof Request ? input.headers : undefined);
+    if (init?.headers) new Headers(init.headers).forEach((value, key) => headers.set(key, value));
+    if ((apiKey.startsWith("sb_publishable_") || apiKey.startsWith("sb_secret_")) && headers.get("Authorization") === "Bearer " + apiKey) {
+      headers.delete("Authorization");
+    }
+    headers.set("apikey", apiKey);
+    return fetch(input, { ...init, headers });
+  };
+}
+
 function client() {
   const url = Deno.env.get("SUPABASE_URL");
-  const key = Deno.env.get("SUPABASE_SECRET_KEYS")
-    ?? Deno.env.get("SUPABASE_SECRET_KEY")
-    ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const key = envKey("SUPABASE_SECRET_KEYS", "SUPABASE_SECRET_KEY", "SUPABASE_SERVICE_ROLE_KEY");
   if (!url || !key) throw new Error("Media backend is not configured.");
   return createClient(url, key, {
+    global: { fetch: createSupabaseFetch(key) },
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
   });
 }
-
 function denied() {
   return new Response("Not found", { status: 404, headers: { ...Object.fromEntries(CORS), "Cache-Control": "no-store" } });
 }
