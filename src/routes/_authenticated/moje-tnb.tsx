@@ -1,8 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { useServerFn } from '@tanstack/react-start';
 import { useQuery } from '@tanstack/react-query';
 import { BookOpen, FolderOpen, CalendarDays, MessageCircle, Settings, ArrowUpRight, Shield } from 'lucide-react';
-import { getAdminStatus } from '@/lib/api/admin';
+import { supabase } from '@/integrations/supabase/client';
 import { PageShell } from '@/components/tnb/PageShell';
 import { Button } from '@/components/ui/button';
 import { MyMeetings } from '@/components/consult/MyMeetings';
@@ -22,8 +21,18 @@ export const Route = createFileRoute('/_authenticated/moje-tnb')({
   ] }), component: MojeTnb,
 });
 function MojeTnb() {
-  const { user } = useAuth(); const adminFn = useServerFn(getAdminStatus);
-  const admin = useQuery({ queryKey: ['admin-status', user?.id], queryFn: () => adminFn(), enabled: !!user });
+  const { user } = useAuth();
+  const admin = useQuery({
+    queryKey: ['admin-status', user?.id],
+    queryFn: async () => {
+      const { data: auth, error: authError } = await supabase.auth.getUser();
+      if (authError || !auth.user) return { isAdmin: false, email: null };
+      const { data: isAdmin, error } = await supabase.rpc('has_role', { _user_id: auth.user.id, _role: 'admin' });
+      if (error) throw new Error('Nie udało się sprawdzić uprawnień.');
+      return { isAdmin: !!isAdmin, email: auth.user.email ?? null };
+    },
+    enabled: !!user,
+  });
   const name = user ? accountName(user.user_metadata) : '';
   function jump(id: string) { const el = document.getElementById(id); if (!el) return; el.scrollIntoView({ behavior: 'instant', block: 'start' }); el.focus({ preventScroll: true }); }
   return <PageShell><div className="mx-auto max-w-[1200px] px-5 py-6 lg:px-10 lg:py-10">
