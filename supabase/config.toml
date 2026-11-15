@@ -1,1 +1,7 @@
-project_id = "dgyeadkyuguuuruzkbmu"
+project_id = "pmdfiipontreuclfumdh"
+
+[functions.tnb-health]
+verify_jwt = true
+
+[functions.tnb-users]
+verify_jwt = true
