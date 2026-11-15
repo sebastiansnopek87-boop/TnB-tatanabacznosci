@@ -391,7 +391,7 @@ async function ccRead<T>(query: PromiseLike<{ data: T | null; error: unknown }>)
 function ccReadState(error: unknown, count: number, limit: number, incomplete = false) {
   return { error: error ? "Nie udało się pobrać danych. Spróbuj ponownie." : null, limited: !error && count > limit, incomplete };
 }
-function ccFilterValue(value: string) { return `"${v.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`; }
+const ccFilterValue = (v: string) => `"${v.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
 function ccSearchParts(query: string) {
 function ccHasAccess(order: { status: string; paid_at: string | null; access_revoked_at: string | null }) {
   return !!order.paid_at && !order.access_revoked_at && ["paid", "refund_pending", "refunded"].includes(order.status);
