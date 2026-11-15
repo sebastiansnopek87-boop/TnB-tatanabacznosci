@@ -70,9 +70,6 @@ import { Route as SpotkaniaZgloszenieTokenRouteImport } from './routes/spotkania
 import { Route as ApiPublicCronConsultRemindersRouteImport } from './routes/api/public/cron/consult-reminders'
 import { Route as ApiPublicCronInstagramSyncRouteImport } from './routes/api/public/cron/instagram-sync'
 import { Route as ApiPublicInstagramCallbackRouteImport } from './routes/api/public/instagram/callback'
-import { Route as ApiPublicPaymentsP24RouteImport } from './routes/api/public/payments/p24'
-import { Route as ApiPublicPaymentsPayuRouteImport } from './routes/api/public/payments/payu'
-import { Route as ApiPublicPaymentsTpayRouteImport } from './routes/api/public/payments/tpay'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -409,21 +406,6 @@ const ApiPublicInstagramCallbackRoute =
     path: '/api/public/instagram/callback',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicPaymentsP24Route = ApiPublicPaymentsP24RouteImport.update({
-  id: '/api/public/payments/p24',
-  path: '/api/public/payments/p24',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicPaymentsPayuRoute = ApiPublicPaymentsPayuRouteImport.update({
-  id: '/api/public/payments/payu',
-  path: '/api/public/payments/payu',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicPaymentsTpayRoute = ApiPublicPaymentsTpayRouteImport.update({
-  id: '/api/public/payments/tpay',
-  path: '/api/public/payments/tpay',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -486,9 +468,6 @@ export interface FileRoutesByFullPath {
   '/api/public/cron/consult-reminders': typeof ApiPublicCronConsultRemindersRoute
   '/api/public/cron/instagram-sync': typeof ApiPublicCronInstagramSyncRoute
   '/api/public/instagram/callback': typeof ApiPublicInstagramCallbackRoute
-  '/api/public/payments/p24': typeof ApiPublicPaymentsP24Route
-  '/api/public/payments/payu': typeof ApiPublicPaymentsPayuRoute
-  '/api/public/payments/tpay': typeof ApiPublicPaymentsTpayRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -550,9 +529,6 @@ export interface FileRoutesByTo {
   '/api/public/cron/consult-reminders': typeof ApiPublicCronConsultRemindersRoute
   '/api/public/cron/instagram-sync': typeof ApiPublicCronInstagramSyncRoute
   '/api/public/instagram/callback': typeof ApiPublicInstagramCallbackRoute
-  '/api/public/payments/p24': typeof ApiPublicPaymentsP24Route
-  '/api/public/payments/payu': typeof ApiPublicPaymentsPayuRoute
-  '/api/public/payments/tpay': typeof ApiPublicPaymentsTpayRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -617,9 +593,6 @@ export interface FileRoutesById {
   '/api/public/cron/consult-reminders': typeof ApiPublicCronConsultRemindersRoute
   '/api/public/cron/instagram-sync': typeof ApiPublicCronInstagramSyncRoute
   '/api/public/instagram/callback': typeof ApiPublicInstagramCallbackRoute
-  '/api/public/payments/p24': typeof ApiPublicPaymentsP24Route
-  '/api/public/payments/payu': typeof ApiPublicPaymentsPayuRoute
-  '/api/public/payments/tpay': typeof ApiPublicPaymentsTpayRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -684,9 +657,6 @@ export interface FileRouteTypes {
     | '/api/public/cron/consult-reminders'
     | '/api/public/cron/instagram-sync'
     | '/api/public/instagram/callback'
-    | '/api/public/payments/p24'
-    | '/api/public/payments/payu'
-    | '/api/public/payments/tpay'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -748,9 +718,6 @@ export interface FileRouteTypes {
     | '/api/public/cron/consult-reminders'
     | '/api/public/cron/instagram-sync'
     | '/api/public/instagram/callback'
-    | '/api/public/payments/p24'
-    | '/api/public/payments/payu'
-    | '/api/public/payments/tpay'
   id:
     | '__root__'
     | '/'
@@ -814,9 +781,6 @@ export interface FileRouteTypes {
     | '/api/public/cron/consult-reminders'
     | '/api/public/cron/instagram-sync'
     | '/api/public/instagram/callback'
-    | '/api/public/payments/p24'
-    | '/api/public/payments/payu'
-    | '/api/public/payments/tpay'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -852,9 +816,6 @@ export interface RootRouteChildren {
   ApiPublicCronConsultRemindersRoute: typeof ApiPublicCronConsultRemindersRoute
   ApiPublicCronInstagramSyncRoute: typeof ApiPublicCronInstagramSyncRoute
   ApiPublicInstagramCallbackRoute: typeof ApiPublicInstagramCallbackRoute
-  ApiPublicPaymentsP24Route: typeof ApiPublicPaymentsP24Route
-  ApiPublicPaymentsPayuRoute: typeof ApiPublicPaymentsPayuRoute
-  ApiPublicPaymentsTpayRoute: typeof ApiPublicPaymentsTpayRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1286,27 +1247,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicInstagramCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/payments/p24': {
-      id: '/api/public/payments/p24'
-      path: '/api/public/payments/p24'
-      fullPath: '/api/public/payments/p24'
-      preLoaderRoute: typeof ApiPublicPaymentsP24RouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/payments/payu': {
-      id: '/api/public/payments/payu'
-      path: '/api/public/payments/payu'
-      fullPath: '/api/public/payments/payu'
-      preLoaderRoute: typeof ApiPublicPaymentsPayuRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/payments/tpay': {
-      id: '/api/public/payments/tpay'
-      path: '/api/public/payments/tpay'
-      fullPath: '/api/public/payments/tpay'
-      preLoaderRoute: typeof ApiPublicPaymentsTpayRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -1421,9 +1361,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicCronConsultRemindersRoute: ApiPublicCronConsultRemindersRoute,
   ApiPublicCronInstagramSyncRoute: ApiPublicCronInstagramSyncRoute,
   ApiPublicInstagramCallbackRoute: ApiPublicInstagramCallbackRoute,
-  ApiPublicPaymentsP24Route: ApiPublicPaymentsP24Route,
-  ApiPublicPaymentsPayuRoute: ApiPublicPaymentsPayuRoute,
-  ApiPublicPaymentsTpayRoute: ApiPublicPaymentsTpayRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
