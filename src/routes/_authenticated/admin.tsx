@@ -1,8 +1,6 @@
 import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { getAdminStatus } from "@/lib/api/admin";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { ChevronDown, ChevronRight, LayoutDashboard, Users, FileText, Mail, Settings, Menu, X, LogOut } from "lucide-react";
@@ -61,10 +59,19 @@ const GROUPS: Array<{ title: string; items: NavItem[] }> = [
 ];
 
 function AdminLayout() {
-  const fn = useServerFn(getAdminStatus);
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const { data, isLoading, error } = useQuery({ queryKey: ["admin-status"], queryFn: () => fn() });
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["admin-status"],
+    queryFn: async () => {
+      const { data: auth, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!auth.user) return { isAdmin: false, email: null };
+      const { data: isAdmin, error: roleError } = await supabase.rpc("has_role", { _user_id: auth.user.id, _role: "admin" });
+      if (roleError) throw roleError;
+      return { isAdmin: !!isAdmin, email: auth.user.email ?? null };
+    },
+  });
 
   const [menu, setMenu] = useState(false);
   const pathname = useRouterState({ select: (r) => r.location.pathname });
