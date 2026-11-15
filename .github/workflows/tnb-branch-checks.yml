@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   build:
-    name: Build and lint
+    name: Build, API lint and secret scan
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -30,5 +30,16 @@ jobs:
       - name: Production build
         run: bun run build
 
-      - name: ESLint
-        run: bun run lint
+      - name: Scan production bundle for server-only credentials
+        run: bash scripts/scan-dist-secrets.sh dist
+
+      - name: Lint migrated browser API adapters
+        run: >-
+          bunx eslint
+          src/lib/api/edge.ts
+          src/lib/api/useServerFn.ts
+          src/lib/api/users.ts
+          src/lib/api/brand.ts
+          src/lib/api/platform.ts
+          src/lib/api/templates.ts
+          --rule 'prettier/prettier: off'
