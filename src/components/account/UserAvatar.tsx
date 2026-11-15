@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { UserRound } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,9 +7,19 @@ import { tnbPublicFunctionUrl } from '@/lib/public-edge-url';
 
 export function UserAvatar({ name = '', own = false, kind, id, className = 'size-10' }: { name?: string; own?: boolean; kind?: 'post' | 'comment'; id?: string; className?: string }) {
   const auth = useAuth();
+  const ownAvatar = useQuery({
+    queryKey: ['my-avatar', auth.user?.id],
+    queryFn: async () => {
+      if (!auth.user) return null;
+      const { data, error } = await supabase.from('user_avatars').select('object_path').eq('user_id', auth.user.id).maybeSingle();
+      if (error) throw new Error('Nie udało się wczytać avatara.');
+      return data?.object_path ?? null;
+    },
+    enabled: own && !!auth.user && !auth.user.id.startsWith('00000000-'),
+  });
   const path = own
-    ? auth.user && !auth.user.id.startsWith('00000000-')
-      ? tnbPublicFunctionUrl('tnb-media', { kind: 'avatar', avatarKind: 'own', id: auth.user.id })
+    ? auth.user && ownAvatar.data
+      ? tnbPublicFunctionUrl('tnb-media', { kind: 'avatar', avatarKind: 'own', id: auth.user.id, v: ownAvatar.data.split('/').pop() ?? '' })
       : null
     : kind && id
       ? tnbPublicFunctionUrl('tnb-media', { kind: 'avatar', avatarKind: kind, id })
