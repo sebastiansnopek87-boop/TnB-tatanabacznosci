@@ -69,7 +69,22 @@ function endOf(m: { starts_at: string; ends_at: string | null }) {
 }
 type RegStatus = "pending" | "approved" | "rejected" | "cancelled";
 type MyReg = { status: RegStatus; token: string; link: string | null; joinOpensAt: string | null; recording: string | null; address: string | null; meeting_point: string | null; map_url: string | null; canCancel: boolean };
-function toPublic(m: any, count: number) {
+type MeetingRecord = {
+  id: string; slug: string; title: string; kind: "online" | "live"; summary: string; description: string; rules: string;
+  starts_at: string; ends_at: string | null; location: string; location_public: boolean; image_url: string | null;
+  capacity: number | null; registration_open: boolean; requires_login: boolean; requires_approval: boolean;
+  host: string; venue_name: string; is_outdoor: boolean; cancelled_at: string | null; cancel_reason: string | null;
+  recording_url: string | null; recording_access: string; fee_info: string; difficulty: string; route_length: string;
+  route_duration: string; equipment: string; organizer_contact: string; cancellation_policy: string;
+  preparation: string; org_notes: string; address: string; meeting_point: string; map_url: string | null;
+  user_can_cancel: boolean; join_open_minutes: number; online_link: string | null; status?: string;
+};
+type EntitlementMeetingRecord = Pick<MeetingRecord, "id" | "title" | "slug" | "kind" | "status" | "starts_at" | "ends_at" | "online_link" | "join_open_minutes" | "recording_url" | "address" | "location" | "meeting_point" | "map_url" | "cancelled_at" | "user_can_cancel"> & { status: string };
+type RegistrationLookup = { id?: string; meeting_id: string; status: string; access_token: string; user_id?: string | null; email?: string; name?: string; phone?: string | null; message?: string | null; attended?: boolean; created_at?: string; decided_at?: string | null };
+type MeetingAdminRow = { id: string; slug: string; title: string; kind: string; status: string; starts_at: string; capacity: number | null; registration_open: boolean; cancelled_at: string | null; is_outdoor: boolean; online_link: string | null };
+type MeetingRegistrationCount = { meeting_id: string; status: string };
+
+function toPublic(m: MeetingRecord, count: number) {
   const pub = m.location_public, past = endOf(m) < Date.now();
   return {
     id:m.id,slug:m.slug,title:m.title,kind:m.kind,summary:m.summary,description:m.description,rules:m.rules,
@@ -83,7 +98,7 @@ function toPublic(m: any, count: number) {
     recording_public:past && m.recording_access==="public" ? m.recording_url : null
   };
 }
-function entitlement(m: any, r: { status: string; access_token: string }): MyReg {
+function entitlement(m: EntitlementMeetingRecord, r: { status: string; access_token: string }): MyReg {
   const approved = r.status==="approved" && m.status==="published" && !m.cancelled_at;
   const start = new Date(m.starts_at).getTime(), end=endOf(m), now=Date.now(), opens=start-m.join_open_minutes*60000;
   const hasLink=approved && m.kind==="online" && !!m.online_link;
@@ -184,7 +199,7 @@ const RequestSchema=z.discriminatedUnion("action",[
 ]);
 const ADMIN_ACTIONS=new Set(["adminListMeetings","adminGetMeeting","adminSaveMeeting","adminSetMeetingStatus","adminUploadMeetingImage","adminRemoveMeetingImage","adminListRegistrations","adminUpdateRegistration","adminCancelMeeting"]);
 const AUTH_ACTIONS=new Set(["getMyRegistration","listMyRegistrations"]);
-function publicMeetingCard(d:any) {
+function publicMeetingCard(d: ReturnType<typeof toPublic>) {
   return {id:d.id,slug:d.slug,title:d.title,kind:d.kind,summary:d.summary,starts_at:d.starts_at,ends_at:d.ends_at,location:d.location,has_image:d.has_image,capacity:d.capacity,taken:d.taken,registration_open:d.registration_open,requires_login:d.requires_login,requires_approval:d.requires_approval,host:d.host,venue_name:d.venue_name,is_outdoor:d.is_outdoor,cancelled:d.cancelled,cancel_reason:d.cancel_reason,has_recording:d.has_recording,fee_info:d.fee_info,difficulty:d.difficulty,route_length:d.route_length,route_duration:d.route_duration};
 }
 async function handle(s:Db,req:Request,raw:unknown) {
@@ -194,15 +209,17 @@ async function handle(s:Db,req:Request,raw:unknown) {
     case "listMeetings": {
       const {data,error}=await s.from("meetings").select(COLS).eq("status","published").order("starts_at",{ascending:true}).limit(200);
       if(error)throw new HttpError(500,"Nie udało się pobrać spotkań.");
-      const counts=await taken(s,(data??[]).map((m:any)=>m.id));
-      return (data??[]).map((m:any)=>publicMeetingCard(toPublic(m,counts.get(m.id)??0)));
+      const meetingRows = (data ?? []) as unknown as MeetingRecord[];
+      const counts=await taken(s,meetingRows.map((m)=>m.id));
+      return meetingRows.map((m)=>publicMeetingCard(toPublic(m,counts.get(m.id)??0)));
     }
     case "getMeeting": {
       const {data:m,error}=await s.from("meetings").select(COLS).eq("slug",input.data.slug).eq("status","published").maybeSingle();
       if(error)throw new HttpError(500,"Nie udało się pobrać spotkania.");
       if(!m)return null;
-      const counts=await taken(s,[m.id]);
-      return toPublic(m,counts.get(m.id)??0);
+      const meeting = m as unknown as MeetingRecord;
+      const counts=await taken(s,[meeting.id]);
+      return toPublic(meeting,counts.get(meeting.id)??0);
     }
     case "getMyRegistration": {
       const d=input.data;
@@ -214,12 +231,14 @@ async function handle(s:Db,req:Request,raw:unknown) {
     }
     case "listMyRegistrations": {
       const {data:regs}=await s.from("meeting_registrations").select("meeting_id,status,access_token").eq("user_id",actor!.id);
-      if(!regs?.length)return [];
-      const {data:meetings}=await s.from("meetings").select(ENT_COLS).in("id",regs.map((r:any)=>r.meeting_id)).neq("status","draft");
-      return (meetings??[]).map((m:any)=>{
-        const r=regs.find((x:any)=>x.meeting_id===m.id)!;
+      const registrationRows = (regs ?? []) as unknown as RegistrationLookup[];
+      if(!registrationRows.length)return [];
+      const {data:meetings}=await s.from("meetings").select(ENT_COLS).in("id",registrationRows.map((r)=>r.meeting_id)).neq("status","draft");
+      const meetingRows = (meetings ?? []) as unknown as EntitlementMeetingRecord[];
+      return meetingRows.map((m)=>{
+        const r=registrationRows.find((x)=>x.meeting_id===m.id)!;
         return {id:m.id,title:m.title,slug:m.status==="published"?m.slug:null,kind:m.kind,starts_at:m.starts_at,ends_at:m.ends_at,meetingCancelled:!!m.cancelled_at,ended:endOf(m)<Date.now(),...entitlement(m,r)};
-      }).sort((a:any,b:any)=>a.starts_at.localeCompare(b.starts_at));
+      }).sort((a,b)=>a.starts_at.localeCompare(b.starts_at));
     }
     case "cancelMyRegistration": {
       const token=input.data.token;
@@ -243,7 +262,8 @@ async function handle(s:Db,req:Request,raw:unknown) {
       const user=await userFromRequest(s,req);
       if(m.requires_login && !user)return {error:"Zapisy na to spotkanie wymagają zalogowania."};
       const {data:prevRows}=await s.from("meeting_registrations").select("id,status,user_id,email").eq("meeting_id",m.id);
-      const prev=(prevRows??[]).find((r:any)=>(user && r.user_id===user.id) || r.email.toLowerCase()===d.email);
+      const previousRows = (prevRows ?? []) as unknown as RegistrationLookup[];
+      const prev=previousRows.find((r)=>(user && r.user_id===user.id) || (r.email ?? "").toLowerCase()===d.email);
       if(prev && prev.status!=="cancelled")return {error:user && prev.user_id===user.id?"Z tego konta wysłano już zgłoszenie na to spotkanie.":"Na ten adres e-mail wysłano już zgłoszenie na to spotkanie."};
       const {count:recent}=await s.from("meeting_registrations").select("id",{count:"exact",head:true}).ilike("email",d.email).gte("created_at",new Date(Date.now()-3600000).toISOString());
       if((recent??0)>=5)return {error:"Wysłano zbyt wiele zgłoszeń z tego adresu. Spróbuj później."};
@@ -273,8 +293,10 @@ async function handle(s:Db,req:Request,raw:unknown) {
       const {data,error}=await s.from("meetings").select("id,slug,title,kind,status,starts_at,capacity,registration_open,cancelled_at,is_outdoor,online_link").order("starts_at",{ascending:false});
       if(error)throw new HttpError(500,"Nie udało się wczytać spotkań.");
       const {data:regs}=await s.from("meeting_registrations").select("meeting_id,status");
-      return (data??[]).map((m:any)=>{
-        const rs=(regs??[]).filter((r:any)=>r.meeting_id===m.id),c=(status:string)=>rs.filter((r:any)=>r.status===status).length;
+      const meetingRows = (data ?? []) as unknown as MeetingAdminRow[];
+      const registrationRows = (regs ?? []) as unknown as MeetingRegistrationCount[];
+      return meetingRows.map((m)=>{
+        const rs=registrationRows.filter((r)=>r.meeting_id===m.id),c=(status:string)=>rs.filter((r)=>r.status===status).length;
         return {...m,total:rs.length,pending:c("pending"),approved:c("approved"),rejected:c("rejected")};
       });
     }
@@ -306,7 +328,7 @@ async function handle(s:Db,req:Request,raw:unknown) {
       return {id:saved.id as string};
     }
     case "adminSetMeetingStatus": {
-      const patch:any={status:input.data.status};if(input.data.status==="published")patch.published_at=new Date().toISOString();
+      const patch: { status: string; published_at?: string }={status:input.data.status};if(input.data.status==="published")patch.published_at=new Date().toISOString();
       const {error}=await s.from("meetings").update(patch).eq("id",input.data.id);
       await logAdminEvent(s,{type:"meeting_"+input.data.status,actor:actor!.id,objectKind:"meeting",objectId:input.data.id,result:error?"failed":"ok"});
       if(error)throw new HttpError(500,"Nie udało się zmienić statusu.");
@@ -336,7 +358,7 @@ async function handle(s:Db,req:Request,raw:unknown) {
       return data ?? [];
     }
     case "adminUpdateRegistration": {
-      const d=input.data,patch:any={};
+      const d=input.data,patch: { status?: string; decided_at?: string; decided_by?: string; attended?: boolean } = {};
       if(d.status)Object.assign(patch,{status:d.status,decided_at:new Date().toISOString(),decided_by:actor!.id});
       if(d.attended!==undefined)patch.attended=d.attended;
       const {data:before}=await s.from("meeting_registrations").select("status,meeting_id").eq("id",d.id).maybeSingle();
