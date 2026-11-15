@@ -21,6 +21,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
@@ -44,5 +46,9 @@ jobs:
           fi
           bash scripts/scan-dist-secrets.sh "$OUTPUT_DIR"
 
-      - name: Lint application
-        run: bun run lint
+      - name: Lint changed source files
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_BEFORE: ${{ github.event.before }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: bash scripts/lint-changed.sh
