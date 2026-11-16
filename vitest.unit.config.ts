@@ -21,6 +21,8 @@ export default defineConfig({
       "src/lib/admin-api.test.ts",
       "src/lib/users-api.test.ts",
       "src/lib/notifications-api-contract.test.ts",
+      "src/lib/newsletter-api-contract.test.ts",
+      "src/lib/contact-api-contract.test.ts",
       "src/lib/rich-text.test.ts",
     ],
   },
