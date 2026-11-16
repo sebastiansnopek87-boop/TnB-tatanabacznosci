@@ -110,6 +110,43 @@ describe("library SPA adapter contracts", () => {
     }
   });
 
+  it("keeps admin operations behind server-verified admin role checks", () => {
+    const adminEdge = readFileSync(new URL("../../supabase/functions/tnb-library-admin/index.ts", import.meta.url), "utf8");
+    const deliveryEdge = readFileSync(new URL("../../supabase/functions/tnb-library-delivery/index.ts", import.meta.url), "utf8");
+
+    expect(adminEdge).toContain('s.rpc("has_role", { _user_id: user.id, _role: "admin" })');
+    expect(adminEdge.indexOf("const actor = await requireAdmin(s, req)")).toBeGreaterThan(adminEdge.indexOf('if (input.action === "getLibraryFileUrl")'));
+    expect(deliveryEdge).toContain('s.rpc("has_role", { _user_id: user.id, _role: "admin" })');
+    expect(deliveryEdge.indexOf("const actor = await requireAdmin(s, req)")).toBeGreaterThan(deliveryEdge.indexOf('if (input.action === "redeemFreeMaterial")'));
+  });
+
+  it("checks direct-download entitlement as the caller before issuing a service-role signed URL", () => {
+    const edge = readFileSync(new URL("../../supabase/functions/tnb-library-admin/index.ts", import.meta.url), "utf8");
+    const direct = edge.slice(edge.indexOf('if (input.action === "getLibraryFileUrl")'), edge.indexOf("const actor = await requireAdmin"));
+    expect(direct).toContain('client.rpc("library_can_read", { _item: item.id })');
+    expect(direct).toContain('s.storage.from(BUCKET).createSignedUrl(content.file_path, 300)');
+    expect(direct.indexOf('client.rpc("library_can_read"')).toBeLessThan(direct.indexOf("createSignedUrl"));
+  });
+
+  it("binds redemption to a hashed token and the item recorded on its request", () => {
+    const edge = readFileSync(new URL("../../supabase/functions/tnb-library-delivery/index.ts", import.meta.url), "utf8");
+    const redeem = edge.slice(edge.indexOf('if (input.action === "redeemFreeMaterial")'), edge.indexOf("const actor = await requireAdmin"));
+    expect(redeem).toContain('eq("token_hash", await sha256(input.data.token))');
+    expect(redeem).toContain("request.item_id");
+    expect(redeem).toContain("createSignedUrl(content.file_path, 300");
+    expect(redeem).not.toContain("input.data.itemId");
+  });
+
+  it("keeps the Edge PDF watermark geometry and producer marker aligned with the legacy helper", () => {
+    const legacy = readFileSync(new URL("./library/watermark.server.ts", import.meta.url), "utf8");
+    const edge = readFileSync(new URL("../../supabase/functions/tnb-library-admin/index.ts", import.meta.url), "utf8");
+    for (const source of [legacy, edge]) {
+      expect(source).toContain("sizeMm: 8, rightMm: 4, bottomMm: 3");
+      expect(source).toContain('doc.setProducer("TATA NA BACZNOŚCI — znak wodny TNB")');
+      expect(source).toContain("width < 60 * MM");
+    }
+  });
+
   it("does not turn a failed Edge invocation into a successful library result", async () => {
     const failure = new Error("Brak uprawnień administratora.");
     invoke.mockResolvedValueOnce({ data: null, error: failure });
