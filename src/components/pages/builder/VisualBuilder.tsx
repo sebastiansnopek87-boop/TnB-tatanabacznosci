@@ -15,7 +15,6 @@ import { PageView, type Sel } from "@/components/pages/PageView";
 import {
   adminCreatePageUpload, adminGetPage, adminStartHomeDraft, adminListVersions, adminPageImageUrls, adminPublishDraft, adminRestoreVersion, adminSaveDraft,
 } from "@/lib/api/pages";
-import type { AdminPage } from "@/lib/api/pages";
 import { isHomeKind, SECTION_KINDS, SYSTEM_PAGES, newSection, normalizeSections, pagePath, type PageDraft, type PageSection, type PageVersion, type SectionKind } from "@/lib/pages";
 import { Frame } from "./Frame";
 import { HomeInspector } from "./HomeInspector";
@@ -31,7 +30,7 @@ const WIDTH: Record<Device, number | null> = { desktop: null, tablet: 820, phone
 let dragTpl: BuilderTemplate | null = null; // template being dragged from "Moje szablony"
 let dragKind: SectionKind | null = null; // native DnD across the preview iframe (same JS realm)
 
-const pick = (p: AdminPage): PageDraft => ({ slug: p.slug, title: p.title, intro: p.intro, sections: normalizeSections(p.sections), seo_title: p.seo_title ?? "", seo_description: p.seo_description ?? "" });
+const pick = (p: PageDraft) => ({ slug: p.slug, title: p.title, intro: p.intro, sections: normalizeSections(p.sections), seo_title: p.seo_title ?? "", seo_description: p.seo_description ?? "" });
 const same = (a: PageDraft, b: PageDraft) => JSON.stringify(a) === JSON.stringify(b);
 
 export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose: () => void; onFormView: () => void }) {
