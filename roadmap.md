@@ -136,3 +136,5 @@
 - [x] Komentarze gościnne — dodano test kontraktu 3 akcji `tnb-guest-comments`; objęto zgodę, antyspam, limity IP/e-mail, hashowanie tokenów, 48-godzinny TTL, jednokrotne potwierdzenie i limity ponownej wysyłki.
 
 - [x] Asystent redakcyjny AI — dodano test kontraktu 15 akcji `tnb-editor-ai`; sprawdza zgodność SPA/legacy/Edge, bramkę superadmin, schematy wejścia i filtrowanie danych osobowych. Nie uruchamiano zewnętrznego dostawcy AI ani rzeczywistych analiz.
+
+- [x] Spotkania — dodano test kontraktu 16 akcji `tnb-meetings`; obejmuje publiczne odczyty, operacje zalogowanego użytkownika, panel admina, zgody, antyspam i limity uploadu. Test nie tworzy rezerwacji ani nie uruchamia powiadomień.
