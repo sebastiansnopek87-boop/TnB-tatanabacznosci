@@ -19,7 +19,7 @@ vi.mock("@/integrations/supabase/client", () => ({
 }));
 
 import {
-  adminArticleInteractions, adminCheckArticleSlug, adminCreateArticleUpload, adminDeleteCategory,
+  adminArticleImageUrls, adminArticleInteractions, adminCheckArticleSlug, adminCreateArticleUpload, adminDeleteCategory,
   adminDeletePoll, adminGetArticle, adminListArticleComments, adminListArticles, adminModerateArticleComment,
   adminSaveArticle, adminSaveCategory, adminSavePoll, adminSetFeatured, adminSetHomeMode,
   adminSetArticleStatus, adminTrashArticle,
