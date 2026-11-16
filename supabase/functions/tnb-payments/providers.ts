@@ -17,7 +17,7 @@ export type Notice = { orderId: string | null; providerRef: string; amount: numb
 const sha384 = (s: string) => createHash("sha384").update(s, "utf8").digest("hex");
 const md5 = (s: string) => createHash("md5").update(s, "utf8").digest("hex");
 const sha256 = (s: string) => createHash("sha256").update(s, "utf8").digest("hex");
-const env = (k: string) => Deno.env.get(k) || "";
+declare const Deno: { env: { get(name: string): string | undefined } };\nconst env = (k: string) => Deno.env.get(k) || "";
 function safeEq(a: string, b: string) {
   if (!a || a.length !== b.length) return false;
   let r = 0; for (let i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i);
