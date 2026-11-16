@@ -75,6 +75,8 @@ async function dispatchFreeMaterial(s: Db, input: { to: string; firstName: strin
   const [{ settings, platform }, { data: rule }] = await Promise.all([
     notificationContext(s), s.from("notification_rules").select("enabled").eq("event_key", key).maybeSingle()
   ]);
+  const smtp = smtpConfig();
+  const mode = settings?.delivery_mode === "live" && smtp.configured ? "live" : "test";
   const base = { kind: key, related_id: input.id, template_key: key, idempotency_key: "library-free-" + input.id };
   const insert = async (row: Record<string, unknown>) => {
     const { data, error } = await s.from("email_notification_log").insert({ ...base, mode, ...row }).select("id").single();
