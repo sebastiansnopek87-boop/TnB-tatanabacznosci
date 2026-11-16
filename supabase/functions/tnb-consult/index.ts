@@ -218,6 +218,7 @@ async function requireCron(s: Db, req: Request) {
   const token = (req.headers.get("authorization") ?? "").match(/^Bearer ([^\\s,]+)$/)?.[1] ?? "";
   if (!token) throw new HttpError(401, "Unauthorized");
   // Primary secret is stored in Supabase Vault; environment secrets remain valid during rotation.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
   const { data: vaultSecret, error: vaultError } = await (s as any).rpc("get_tnb_cron_secret");
   const secrets = [
     ...(typeof vaultSecret === "string" && vaultSecret ? [vaultSecret] : []),
