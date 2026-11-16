@@ -2,6 +2,7 @@
 // Each adapter only talks to its own operator; the shared order logic lives in core.server.ts.
 // Secrets come from server env only; non-secret identifiers from payment_providers.
 import { Buffer } from "node:buffer";
+import { p24VerificationSucceeded } from "../_shared/payment-webhook.ts";
 import { md5, p24NotifySign, p24RegisterSign, payuCheckSignature, safeEq, sha256, sha384, tpayMd5 } from "./signatures.ts";
 export { p24NotifySign, p24RegisterSign, payuCheckSignature, tpayMd5 } from "./signatures.ts";
 
@@ -87,8 +88,8 @@ async function p24Notice(p: ProviderRow, raw: string): Promise<Notice | null> {
     body: JSON.stringify({ merchantId: Number(p.merchant_id), posId: Number(p.pos_id), sessionId, amount, currency, orderId, sign: sha384(JSON.stringify({ sessionId, orderId, amount, currency, crc: env("P24_CRC") })) }),
   });
   const vj = await vr.json().catch(() => null) as { data?: { status?: string } } | null;
-  const ok = vr.ok && vj?.data?.status === "success";
-  return { orderId: sessionId, providerRef: sessionId, amount, currency, outcome: ok ? "paid" : "pending", eventId: `p24:${orderId}:${ok ? "verified" : "unverified"}` };
+  if (!p24VerificationSucceeded(vr.ok, vj?.data?.status)) return null;
+  return { orderId: sessionId, providerRef: sessionId, amount, currency, outcome: "paid", eventId: `p24:${orderId}:verified` };
 }
 
 async function p24Test(p: ProviderRow) {
