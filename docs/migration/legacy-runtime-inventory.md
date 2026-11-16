@@ -23,7 +23,7 @@ W repozytorium znajduje się 41 plików `*.functions.ts` / `*.server.ts` w `src/
 | `src/lib/brand.functions.ts` | `src/lib/api/brand.ts` | `tnb-brand` | porównać walidację i zapis |
 | `src/lib/consult.functions.ts` | `src/lib/api/consult.ts` | `tnb-consult` | częściowe testy kalendarza; pełna zgodność nadal do sprawdzenia |
 | `src/lib/consult.server.ts` | `src/lib/api/consult.ts` | `tnb-consult` | sprawdzić wspólne reguły terminów i powiadomień |
-| `src/lib/contact.functions.ts` | `src/lib/api/contact.ts` | `tnb-contact` | porównać antyspam i dostarczanie |
+| `src/lib/contact.functions.ts` | `src/lib/api/contact.ts` | `tnb-contact` | dodano test kontraktu formularza, błędów Edge, strict schema, allowlisty originów, antyspamu i bezpiecznego renderowania HTML; legacy zachowany do sprawdzenia semantyki powiadomień |
 | `src/lib/control-center.functions.ts` | `src/lib/api/control-center.ts` | `tnb-admin` | test kontraktu SPA ↔ Edge obejmuje wyszukiwanie i historię, walidację zapytań/UUID/paginacji oraz bramkę admin; nadal wymagany audyt kompletności wyników i zgodności semantyki |
 | `src/lib/editor-ai.functions.ts` | `src/lib/api/editor-ai.ts` | `tnb-editor-ai` | porównać kontrakty i uprawnienia |
 | `src/lib/editor-materials.functions.ts` | `src/lib/api/editor-materials.ts` | `tnb-editor-materials` | porównać upload i dostęp |
@@ -37,7 +37,7 @@ W repozytorium znajduje się 41 plików `*.functions.ts` / `*.server.ts` w `src/
 | `src/lib/media.functions.ts` | `src/lib/api/media.ts` | `tnb-media` / `tnb-media-admin` | rozdzielić publiczne i administracyjne akcje |
 | `src/lib/meetings-notify.server.ts` | `src/lib/api/meetings.ts` | `tnb-meetings` / `tnb-notifications` | sprawdzić harmonogram i status wysyłki |
 | `src/lib/meetings.functions.ts` | `src/lib/api/meetings.ts` | `tnb-meetings` | porównać CRUD i role |
-| `src/lib/newsletter.functions.ts` | `src/lib/api/newsletter.ts` | `tnb-newsletter` | porównać double opt-in i wypis |
+| `src/lib/newsletter.functions.ts` | `src/lib/api/newsletter.ts` | `tnb-newsletter` | dodano test kontraktu 3 akcji, walidacji zgody, payloadów, błędów, rate limitu, double opt-in, potwierdzania i wypisu; legacy zachowany do porównania pełnych skutków ubocznych |
 | `src/lib/notifications-test.server.ts` | `src/lib/api/notifications.ts` | `tnb-notifications` | testowe wysyłki; sprawdzić dostęp wyłącznie admin |
 | `src/lib/notifications.functions.ts` | `src/lib/api/notifications.ts` | `tnb-notifications` | dodano test kontraktu dla 11 akcji, tokenu Bearer, braku sesji, 403, pustej odpowiedzi oraz granic admin/superadmin; legacy zachowany do porównania semantyki odbiorców i providerów |
 | `src/lib/notifications.server.ts` | `src/lib/api/notifications.ts` | `tnb-notifications` | provider/sekrety; obecnie tryb testowy |
@@ -142,3 +142,11 @@ Pozostałe bramki: idempotencja tworzenia zamówienia, trwały outbox/retry dla 
 - Powiadomienia: dodano `src/lib/notifications-api-contract.test.ts` dla 11 akcji adaptera `tnb-notifications`. Test obejmuje token Bearer, blokadę bez sesji, propagację 403 i pustej odpowiedzi, allowlistę Edge oraz granice ról. Edycja szablonów, reguł, konfiguracji dostarczania, test SMTP, kontrola duplikatów i retry wymagają superadministratora; odczyt i podgląd logów pozostają dostępne dla administratora.
 - Edge nie przełącza wysyłki na `live`, jeśli nie ma kompletnych sekretów SMTP i udanego `verifySmtp()`. W bazie ustawienie `delivery_mode` nadal pozostaje `test`; nie wysyłano wiadomości i nie zmieniano sekretów.
 - Nie usuwano żadnych modułów legacy. Różnice między dawnym providerem poczty a obecnym transportem SMTP wymagają osobnej walidacji zachowania i konfiguracji produkcyjnej.
+
+
+## Audyt kontaktu i newslettera — 2026-11-16
+
+- Kontakt: test adaptera `tnb-contact` obejmuje walidację pól, wysłanie payloadu, propagację błędów i odrzucanie niepoprawnej odpowiedzi. Test statyczny potwierdza ścisły schemat Edge, allowlistę originów, filtr honeypot/czasu wypełnienia i escapowanie treści przed renderowaniem wiadomości.
+- Newsletter: test adaptera obejmuje `subscribe`, `unsubscribe` i `confirm`, normalizację adresu, wymóg zgody, błędy Edge i pustą odpowiedź. Test statyczny potwierdza filtr antyspamowy, limit prób IP, double opt-in, potwierdzenie tokenem i wypis.
+- Newsletter double opt-in wymaga aktywnego trybu live i poprawnie skonfigurowanego SMTP; produkcyjny SMTP nadal nie jest skonfigurowany, więc testy nie wysyłają prawdziwych wiadomości.
+- Testy są włączone do `vitest.unit.config.ts`. Nie usuwano modułów legacy ani nie zmieniano produkcyjnych rekordów kontaktowych/subskrybentów.
