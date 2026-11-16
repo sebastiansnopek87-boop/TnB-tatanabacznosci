@@ -4,34 +4,55 @@ set -euo pipefail
 python3 - <<'PY'
 from pathlib import Path
 import re
+
 root = Path("src")
 legacy_suffixes = (".functions.ts", ".server.ts")
-import_pattern = re.compile(r"""(?:from\s*|import\s*\(\s*)["']([^"']+)["']""")
-forbidden = re.compile(r"""(?:\.functions|\.server)$|@tanstack/react-start""")
-server_only = re.compile(r"""client\.server|supabaseAdmin|SUPABASE_SERVICE_ROLE_KEY""")
+# These generated TanStack middleware files are retained only as migration
+# inventory. They are not part of the Vite SPA entry graph.
+retained_legacy = {
+    Path("integrations/supabase/auth-middleware.ts"),
+    Path("integrations/supabase/auth-attacher.ts"),
+}
+static_or_dynamic_import = re.compile(
+    r"""(?:\bfrom\s*|\bimport\s*(?:\(\s*)?|\brequire\s*\(\s*)["']([^"']+)["']""",
+    re.MULTILINE,
+)
+forbidden_import = re.compile(r"""(?:\.functions|\.server)$|@tanstack/react-start""")
+server_only = re.compile(r"""\b(?:client\.server|supabaseAdmin|SUPABASE_SERVICE_ROLE_KEY)\b""")
+
 errors = []
 legacy_count = 0
 for path in root.rglob("*"):
-    if not path.is_file() or path.suffix not in (".ts", ".tsx"):
+    if not path.is_file() or path.suffix not in (".ts", ".tsx", ".js", ".jsx"):
         continue
-    if path.name.endswith(legacy_suffixes):
+
+    relative = path.relative_to(root)
+    if path.name.endswith(legacy_suffixes) or relative in retained_legacy:
         legacy_count += 1
         continue
-    # Test fixtures may temporarily exercise the legacy implementation while
-    # equivalent Edge Function coverage is migrated. They are never bundled.
+
+    # Unit/integration tests may intentionally import legacy handlers behind
+    # mocks; they are not shipped in the browser bundle.
     if path.name.endswith((".test.ts", ".spec.ts", ".test.tsx", ".spec.tsx")):
         continue
-    if path.name in ("auth-middleware.ts", "auth-attacher.ts"):
-        continue
+
     source = path.read_text(errors="replace")
-    for number, line in enumerate(source.splitlines(), 1):
-        for match in import_pattern.finditer(line):
-            if forbidden.search(match.group(1)):
-                errors.append(f"{path}:{number}: legacy runtime import {match.group(1)}")
-        if server_only.search(line):
-            errors.append(f"{path}:{number}: server-only Supabase reference")
+    for match in static_or_dynamic_import.finditer(source):
+        target = match.group(1)
+        if forbidden_import.search(target):
+            line = source.count("\\n", 0, match.start()) + 1
+            errors.append(f"{path}:{line}: legacy runtime import {target}")
+
+    for match in server_only.finditer(source):
+        line = source.count("\\n", 0, match.start()) + 1
+        errors.append(f"{path}:{line}: server-only Supabase reference")
+
 if errors:
-    print("\n".join(errors))
+    print("\\n".join(errors))
     raise SystemExit("ERROR: browser/application source references legacy server runtime.")
-print(f"OK: no browser source imports legacy server modules; {legacy_count} legacy source files remain isolated for migration.")
+
+print(
+    f"OK: no browser/application source imports legacy server modules; "
+    f"{legacy_count} retained legacy source files remain isolated for migration."
+)
 PY
