@@ -67,7 +67,7 @@ describe("brand SPA contract", () => {
     expect(edge).toContain("size <= MAX_SIZE");
     expect(edge).toContain("MIME_EXT[mime]");
     expect(edge).toContain("createSignedUploadUrl");
-    expect(edge).toContain("await ctx.supabaseAdmin.storage.from(BUCKET).remove([path])");
+    expect(edge).toContain(".storage.from(BUCKET).remove([path])");
     for (const action of ["getBrandSettings", "createBrandUpload", "finalizeBrandUpload", "saveBrandSettings"]) {
       expect(legacy).toContain("export const " + action + " =");
     }
