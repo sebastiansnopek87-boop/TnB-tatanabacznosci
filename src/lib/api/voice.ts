@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { SUBMISSION_STATUSES, type SubmissionStatus } from "@/lib/voice";
+import type { SubmissionStatus } from "@/lib/voice";
 
 type Input<T> = { data: T };
 type ApiError = { message?: unknown };
