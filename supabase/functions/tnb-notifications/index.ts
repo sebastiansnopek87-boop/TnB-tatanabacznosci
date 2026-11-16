@@ -3,7 +3,7 @@ import { corsHeaders as sdkCorsHeaders } from "npm:@supabase/supabase-js@2.117.2
 import { z } from "zod";
 import { DEFAULT_TEMPLATES, EVENTS, EVENT_MAP, sampleVars } from "./registry.ts";
 import { render, maskSensitive, stripSensitive, type Vars } from "./render.ts";
-import { sendSmtpMail, smtpConfig } from "../_shared/smtp.ts";
+import { sendSmtpMail, smtpConfig, verifySmtp } from "../_shared/smtp.ts";
 
 const CORS = new Headers({
   ...sdkCorsHeaders,
@@ -305,7 +305,11 @@ Deno.serve(async (req: Request) => {
         return json({ ok: true });
       }
       case "updateDeliveryConfig": {
-        if (input.data.delivery_mode === "live" && !smtpConfig().configured) throw new HttpError(409, "Rzeczywistej wysyłki nie można włączyć: brakuje poprawnej konfiguracji SMTP w sekretach Supabase.");
+        if (input.data.delivery_mode === "live") {
+          if (!smtpConfig().configured) throw new HttpError(409, "Rzeczywistej wysyłki nie można włączyć: brakuje poprawnej konfiguracji SMTP w sekretach Supabase.");
+          try { await verifySmtp(); }
+          catch { throw new HttpError(409, "Nie udało się połączyć z serwerem SMTP lub uwierzytelnić. Sprawdź host, port, login i hasło w sekretach Supabase."); }
+        }
         const { error } = await db.from("email_settings").update({ ...input.data, updated_at: new Date().toISOString() }).eq("id", 1);
         if (error) throw new HttpError(500, "Nie udało się zapisać konfiguracji.");
         await logEvent(db, { type: "settings_update", actor: user.id, objectKind: "settings", objectId: "email_provider" });
