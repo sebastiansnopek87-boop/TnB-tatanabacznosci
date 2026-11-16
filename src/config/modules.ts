@@ -28,8 +28,8 @@ export function normalizeModuleVisibility(value: unknown): ModuleVisibility {
     const entry = item as Record<string, unknown>;
     if (typeof entry["menu"] === "boolean" || typeof entry["page"] === "boolean") {
       normalized[module.id] = {
-        menu: typeof entry.menu === "boolean" ? entry.menu : true,
-        page: typeof entry.page === "boolean" ? entry.page : true,
+        menu: typeof entry["menu"] === "boolean" ? entry["menu"] : true,
+        page: typeof entry["page"] === "boolean" ? entry["page"] : true,
       };
     }
   }
