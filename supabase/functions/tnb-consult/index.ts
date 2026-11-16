@@ -199,12 +199,20 @@ const RequestSchema = z.discriminatedUnion("action", [
 const ADMIN_ACTIONS = new Set(["adminListBookings","adminGetBooking","adminUpdateBooking","adminGetAvailability","adminSaveAvailability","adminBlockDate"]);
 const AUTH_ACTIONS = new Set(["listMyBookings","cancelMyBooking"]);
 
-async function requireCron(req: Request) {
-  const token = (req.headers.get("authorization") ?? "").match(/^Bearer ([^\s,]+)$/)?.[1] ?? "";
+async function requireCron(s: Db, req: Request) {
+  const token = (req.headers.get("authorization") ?? "").match(/^Bearer ([^\\s,]+)$/)?.[1] ?? "";
   if (!token) throw new HttpError(401, "Unauthorized");
-  const secrets = ["LOVABLE_CRON_SECRET", "TNB_CRON_SECRET", "LOVABLE_CRON_SECRET_PREVIOUS", "TNB_CRON_SECRET_PREVIOUS"]
-    .map((name) => envKey(name)).filter((value): value is string => !!value);
-  if (!secrets.length) throw new HttpError(503, "Zadanie cykliczne nie jest skonfigurowane.");
+  // Primary secret is stored in Supabase Vault; environment secrets remain valid during rotation.
+  const { data: vaultSecret, error: vaultError } = await (s as any).rpc("get_tnb_cron_secret");
+  const secrets = [
+    ...(typeof vaultSecret === "string" && vaultSecret ? [vaultSecret] : []),
+    ...["LOVABLE_CRON_SECRET", "TNB_CRON_SECRET", "LOVABLE_CRON_SECRET_PREVIOUS", "TNB_CRON_SECRET_PREVIOUS"]
+      .map((name) => envKey(name)).filter((value): value is string => !!value),
+  ];
+  if (!secrets.length) {
+    if (vaultError) console.error("Cron secret lookup failed:", vaultError.code ?? "unknown");
+    throw new HttpError(503, "Zadanie cykliczne nie jest skonfigurowane.");
+  }
   const digest = async (value: string) => new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value)));
   const provided = await digest(token);
   let matched = false;
@@ -240,7 +248,7 @@ async function processReminders(s: Db, now = new Date()) {
 async function handle(s: Db, req: Request, raw: unknown) {
   const input = RequestSchema.parse(raw);
   if (input.action === "processReminders") {
-    await requireCron(req);
+    await requireCron(s, req);
     return await processReminders(s);
   }
   const actor = ADMIN_ACTIONS.has(input.action) ? await requireAdmin(s, req) : AUTH_ACTIONS.has(input.action) ? await requireUser(s, req) : null;
