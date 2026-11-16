@@ -110,3 +110,10 @@ To nie jest drobna kosmetyczna różnica. Z samej tabeli historii można odzyska
 - Wersja i nazwa migracji cron są zgodne z historią.
 - Czysta baza testowa daje się odtworzyć z repo i przechodzi testy Edge Functions oraz aplikacji.
 - Produkcyjna baza nie jest resetowana ani modyfikowana w ramach samego uzgadniania.
+
+
+## Kontrola historii Git
+
+Dodatkowo sprawdzono historię GitHub dla ścieżki `supabase/migrations`. Zwróciła jeden commit dodający plik `20261116100000_tnb_cron_jobs.sql`; zapytanie o ścieżkę `0000_contact_messages.sql` nie zwróciło żadnego commitu. W aktualnej historii tego repo nie ma więc poprzednich plików źródłowych, które można po prostu przywrócić przez checkout starszego commitu.
+
+Wniosek: nie odtworzę brakujących 65 migracji z samej historii Git tego repo. Trzeba odzyskać je z oryginalnego projektu/backupów lub przygotować i zatwierdzić pełny baseline schematu. Nie będę generować atrap migracji ani oznaczać wersji jako wykonanych bez ich rzeczywistej treści.
