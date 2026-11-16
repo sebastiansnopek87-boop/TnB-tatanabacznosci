@@ -11,7 +11,7 @@
 
 - Admin functions use assertAdmin/logEvent; RLS repeats access rules for defense in depth.
 - Open signup (confirmed email, Google, Apple) -> /moje-tnb; user_roles granted manually.
-- Frontend produkcyjny to statyczny Vite CSR: `index.html` → `src/main.tsx` → `src/router.tsx`; nie przywracać TanStack Start SSR ani endpointów `/api/*`. Głębokie trasy obsługuje `public/.htaccess`, a callback Meta przekazuje do `tnb-voice`.
+- Frontend produkcyjny to statyczny Vite CSR: `index.html` → `src/main.tsx` → `src/router.tsx`; nie przywracać TanStack Start SSR ani endpointów `/api/*`. Głębokie trasy obsługuje `public/.htaccess`, a callback Meta przekazuje do `tnb-voice`. TanStack Start pozostaje wyłącznie jako zależność developerska dla nieprzeniesionych testów legacy; nie może wrócić do ścieżki produkcyjnej.
 - Private buckets only; public media served by existing Supabase Edge Functions (`tnb-assets`, `tnb-articles`, `tnb-brand`, `tnb-media`, `tnb-pages` and module-specific functions) after access/reference checks. Read subdirectory AGENTS.md before changing files there; module rules: src/lib/AGENTS.md.
 - Roles: user_roles enum (superadmin, admin, moderator, editor, support, premium); panel access = admin; only superadmin changes roles (src/lib/users.functions.ts), last superadmin protected; why: reuse existing has_role/RLS.
 - Platform settings: singleton platform_settings (public read of safe columns); browser operations go through `src/lib/api/platform.ts` to Supabase Edge Functions, with superadmin checks and RLS defense in depth; maintenance screen is a UI gate in `__root`, `/admin` and `/auth` exempt. Why: config editable, admins never locked out.

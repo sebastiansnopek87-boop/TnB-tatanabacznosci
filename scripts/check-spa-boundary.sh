@@ -27,4 +27,6 @@ if grep -Eq 'tanstack/react-start|nitro|@lovable.dev/vite-tanstack-config' vite.
   exit 1
 fi
 
+node -e 'const p=require("./package.json"); const prod=p.dependencies||{}; const dev=p.devDependencies||{}; const bad=["@tanstack/react-start","nitro","@lovable.dev/vite-tanstack-config"].filter(k=>prod[k]); const unused=["nitro","@lovable.dev/vite-tanstack-config"].filter(k=>dev[k]); if(bad.length||unused.length){console.error("ERROR: SPA runtime dependencies are not clean:", [...bad,...unused].join(", ")); process.exit(1);}'
+
 echo "OK: UI source is separated from TanStack server functions; Vite is configured for static SPA."
