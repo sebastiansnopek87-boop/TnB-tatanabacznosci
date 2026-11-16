@@ -228,10 +228,10 @@ function Proposals({ aiOn, onCreated }: { aiOn: boolean; onCreated: (id: string)
                 <div><dt className="text-xs uppercase text-muted-foreground">Grupa odbiorców</dt><dd>{d.audience || "—"}</dd></div>
                 <div><dt className="text-xs uppercase text-muted-foreground">Główne wątki</dt><dd><ul className="list-disc pl-5">{(d.threads ?? []).map((t: string, i: number) => <li key={i}>{t}</li>)}</ul></dd></div>
                 <div><dt className="text-xs uppercase text-muted-foreground">Proponowana struktura</dt><dd><ol className="list-decimal pl-5">{(d.structure ?? []).map((t: string, i: number) => <li key={i}>{t}</li>)}</ol></dd></div>
-                <div><dt className="text-xs uppercase text-muted-foreground">Powiązane materiały TNB</dt><dd><RefList refs={d.related} /></dd></div>
-                <div><dt className="text-xs uppercase text-muted-foreground">Źródła użyte do propozycji</dt><dd><RefList refs={d.sources} /></dd></div>
+                <div><dt className="text-xs uppercase text-muted-foreground">Powiązane materiały TNB</dt><dd><RefList refs={d.related ?? []} /></dd></div>
+                <div><dt className="text-xs uppercase text-muted-foreground">Źródła użyte do propozycji</dt><dd><RefList refs={d.sources ?? []} /></dd></div>
               </dl>
-              <div className="border-l-2 border-gold pl-3"><p className="text-xs uppercase text-gold">Fakty ze źródeł</p>{(d.facts ?? []).length ? <ul className="list-disc pl-5">{d.facts.map((fact, i: number) => <li key={i}>{fact.text} <span className="text-xs text-muted-foreground">— {fact.source?.title}</span></li>)}</ul> : <p className="text-muted-foreground">Brak faktów przypisanych do źródeł.</p>}</div>
+              <div className="border-l-2 border-gold pl-3"><p className="text-xs uppercase text-gold">Fakty ze źródeł</p>{(d.facts ?? []).length ? <ul className="list-disc pl-5">{(d.facts ?? []).map((fact, i: number) => <li key={i}>{fact.text} <span className="text-xs text-muted-foreground">— {fact.source?.title}</span></li>)}</ul> : <p className="text-muted-foreground">Brak faktów przypisanych do źródeł.</p>}</div>
               <div className="border-l-2 border-border pl-3"><p className="text-xs uppercase text-muted-foreground">Sugestie AI (nie fakty)</p><ul className="list-disc pl-5">{(d.suggestions ?? []).map((t: string, i: number) => <li key={i}>{t}</li>)}</ul></div>
               {d.duplicate_warning && <p className="text-gold">Możliwe powtórzenie: {d.duplicate_warning}</p>}
               <div><p className="text-xs uppercase text-muted-foreground">Kolejne kroki</p><ul className="list-disc pl-5">{(d.next_steps ?? []).map((t: string, i: number) => <li key={i}>{t}</li>)}</ul></div>
@@ -253,7 +253,7 @@ function Proposals({ aiOn, onCreated }: { aiOn: boolean; onCreated: (id: string)
                   <option value="">— brak —</option>{(q.data?.materials ?? []).map((m) => <option key={m.id} value={`${m.kind}:${m.id}`}>{m.kind === "article" ? "Artykuł" : "Biblioteka"}: {m.title}</option>)}
                 </select></label>
               {p.reject_reason && <p className="text-xs text-muted-foreground">Powód odrzucenia: {p.reject_reason}</p>}
-              <div><p className="text-xs uppercase text-muted-foreground">Historia decyzji</p><ul className="text-xs text-muted-foreground">{ev.map((e, i: number) => <li key={i}>{fmt(e.created_at)} — {e.action === "status" ? `${STATUS[e.from_status] ?? e.from_status} → ${STATUS[e.to_status] ?? e.to_status}` : e.note ?? e.action}{e.action === "status" && e.note ? ` (${e.note})` : ""}</li>)}</ul></div>
+              <div><p className="text-xs uppercase text-muted-foreground">Historia decyzji</p><ul className="text-xs text-muted-foreground">{ev.map((e, i: number) => <li key={i}>{fmt(e.created_at)} — {e.action === "status" ? `${e.from_status ? STATUS[e.from_status] ?? e.from_status : "—"} → ${e.to_status ? STATUS[e.to_status] ?? e.to_status : "—"}` : e.note ?? e.action}{e.action === "status" && e.note ? ` (${e.note})` : ""}</li>)}</ul></div>
             </div>}
           </li>);
       })}</ul>
@@ -281,8 +281,8 @@ function History() {
             <Button size="sm" variant="outline" onClick={() => setOpen(open === a.id ? null : a.id)}>{open === a.id ? "Zwiń" : "Wyniki"}</Button></div>
           {a.error && <p className="mt-1 text-destructive">{a.error}</p>}
           {open === a.id && <div className="mt-3 space-y-3">
-            {Object.entries(FINDINGS).map(([k, l]) => (a.findings?.[k] ?? []).length ? <div key={k}><p className="text-xs uppercase text-gold">{l}</p><ul className="list-disc pl-5">{a.findings[k].map((finding: AiAnalysis["findings"][string][number], i: number) => <li key={i}>{finding.text}{finding.refs?.length ? <span className="text-xs text-muted-foreground"> — {finding.refs.map((ref) => ref.title).join("; ")}</span> : null}</li>)}</ul></div> : null)}
-            {(a.findings?.skipped ?? []).length > 0 && <div><p className="text-xs uppercase text-muted-foreground">Pominięte jako powtórzenia ocenionych tematów</p><ul className="list-disc pl-5 text-xs">{a.findings.skipped.map((s: string, i: number) => <li key={i}>{s}</li>)}</ul></div>}
+            {Object.entries(FINDINGS).map(([k, l]) => (a.findings?.[k] ?? []).length ? <div key={k}><p className="text-xs uppercase text-gold">{l}</p><ul className="list-disc pl-5">{(a.findings?.[k] ?? []).map((finding: AiAnalysis["findings"][string][number], i: number) => <li key={i}>{finding.text}{finding.refs?.length ? <span className="text-xs text-muted-foreground"> — {finding.refs.map((ref) => ref.title).join("; ")}</span> : null}</li>)}</ul></div> : null)}
+            {(a.findings?.skipped ?? []).length > 0 && <div><p className="text-xs uppercase text-muted-foreground">Pominięte jako powtórzenia ocenionych tematów</p><ul className="list-disc pl-5 text-xs">{(a.findings?.skipped ?? []).map((s: string, i: number) => <li key={i}>{s}</li>)}</ul></div>}
             <div><p className="text-xs uppercase text-muted-foreground">Źródła użyte</p><RefList refs={a.sources_used} /></div>
           </div>}
         </div>))}
