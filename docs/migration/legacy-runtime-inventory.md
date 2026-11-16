@@ -72,3 +72,12 @@ W repozytorium znajduje się 41 plików `*.functions.ts` / `*.server.ts` w `src/
 ## Warunek zamknięcia migracji
 
 Liczba pozostałych modułów legacy w `src/` = 0; brak `@tanstack/react-start` w kodzie, konfiguracji, zależnościach i lockfile; komplet testów regresji kontraktów, ról, webhooków i głównych przepływów; CI PASS na PR; osobny test produkcyjny hostingu i Supabase.
+
+## SMTP i system powiadomień (2026-11-16)
+
+- Wspólny transport `supabase/functions/_shared/smtp.ts` używa Nodemailer i sekretów Edge Functions; nie udostępnia danych SMTP w kliencie.
+- Podłączono transport do `tnb-notifications`, `tnb-newsletter`, `tnb-article-newsletter`, `tnb-orders`, `tnb-consult`, `tnb-library-delivery` i `tnb-contact`.
+- Tryb `live` wymaga `email_settings.delivery_mode = live` oraz kompletnej konfiguracji SMTP. Panel nie pozwala włączyć trybu live bez weryfikacji połączenia i uwierzytelnienia SMTP.
+- Dla Cyber_Folks przewidziano port 465 SSL/TLS. Porty 25 i 587 są odrzucane w helperze z uwagi na ograniczenia Supabase Edge.
+- Dodano instrukcję `docs/operations/smtp-cyberfolks.md` oraz test kontraktowy. Sekrety i dane skrzynki nie zostały skonfigurowane ani wdrożone, bo nie są dostępne w narzędziach i nie zostały przekazane; produkcyjna wysyłka pozostaje w trybie testowym.
+- Supabase Auth ma osobne ustawienia SMTP w Dashboard → Authentication → SMTP Settings; instrukcja obejmuje tę konfigurację. Nie jest ona automatycznie zmieniana przez Edge Function.
