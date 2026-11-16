@@ -47,7 +47,7 @@ W repozytorium znajduje się 41 plików `*.functions.ts` / `*.server.ts` w `src/
 | `src/lib/payments.functions.ts` | `src/lib/api/payments.ts` | `tnb-payments` | testy podpisów Edge; pełne testy webhooków i refundów wymagane |
 | `src/lib/payments/providers.server.ts` | `src/lib/api/payments.ts` | `tnb-payments` | przeniesiono współdzielone podpisy do Edge; porównać pełną konfigurację |
 | `src/lib/platform.functions.ts` | `src/lib/api/platform.ts` | `tnb-platform` | test kontraktu SPA ↔ Edge dodany: wszystkie 6 akcji, bearer token, odmowa bez sesji, obsługa błędów, oddzielenie publicznych od chronionych odczytów i kontrola allowlisty kolumn/role gates; test dołączony do CI; moduł legacy zachowany do czasu pełnego porównania semantyki |
-| `src/lib/podcast.functions.ts` | `src/lib/api/podcast.ts` | `tnb-podcast` | porównać publikację i dostęp |
+| `src/lib/podcast.functions.ts` | `src/lib/api/podcast.ts` | `tnb-podcast` | dodano test kontraktu 11 akcji public/admin, Bearer, anonimowych odczytów, nullable detail, entitlement premium/admin i signed audio URL |
 | `src/lib/recommend.functions.ts` | `src/lib/api/recommend.ts` | `tnb-recommend` | test kontraktu SPA ↔ Edge dodany: akcja, walidacja 10–600 znaków, brak fragmentów premium, payload i obsługa błędów; test uruchamiany w CI; logika legacy nadal zachowana do czasu pełnej weryfikacji równoważności |
 | `src/lib/templates.functions.ts` | `src/lib/api/templates.ts` | `tnb-templates` | porównać operacje szablonów |
 | `src/lib/users.functions.ts` | `src/lib/api/users.ts` | `tnb-users` | test kontraktu SPA ↔ Edge obejmuje 3 akcje, bearer token, brak sesji, 403 i bramki admin/superadmin; Edge zmienia role przez atomową procedurę DB `admin_set_user_role`; legacy zachowany do pełnej weryfikacji semantyki |
