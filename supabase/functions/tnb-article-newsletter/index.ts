@@ -217,6 +217,8 @@ async function handle(s: Db, req: Request, raw: unknown) {
   const parsed = RequestSchema.parse(raw);
   if (parsed.action === "sendArticleNewsletter") {
     const actor = await requireAdmin(s, req, true);
+    const { data: mailSettings } = await s.from("email_settings").select("delivery_mode").eq("id", 1).maybeSingle();
+    const deliveryMode = mailSettings?.delivery_mode === "live" && smtpConfig().configured ? "live" : "test";
     const article = await getArticle(s, parsed.data.articleId);
     if (!isLive(article)) throw new HttpError(409, "Artykuł nie jest opublikowany.");
     const expected = parsed.data.expectedRecipients;
@@ -252,8 +254,10 @@ async function handle(s: Db, req: Request, raw: unknown) {
       else if (result.status === "simulated") simulated++;
       else if (result.status === "failed") failed++;
     }
-    const status = failed ? "failed" : "approved";
-    const note = "WYSYŁKA TESTOWA: " + simulated + " wiadomości zapisano w historii powiadomień, żadna nie została dostarczona." + (failed ? " Błędy: " + failed + "." : "");
+    const status = failed ? "failed" : deliveryMode === "live" ? "sent" : "approved";
+    const note = deliveryMode === "live"
+      ? "Wysyłka SMTP zakończona. Serwer przyjął: " + sent + " wiadomości." + (failed ? " Błędy: " + failed + "." : "")
+      : "WYSYŁKA TESTOWA: " + simulated + " wiadomości zapisano w historii powiadomień, żadna nie została dostarczona." + (failed ? " Błędy: " + failed + "." : "");
     await s.from("article_newsletters").update({
       status, round, sent_count: sent, simulated_count: simulated, failed_count: failed, last_note: note,
       sent_at: deliveryMode === "live" && !failed ? new Date().toISOString() : null, updated_at: new Date().toISOString()
