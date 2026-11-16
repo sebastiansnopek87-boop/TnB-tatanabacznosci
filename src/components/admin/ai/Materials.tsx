@@ -29,7 +29,7 @@ export const ImgKey = (id: string) => ["ai-ed", "img", id];
 // ---------- Creation: summary -> explicit start -> real stage-by-stage progress ----------
 type Step = { key: string; label: string; state: "todo" | "doing" | "done" | "error"; note?: string | undefined };
 export function CreateArticle({ proposal, topic: topic0 = "", aiOn, onCreated, onCancel, compact }: { proposal?: any; topic?: string; aiOn: boolean; onCreated: (id: string) => void; onCancel?: () => void; compact?: boolean }) {
-  const prev = previewCreateMaterial), start = startMaterial), write = writeMaterial), gen = generateMaterialImage), finish = finishMaterial);
+  const prev = previewCreateMaterial, start = startMaterial, write = writeMaterial, gen = generateMaterialImage, finish = finishMaterial;
   const [topic, setTopic] = useState(topic0), [info, setInfo] = useState<any>(null), [format, setFormat] = useState("artykuł"), [dir, setDir] = useState("");
   const [busy, setBusy] = useState(false), [steps, setSteps] = useState<Step[] | null>(null), [usage, setUsage] = useState({ input: 0, output: 0, images: 0 }), [failedId, setFailedId] = useState<string | null>(null);
   const label = format === "artykuł" ? "STWÓRZ ARTYKUŁ" : "STWÓRZ MATERIAŁ";
@@ -117,7 +117,7 @@ function SourcesList({ sources, title }: { sources: any[]; title: string }) {
 
 // ---------- List ----------
 export function MaterialsTab({ aiOn, openId, setOpenId }: { aiOn: boolean; openId: string | null; setOpenId: (id: string | null) => void }) {
-  const list = listMaterials), status = setMaterialStatus);
+  const list = listMaterials, status = setMaterialStatus;
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["ai-ed", "materials"], queryFn: () => list() });
   if (openId) return <Editor id={openId} aiOn={aiOn} close={() => { setOpenId(null); qc.invalidateQueries({ queryKey: ["ai-ed"] }); }} />;
@@ -152,8 +152,8 @@ const WORKFLOW = ["Temat", "Źródła", "Tworzenie", "Obrazy", "SEO", "Przegląd
 
 // ---------- Editor: review, fixes, images, preview, approval ----------
 function Editor({ id, aiOn, close }: { id: string; aiOn: boolean; close: () => void }) {
-  const get = getMaterial), save = saveMaterial), frag = aiEditFragment), whole = aiEditWhole),
-    restore = restoreMaterialVersion), approve = approveAndHandoff), urls = materialImageUrls);
+  const get = getMaterial, save = saveMaterial, frag = aiEditFragment, whole = aiEditWhole,
+    restore = restoreMaterialVersion, approve = approveAndHandoff, urls = materialImageUrls;
   const q = useQuery({ queryKey: ["ai-ed", "material", id], queryFn: () => get({ data: { id } }) });
   const iq = useQuery({ queryKey: ImgKey(id), queryFn: () => urls({ data: { id } }), staleTime: 30 * 60 * 1000 });
   const cats = useQuery(articleCategoriesQuery());
@@ -328,7 +328,7 @@ function Editor({ id, aiOn, close }: { id: string; aiOn: boolean; close: () => v
 }
 
 function ImagesPanel({ id, images, secs, urls, locked, aiOn, refresh }: { id: string; images: MaterialImage[]; secs: MaterialSection[]; urls: Record<string, string>; locked: boolean; aiOn: boolean; refresh: () => Promise<void> }) {
-  const gen = generateMaterialImage), upd = updateMaterialImage);
+  const gen = generateMaterialImage, upd = updateMaterialImage;
   const [busy, setBusy] = useState<string | null>(null), [edit, setEdit] = useState<{ id: string; text: string } | null>(null);
   const act = async (key: string, p: Promise<any>, msg: string) => { setBusy(key); const r: any = await fix(p); setBusy(null); if (!r.ok) { toast.error(r.error); return; } toast.success(msg); await refresh(); };
   const one = (img: MaterialImage) => {

@@ -17,8 +17,8 @@ type C = { subject: string; preheader: string; intro: string; teaser: string; ou
 
 // Article module: AI provenance (admin-only) + optional newsletter announcement.
 export function ArticleNewsletter({ articleId, dirty }: { articleId: string; dirty: boolean }) {
-  const get = getArticleNewsletter), prep = prepareArticleNewsletter), save = saveArticleNewsletter),
-    test = sendArticleNewsletterTest), send = sendArticleNewsletter), unmark = unmarkArticleNewsletter);
+  const get = getArticleNewsletter, prep = prepareArticleNewsletter, save = saveArticleNewsletter,
+    test = sendArticleNewsletterTest, send = sendArticleNewsletter, unmark = unmarkArticleNewsletter;
   const q = useQuery({ queryKey: ["article-nl", articleId], queryFn: () => get({ data: { articleId } }) });
   const [c, setC] = useState<C | null>(null), [edited, setEdited] = useState(false), [busy, setBusy] = useState<string | null>(null), [confirm, setConfirm] = useState(false);
   const nl: any = q.data?.newsletter;
