@@ -7,9 +7,9 @@ const read = (path: string) => readFileSync(new URL(path, root), "utf8");
 describe("Cyber_Folks SMTP provider contract", () => {
   it("keeps SMTP credentials server-side and rejects ports blocked by Supabase Edge", () => {
     const smtp = read("_shared/smtp.ts");
-    expect(smtp).toContain('Deno.env.get("SMTP_HOST")');
-    expect(smtp).toContain('Deno.env.get("SMTP_PORT")');
-    expect(smtp).toContain('Deno.env.get("SMTP_USERNAME")');
+    expect(smtp).toContain('env("SMTP_HOST")');
+    expect(smtp).toContain('env("SMTP_PORT")');
+    expect(smtp).toContain('env("SMTP_USERNAME")');
     expect(smtp).toContain('Deno.env.get("SMTP_PASSWORD")');
     expect(smtp).toContain('env("SMTP_FROM")');
     expect(smtp).toContain("port === 25 || port === 587");
