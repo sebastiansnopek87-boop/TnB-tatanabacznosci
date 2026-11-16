@@ -91,7 +91,11 @@ describe("pages SPA contract", () => {
     ];
     for (const action of actions) {
       expect(edge).toContain('z.literal("' + action + '")');
-      expect(edge).toContain('case "' + action + '":');
+      if (action === "getPublicPage") {
+        expect(edge).toContain('if (parsed.data.action === "getPublicPage")');
+      } else {
+        expect(edge).toContain('case "' + action + '":');
+      }
       expect(legacy).toContain("export const " + action + " =");
     }
   });
