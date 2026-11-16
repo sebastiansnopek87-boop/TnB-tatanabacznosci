@@ -67,6 +67,8 @@ async function notifyAdmin(db: Db, id: string, now: string) {
       db.from("email_settings").select("*").eq("id", 1).maybeSingle(),
       db.from("platform_settings").select("platform_name").eq("id", 1).maybeSingle(),
     ]);
+    const smtp = smtpConfig();
+    const mode = settings?.delivery_mode === "live" && smtp.configured ? "live" : "test";
     if (settings?.newsletter_notifications_enabled === false) return;
     const { data: rule } = await db.from("notification_rules").select("enabled").eq("event_key", "newsletter_signup").maybeSingle();
     if (rule?.enabled === false) return;
