@@ -121,3 +121,6 @@
 - [x] Supabase migration drift — odczytano 66 wersji migracji w aktywnym projekcie; repo zawiera 1 plik SQL, którego timestamp nie zgadza się z wpisem historii. Lista i plan uzgodnienia: `docs/migration/supabase-migration-reconciliation.md`. Nie wykonano zmian w DB.
 - [ ] Supabase migration recovery — odzyskać oryginalne pliki migracji z wiarygodnego źródła lub zatwierdzić pełny baseline/snapshot; bez tego nie wdrażać nowych zmian schematu.
 - [ ] React SPA completion — migracja wszystkich 43 pozostałych modułów legacy, usunięcie `@tanstack/react-start` z manifestu i lockfile, testy regresji oraz czysta instalacja.
+
+- [x] Powiadomienia — dodano test kontraktu dla 11 akcji `tnb-notifications`: payloady, token Bearer, brak sesji, propagacja 403 i pustej odpowiedzi oraz kontrola uprawnień admin/superadmin. Weryfikacja SMTP `live` pozostaje wymagana; produkcyjne sekrety SMTP nie są ustawione.
+- [x] Biblioteka — adapter odrzuca pustą odpowiedź Edge Function; test dodano do istniejącego `library-api.test.ts`, bez duplikowania wcześniej pokrytych 11 akcji administracyjnych i 4 akcji dostarczania materiałów.
