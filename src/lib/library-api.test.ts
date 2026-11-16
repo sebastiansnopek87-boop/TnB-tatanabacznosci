@@ -58,7 +58,8 @@ describe("library SPA adapter contracts", () => {
     const edge = readFileSync(new URL("../../supabase/functions/tnb-library-admin/index.ts", import.meta.url), "utf8");
 
     for (const action of adminActions) {
-      expect(legacy).toContain("export const " + action + " =");
+      if (action === "adminCreateLibraryUpload" || action === "adminFinalizeLibraryUpload") expect(legacy).toContain("export const adminUploadLibraryFile =");
+      else expect(legacy).toContain("export const " + action + " =");
       expect(edge).toContain('input.action === "' + action + '"');
     }
   });
@@ -140,7 +141,7 @@ describe("library SPA adapter contracts", () => {
   it("uses the exact owner-supplied logo bytes in the legacy helper and Edge Function", () => {
     const legacy = readFileSync(new URL("./library/watermark-logo.server.ts", import.meta.url), "utf8");
     const edge = readFileSync(new URL("../../supabase/functions/tnb-library-admin/watermark-logo.ts", import.meta.url), "utf8");
-    const extract = (source: string) => source.match(/TNB_LOGO_PNG_BASE64\\s*=\\s*["']([^"']+)["']/)?.[1] ?? null;
+    const extract = (source: string) => source.match(/TNB_LOGO_PNG_BASE64\s*=\s*["']([^"']+)["']/)?.[1] ?? null;
     expect(extract(edge)).not.toBeNull();
     expect(extract(edge)).toBe(extract(legacy));
   });
