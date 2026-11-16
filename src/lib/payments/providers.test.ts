@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createHash } from "crypto";
-import { p24NotifySign, payuCheckSignature, tpayMd5 } from "./providers.server";
+import { p24NotifySign, payuCheckSignature, tpayMd5 } from "./provider-signatures";
 
 const md5 = (s: string) => createHash("md5").update(s).digest("hex");
 
