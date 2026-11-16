@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertAdmin, assertSuperadmin, logEvent } from "./admin-auth.server";
 import { MODULES, type ModuleVisibility } from "@/config/modules";
@@ -42,7 +43,7 @@ export const getPublicPlatformSettings = createServerFn({ method: "GET" }).handl
   return (data ?? null) as PublicPlatformSettings | null;
 });
 
-async function isSuper(ctx: { supabase: any; userId: string }) {
+async function isSuper(ctx: { supabase: SupabaseClient; userId: string }) {
   const { data } = await ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "superadmin" });
   return !!data;
 }
@@ -117,7 +118,7 @@ export const setModuleVisibility = createServerFn({ method: "POST" })
 // Public: layout of the episode list on /podcast.
 export const getPodcastLayout = createServerFn({ method: "GET" }).handler(async () => {
   const s = await getPublicPlatformSettings();
-  return ((s as any)?.podcast_layout === "grid" ? "grid" : "list") as PodcastLayout;
+  return s?.podcast_layout === "grid" ? "grid" : "list";
 });
 
 export const setPodcastLayout = createServerFn({ method: "POST" })
