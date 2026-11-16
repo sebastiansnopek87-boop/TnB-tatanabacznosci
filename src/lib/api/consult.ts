@@ -14,7 +14,7 @@ async function invokeConsult<T>(action: string, data?: ActionData, options: Invo
     throw new Error("Sesja wygasła. Zaloguj się ponownie.");
   }
   const headers: Record<string, string> = {};
-  if (accessToken) headers.Authorization = "Bearer " + accessToken;
+  if (accessToken) headers["Authorization"] = "Bearer " + accessToken;
   const body = data === undefined ? { action } : { action, data };
   const { data: result, error } = await supabase.functions.invoke<T>("tnb-consult", { body, headers });
   if (error) {
