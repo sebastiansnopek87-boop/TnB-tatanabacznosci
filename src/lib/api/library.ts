@@ -50,7 +50,7 @@ async function invokeLibrary<T>(action: string, data: ActionData, allowAnonymous
     throw new Error(sessionError ? "Nie udało się odczytać sesji. Zaloguj się ponownie." : "Sesja wygasła. Zaloguj się ponownie.");
   }
   const headers: Record<string, string> = {};
-  if (accessToken) headers.Authorization = "Bearer " + accessToken;
+  if (accessToken) headers["Authorization"] = "Bearer " + accessToken;
   const { data: result, error } = await supabase.functions.invoke<T>("tnb-library-admin", { body: { action, data }, headers });
   if (error) {
     const context = (error as { context?: unknown }).context;
