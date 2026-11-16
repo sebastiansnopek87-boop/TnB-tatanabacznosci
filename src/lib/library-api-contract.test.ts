@@ -62,7 +62,7 @@ describe("library SPA contract", () => {
     await expect(adminListLibrary({ data: { q: "", status: "all", category: null, access: null } }))
       .rejects.toThrow("Brak uprawnień administratora.");
     invoke.mockResolvedValueOnce({ data: null, error: null });
-    await expect(adminGetLibraryItem({ data: { id } })).resolves.toBeNull();
+    await expect(adminGetLibraryItem({ data: { id } })).rejects.toThrow("pustą odpowiedź");
   });
 
   it("keeps the Edge action allowlist, admin gate, upload lifecycle and file-access checks explicit", () => {
