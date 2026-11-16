@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AuthNotice, AuthShell, readAuthUrlParams } from "@/components/auth/AuthShell";
-import { lovable } from "@/integrations/lovable/index";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -140,7 +139,17 @@ function AuthPage() {
   async function oauth(provider: "google" | "apple") {
     if (busy) return;
     setMsg(null); setBusy(true);
-    const res = await lovable.auth.signInWithOAuth(provider, { redirect_uri: `${window.location.origin}/auth` }).catch((e) => ({ error: e, redirected: false }));
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: `${window.location.origin}/auth` },
+    }).then(({ error }) => ({ error, redirected: !error })).catch((cause: unknown) => ({
+      error: cause instanceof Error ? cause : new Error(String(cause)),
+      redirected: false,
+    })).then(({ error: oauthError, redirected }) => {
+      if (oauthError) return { error: oauthError, redirected: false };
+      return { error: null, redirected };
+    });
+    const res = { error, redirected: !error };
     setBusy(false);
     if (res.error) {
       const cancelled = /cancel|closed|denied/i.test(String((res.error as Error).message ?? res.error));
