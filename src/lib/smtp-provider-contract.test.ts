@@ -62,6 +62,13 @@ describe("Cyber_Folks SMTP provider contract", () => {
     expect(route).toContain('createFileRoute("/newsletter/potwierdz")');
   });
 
+  it("requires verified SMTP before enabling double opt-in in admin settings", () => {
+    const admin = read("tnb-admin/index.ts");
+    expect(admin).toContain("if (input.newsletter_double_opt_in && !current?.newsletter_double_opt_in)");
+    expect(admin).toContain("await verifySmtp()");
+    expect(admin).toContain("Najpierw skonfiguruj SMTP i włącz rzeczywistą wysyłkę.");
+  });
+
   it("does not commit SMTP credential values in the shared transport or setup guide", () => {
     const smtp = read("_shared/smtp.ts");
     const guide = readFileSync(new URL("../../docs/operations/smtp-cyberfolks.md", import.meta.url), "utf8");
