@@ -49,7 +49,9 @@ describe("articles SPA contract", () => {
       adminSaveCategory({ data: { original: null, slug: "test", name: "Test", sort_order: 1 } }),
       adminDeleteCategory({ data: { slug: "test" } }),
       adminCreateArticleUpload({ data: { id, type: "image/jpeg", size: 1024 } }),
+      adminArticleImageUrls({ data: { id, names: ["cover.jpg"] } }),
       adminArticleInteractions({ data: { id } }),
+      adminSavePoll({ data: { id, question: "Pytanie", options: ["A", "B"], active: true } }),
       adminDeletePoll({ data: { id } }),
       adminListArticleComments({ data: { filter: "reported" } }),
       adminModerateArticleComment({ data: { id, action: "hide" } }),
@@ -60,9 +62,8 @@ describe("articles SPA contract", () => {
       "adminCreateArticleUpload", "adminArticleImageUrls", "adminArticleInteractions",
       "adminSavePoll", "adminDeletePoll", "adminListArticleComments", "adminModerateArticleComment",
     ];
-    expect(invoke).toHaveBeenCalledTimes(13);
+    expect(invoke).toHaveBeenCalledTimes(15);
     for (const action of actions) {
-      if (action === "adminArticleImageUrls" || action === "adminSavePoll") continue;
       expect(invoke).toHaveBeenCalledWith("tnb-articles", {
         body: expect.objectContaining({ action }),
         headers: { Authorization: "Bearer admin-token" },
