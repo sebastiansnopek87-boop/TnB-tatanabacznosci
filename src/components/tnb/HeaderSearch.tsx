@@ -5,7 +5,7 @@ import { Search } from "lucide-react";
 import { listArticles } from "@/lib/articles";
 import { listLibrary } from "@/lib/library";
 import { listEpisodes } from "@/lib/api/podcast";
-import { listVideos } from "@/lib/api/voice";
+import { listVideos } from "@/lib/api/youtube";
 import { useModuleVisibility } from "@/hooks/use-module-visibility";
 import { Button } from "@/components/ui/button";
 
