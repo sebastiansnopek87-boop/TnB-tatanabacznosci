@@ -142,3 +142,5 @@
 - [x] Podcast — dodano test kontraktu 11 akcji `tnb-podcast`; obejmuje anonimowe odczyty publiczne, wymóg sesji dla panelu, błędy Edge, dostęp premium/admin do audio i signed URL. Test nie publikuje odcinków ani nie przesyła plików.
 
 - [x] Artykuły — dodano test kontraktu 15 akcji Edge `tnb-articles` oraz testy bezpośrednich odczytów admina przez RLS po kontroli roli. Zakres obejmuje trash/restore/purge, upload, ankiety i moderację komentarzy.
+
+- [x] Marka — dodano test kontraktu 4 akcji `tnb-brand`; obejmuje płaskie payloady, Bearer, odmowę bez sesji, admin read/superadmin writes, MIME i limity 2 MB oraz weryfikację metadanych przesłanego pliku.
