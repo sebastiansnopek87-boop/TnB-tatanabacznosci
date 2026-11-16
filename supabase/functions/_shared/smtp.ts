@@ -26,7 +26,8 @@ export function smtpConfig(): { configured: boolean; host: string | null; port: 
   const portRaw = env("SMTP_PORT");
   const port = portRaw ? Number(portRaw) : 0;
   const user = env("SMTP_USERNAME") || env("SMTP_USER");
-  const password = Deno.env.get("SMTP_PASSWORD") ?? Deno.env.get("SMTP_PASS") ?? "";\n  const sender = env("SMTP_FROM");
+  const password = Deno.env.get("SMTP_PASSWORD") ?? Deno.env.get("SMTP_PASS") ?? "";
+  const sender = env("SMTP_FROM");
   const secureRaw = env("SMTP_SECURE").toLowerCase();
   const secure = secureRaw ? secureRaw === "true" || secureRaw === "1" : port === 465;
 
