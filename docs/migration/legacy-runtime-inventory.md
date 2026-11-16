@@ -83,3 +83,27 @@ Liczba pozostałych modułów legacy w `src/` = 0; brak `@tanstack/react-start` 
 - CI PASS dla commitu `09877e4a3347ed9c75b08dc2fd6fd24573309021`, run `43918013467`: build, route smoke, TypeScript, SPA boundary, legacy isolation, Edge source/config, 59 unit tests, scan sekretów i lint.
 - Sekrety i dane skrzynki nie zostały skonfigurowane ani wdrożone, bo nie są dostępne w narzędziach i nie zostały przekazane; produkcyjna wysyłka pozostaje w trybie testowym.
 - Supabase Auth ma osobne ustawienia SMTP w Dashboard → Authentication → SMTP Settings; instrukcja obejmuje tę konfigurację. Nie jest ona automatycznie zmieniana przez Edge Function.
+
+
+## Audyt zamówień i płatności — pierwsza inspekcja (2026-11-16)
+
+Zakres odczytany z aktualnego brancha: `src/lib/api/orders.ts`, `src/lib/api/payments.ts`, legacy `orders.functions.ts` / `payments.functions.ts`, `supabase/functions/tnb-orders`, `supabase/functions/tnb-payments`, adaptery P24/Tpay/PayU i migracje tabel zamówień/webhooków. Na tym etapie nie zmieniano logiki płatności, danych produkcyjnych, operatorów ani sekretów.
+
+### Potwierdzone mechanizmy
+
+- Cena i waluta zamówienia są pobierane po stronie serwera z rekordu opublikowanego materiału; klient przesyła slug, dane nabywcy, metodę i zgodę.
+- Dostęp do materiału wynika z `paid_at`, statusu uprawniającego i braku `access_revoked_at`; samo przekierowanie powrotne z operatora nie nadaje dostępu.
+- Zmiany statusów w ścieżce webhooka są warunkowymi UPDATE po bieżącym statusie; potwierdzenie przelewu ręcznego jest ograniczone do `bank_transfer`.
+- P24 wykonuje dodatkowe `/transaction/verify` po sprawdzeniu podpisu powiadomienia. Tpay i PayU sprawdzają podpis webhooka; PayU weryfikuje surowe body.
+- Zdarzenia webhooków mają klucz główny `event_id`; duplikaty dostają odpowiedź ACK operatora. Przy wyjątku w obsłudze wpis idempotencyjny jest usuwany, aby umożliwić retry.
+- Zmiany konfiguracji operatora są ograniczone do superadmina; włączenie operatora live wymaga testu połączenia, a przełączenie środowiska live wymaga jawnego potwierdzenia.
+
+### Otwarte punkty bezpieczeństwa i zgodności — blokują usunięcie legacy
+
+1. **P1 — powiązanie webhooka z referencją transakcji.** Gdy podpisany adapter dostarcza UUID zamówienia w `notice.orderId`, `confirmOperatorPayment` wyszukuje rekord wyłącznie po UUID. Nie porównuje wprost `notice.providerRef` z zapisanym `library_orders.provider_ref`. Należy potwierdzić semantykę referencji każdego operatora (szczególnie Tpay: wartość zwracana przy rejestracji vs `tr_id` w webhooku), a następnie dodać walidację i testy negatywne bez psucia poprawnych callbacków.
+2. **P1 — brak atomowości całego procesu webhooka.** Wpis `payment_webhook_events`, zmiana statusu zamówienia, log zdarzenia i przyznanie dostępu są osobnymi operacjami. Warunkowy UPDATE ogranicza podwójne nadanie statusu, ale awaria po zmianie statusu na `paid` i przed `afterPaid` może pozostawić zamówienie opłacone bez zakończonej obsługi dostawy. Potrzebny jest trwały mechanizm retry/outbox dla skutków ubocznych i test awarii między krokami.
+3. **P1 — brak idempotency key dla tworzenia zamówienia.** `createLibraryOrder` tworzy nowy rekord przy każdym poprawnym żądaniu; nie wykazano ochrony przed ponowieniem żądania przez klienta/proxy i utworzeniem kilku transakcji dla jednego kliknięcia. Potrzebny jest projekt klucza idempotencji po stronie klienta i unikalnego zapisu po stronie DB, bez deduplikacji dwóch legalnych zakupów.
+4. **P2 — brak pełnych testów kontraktu SPA ↔ Edge ↔ legacy dla zamówień i płatności.** Istnieją testy prymitywów podpisu, ale nie ma jeszcze kompletnego zestawu dla akcji, payloadów, uprawnień, błędów, przejść statusów, ACK, duplikatów, kwot/walut i retry.
+5. **P2 — rozjazd operacyjny po zmianie środowiska operatora.** Zamówienie zapisuje własne `environment`, a webhook porównuje je z aktualnym środowiskiem konfiguracji operatora. Trzeba określić i przetestować procedurę zmiany sandbox/live przy istniejących oczekujących zamówieniach.
+
+Nie wdrażać poprawek w produkcyjnych webhookach przed testami adapterów i potwierdzeniem kontraktów operatorów. Następny krok: wyodrębnić czyste funkcje normalizacji/walidacji referencji, dodać testy P24/Tpay/PayU i kontrakt SPA/Edge; potem zaprojektować outbox i idempotencję zamówień.
