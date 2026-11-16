@@ -1,8 +1,8 @@
 import { createHash } from "crypto";
 
-const sha384 = (value: string) => createHash("sha384").update(value, "utf8").digest("hex");
-const md5 = (value: string) => createHash("md5").update(value, "utf8").digest("hex");
-const sha256 = (value: string) => createHash("sha256").update(value, "utf8").digest("hex");
+export const sha384 = (value: string) => createHash("sha384").update(value, "utf8").digest("hex");
+export const md5 = (value: string) => createHash("md5").update(value, "utf8").digest("hex");
+export const sha256 = (value: string) => createHash("sha256").update(value, "utf8").digest("hex");
 
 /** Constant-time comparison for equal-length hexadecimal signatures. */
 export function safeEq(a: string, b: string): boolean {
