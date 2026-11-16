@@ -112,6 +112,8 @@ async function dispatchOrderNotification(db: Db, orderId: string, event: string,
     const { data: order } = await db.from("library_orders").select("id, order_number, buyer_email, buyer_name, amount, access_token, user_id, library_items(title)").eq("id", orderId).maybeSingle();
     if (!order) return { status: "skipped" as const, reason: "order_not_found" };
     const { settings, platform } = await notificationContext(db);
+    const smtp = smtpConfig();
+    const mode = settings?.delivery_mode === "live" && smtp.configured ? "live" : "test";
     if (!(await notificationEnabled(db, event, settings))) return { status: "skipped" as const, reason: "notification_disabled" };
     const recipient = event === "order_admin_new" ? settings?.notification_recipient : order.buyer_email;
     if (typeof recipient !== "string" || !/^[^\s@<>"]+@[^\s@<>]+\.[a-z]{2,}$/i.test(recipient)) return { status: "skipped" as const, reason: "recipient_not_configured" };
