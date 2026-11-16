@@ -50,6 +50,18 @@ describe("Cyber_Folks SMTP provider contract", () => {
     }
   });
 
+  it("does not leave double-opt-in newsletter subscribers pending without a confirmation flow", () => {
+    const edge = read("tnb-newsletter/index.ts");
+    const api = readFileSync(new URL("./api/newsletter.ts", import.meta.url), "utf8");
+    const route = readFileSync(new URL("../routes/newsletter.potwierdz.tsx", import.meta.url), "utf8");
+    expect(edge).toContain('action: z.literal("confirm")');
+    expect(edge).toContain('confirm_token", token');
+    expect(edge).toContain('status: "active", confirmed_at: now');
+    expect(edge).toContain("sendSmtpMail");
+    expect(api).toContain('invokeNewsletter<{ ok: true }>("confirm", data)');
+    expect(route).toContain('createFileRoute("/newsletter/potwierdz")');
+  });
+
   it("does not commit SMTP credential values in the shared transport or setup guide", () => {
     const smtp = read("_shared/smtp.ts");
     const guide = readFileSync(new URL("../../docs/operations/smtp-cyberfolks.md", import.meta.url), "utf8");
