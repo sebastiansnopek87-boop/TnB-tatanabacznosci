@@ -273,7 +273,8 @@ async function handle(s: Db, req: Request, raw: unknown) {
       getArticle(s, id), getDraft(s, id), activeSubscriberCount(s), getOrigin(s, id)
     ]);
     const { data: mailSettings } = await s.from("email_settings").select("delivery_mode").eq("id", 1).maybeSingle();
-    const mode = mailSettings?.delivery_mode === "live" && smtpConfig().configured ? "live" as const : "test" as const;\n    return { published: isLive(article), newsletter, activeSubscribers, mode, origin, testEmail: actor.email ?? null };
+    const mode = mailSettings?.delivery_mode === "live" && smtpConfig().configured ? "live" as const : "test" as const;
+    return { published: isLive(article), newsletter, activeSubscribers, mode, origin, testEmail: actor.email ?? null };
   }
   if (parsed.action === "prepareArticleNewsletter") {
     const article = await getArticle(s, id, parsed.data.useAi);
