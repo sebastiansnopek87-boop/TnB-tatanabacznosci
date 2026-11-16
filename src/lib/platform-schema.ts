@@ -6,11 +6,11 @@ export const PUBLIC_COLS = "platform_name, contact_email, support_email, notice_
 const optEmail = z.union([z.string().trim().email("Podaj poprawny adres e-mail").max(255), z.literal("")]).transform((v) => (v === "" ? null : v));
 const optUrl = z.union([z.string().trim().url("Podaj pełny adres zaczynający się od https://").max(500).refine((v) => v.startsWith("https://"), "Adres musi zaczynać się od https://"), z.literal("")]).transform((v) => (v === "" ? null : v));
 const optText = (max: number) => z.union([z.string().trim().max(max), z.literal("")]).transform((v) => (v === "" ? null : v));
-const optNip = z.union([z.string().trim().regex(/^\\d{10}$/, "NIP musi mieć dokładnie 10 cyfr (bez myślników)"), z.literal("")]).transform((v) => (v === "" ? null : v));
-const optRegon = z.union([z.string().trim().regex(/^\\d{9}(\\d{5})?$/, "REGON musi mieć 9 lub 14 cyfr"), z.literal("")]).transform((v) => (v === "" ? null : v));
-const optKrs = z.union([z.string().trim().regex(/^\\d{10}$/, "KRS musi mieć dokładnie 10 cyfr"), z.literal("")]).transform((v) => (v === "" ? null : v));
-const optPostal = z.union([z.string().trim().regex(/^\\d{2}-\\d{3}$/, "Kod pocztowy w formacie 00-000"), z.literal("")]).transform((v) => (v === "" ? null : v));
-const optPhone = z.union([z.string().trim().regex(/^\\+?[0-9\\s-]{7,20}$/, "Podaj poprawny numer telefonu"), z.literal("")]).transform((v) => (v === "" ? null : v));
+const optNip = z.union([z.string().trim().regex(/^\d{10}$/, "NIP musi mieć dokładnie 10 cyfr (bez myślników)"), z.literal("")]).transform((v) => (v === "" ? null : v));
+const optRegon = z.union([z.string().trim().regex(/^\d{9}(\d{5})?$/, "REGON musi mieć 9 lub 14 cyfr"), z.literal("")]).transform((v) => (v === "" ? null : v));
+const optKrs = z.union([z.string().trim().regex(/^\d{10}$/, "KRS musi mieć dokładnie 10 cyfr"), z.literal("")]).transform((v) => (v === "" ? null : v));
+const optPostal = z.union([z.string().trim().regex(/^\d{2}-\d{3}$/, "Kod pocztowy w formacie 00-000"), z.literal("")]).transform((v) => (v === "" ? null : v));
+const optPhone = z.union([z.string().trim().regex(/^\\+?[0-9\s-]{7,20}$/, "Podaj poprawny numer telefonu"), z.literal("")]).transform((v) => (v === "" ? null : v));
 
 export const platformSchema = z.object({
   social_youtube: optUrl, social_spotify: optUrl, social_tiktok: optUrl, social_instagram: optUrl,
