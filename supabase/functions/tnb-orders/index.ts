@@ -4,6 +4,7 @@ import { z } from "zod";
 import { ADAPTERS, configStatus, type ProviderId, type ProviderRow } from "./providers.ts";
 import { DEFAULT_TEMPLATES, EVENT_MAP } from "./registry.ts";
 import { render, maskSensitive, stripSensitive, type Vars } from "./render.ts";
+import { sendSmtpMail, smtpConfig } from "../_shared/smtp.ts";
 
 const CORS = new Headers({
   ...sdkCorsHeaders,
@@ -134,19 +135,31 @@ async function dispatchOrderNotification(db: Db, orderId: string, event: string,
     const { data: inserted, error } = await db.from("email_notification_log").insert({
       kind: event, related_id: order.id, template_key: event,
       idempotency_key: event + "-" + order.id + (suffix ? "-" + suffix : ""),
-      mode: "test", recipient, payload: stripSensitive(vars), retryable: !rendered.usesSensitive, status: "sending",
+      mode, recipient, payload: stripSensitive(vars), retryable: !rendered.usesSensitive, status: "sending",
     }).select("id").single();
     if (error) {
       if (error.code === "23505") return { status: "duplicate" as const };
       console.error("order notification log insert failed", error.message);
       return { status: "failed" as const, reason: "log_insert_failed" };
     }
-    const safe = render(template, maskSensitive(vars), template.required);
-    await db.from("email_notification_log").update({
-      status: "simulated", mode: "test", attempts: 1, reason: null, updated_at: new Date().toISOString(),
-      rendered_subject: safe.ok ? safe.subject : null, rendered_html: safe.ok ? safe.html : null, rendered_text: safe.ok ? safe.text : null,
-    }).eq("id", inserted.id);
-    return { status: "simulated" as const, id: inserted.id };
+    if (mode === "test") {
+      const safe = render(template, maskSensitive(vars), template.required);
+      await db.from("email_notification_log").update({
+        status: "simulated", mode: "test", attempts: 1, reason: null, updated_at: new Date().toISOString(),
+        rendered_subject: safe.ok ? safe.subject : null, rendered_html: safe.ok ? safe.html : null, rendered_text: safe.ok ? safe.text : null,
+      }).eq("id", inserted.id);
+      return { status: "simulated" as const, id: inserted.id };
+    }
+    try {
+      const from = `${settings?.sender_name ?? "Tata Na Baczności"} <${settings?.sender_local_part ?? "kontakt"}@${settings?.sender_domain ?? "tatanabacznosci.pl"}>`;
+      const sent = await sendSmtpMail({ to: recipient, from, replyTo: settings?.reply_to ?? null, subject: rendered.subject, html: rendered.html, text: rendered.text });
+      await db.from("email_notification_log").update({ status: "sent", mode: "live", attempts: 1, reason: null, provider_message_id: sent.messageId, updated_at: new Date().toISOString() }).eq("id", inserted.id);
+      return { status: "sent" as const, id: inserted.id };
+    } catch (error) {
+      const reason = error instanceof Error ? error.message.slice(0, 300) : "smtp_delivery_failed";
+      await db.from("email_notification_log").update({ status: "failed", mode: "live", attempts: 1, reason, updated_at: new Date().toISOString() }).eq("id", inserted.id);
+      return { status: "failed" as const, id: inserted.id, reason: "smtp_delivery_failed" };
+    }
   } catch (error) {
     console.error("order notification failed", error instanceof Error ? error.message : error);
     return { status: "failed" as const, reason: "internal_error" };
