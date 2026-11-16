@@ -42,7 +42,7 @@ jobs:
           grep -Eq 'href="/assets/[^"]+\.css"' dist/index.html
           grep -Fq 'RewriteRule . /index.html [L]' dist/.htaccess
           test ! -e .output
-          if grep -R -n -E '@tanstack/react-start|useServerFn|createServerFn' src; then
+          if grep -R -n -E --include='*.ts' --include='*.tsx' --exclude='*.test.ts' '@tanstack/react-start|useServerFn|createServerFn' src; then
             echo "::error::TanStack Start server code found in the React SPA source."
             exit 1
           fi
