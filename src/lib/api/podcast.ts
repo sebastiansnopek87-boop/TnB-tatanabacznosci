@@ -20,7 +20,7 @@ async function invokePodcast<T>(
   }
 
   const headers: Record<string, string> = {};
-  if (accessToken) headers.Authorization = "Bearer " + accessToken;
+  if (accessToken) headers["Authorization"] = "Bearer " + accessToken;
 
   const body = data ? { action, data } : { action };
   const { data: result, error } = await supabase.functions.invoke<T>("tnb-podcast", {
