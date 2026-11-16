@@ -112,3 +112,8 @@
 
 - [x] Zamówienia/płatności — audyt idempotencji i dostaw wykonany read-only 2026-11-16; potwierdzono brak idempotency key zamówienia, brak outbox/worker, nieatomowe `afterPaid` i blokadę automatycznego retry przez stały unikalny klucz wiadomości. Schemat live ma 40+ migracji w historii, repo zawiera obecnie tylko jeden plik migracji — przed nową migracją wymagane uzgodnienie pełnej historii. Raport: `docs/migration/orders-idempotency-outbox-audit.md`. Brak zmian w DB i danych.
 - [ ] Zamówienia/płatności — uzgodnić kompletny łańcuch migracji repo ↔ Supabase, następnie wdrożyć idempotency key i atomowy outbox z workerem retry. Nie stosować zmian live przed uzgodnieniem schematu i testami współbieżności.
+
+- [x] React SPA boundary — potwierdzono statyczny entrypoint Vite/React/TanStack Router oraz brak importów legacy w UI. Pozostaje 41 plików `.functions.ts`/`.server.ts` i 2 middleware TanStack Start (43 łącznie); `@tanstack/react-start` pozostaje w devDependencies do czasu bezpiecznego usunięcia tych modułów.
+- [x] Supabase migration drift — odczytano 66 wersji migracji w aktywnym projekcie; repo zawiera 1 plik SQL, którego timestamp nie zgadza się z wpisem historii. Lista i plan uzgodnienia: `docs/migration/supabase-migration-reconciliation.md`. Nie wykonano zmian w DB.
+- [ ] Supabase migration recovery — odzyskać oryginalne pliki migracji z wiarygodnego źródła lub zatwierdzić pełny baseline/snapshot; bez tego nie wdrażać nowych zmian schematu.
+- [ ] React SPA completion — migracja wszystkich 43 pozostałych modułów legacy, usunięcie `@tanstack/react-start` z manifestu i lockfile, testy regresji oraz czysta instalacja.
