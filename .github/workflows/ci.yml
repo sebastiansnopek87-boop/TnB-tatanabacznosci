@@ -38,8 +38,8 @@ jobs:
           test -d dist
           test -f dist/index.html
           test -f dist/.htaccess
-          grep -Eq 'src="/assets/[^"]+\\.js"' dist/index.html
-          grep -Eq 'href="/assets/[^"]+\\.css"' dist/index.html
+          grep -Eq 'src="/assets/[^"]+\.js"' dist/index.html
+          grep -Eq 'href="/assets/[^"]+\.css"' dist/index.html
           grep -Fq 'RewriteRule . /index.html [L]' dist/.htaccess
           test ! -e .output
           if grep -R -n -E '@tanstack/react-start|useServerFn|createServerFn' src; then
