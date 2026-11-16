@@ -9,3 +9,8 @@ export function providerReferenceMatches(stored: unknown, received: unknown): bo
     && received.length > 0
     && stored === received;
 }
+
+/** P24 requires a successful server-side /transaction/verify before ACK. */
+export function p24VerificationSucceeded(httpOk: boolean, providerStatus: unknown): boolean {
+  return httpOk && providerStatus === "success";
+}
