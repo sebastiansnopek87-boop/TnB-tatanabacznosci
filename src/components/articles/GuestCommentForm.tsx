@@ -1,6 +1,5 @@
 import { useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
 import { MailCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +10,6 @@ import type { Article } from "@/lib/articles";
 
 // Comment form for visitors without an account. Nothing is published until the e-mail link is confirmed.
 export function GuestCommentForm({ a }: { a: Article }) {
-  const submit = useServerFn(submitGuestComment);
   const started = useRef(Date.now());
   const [f, setF] = useState({ firstName: "", lastName: "", email: "", body: "", rules: false, website: "" });
   const [err, setErr] = useState<string | null>(null);
@@ -26,7 +24,7 @@ export function GuestCommentForm({ a }: { a: Article }) {
     if (!f.rules) { setErr("Zaakceptuj zasady komentowania."); return; }
     setSending(true);
     try {
-      await submit({ data: { articleId: a.id, ...f, rules: true, elapsedMs: Date.now() - started.current } });
+      await submitGuestComment({ data: { articleId: a.id, ...f, rules: true, elapsedMs: Date.now() - started.current } });
       setDone(true);
     } catch (x: any) {
       let m = String(x?.message ?? "");
