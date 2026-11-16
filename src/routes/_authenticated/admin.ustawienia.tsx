@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ModuleVisibilitySettings } from "@/components/admin/ModuleVisibility";
 import { BrandSettings } from "@/components/admin/BrandSettings";
 import { VisualEffectsSettings } from "@/components/admin/VisualEffectsSettings";
+import { normalizeModuleVisibility } from "@/config/modules";
 
 export const Route = createFileRoute("/_authenticated/admin/ustawienia")({
   head: () => ({ meta: [
@@ -91,7 +92,7 @@ function PlatformSettings() {
       {ro && <p className="border border-gold/50 p-3 text-sm">Tryb podglądu. Zmieniać ustawienia może tylko superadministrator.</p>}
       <BrandSettings canEdit={!ro} />
 
-      <ModuleVisibilitySettings value={data.settings.module_visibility} canEdit={!ro} />
+      <ModuleVisibilitySettings value={normalizeModuleVisibility(data.settings.module_visibility)} canEdit={!ro} />
 
       <VisualEffectsSettings value={(data.settings as any).visual_effects} canEdit={!ro} />
 
