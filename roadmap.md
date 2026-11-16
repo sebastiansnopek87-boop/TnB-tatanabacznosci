@@ -124,3 +124,5 @@
 
 - [x] Powiadomienia — dodano test kontraktu dla 11 akcji `tnb-notifications`: payloady, token Bearer, brak sesji, propagacja 403 i pustej odpowiedzi oraz kontrola uprawnień admin/superadmin. Weryfikacja SMTP `live` pozostaje wymagana; produkcyjne sekrety SMTP nie są ustawione.
 - [x] Biblioteka — adapter odrzuca pustą odpowiedź Edge Function; test dodano do istniejącego `library-api.test.ts`, bez duplikowania wcześniej pokrytych 11 akcji administracyjnych i 4 akcji dostarczania materiałów.
+
+- [x] Kontakt i newsletter — dodano testy kontraktu adapterów `tnb-contact` i `tnb-newsletter`; obejmują payloady, walidację, błędy, ochronę antyspamową, allowlistę originów, zgodę i double opt-in. Testy Edge nie uruchamiają rzeczywistej wysyłki; produkcyjny SMTP pozostaje nieaktywny.
