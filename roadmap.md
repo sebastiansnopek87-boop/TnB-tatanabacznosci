@@ -130,3 +130,5 @@
 - [x] Newsletter artykułów — dodano test kontraktu 6 akcji `tnb-article-newsletter`, w tym role admin/superadmin, potwierdzenie liczby odbiorców przed wysyłką, claim statusu, tryb testowy i klucze idempotencji na odbiorcę. Wysłanie produkcyjne nie jest uruchamiane przez testy.
 
 - [x] Multimedia — dodano test kontraktu 5 akcji `tnb-media-admin`: token Bearer, brak sesji, błędy 403, walidacja typu/rozmiaru uploadu, finalna weryfikacja metadanych pliku oraz fail-closed przy usuwaniu obiektów używanych przez inne moduły. Publiczne serwowanie okładek i avatarów pozostaje osobną Edge Function.
+
+- [x] Materiały redakcyjne AI — dodano test kontraktu 15 akcji `tnb-editor-materials`; potwierdzono zgodność allowlisty, dispatch do współdzielonej logiki i wymóg superadministratora w Edge oraz w legacy. Test nie wywołuje zewnętrznego dostawcy AI ani nie publikuje artykułów.
