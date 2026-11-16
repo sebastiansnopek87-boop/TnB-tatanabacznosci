@@ -108,3 +108,7 @@
 
 - [x] Płatności — potwierdzono kontrakty referencji P24 (`sessionId`), Tpay (`title` ↔ `tr_id`, `hiddenDescription` ↔ `tr_crc`) i PayU (`orderId` ↔ zapisany identyfikator PayU); Edge Function porównuje niezależnie zapisaną referencję operatora. Naprawiono P24: brak udanej weryfikacji `transaction/verify` nie otrzymuje ACK i może być ponowiony. Dodano testy referencji, bramki P24 i adapterów SPA. Testy CI dla najnowszego commitu są w toku.
 - [ ] Płatności — dodać idempotency key przy tworzeniu zamówienia oraz trwały outbox/retry dla skutków ubocznych po zmianie statusu na `paid`; wymaga migracji schematu i planu bezpiecznej obsługi istniejących zamówień.
+
+
+- [x] Zamówienia/płatności — audyt idempotencji i dostaw wykonany read-only 2026-11-16; potwierdzono brak idempotency key zamówienia, brak outbox/worker, nieatomowe `afterPaid` i blokadę automatycznego retry przez stały unikalny klucz wiadomości. Schemat live ma 40+ migracji w historii, repo zawiera obecnie tylko jeden plik migracji — przed nową migracją wymagane uzgodnienie pełnej historii. Raport: `docs/migration/orders-idempotency-outbox-audit.md`. Brak zmian w DB i danych.
+- [ ] Zamówienia/płatności — uzgodnić kompletny łańcuch migracji repo ↔ Supabase, następnie wdrożyć idempotency key i atomowy outbox z workerem retry. Nie stosować zmian live przed uzgodnieniem schematu i testami współbieżności.
