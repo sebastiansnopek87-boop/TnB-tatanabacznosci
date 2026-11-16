@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { MeetingDetail, MyReg, PublicMeeting } from "@/lib/meetings";
+import type { MeetingDetail, MyReg, PublicMeeting, RegStatus } from "@/lib/meetings";
 
 type ApiError = { message?: unknown };
 type InvokeOptions = { allowAnonymous?: boolean };
@@ -15,7 +15,7 @@ async function invokeMeetings<T>(action: string, data?: ActionData, options: Inv
     throw new Error("Sesja wygasła. Zaloguj się ponownie.");
   }
   const headers: Record<string, string> = {};
-  if (accessToken) headers.Authorization = "Bearer " + accessToken;
+  if (accessToken) headers["Authorization"] = "Bearer " + accessToken;
   const body = data === undefined ? { action } : { action, data };
   const { data: result, error } = await supabase.functions.invoke<T>("tnb-meetings", { body, headers });
   if (error) {
@@ -106,7 +106,7 @@ export function registerForMeeting({ data }: { data: MeetingRegistrationInput })
   return invokeMeetings("registerForMeeting", data as unknown as ActionData, { allowAnonymous: true });
 }
 export function getRegistrationByToken({ data }: { data: { token: string } }): Promise<{
-  status: string;
+  status: RegStatus;
   token: string;
   link: string | null;
   joinOpensAt: string | null;
