@@ -72,7 +72,7 @@ function Orders() {
           <table className="w-full min-w-[820px] text-sm">
             <thead className="text-left text-xs uppercase tracking-wider text-muted-foreground"><tr className="border-b border-border/60">
               <th className="p-3">Nr</th><th className="p-3">Data</th><th className="p-3">Materiał</th><th className="p-3">E-mail</th><th className="p-3">Kwota</th><th className="p-3">Metoda</th><th className="p-3">Status</th></tr></thead>
-            <tbody>{data.map((r: any) => (
+            <tbody>{data.map((r) => (
               <tr key={r.id} tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter") setOpenId(r.id); }} onClick={() => setOpenId(r.id)} className={`cursor-pointer border-b border-border/40 hover:bg-card ${openId === r.id ? "bg-card" : ""}`}>
                 <td className="whitespace-nowrap p-3 font-mono text-xs">{r.order_number}{r.is_test && <TestBadge />}</td>
                 <td className="p-3">{fmtDate(r.created_at)}</td><td className="p-3">{r.library_items?.title}</td><td className="p-3">{r.buyer_email}</td>
