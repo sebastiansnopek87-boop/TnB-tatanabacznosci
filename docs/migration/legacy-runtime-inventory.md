@@ -30,7 +30,7 @@ W repozytorium znajduje się 41 plików `*.functions.ts` / `*.server.ts` w `src/
 | `src/lib/guest-comments.functions.ts` | `src/lib/api/guest-comments.ts` | `tnb-guest-comments` | porównać moderację i limity |
 | `src/lib/instagram.server.ts` | brak potwierdzonego adaptera | do ustalenia (możliwy `tnb-media`) | OAuth/sekrety; blokada do audytu przepływu |
 | `src/lib/library-delivery.functions.ts` | `src/lib/api/library-delivery.ts` | `tnb-library-delivery` | test kontraktu SPA ↔ Edge dla 4 akcji; auth admin, token hash i związanie tokenu z materiałem objęte kontrolą statyczną; testy CI/E2E oczekują na wynik |
-| `src/lib/library.functions.ts` | `src/lib/api/library.ts` | `tnb-library-admin` | test kontraktu SPA ↔ Edge dla 11 akcji; testy statyczne kontroli admina, uprawnienia direct download i zgodności geometrii watermark; CI/E2E oczekują na wynik |
+| `src/lib/library.functions.ts` | `src/lib/api/library.ts` | `tnb-library-admin` | istniejący test kontraktu obejmuje 11 akcji, upload/finalize, bramkę admin, direct-download entitlement i zgodność watermark; dodano odrzucanie pustej odpowiedzi w adapterze SPA; CI aktualnie oczekuje na wynik |
 | `src/lib/library/pdf.server.ts` | `src/lib/api/library.ts` (pośrednio) | `tnb-library-admin` / `tnb-library-delivery` | PDF; porównać watermark i przechowywanie |
 | `src/lib/library/watermark-logo.server.ts` | brak w przeglądarce | `tnb-library-admin` | zasób serwerowy; usunąć po potwierdzeniu użycia w Edge |
 | `src/lib/library/watermark.server.ts` | brak w przeglądarce | `tnb-library-admin` | logika PDF pozostaje wyłącznie po stronie Edge; testy porównują wymiary/pozycję znaku, minimalną szerokość strony i producer marker; pełny test wizualny PDF nadal wymagany |
@@ -39,7 +39,7 @@ W repozytorium znajduje się 41 plików `*.functions.ts` / `*.server.ts` w `src/
 | `src/lib/meetings.functions.ts` | `src/lib/api/meetings.ts` | `tnb-meetings` | porównać CRUD i role |
 | `src/lib/newsletter.functions.ts` | `src/lib/api/newsletter.ts` | `tnb-newsletter` | porównać double opt-in i wypis |
 | `src/lib/notifications-test.server.ts` | `src/lib/api/notifications.ts` | `tnb-notifications` | testowe wysyłki; sprawdzić dostęp wyłącznie admin |
-| `src/lib/notifications.functions.ts` | `src/lib/api/notifications.ts` | `tnb-notifications` | porównać akcje i odbiorców |
+| `src/lib/notifications.functions.ts` | `src/lib/api/notifications.ts` | `tnb-notifications` | dodano test kontraktu dla 11 akcji, tokenu Bearer, braku sesji, 403, pustej odpowiedzi oraz granic admin/superadmin; legacy zachowany do porównania semantyki odbiorców i providerów |
 | `src/lib/notifications.server.ts` | `src/lib/api/notifications.ts` | `tnb-notifications` | provider/sekrety; obecnie tryb testowy |
 | `src/lib/orders.functions.ts` | `src/lib/api/orders.ts` | `tnb-orders` | porównać statusy i idempotencję |
 | `src/lib/orders.server.ts` | `src/lib/api/orders.ts` | `tnb-orders` | porównać operacje uprzywilejowane |
@@ -133,3 +133,12 @@ Pozostałe bramki: idempotencja tworzenia zamówienia, trwały outbox/retry dla 
 - Odczyt ACL w aktywnej bazie: funkcja ma `SECURITY DEFINER`, `search_path=public, pg_temp`, właściciela `postgres`; EXECUTE ma wyłącznie `service_role`. Role `authenticated`, `anon` i `public` nie mają EXECUTE. To ogranicza bezpośrednie wywołanie RPC z klienta.
 - Historia Supabase zawiera migrację `20261115150058 / 0061_admin_set_user_role_atomic`, ale plik źródłowy tej migracji nie jest obecny w repo. Nie odtwarzano go z samej nazwy ani nie zmieniano bazy. Wymagane odzyskanie oryginalnej treści migracji w ramach uzgadniania brakujących plików.
 - Nie usuwano `src/lib/users.functions.ts`; pozostaje potrzebny do porównania zachowania i nie został wykazany jako zbędny.
+
+
+## Audyt biblioteki i powiadomień — 2026-11-16
+
+- Biblioteka: ponownie wykorzystano istniejący `src/lib/library-api.test.ts` (11 akcji administracyjnych i 4 akcje dostarczania materiałów), bez utrzymywania duplikatu testu. Adapter `src/lib/api/library.ts` odrzuca teraz również pustą odpowiedź Edge Function zamiast zwracać `null` jako pozornie poprawny wynik.
+- Kontrola statyczna istniejącego testu biblioteki obejmuje autoryzację admina, bezpośrednie pobieranie pliku dopiero po `library_can_read`, token redemption związany z hashem i konkretnym materiałem oraz geometrię i zasób znaku wodnego. Upload jest dwufazowy: podpisany upload URL, a następnie walidacja ścieżki, typu i rozmiaru podczas finalizacji.
+- Powiadomienia: dodano `src/lib/notifications-api-contract.test.ts` dla 11 akcji adaptera `tnb-notifications`. Test obejmuje token Bearer, blokadę bez sesji, propagację 403 i pustej odpowiedzi, allowlistę Edge oraz granice ról. Edycja szablonów, reguł, konfiguracji dostarczania, test SMTP, kontrola duplikatów i retry wymagają superadministratora; odczyt i podgląd logów pozostają dostępne dla administratora.
+- Edge nie przełącza wysyłki na `live`, jeśli nie ma kompletnych sekretów SMTP i udanego `verifySmtp()`. W bazie ustawienie `delivery_mode` nadal pozostaje `test`; nie wysyłano wiadomości i nie zmieniano sekretów.
+- Nie usuwano żadnych modułów legacy. Różnice między dawnym providerem poczty a obecnym transportem SMTP wymagają osobnej walidacji zachowania i konfiguracji produkcyjnej.
