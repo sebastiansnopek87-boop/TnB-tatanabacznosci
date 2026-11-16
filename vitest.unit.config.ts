@@ -24,6 +24,7 @@ export default defineConfig({
       "src/lib/newsletter-api-contract.test.ts",
       "src/lib/contact-api-contract.test.ts",
       "src/lib/article-newsletter-api-contract.test.ts",
+      "src/lib/media-api-contract.test.ts",
       "src/lib/rich-text.test.ts",
     ],
   },
