@@ -8,7 +8,7 @@ type ApiError = { message?: unknown };
 export const storySchema = z.object({
   name: z.string().trim().min(1, "Podaj imię i nazwisko").max(120, "Maksymalnie 120 znaków"),
   email: z.string().trim().email("Podaj poprawny adres e-mail").max(255),
-  phone: z.string().trim().max(40, "Maksymalnie 40 znaków").regex(/^[0-9+()\\s-]*$/, "Numer może zawierać tylko cyfry, spacje i znaki + ( ) -"),
+  phone: z.string().trim().max(40, "Maksymalnie 40 znaków").regex(/^[0-9+()\s-]*$/, "Numer może zawierać tylko cyfry, spacje i znaki + ( ) -"),
   about: z.string().trim().max(1000, "Maksymalnie 1000 znaków"),
   topic: z.string().trim().min(1, "Napisz, o czym chcesz porozmawiać").max(1000, "Maksymalnie 1000 znaków"),
   story: z.string().trim().min(20, "Opowiedz swoją historię (co najmniej 20 znaków)").max(5000, "Maksymalnie 5000 znaków"),
