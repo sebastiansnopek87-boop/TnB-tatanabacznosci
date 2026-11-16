@@ -92,7 +92,7 @@ export function BrandSettings({ canEdit }: { canEdit: boolean }) {
   async function onSave() {
     setSaving(true);
     try {
-      await saveBrandSettings({ data: f });
+      await saveBrandSettings({ data: current });
       setPreviews((p) => { for (const u of Object.values(p)) URL.revokeObjectURL(u); return {}; });
       toast.success("Ustawienia marki zapisane.");
       qc.invalidateQueries({ queryKey: ["admin-brand-settings"] });
