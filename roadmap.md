@@ -140,3 +140,5 @@
 - [x] Spotkania — dodano test kontraktu 16 akcji `tnb-meetings`; obejmuje publiczne odczyty, operacje zalogowanego użytkownika, panel admina, zgody, antyspam i limity uploadu. Test nie tworzy rezerwacji ani nie uruchamia powiadomień.
 
 - [x] Podcast — dodano test kontraktu 11 akcji `tnb-podcast`; obejmuje anonimowe odczyty publiczne, wymóg sesji dla panelu, błędy Edge, dostęp premium/admin do audio i signed URL. Test nie publikuje odcinków ani nie przesyła plików.
+
+- [x] Artykuły — dodano test kontraktu 15 akcji Edge `tnb-articles` oraz testy bezpośrednich odczytów admina przez RLS po kontroli roli. Zakres obejmuje trash/restore/purge, upload, ankiety i moderację komentarzy.
