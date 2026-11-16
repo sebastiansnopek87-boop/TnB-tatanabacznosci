@@ -3,6 +3,8 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertAdmin, assertSuperadmin, logEvent } from "./admin-auth.server";
 import { MODULES, type ModuleVisibility } from "@/config/modules";
+import { PUBLIC_COLS, platformSchema } from "./platform-schema";
+export { PUBLIC_COLS, platformSchema } from "./platform-schema";
 
 export type PublicPlatformSettings = {
   platform_name: string; contact_email: string | null; support_email: string | null;
@@ -22,7 +24,8 @@ export type PublicPlatformSettings = {
 // Admin-only billing fields — never in PUBLIC_COLS, never in public responses.
 export type BillingSettings = { billing_same_as_company: boolean; billing_name: string | null; billing_nip: string | null; billing_address: string | null };
 const BILLING_COLS = "billing_same_as_company, billing_name, billing_nip, billing_address";
-import { PUBLIC_COLS, platformSchema } from "./platform-schema";\nexport { PUBLIC_COLS, platformSchema } from "./platform-schema";
+import { PUBLIC_COLS, platformSchema } from "./platform-schema";
+export { PUBLIC_COLS, platformSchema } from "./platform-schema";
 
 // Public: only non-sensitive columns, read through the anon SELECT policy.
 export const getPublicPlatformSettings = createServerFn({ method: "GET" }).handler(async () => {
