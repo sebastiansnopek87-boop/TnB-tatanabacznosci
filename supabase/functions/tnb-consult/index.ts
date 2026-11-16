@@ -126,6 +126,8 @@ async function dispatch(s: Db, input: { event: string; to?: string | null; vars:
     const event = EVENT_MAP[input.event];
     if (!event) return { status: "failed" as const, reason: "unknown_event" };
     const { settings, platform } = await notificationContext(s);
+    const smtp = smtpConfig();
+    const mode = settings?.delivery_mode === "live" && smtp.configured ? "live" : "test";
     const base = { kind: input.event, related_id: input.relatedId ?? null, template_key: input.event, idempotency_key: input.idempotencyKey };
     const put = async (row: Record<string, unknown>) => {
       const { data, error } = await s.from("email_notification_log").insert({ ...base, mode, ...row }).select("id").single();
