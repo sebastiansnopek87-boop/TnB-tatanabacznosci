@@ -76,7 +76,7 @@ describe("AI editorial materials SPA contract", () => {
     }
     expect(edge).toContain("await requireSuperadminEdge(req)");
     expect(edge).toContain("const fn = (logic as unknown as Record<string, unknown>)[raw.action]");
-    expect(auth).toContain("supabaseAdmin.auth.getUser(token)");
+    expect(auth).toContain("getUser(token)");
     expect(auth).toContain('_role: "admin"');
     expect(auth).toContain('_role: "superadmin"');
     expect(legacy).toContain("await assertSuperadmin(c, `ai_material:${op}`)");
