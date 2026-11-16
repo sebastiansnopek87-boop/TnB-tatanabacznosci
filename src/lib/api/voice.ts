@@ -27,7 +27,7 @@ export type VoiceSubmission = {
 export type InstagramSource = {
   id: number; status: string; username: string | null; profile_url: string | null; display_count: number;
   show_reels: boolean; show_posts: boolean; show_carousels: boolean; last_sync_at: string | null; last_error: string | null;
-  connected_at: string | null; connected_by: string | null; media_count: number; [key: string]: unknown;
+  connected_at: string | null; connected_by: string | null; media_count: number; last_sync_added?: number | null; [key: string]: unknown;
 };
 export type InstagramCheck = {
   ok: boolean;
