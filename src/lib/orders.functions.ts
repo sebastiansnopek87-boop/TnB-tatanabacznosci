@@ -82,6 +82,7 @@ export const createLibraryOrder = createServerFn({ method: "POST" })
     await core.notifyOrder(order.id, "order_created");
     await core.notifyOrder(order.id, "order_admin_new");
     if (!online) return { token: order.access_token };
+    if (!provider) return { error: "Nie udało się odczytać konfiguracji operatora płatności." };
     const { ADAPTERS } = await import("./payments/providers.server");
     const origin = core.siteOrigin();
     const r = await ADAPTERS[data.method as (typeof PROVIDERS)[number]].create(provider, {

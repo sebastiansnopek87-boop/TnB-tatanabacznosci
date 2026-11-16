@@ -79,7 +79,7 @@ async function invokeYoutube<T>(
   }
 
   const headers: Record<string, string> = {};
-  if (accessToken) headers.Authorization = "Bearer " + accessToken;
+  if (accessToken) headers["Authorization"] = "Bearer " + accessToken;
   const body = data === undefined ? { action } : { action, data };
   const { data: result, error } = await supabase.functions.invoke<T>("tnb-youtube", {
     body,

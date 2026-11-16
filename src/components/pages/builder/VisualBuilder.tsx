@@ -77,7 +77,7 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
     getFn({ data: { id } }).then((p) => {
       if (!live) return;
       const pub = pick(p);
-      setMeta({ system_key: p.system_key, status: p.status, live: pub });
+      setMeta({ system_key: p.system_key, status: p.status ?? "draft", live: pub });
       setD(p.draft ? { ...pub, ...pick({ ...pub, ...p.draft }) } : pub);
       setSaveState((s) => ({ ...s, at: p.draft_updated_at }));
       if (typeof window !== "undefined" && window.innerWidth < 1024) { setLeft(null); setRightOpen(false); }
@@ -146,7 +146,7 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
     if (saveState.dirty && !(await save(false))) return;
     setSaveState((s) => ({ ...s, busy: true }));
     try {
-      await pubFn({ data: { id, ...(legal ? { legalConfirmed: true, expectedDigest } : {}) } });
+      await pubFn({ data: { id, ...(legal && expectedDigest ? { legalConfirmed: true, expectedDigest } : {}) } });
       setMeta((m) => m && d ? { ...m, status: "published", live: d } : m);
       toast.success("Opublikowano. Zmiany są widoczne na stronie publicznej.");
       setModal(null);
