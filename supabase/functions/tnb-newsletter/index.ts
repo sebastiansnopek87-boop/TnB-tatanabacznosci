@@ -186,7 +186,7 @@ async function confirm(db: Db, token: string) {
 async function unsubscribe(db: Db, data: z.infer<typeof unsubscribeSchema>) {
   if ("website" in data && data.website) throw new Error("Odrzucono.");
   const now = new Date().toISOString();
-  let query = db.from("newsletter_subscribers").update({ status: "unsubscribed", unsubscribed_at: now, updated_at: now }).neq("status", "unsubscribed");
+  const query = db.from("newsletter_subscribers").update({ status: "unsubscribed", unsubscribed_at: now, updated_at: now }).neq("status", "unsubscribed");
   const { error } = "token" in data ? await query.eq("unsubscribe_token", data.token) : await query.ilike("email", data.email);
   if (error) { console.error("unsubscribe", error.message); throw new Error("Nie udało się wypisać adresu."); }
   return { ok: true as const };
