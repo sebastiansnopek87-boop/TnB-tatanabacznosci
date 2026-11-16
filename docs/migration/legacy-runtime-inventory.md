@@ -76,8 +76,10 @@ Liczba pozostałych modułów legacy w `src/` = 0; brak `@tanstack/react-start` 
 ## SMTP i system powiadomień (2026-11-16)
 
 - Wspólny transport `supabase/functions/_shared/smtp.ts` używa Nodemailer i sekretów Edge Functions; nie udostępnia danych SMTP w kliencie.
-- Podłączono transport do `tnb-notifications`, `tnb-newsletter`, `tnb-article-newsletter`, `tnb-orders`, `tnb-consult`, `tnb-library-delivery` i `tnb-contact`.
+- Podłączono transport do `tnb-notifications`, `tnb-newsletter`, `tnb-article-newsletter`, `tnb-orders`, `tnb-consult`, `tnb-library-delivery` i `tnb-contact`; `tnb-admin` weryfikuje połączenie przed włączeniem trybu live i double opt-in.
 - Tryb `live` wymaga `email_settings.delivery_mode = live` oraz kompletnej konfiguracji SMTP. Panel nie pozwala włączyć trybu live bez weryfikacji połączenia i uwierzytelnienia SMTP.
 - Dla Cyber_Folks przewidziano port 465 SSL/TLS. Porty 25 i 587 są odrzucane w helperze z uwagi na ograniczenia Supabase Edge.
-- Dodano instrukcję `docs/operations/smtp-cyberfolks.md` oraz test kontraktowy. Sekrety i dane skrzynki nie zostały skonfigurowane ani wdrożone, bo nie są dostępne w narzędziach i nie zostały przekazane; produkcyjna wysyłka pozostaje w trybie testowym.
+- Dodano instrukcję `docs/operations/smtp-cyberfolks.md` oraz test kontraktowy. Double opt-in ma teraz kompletny przepływ wysyłki tokenu i aktywacji adresu (`/newsletter/potwierdz`); nie da się go włączyć bez aktywnego, zweryfikowanego SMTP.
+- CI PASS dla commitu `09877e4a3347ed9c75b08dc2fd6fd24573309021`, run `43918013467`: build, route smoke, TypeScript, SPA boundary, legacy isolation, Edge source/config, 59 unit tests, scan sekretów i lint.
+- Sekrety i dane skrzynki nie zostały skonfigurowane ani wdrożone, bo nie są dostępne w narzędziach i nie zostały przekazane; produkcyjna wysyłka pozostaje w trybie testowym.
 - Supabase Auth ma osobne ustawienia SMTP w Dashboard → Authentication → SMTP Settings; instrukcja obejmuje tę konfigurację. Nie jest ona automatycznie zmieniana przez Edge Function.
