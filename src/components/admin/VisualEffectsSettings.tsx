@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 const INTENSITY = [["subtle", "Subtelna (zalecana)"], ["standard", "Standardowa"], ["off", "Wyłączona"]] as const;
 const SPEED = [["fast", "Szybka"], ["standard", "Standardowa"], ["calm", "Spokojna"]] as const;
 
-export function VisualEffectsSettings({ value, canEdit }: { value: Partial<VisualEffects> | undefined; canEdit: boolean }) {
+export function VisualEffectsSettings({ value, canEdit }: { value: unknown; canEdit: boolean }) {
   const [d, setD] = useState<VisualEffects>(normalizeFx(value));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
