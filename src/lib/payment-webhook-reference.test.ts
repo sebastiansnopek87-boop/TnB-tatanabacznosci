@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { providerReferenceMatches } from "../../supabase/functions/_shared/payment-webhook";
+import { p24VerificationSucceeded, providerReferenceMatches } from "../../supabase/functions/_shared/payment-webhook";
 
 describe("payment webhook provider reference guard", () => {
   it("accepts the exact transaction reference saved at checkout", () => {
@@ -15,5 +15,14 @@ describe("payment webhook provider reference guard", () => {
     expect(providerReferenceMatches("provider-ref", "")).toBe(false);
     expect(providerReferenceMatches("provider-ref", "attacker-ref")).toBe(false);
     expect(providerReferenceMatches("ABC", "abc")).toBe(false);
+  });
+});
+
+describe("P24 verification gate", () => {
+  it("accepts only a successful HTTP response with provider status success", () => {
+    expect(p24VerificationSucceeded(true, "success")).toBe(true);
+    expect(p24VerificationSucceeded(false, "success")).toBe(false);
+    expect(p24VerificationSucceeded(true, "pending")).toBe(false);
+    expect(p24VerificationSucceeded(true, undefined)).toBe(false);
   });
 });
