@@ -44,7 +44,7 @@ let cachedTransport: ReturnType<typeof nodemailer.createTransport> | null = null
 let cachedFingerprint = "";
 
 function transport(config: SmtpConfig) {
-  const fingerprint = [config.host, config.port, config.secure, config.user].join("|");
+  const fingerprint = [config.host, config.port, config.secure, config.user, config.password].join("|");
   if (!cachedTransport || cachedFingerprint !== fingerprint) {
     cachedTransport = nodemailer.createTransport({
       host: config.host,
@@ -85,7 +85,7 @@ export async function sendSmtpMail(message: SmtpMessage): Promise<{ messageId: s
     password: Deno.env.get("SMTP_PASSWORD") ?? Deno.env.get("SMTP_PASS") ?? "",
   };
   const result = await transport(config).sendMail({
-    from: message.from,
+    from: env("SMTP_FROM") || message.from,
     to: message.to,
     ...(message.replyTo ? { replyTo: message.replyTo } : {}),
     subject: message.subject,
