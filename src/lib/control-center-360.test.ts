@@ -12,7 +12,9 @@ describe("Control Center 360 pure helpers", () => {
   });
   it("builds safe exact-slug and partial-title search filters", () => {
     expect(materialSearchFilter("test-zakupu-etap-21")).toBe('slug.eq."test-zakupu-etap-21",title.ilike."%test-zakupu-etap-21%"');
-    expect(materialSearchFilter('a,b("c")')).toContain('a\\,b');
+    const safe = searchParts("a,b(\"c\")").safe;
+    expect(safe).toBe("a b c");
+    expect(materialSearchFilter(safe)).toBe('slug.eq."a b c",title.ilike."%a b c%"');
   });
   it("deduplicates by source and ID, sorts, and advances independent cursors", () => {
     const make = (source: HistoryEvent["source"], at: string): HistoryEvent => ({ id: "same", source, at, type: "paid", actor: null, objectKind: "order", objectId: id, detail: null, result: null });
