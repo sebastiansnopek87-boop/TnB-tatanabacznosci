@@ -73,6 +73,7 @@
 - [x] Article newsletter: read, prepare, edit, test-send, explicit superadmin send and unmark actions invoke `tnb-article-newsletter` directly; role checks and explicit send confirmation remain enforced by the Edge Function.
 - [x] Library administration: list/edit/status, signed downloads, cover previews, secure file upload and PDF watermark processing use `tnb-library-admin`; uploads use signed Storage upload URLs followed by server-side validation/finalization.
 - [x] Library AI recommender invokes the public `tnb-recommend` Edge Function directly.
+- [x] Removed remaining `useServerFn` wrappers from the consultation history/cancellation UI and free-library request/redeem UI; route and custom-component inventory now has no remaining `useServerFn` call sites.
 - [ ] Move remaining SSR/API route handlers (OAuth callbacks, cron, signed media, payment callbacks) to explicit Supabase Edge Function or hosting-compatible endpoints while preserving webhook signature verification and private-media access checks.
 - [ ] Remove TanStack Start/Nitro server runtime only after no production path depends on it; replace with a static Vite React SPA and configure CyberFolks routing/fallbacks.
 - [ ] Run production build, typecheck, lint, unit tests, route smoke tests and authenticated E2E across guest/user/admin/superadmin; validate on CyberFolks staging before production cutover.
