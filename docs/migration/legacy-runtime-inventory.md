@@ -14,7 +14,7 @@ W repozytorium znajduje się 41 plików `*.functions.ts` / `*.server.ts` w `src/
 |---|---|---|---|
 | `src/integrations/supabase/client.server.ts` | `src/integrations/supabase/client.ts` | wszystkie funkcje wymagające klienta uprzywilejowanego | infrastruktura; sprawdzić każdy import i sekrety |
 | `src/lib/admin-auth.server.ts` | brak bezpośredniego adaptera | `tnb-admin` oraz autoryzacja w poszczególnych funkcjach | wspólna warstwa auth; wymaga audytu roli i RLS |
-| `src/lib/admin.functions.ts` | `src/lib/api/admin.ts` | `tnb-admin` | porównać wszystkie akcje |
+| `src/lib/admin.functions.ts` | `src/lib/api/admin.ts` | `tnb-admin` | test kontraktu SPA ↔ Edge dodany: 14 akcji, bearer token, odmowa bez sesji, obsługa 403/pustej odpowiedzi, nawigacyjna kontrola roli, walidacja i rozdział admin/superadmin; moduł legacy zachowany do pełnej weryfikacji semantyki |
 | `src/lib/ai/editor.server.ts` | `src/lib/api/editor-ai.ts` | `tnb-editor-ai` | porównać limity, model i zapis |
 | `src/lib/ai/recommend.server.ts` | `src/lib/api/recommend.ts` | `tnb-recommend` | porównać wejście/wyjście i uprawnienia |
 | `src/lib/ai/run-id.server.ts` | do ustalenia | do ustalenia | pomocniczy moduł; ustalić wszystkich konsumentów |
@@ -24,7 +24,7 @@ W repozytorium znajduje się 41 plików `*.functions.ts` / `*.server.ts` w `src/
 | `src/lib/consult.functions.ts` | `src/lib/api/consult.ts` | `tnb-consult` | częściowe testy kalendarza; pełna zgodność nadal do sprawdzenia |
 | `src/lib/consult.server.ts` | `src/lib/api/consult.ts` | `tnb-consult` | sprawdzić wspólne reguły terminów i powiadomień |
 | `src/lib/contact.functions.ts` | `src/lib/api/contact.ts` | `tnb-contact` | porównać antyspam i dostarczanie |
-| `src/lib/control-center.functions.ts` | `src/lib/api/control-center.ts` | `tnb-admin` | testy zakresu danych i paginacji; sprawdzić role |
+| `src/lib/control-center.functions.ts` | `src/lib/api/control-center.ts` | `tnb-admin` | test kontraktu SPA ↔ Edge obejmuje wyszukiwanie i historię, walidację zapytań/UUID/paginacji oraz bramkę admin; nadal wymagany audyt kompletności wyników i zgodności semantyki |
 | `src/lib/editor-ai.functions.ts` | `src/lib/api/editor-ai.ts` | `tnb-editor-ai` | porównać kontrakty i uprawnienia |
 | `src/lib/editor-materials.functions.ts` | `src/lib/api/editor-materials.ts` | `tnb-editor-materials` | porównać upload i dostęp |
 | `src/lib/guest-comments.functions.ts` | `src/lib/api/guest-comments.ts` | `tnb-guest-comments` | porównać moderację i limity |
