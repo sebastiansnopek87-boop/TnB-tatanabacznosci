@@ -85,4 +85,4 @@
 - [ ] Przenieść testy logiki pozostałych modułów `*.functions.ts` do testów Supabase Edge Functions, następnie usunąć nieużywane moduły TanStack Start i samą zależność `@tanstack/react-start` z `devDependencies`. Nie usuwać modułów, dopóki ich przypadki testowe nie mają odpowiedników.
 - [ ] Zweryfikować wdrożenie `dist` na CyberFolks: fallback, odświeżanie tras, logowanie, callback Instagrama i przepływy zakupowe. Następnie wykonać autoryzowane E2E gość/użytkownik/admin/superadmin.
 - [ ] Reconcile the generated Supabase types and migration inventory with the live project; no database schema or production data changes were made in this continuation.
-
+- [x] Consultation calendar regression tests: Warsaw winter/summer conversion, DST transition, round-trip, date arithmetic and exact 2-hour cancellation boundary; included in Vitest CI (PR #11, all checks PASS).
