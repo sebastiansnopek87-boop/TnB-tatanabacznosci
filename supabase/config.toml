@@ -56,3 +56,35 @@ verify_jwt = false
 
 [functions.tnb-newsletter]
 verify_jwt = false
+
+# Keep the deployed Edge Function gateway policy in sync with this repository.
+# verify_jwt=false means the function performs its own authorization where required.
+[functions.tnb-consult]
+verify_jwt = false
+
+[functions.tnb-meetings]
+verify_jwt = false
+
+[functions.tnb-guest-comments]
+verify_jwt = false
+
+[functions.tnb-article-newsletter]
+verify_jwt = false
+
+[functions.tnb-recommend]
+verify_jwt = false
+
+[functions.tnb-library-delivery]
+verify_jwt = false
+
+[functions.tnb-library-admin]
+verify_jwt = false
+
+[functions.tnb-editor-ai]
+verify_jwt = false
+
+[functions.tnb-editor-materials]
+verify_jwt = false
+
+[functions.tnb-voice]
+verify_jwt = false

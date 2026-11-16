@@ -1,14 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { listMyRegistrations } from "@/lib/api/meetings";
 import { MEETING_KINDS, fmtWhen, type MeetingKind } from "@/lib/meetings";
 import { MyRegBox } from "./MyRegBox";
 
 /** Moje TNB — webinars and LIVE meetings the user signed up for, split into upcoming / ended / cancelled. */
 export function MyEvents() {
-  const fn = useServerFn(listMyRegistrations);
+  const fn = listMyRegistrations;
   const q = useQuery({ queryKey: ["my-meeting-regs"], queryFn: () => fn() });
   if (q.isLoading) return <p className="text-sm text-muted-foreground">Ładowanie…</p>;
   if (q.error) return <p className="text-sm text-destructive">Nie udało się wczytać wydarzeń.</p>;

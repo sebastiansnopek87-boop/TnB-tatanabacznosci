@@ -30,21 +30,35 @@ jobs:
       - name: Install locked dependencies
         run: bun install --frozen-lockfile
 
+      - name: Run unit and integration tests
+        run: bun run test
+
+      - name: TypeScript typecheck
+        run: bun run typecheck
+
       - name: Build application
         run: bun run build
 
-      - name: Scan static build for server-only code and secrets
-        shell: bash
+      - name: Assert static React SPA build
         run: |
-          if [[ -d "dist" ]]; then
-            OUTPUT_DIR="dist"
-          elif [[ -d ".output/public" ]]; then
-            OUTPUT_DIR=".output/public"
-          else
-            echo "::error::No known client build output directory found."
+          test -d dist
+          test -f dist/index.html
+          test -f dist/.htaccess
+          grep -Eq 'src="/assets/[^"]+\.js"' dist/index.html
+          grep -Eq 'href="/assets/[^"]+\.css"' dist/index.html
+          grep -Fq 'RewriteRule . /index.html [L]' dist/.htaccess
+          test ! -e .output
+          if grep -R -n -E --include='*.ts' --include='*.tsx' --exclude='*.test.ts' '@tanstack/react-start|useServerFn|createServerFn' src; then
+            echo "::error::TanStack Start server code found in the React SPA source."
             exit 1
           fi
-          bash scripts/scan-dist-secrets.sh "$OUTPUT_DIR"
+          if find src -type f \( -name '*.functions.ts' -o -name '*.server.ts' \) -print -quit | grep -q .; then
+            echo "::error::Legacy Server Function modules remain in src/."
+            exit 1
+          fi
+
+      - name: Scan static build for server-only code and secrets
+        run: bash scripts/scan-dist-secrets.sh dist
 
       - name: Lint changed source files
         env:

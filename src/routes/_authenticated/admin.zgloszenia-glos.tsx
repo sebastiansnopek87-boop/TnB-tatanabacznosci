@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { adminListSubmissions, adminUpdateSubmission } from "@/lib/api/voice";
@@ -17,7 +16,7 @@ export const Route = createFileRoute("/_authenticated/admin/zgloszenia-glos")({ 
 type Row = Awaited<ReturnType<typeof adminListSubmissions>>[number];
 
 function Submissions() {
-  const listFn = useServerFn(adminListSubmissions);
+  const listFn = adminListSubmissions;
   const list = useQuery({ queryKey: ["admin-voice-submissions"], queryFn: () => listFn() });
   const [filter, setFilter] = useState<"active" | SubmissionStatus | "all">("active");
   const [openId, setOpenId] = useState<string | null>(null);
@@ -58,7 +57,7 @@ function Submissions() {
 }
 
 function Detail({ r }: { r: Row }) {
-  const upFn = useServerFn(adminUpdateSubmission);
+  const upFn = adminUpdateSubmission;
   const qc = useQueryClient();
   const [status, setStatus] = useState<SubmissionStatus>(r.status);
   const [note, setNote] = useState(r.admin_note);

@@ -1,6 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { CalendarDays, MapPin, Users, Mic, Mountain, Wallet } from "lucide-react";
 import { MeetingBadges } from "@/components/meetings/MeetingBadges";
@@ -115,8 +114,8 @@ const btn = "bg-gold px-6 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-p
 function Registration({ m }: { m: MeetingDetail }) {
   const st = regState(m);
   const navigate = useNavigate();
-  const regFn = useServerFn(registerForMeeting);
-  const myFn = useServerFn(getMyRegistration);
+  const regFn = registerForMeeting;
+  const myFn = getMyRegistration;
   const [userId, setUserId] = useState<string | null | undefined>(undefined);
   const [name, setName] = useState(""); const [email, setEmail] = useState(""); const [phone, setPhone] = useState("");
   const [message, setMessage] = useState(""); const [consent, setConsent] = useState(false); const [website, setWebsite] = useState("");

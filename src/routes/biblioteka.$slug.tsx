@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { z } from "zod";
 import { PageShell } from "@/components/tnb/PageShell";
@@ -32,8 +31,8 @@ function ItemPage() {
   const { uid, ready } = useUid();
   const q = useQuery({ queryKey: ["library-item", slug, uid, preview], queryFn: () => getLibraryItem(slug, preview), enabled: ready });
   const cats = useQuery({ queryKey: ["library-cats"], queryFn: listCategories });
-  const fileFn = useServerFn(getLibraryFileUrl);
-  const coverFn = useServerFn(adminLibraryCoverUrl);
+  const fileFn = getLibraryFileUrl;
+  const coverFn = adminLibraryCoverUrl;
   const draftCover = useQuery({ queryKey: ["library-preview-cover", q.data?.item.id], queryFn: () => coverFn({ data: { id: q.data!.item.id } }),
     enabled: preview && !!q.data && q.data.item.status !== "published" && !!q.data.item.cover_url });
   const isPremium = q.data?.item.access === "premium" && !!q.data?.content;

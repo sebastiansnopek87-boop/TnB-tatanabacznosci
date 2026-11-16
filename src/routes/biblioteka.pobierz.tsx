@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { PageShell } from "@/components/tnb/PageShell";
@@ -28,7 +27,7 @@ const MSG = {
 
 function Pickup() {
   const { t } = Route.useSearch();
-  const fn = useServerFn(redeemFreeMaterial);
+  const fn = redeemFreeMaterial;
   const [state, setState] = useState<{ s: "loading" } | { s: "ok"; url: string; title: string } | { s: keyof typeof MSG }>({ s: "loading" });
   async function run() {
     if (!t) return setState({ s: "invalid" });

@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { adminCheckInstagramConfig, adminDisconnectInstagram, adminGetInstagram, adminSaveInstagramOptions, adminStartInstagramConnect, adminSyncInstagram } from "@/lib/api/voice";
 import { errMsg } from "@/components/admin/format";
@@ -11,9 +10,9 @@ const dt = (s?: string | null) => (s ? new Date(s).toLocaleString("pl-PL", { dat
 const RESULT: Record<string, string> = { polaczono: "Konto Instagram połączone.", anulowano: "Autoryzacja Instagrama została anulowana.", blad: "Nie udało się połączyć konta Instagram — szczegóły w dzienniku zdarzeń." };
 
 export function InstagramSource() {
-  const getFn = useServerFn(adminGetInstagram); const startFn = useServerFn(adminStartInstagramConnect);
-  const syncFn = useServerFn(adminSyncInstagram); const discFn = useServerFn(adminDisconnectInstagram);
-  const optFn = useServerFn(adminSaveInstagramOptions); const checkFn = useServerFn(adminCheckInstagramConfig);
+  const getFn = adminGetInstagram; const startFn = adminStartInstagramConnect;
+  const syncFn = adminSyncInstagram; const discFn = adminDisconnectInstagram;
+  const optFn = adminSaveInstagramOptions; const checkFn = adminCheckInstagramConfig;
   const check = useMutation({ mutationFn: () => checkFn(), onSuccess: (r) => (r.ok ? toast.success("Konfiguracja kompletna.") : toast.error("Konfiguracja niepełna — zobacz listę poniżej.")), onError: (e) => toast.error(errMsg(e)) });
   const copy = (v: string) => navigator.clipboard.writeText(v).then(() => toast.success("Skopiowano."), () => toast.error("Nie udało się skopiować."));
   const qc = useQueryClient();

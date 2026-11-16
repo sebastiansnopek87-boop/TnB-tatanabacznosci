@@ -30,7 +30,7 @@ const WIDTH: Record<Device, number | null> = { desktop: null, tablet: 820, phone
 let dragTpl: BuilderTemplate | null = null; // template being dragged from "Moje szablony"
 let dragKind: SectionKind | null = null; // native DnD across the preview iframe (same JS realm)
 
-const pick = (p: any): PageDraft => ({ slug: p.slug, title: p.title, intro: p.intro, sections: normalizeSections(p.sections), seo_title: p.seo_title ?? "", seo_description: p.seo_description ?? "" });
+const pick = (p: PageDraft) => ({ slug: p.slug, title: p.title, intro: p.intro, sections: normalizeSections(p.sections), seo_title: p.seo_title ?? "", seo_description: p.seo_description ?? "" });
 const same = (a: PageDraft, b: PageDraft) => JSON.stringify(a) === JSON.stringify(b);
 
 export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose: () => void; onFormView: () => void }) {
@@ -77,7 +77,7 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
     getFn({ data: { id } }).then((p) => {
       if (!live) return;
       const pub = pick(p);
-      setMeta({ system_key: p.system_key, status: p.status, live: pub });
+      setMeta({ system_key: p.system_key, status: p.status ?? "draft", live: pub });
       setD(p.draft ? { ...pub, ...pick({ ...pub, ...p.draft }) } : pub);
       setSaveState((s) => ({ ...s, at: p.draft_updated_at }));
       if (typeof window !== "undefined" && window.innerWidth < 1024) { setLeft(null); setRightOpen(false); }
@@ -111,7 +111,9 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
     const h = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement;
       if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== "z" || t.closest("input,textarea,select")) return;
-      e.preventDefault(); e.shiftKey ? undoRef.current.redo() : undoRef.current.undo();
+      e.preventDefault();
+      if (e.shiftKey) undoRef.current.redo();
+      else undoRef.current.undo();
     };
     window.addEventListener("keydown", h); return () => window.removeEventListener("keydown", h);
   }, []);
@@ -136,7 +138,8 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
   async function exit(to: "list" | "form") {
     if (saveState.dirty && !(await save(false)) && !confirm("Nie udało się zapisać ostatnich zmian. Wyjść mimo to?")) return;
     if (d && meta && !same(d, meta.live)) toast.message("Szkic zapisany — strona publiczna pozostaje bez zmian, dopóki nie klikniesz „Opublikuj”.");
-    to === "list" ? onClose() : onFormView();
+    if (to === "list") onClose();
+    else onFormView();
   }
   async function publish() {
     if (!d || !meta) return;
@@ -146,7 +149,7 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
     if (saveState.dirty && !(await save(false))) return;
     setSaveState((s) => ({ ...s, busy: true }));
     try {
-      await pubFn({ data: { id, ...(legal ? { legalConfirmed: true, expectedDigest } : {}) } });
+      await pubFn({ data: { id, ...(legal && expectedDigest ? { legalConfirmed: true, expectedDigest } : {}) } });
       setMeta((m) => m && d ? { ...m, status: "published", live: d } : m);
       toast.success("Opublikowano. Zmiany są widoczne na stronie publicznej.");
       setModal(null);

@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -33,7 +32,7 @@ function AdminConsults() {
 }
 
 function Bookings({ onOpen }: { onOpen: (id: string) => void }) {
-  const fn = useServerFn(adminListBookings);
+  const fn = adminListBookings;
   const today = new Date().toISOString().slice(0, 10);
   const [from, setFrom] = useState(today); const [to, setTo] = useState(""); const [status, setStatus] = useState("");
   const q = useQuery({ queryKey: ["admin-consults", from, to, status], queryFn: () => fn({ data: { from: from || null, to: to || null, status: status || null } }) });
@@ -82,7 +81,7 @@ const EV: Record<string, string> = {
 };
 
 function Details({ id, onClose }: { id: string; onClose: () => void }) {
-  const getFn = useServerFn(adminGetBooking); const updFn = useServerFn(adminUpdateBooking);
+  const getFn = adminGetBooking; const updFn = adminUpdateBooking;
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["admin-consult", id], queryFn: () => getFn({ data: { id } }) });
   const [link, setLink] = useState(""); const [reason, setReason] = useState("");
@@ -144,7 +143,7 @@ function Details({ id, onClose }: { id: string; onClose: () => void }) {
 type Iv = { weekday: number; start_time: string; end_time: string; active: boolean };
 
 function Availability() {
-  const getFn = useServerFn(adminGetAvailability); const saveFn = useServerFn(adminSaveAvailability); const blockFn = useServerFn(adminBlockDate);
+  const getFn = adminGetAvailability; const saveFn = adminSaveAvailability; const blockFn = adminBlockDate;
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["admin-consult-availability"], queryFn: () => getFn() });
   const [ivs, setIvs] = useState<Iv[]>([]); const [link, setLink] = useState("");

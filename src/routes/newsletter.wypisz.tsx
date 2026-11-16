@@ -35,7 +35,7 @@ function Unsubscribe() {
     if (!token || ran.current) return;
     ran.current = true;
     unsubscribeNewsletter({ data: { token } }).then(() => setState("done")).catch(() => setState("error"));
-  }, [token, send]);
+  }, [token]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();

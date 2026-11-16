@@ -48,7 +48,7 @@ function History({ kind, id, title }: { kind: "order" | "user" | "library_reques
   async function load() {
     setBusy(true); setOpened(true); setError(null);
     try {
-      const result = await fetchHistory({ data: { kind, id, offsets: next, before } });
+      const result = await fetchHistory({ data: { kind, id, offsets: next, ...(before ? { before } : {}) } });
       if (result.error) { setError(result.error); return; }
       setRows((prev) => [...prev, ...result.rows]); setNext(result.next); setBefore(result.before); setMore(result.hasMore);
     } catch { setError("Nie udało się pobrać historii. Spróbuj ponownie."); }

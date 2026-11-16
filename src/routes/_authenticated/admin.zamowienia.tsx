@@ -61,7 +61,7 @@ function Orders() {
       {isLoading ? <p className="text-sm text-muted-foreground">Ładowanie…</p> : error ? <p className="text-sm text-destructive">{errMsg(error)}</p> : !data?.length ? (
         <p className="border border-border/60 p-6 text-sm text-muted-foreground">Brak zamówień.</p>
       ) : (
-        <><ul className="space-y-2 md:hidden">{data.map((r: any) => (
+        <><ul className="space-y-2 md:hidden">{data.map((r) => (
           <li key={r.id}><button type="button" onClick={() => setOpenId(r.id)} className={`w-full border p-4 text-left text-sm ${openId === r.id ? "border-gold bg-card" : "border-border/60"}`}>
             <span className="flex justify-between gap-2"><span className="font-mono text-xs">{r.order_number}{r.is_test && <TestBadge />}</span><span className="text-gold">{STATUS[r.status] ?? r.status}</span></span>
             <span className="mt-1 block break-words">{r.library_items?.title}</span>
@@ -72,7 +72,7 @@ function Orders() {
           <table className="w-full min-w-[820px] text-sm">
             <thead className="text-left text-xs uppercase tracking-wider text-muted-foreground"><tr className="border-b border-border/60">
               <th className="p-3">Nr</th><th className="p-3">Data</th><th className="p-3">Materiał</th><th className="p-3">E-mail</th><th className="p-3">Kwota</th><th className="p-3">Metoda</th><th className="p-3">Status</th></tr></thead>
-            <tbody>{data.map((r: any) => (
+            <tbody>{data.map((r) => (
               <tr key={r.id} tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter") setOpenId(r.id); }} onClick={() => setOpenId(r.id)} className={`cursor-pointer border-b border-border/40 hover:bg-card ${openId === r.id ? "bg-card" : ""}`}>
                 <td className="whitespace-nowrap p-3 font-mono text-xs">{r.order_number}{r.is_test && <TestBadge />}</td>
                 <td className="p-3">{fmtDate(r.created_at)}</td><td className="p-3">{r.library_items?.title}</td><td className="p-3">{r.buyer_email}</td>
@@ -97,7 +97,7 @@ function OrderDetail({ id, onClose }: { id: string; onClose: () => void }) {
   const refresh = () => { qc.invalidateQueries({ queryKey: ["admin-order", id] }); qc.invalidateQueries({ queryKey: ["admin-orders"] }); qc.invalidateQueries({ queryKey: ["admin-sales"] }); };
   const m = useMutation({
     mutationFn: () => resend({ data: { id } }),
-    onSuccess: (r) => { r.ok ? toast.success("Link do materiału wysłany.") : toast.message(REASON[r.reason] ?? r.reason); refresh(); },
+    onSuccess: (r) => { if (r.ok) toast.success("Link do materiału wysłany."); else toast.message(r.reason ? REASON[r.reason] ?? r.reason : "Nie udało się wysłać linku."); refresh(); },
     onError: (e) => toast.error(errMsg(e)),
   });
   const act = useMutation({
@@ -119,7 +119,7 @@ function OrderDetail({ id, onClose }: { id: string; onClose: () => void }) {
       <div className="mt-4 grid gap-x-8 md:grid-cols-2">
         <div>
           {row("Materiał", o.library_items?.title)}{row("Kwota", `${fmtPrice(o.amount)} (${o.currency})`)}{row("Status", STATUS[o.status] ?? o.status)}
-          {row("Metoda / operator", `${PROVIDER[o.provider] ?? o.provider}${online ? ` — środowisko ${o.environment === "sandbox" ? "testowe" : "produkcyjne"}` : ""}`)}
+          {row("Metoda / operator", `${o.provider ? PROVIDER[o.provider] ?? o.provider : "—"}${online ? ` — środowisko ${o.environment === "sandbox" ? "testowe" : "produkcyjne"}` : ""}`)}
           {row("Id transakcji operatora", o.provider_ref)}{row("Telefon", o.buyer_phone)}{row("Konto", o.user_id ? "Zakup na koncie" : "Gość (dostęp przez link i adres e-mail)")}
           {row("Dostęp do materiału", data.access ? "Przyznany" : o.access_revoked_at ? `Cofnięty ${fmtDate(o.access_revoked_at)}` : "Brak")}
         </div>
@@ -127,7 +127,7 @@ function OrderDetail({ id, onClose }: { id: string; onClose: () => void }) {
           {row("Kupujący", o.buyer_name)}{row("E-mail", o.buyer_email)}{row("Utworzono", fmtDate(o.created_at))}
           {row("Opłacono", o.paid_at && fmtDate(o.paid_at))}{row("Opłacone oznaczył", o.paid_marked_by ? (data.names[o.paid_marked_by] ?? o.paid_marked_by) : o.paid_at && online ? "Operator (automatycznie)" : null)}
           {row("Przyczyna weryfikacji", o.review_reason)}{row("Przyczyna zwrotu", o.refund_reason)}
-          {row("Ostatnia zmiana", o.status_changed_at && `${fmtDate(o.status_changed_at)} — ${data.names[o.status_changed_by] ?? "system"}`)}
+          {row("Ostatnia zmiana", o.status_changed_at && `${fmtDate(o.status_changed_at)} — ${(o.status_changed_by ? data.names[o.status_changed_by] : null) ?? "system"}`)}
         </div>
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
@@ -143,7 +143,7 @@ function OrderDetail({ id, onClose }: { id: string; onClose: () => void }) {
       {o.status === "paid" && (
         <div className="mt-5 border border-border/60 p-4">
           <p className="eyebrow text-gold">Rejestracja zwrotu</p>
-          <p className="mt-1 text-xs text-muted-foreground">Automatyczny zwrot nie jest jeszcze dostępny — {online ? `środki zwróć w panelu ${PROVIDER[o.provider]}` : "zwróć środki przelewem"}, a tutaj zarejestruj zwrot.</p>
+          <p className="mt-1 text-xs text-muted-foreground">Automatyczny zwrot nie jest jeszcze dostępny — {online ? `środki zwróć w panelu ${(o.provider ? PROVIDER[o.provider] ?? o.provider : "operator płatności")}` : "zwróć środki przelewem"}, a tutaj zarejestruj zwrot.</p>
           <Input className="mt-2" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Przyczyna zwrotu" maxLength={500} />
           <Button className="mt-2" variant="outline" onClick={() => typed("refund_start", "Rozpocząć zwrot (status „Zwrot w toku”)?")} disabled={act.isPending || reason.trim().length < 3}>Rozpocznij zwrot</Button>
         </div>
@@ -151,15 +151,15 @@ function OrderDetail({ id, onClose }: { id: string; onClose: () => void }) {
       {o.status === "refund_pending" && (
         <div className="mt-5 border border-border/60 p-4">
           <p className="eyebrow text-gold">Zakończenie zwrotu</p>
-          <p className="mt-1 text-xs text-muted-foreground">Zakończ dopiero, gdy zwrot został wykonany {online ? `w panelu ${PROVIDER[o.provider]}` : "przelewem"}.</p>
+          <p className="mt-1 text-xs text-muted-foreground">Zakończ dopiero, gdy zwrot został wykonany {online ? `w panelu ${o.provider ? PROVIDER[o.provider] ?? o.provider : "operator płatności"}` : "przelewem"}.</p>
           <label className="mt-2 flex items-center gap-2"><input type="checkbox" checked={revoke} onChange={(e) => setRevoke(e.target.checked)} /> Cofnij kupującemu dostęp do materiału</label>
           <Button className="mt-2" variant="outline" onClick={() => typed("refund_complete", revoke ? "Zakończyć zwrot i COFNĄĆ dostęp?" : "Zakończyć zwrot i POZOSTAWIĆ dostęp?")} disabled={act.isPending}>Oznacz jako zwrócone</Button>
         </div>
       )}
       <h3 className="mt-6 eyebrow text-gold">Historia zamówienia i płatności</h3>
-      <ul className="mt-2 space-y-1">{data.events.map((e: any, i: number) => <li key={i}><span className="text-muted-foreground">{fmtDate(e.created_at)}</span> — {EVENT[e.type] ?? e.type}{e.detail ? `: ${e.detail}` : ""}</li>)}</ul>
+      <ul className="mt-2 space-y-1">{data.events.map((e, i) => <li key={i}><span className="text-muted-foreground">{fmtDate(e.created_at)}</span> — {EVENT[e.type] ?? e.type}{e.detail ? `: ${e.detail}` : ""}</li>)}</ul>
       <h3 className="mt-6 eyebrow text-gold">Wiadomości e-mail</h3>
-      {!data.mails.length ? <p className="mt-2 text-muted-foreground">Brak.</p> : <ul className="mt-2 space-y-1">{data.mails.map((e: any, i: number) => <li key={i}><span className="text-muted-foreground">{fmtDate(e.created_at)}</span> — {EVENT_MAP[e.template_key ?? e.kind]?.name ?? e.template_key ?? e.kind}: {e.status === "sent" ? "wysłano" : e.status === "simulated" ? "symulacja (nie wysłano)" : `${e.status}${e.reason ? ` (${e.reason})` : ""}`}</li>)}</ul>}
+      {!data.mails.length ? <p className="mt-2 text-muted-foreground">Brak.</p> : <ul className="mt-2 space-y-1">{data.mails.map((e, i) => <li key={i}><span className="text-muted-foreground">{fmtDate(e.created_at)}</span> — {EVENT_MAP[e.template_key ?? e.kind]?.name ?? e.template_key ?? e.kind}: {e.status === "sent" ? "wysłano" : e.status === "simulated" ? "symulacja (nie wysłano)" : `${e.status}${e.reason ? ` (${e.reason})` : ""}`}</li>)}</ul>}
     </section>
   );
 }

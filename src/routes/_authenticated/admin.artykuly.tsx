@@ -115,7 +115,7 @@ function List({ onEdit }: { onEdit: (id: string) => void }) {
         <p className="px-4 pt-3 text-xs text-muted-foreground">Artykuły w koszu nie są widoczne publicznie. Po 30 dniach usuwają się same na stałe. Przywrócony artykuł wraca jako szkic (lub do poprzedniego statusu, jeśli nie był opublikowany).</p>
         <div className="divide-y divide-border/60">
           {bin.map((a) => {
-            const left = Math.max(0, 30 - Math.floor((Date.now() - new Date(a.deleted_at).getTime()) / 864e5));
+            const left = Math.max(0, 30 - Math.floor((Date.now() - new Date(a.deleted_at ?? Date.now()).getTime()) / 864e5));
             return (
               <div key={a.id} className="flex flex-wrap items-center gap-3 p-4">
                 <div className="min-w-0 flex-1"><span className="block font-medium text-muted-foreground">{a.title}</span><span className="block text-xs text-muted-foreground">Usunięty {fmtArticleDate(a.deleted_at)} · zostało {left} dni</span></div>

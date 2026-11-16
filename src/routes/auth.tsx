@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AuthNotice, AuthShell, readAuthUrlParams } from "@/components/auth/AuthShell";
-import { lovable } from "@/integrations/lovable/index";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -140,15 +139,20 @@ function AuthPage() {
   async function oauth(provider: "google" | "apple") {
     if (busy) return;
     setMsg(null); setBusy(true);
-    const res = await lovable.auth.signInWithOAuth(provider, { redirect_uri: `${window.location.origin}/auth` }).catch((e) => ({ error: e, redirected: false }));
+    const result = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: `${window.location.origin}/auth` },
+    }).catch((cause: unknown) => ({
+      error: cause instanceof Error ? cause : new Error(String(cause)),
+    }));
     setBusy(false);
-    if (res.error) {
-      const cancelled = /cancel|closed|denied/i.test(String((res.error as Error).message ?? res.error));
+    if (result.error) {
+      const cancelled = /cancel|closed|denied/i.test(String(result.error.message ?? result.error));
       return setMsg({ tone: cancelled ? "info" : "error", text: cancelled ? "Logowanie zostało anulowane." : "Nie udało się zalogować. Spróbuj ponownie." });
     }
-    if (res.redirected) return;
-    goAfter();
+    return;
   }
+
 
   const social = (
     <div className="space-y-3">

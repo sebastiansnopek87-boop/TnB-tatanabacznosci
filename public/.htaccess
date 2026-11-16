@@ -1,6 +1,7 @@
 RewriteEngine On
 RewriteBase /
 RewriteRule ^index\.html$ - [L]
+RewriteRule ^api/public/(payments/(p24|payu|tpay)|cron/(consult-reminders|instagram-sync))$ - [G,L]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule . /index.html [L]

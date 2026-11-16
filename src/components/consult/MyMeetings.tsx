@@ -1,6 +1,5 @@
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { cancelMyBooking, listMyBookings } from "@/lib/api/consult";
 import { BOOKING_STATUS, CANCEL_REASONS, canUserCancel, fmtDate, fmtHm, type BookingStatus } from "@/lib/consult";
@@ -8,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export function MyMeetings() {
-  const fn = useServerFn(listMyBookings);
+  const fn = listMyBookings;
   const q = useQuery({ queryKey: ["my-consults"], queryFn: () => fn() });
   const [cancelId, setCancelId] = useState<string | null>(null);
   if (q.isLoading) return <p className="text-sm text-muted-foreground">Ładowanie…</p>;
@@ -59,7 +58,7 @@ export function MyMeetings() {
 }
 
 function CancelDialog({ id, onClose }: { id: string | null; onClose: () => void }) {
-  const fn = useServerFn(cancelMyBooking);
+  const fn = cancelMyBooking;
   const qc = useQueryClient();
   const [reason, setReason] = useState<(typeof CANCEL_REASONS)[number] | null>(null);
   const [other, setOther] = useState("");
