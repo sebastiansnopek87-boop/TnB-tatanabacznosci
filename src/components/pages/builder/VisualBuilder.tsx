@@ -15,6 +15,7 @@ import { PageView, type Sel } from "@/components/pages/PageView";
 import {
   adminCreatePageUpload, adminGetPage, adminStartHomeDraft, adminListVersions, adminPageImageUrls, adminPublishDraft, adminRestoreVersion, adminSaveDraft,
 } from "@/lib/api/pages";
+import type { AdminPage } from "@/lib/api/pages";
 import { isHomeKind, SECTION_KINDS, SYSTEM_PAGES, newSection, normalizeSections, pagePath, type PageDraft, type PageSection, type PageVersion, type SectionKind } from "@/lib/pages";
 import { Frame } from "./Frame";
 import { HomeInspector } from "./HomeInspector";
@@ -111,7 +112,9 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
     const h = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement;
       if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== "z" || t.closest("input,textarea,select")) return;
-      e.preventDefault();\n      if (e.shiftKey) undoRef.current.redo();\n      else undoRef.current.undo();
+      e.preventDefault();
+      if (e.shiftKey) undoRef.current.redo();
+      else undoRef.current.undo();
     };
     window.addEventListener("keydown", h); return () => window.removeEventListener("keydown", h);
   }, []);
@@ -136,7 +139,8 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
   async function exit(to: "list" | "form") {
     if (saveState.dirty && !(await save(false)) && !confirm("Nie udało się zapisać ostatnich zmian. Wyjść mimo to?")) return;
     if (d && meta && !same(d, meta.live)) toast.message("Szkic zapisany — strona publiczna pozostaje bez zmian, dopóki nie klikniesz „Opublikuj”.");
-    if (to === "list") onClose();\n    else onFormView();
+    if (to === "list") onClose();
+    else onFormView();
   }
   async function publish() {
     if (!d || !meta) return;
