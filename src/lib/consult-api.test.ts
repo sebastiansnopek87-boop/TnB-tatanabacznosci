@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const invoke = vi.hoisted(() => vi.fn());
@@ -39,6 +40,16 @@ beforeEach(() => {
 });
 
 describe("consult SPA adapter contract", () => {
+  it("keeps all adapter actions represented by both the legacy contract and Edge Function", () => {
+    const legacy = readFileSync(new URL("./consult.functions.ts", import.meta.url), "utf8");
+    const edge = readFileSync(new URL("../../supabase/functions/tnb-consult/index.ts", import.meta.url), "utf8");
+
+    for (const action of actions) {
+      expect(legacy).toContain("export const " + action + " =");
+      expect(edge).toContain("case \"" + action + "\":");
+    }
+  });
+
   it("targets the single tnb-consult Edge Function for every operation", async () => {
     const input = { startsAt: "2026-11-20T10:00:00.000Z", first_name: "Jan", last_name: "Kowalski", email: "jan@example.com", topic: "Rozmowa", reason: "Powód", question: "Pytanie", consent: true as const };
     const calls: Array<Promise<unknown>> = [
