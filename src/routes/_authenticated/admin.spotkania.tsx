@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -30,11 +29,11 @@ function AdminMeetings() {
 }
 
 function List({ onEdit, onRegs }: { onEdit: (id: string | null) => void; onRegs: (id: string, t: string, c: number | null) => void }) {
-  const listFn = useServerFn(adminListMeetings);
-  const statusFn = useServerFn(adminSetMeetingStatus);
+  const listFn = adminListMeetings;
+  const statusFn = adminSetMeetingStatus;
   const qc = useQueryClient();
   const list = useQuery({ queryKey: ["admin-meetings"], queryFn: () => listFn() });
-  const cancelFn = useServerFn(adminCancelMeeting);
+  const cancelFn = adminCancelMeeting;
   const cancel = useMutation({
     mutationFn: (v: { id: string; reason: string }) => cancelFn({ data: v }),
     onSuccess: (r) => { toast.success(`Spotkanie odwołane. Anulowane zgłoszenia: ${r.affected}.`); qc.invalidateQueries({ queryKey: ["admin-meetings"] }); qc.invalidateQueries({ queryKey: ["meetings"] }); },
@@ -104,8 +103,8 @@ const toLocal = (iso: string | null) => { if (!iso) return ""; const d = new Dat
 const toBase64 = (f: File) => new Promise<string>((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1] ?? ""); r.onerror = rej; r.readAsDataURL(f); });
 
 function Editor({ id, onClose, onSaved }: { id: string | null; onClose: () => void; onSaved: (id: string) => void }) {
-  const getFn = useServerFn(adminGetMeeting); const saveFn = useServerFn(adminSaveMeeting);
-  const upFn = useServerFn(adminUploadMeetingImage); const rmFn = useServerFn(adminRemoveMeetingImage);
+  const getFn = adminGetMeeting; const saveFn = adminSaveMeeting;
+  const upFn = adminUploadMeetingImage; const rmFn = adminRemoveMeetingImage;
   const qc = useQueryClient();
   const [f, setF] = useState<Form>(EMPTY); const [slugTouched, setSlugTouched] = useState(!!id);
   const cur = useQuery({ queryKey: ["admin-meeting", id], queryFn: () => getFn({ data: { id: id! } }), enabled: !!id });
@@ -244,7 +243,7 @@ function Editor({ id, onClose, onSaved }: { id: string | null; onClose: () => vo
 function csvCell(v: unknown) { const s = String(v ?? ""); return /[",;\n\r]/.test(s) || /^[=+\-@]/.test(s) ? `"${(/^[=+\-@]/.test(s) ? "'" : "") + s.replace(/"/g, '""')}"` : s; }
 
 function Registrations({ id, title, capacity, onClose }: { id: string; title: string; capacity: number | null; onClose: () => void }) {
-  const listFn = useServerFn(adminListRegistrations); const updFn = useServerFn(adminUpdateRegistration);
+  const listFn = adminListRegistrations; const updFn = adminUpdateRegistration;
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["admin-meeting-regs", id], queryFn: () => listFn({ data: { meetingId: id } }) });
   const upd = useMutation({
