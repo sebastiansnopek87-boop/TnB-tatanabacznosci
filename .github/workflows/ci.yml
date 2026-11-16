@@ -27,14 +27,6 @@ jobs:
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
 
-      - name: Temporarily regenerate and report Bun lockfile diff
-        run: |
-          bun install --lockfile-only
-          echo "LOCK_DIFF_BASE64_BEGIN"
-          git diff -- bun.lock | base64 -w0
-          echo
-          echo "LOCK_DIFF_BASE64_END"
-
       - name: Install locked dependencies
         run: bun install --frozen-lockfile
 
