@@ -45,7 +45,7 @@ export function CreateArticle({ proposal, topic: topic0 = "", aiOn, onCreated, o
   const set = (k: string, state: Step["state"], note?: string) => setSteps((s) => s!.map((x) => (x.key === k ? { ...x, state, note: note ?? x.note } : x)));
   const run = async () => {
     const base: Step[] = [
-      { key: "src", label: info.summaries ? `Przygotowanie źródeł (pełna treść + ${info.summaries} streszczenie/a)` : "Przygotowanie źródeł (pełna treść)", state: "doing" },
+      { key: "src", label: currentInfo.summaries ? `Przygotowanie źródeł (pełna treść + ${currentInfo.summaries} streszczenie/a)` : "Przygotowanie źródeł (pełna treść)", state: "doing" },
       { key: "write", label: format === "artykuł" ? "Pisanie artykułu, SEO i uwag redakcyjnych" : "Pisanie materiału", state: "todo" },
       { key: "img", label: "Obrazy (obraz główny i ewentualne wewnętrzne)", state: "todo" },
       { key: "fin", label: "Finalizacja", state: "todo" },
@@ -70,7 +70,7 @@ export function CreateArticle({ proposal, topic: topic0 = "", aiOn, onCreated, o
     set("fin", r4.ok ? "done" : "error", r4.ok ? undefined : r4.error); setBusy(false);
     if (r4.ok) { toast.success("Artykuł gotowy do przeglądu"); onCreated(r1.id); }
   };
-  if (steps) return (
+  if (steps && info) return (
     <div className="w-full space-y-3 border border-gold/60 p-4">
       <p className="text-xs uppercase tracking-widest text-gold">Tworzenie: {info.topic}</p>
       <ol className="space-y-1 text-sm">{steps.map((s) => <li key={s.key} className={s.state === "error" ? "text-destructive" : s.state === "todo" ? "text-muted-foreground" : ""}>
@@ -280,7 +280,7 @@ function Editor({ id, aiOn, close }: { id: string; aiOn: boolean; close: () => v
         <textarea className={input} rows={2} placeholder="Własne polecenie" value={instr} onChange={(e) => setInstr(e.target.value)} />
         <Button className="mt-2" size="sm" disabled={!aiOn || !sel || instr.trim().length < 2 || !!busy || dirty} onClick={async () => {
           setBusy("frag"); const r = await fix(frag({ data: { id, sectionId: sel!.sectionId, selection: sel!.text, instruction: instr } })); setBusy(null);
-          if (await done(r, `AI zmieniło fragment — nowa wersja (zużycie: ${tok(r.usage)})`)) setSel(null);
+          if (!r.ok) { toast.error(r.error); return; }\n          if (await done(r, `AI zmieniło fragment — nowa wersja (zużycie: ${tok(r.usage)})`)) setSel(null);
         }}>{busy === "frag" ? "AI poprawia fragment…" : "Wykonaj (1 wywołanie AI)"}</Button>
         {dirty && <p className="mt-1 text-xs text-gold">Najpierw zapisz swoje zmiany, aby AI pracowało na aktualnej wersji.</p>}
 
