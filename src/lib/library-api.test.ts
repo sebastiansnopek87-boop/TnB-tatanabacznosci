@@ -137,6 +137,14 @@ describe("library SPA adapter contracts", () => {
     expect(redeem).not.toContain("input.data.itemId");
   });
 
+  it("uses the exact owner-supplied logo bytes in the legacy helper and Edge Function", () => {
+    const legacy = readFileSync(new URL("./library/watermark-logo.server.ts", import.meta.url), "utf8");
+    const edge = readFileSync(new URL("../../supabase/functions/tnb-library-admin/watermark-logo.ts", import.meta.url), "utf8");
+    const extract = (source: string) => source.match(/TNB_LOGO_PNG_BASE64\\s*=\\s*["']([^"']+)["']/)?.[1] ?? null;
+    expect(extract(edge)).not.toBeNull();
+    expect(extract(edge)).toBe(extract(legacy));
+  });
+
   it("keeps the Edge PDF watermark geometry and producer marker aligned with the legacy helper", () => {
     const legacy = readFileSync(new URL("./library/watermark.server.ts", import.meta.url), "utf8");
     const edge = readFileSync(new URL("../../supabase/functions/tnb-library-admin/index.ts", import.meta.url), "utf8");
