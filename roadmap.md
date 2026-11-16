@@ -96,3 +96,6 @@
 - [x] Extracted the paid-order entitlement rule into `src/lib/orders-access.ts`; its regression tests no longer load `orders.server.ts` or any TanStack Start code.
 - [x] Removed the last dynamic legacy import from the platform schema tests. Runtime isolation gate now scans production source separately from test-only rollback fixtures; current production UI has no imports of the legacy server modules.
 - [x] CI on commit `10079ee9`: build, SPA route smoke test, TypeScript, SPA boundary, legacy isolation, Edge Function coverage, unit tests, static secret scan and lint — PASS.
+
+- [x] Added an explicit legacy-runtime test allowlist: only the two existing mocked integration suites may still load Start handlers; all other test/source files are scanned for static, multiline, dynamic and `require()` imports. Removed the platform test's dynamic import of `platform.functions.ts`.
+- [x] Added consultation SPA adapter contract tests for all 11 actions. Tests verify each action is still represented by the legacy contract and `tnb-consult` Edge Function, every SPA operation invokes the intended Edge Function with its action/payload, and invocation errors are propagated. CI on commit `ce322fd8`: build, route fallback, TypeScript, SPA boundary, legacy isolation, Edge Function coverage, unit tests, static secret scan and lint — PASS.
