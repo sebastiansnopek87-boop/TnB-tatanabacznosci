@@ -31,6 +31,7 @@ const unsubscribeSchema = z.union([
 const actionSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("subscribe"), data: subscribeSchema }),
   z.object({ action: z.literal("unsubscribe"), data: unsubscribeSchema }),
+  z.object({ action: z.literal("confirm"), data: z.object({ token: z.string().uuid() }) }),
 ]);
 
 function secret(...names: string[]): string | null {
@@ -131,7 +132,7 @@ async function subscribe(db: Db, req: Request, data: z.infer<typeof subscribeSch
   if (existing) {
     const { error } = await db.from("newsletter_subscribers").update({
       ...consent, status, unsubscribed_at: null, confirmed_at: double ? null : now,
-      confirm_token: crypto.randomUUID(), subscribe_count: existing.subscribe_count + 1,
+      confirm_token: confirmToken, subscribe_count: existing.subscribe_count + 1,
     }).eq("id", existing.id);
     if (error) { console.error("newsletter update", error.message); throw new Error("Nie udało się zapisać adresu."); }
     id = existing.id;
@@ -144,7 +145,39 @@ async function subscribe(db: Db, req: Request, data: z.infer<typeof subscribeSch
     id = row.id;
   }
   await notifyAdmin(db, id, now);
+  if (double) {
+    const to = data.email;
+    const from = `${settings?.sender_name ?? "Tata Na Baczności"} <${settings?.sender_local_part ?? "kontakt"}@${settings?.sender_domain ?? "tatanabacznosci.pl"}>`;
+    const link = (Deno.env.get("PUBLIC_SITE_URL") || "https://tatanabacznosci.pl").replace(/\/+$/, "") + "/newsletter/potwierdz?token=" + confirmToken;
+    const { data: log, error: logError } = await db.from("email_notification_log").insert({
+      kind: "newsletter_confirmation", related_id: id, template_key: "newsletter_confirmation",
+      idempotency_key: "newsletter-confirm-" + confirmToken, mode: "live", recipient: to,
+      payload: {}, retryable: false, status: "sending",
+    }).select("id").single();
+    if (logError || !log) throw new Error("Nie udało się przygotować wiadomości potwierdzającej.");
+    try {
+      const sent = await sendSmtpMail({
+        to, from, replyTo: settings?.reply_to ?? null,
+        subject: "Potwierdź zapis do newslettera Tata Na Baczności",
+        html: `<p>Dzień dobry,</p><p>Otrzymaliśmy prośbę o zapis do newslettera Tata Na Baczności.</p><p><a href="${link}">Potwierdź zapis do newslettera</a></p><p>Jeśli to nie Ty, zignoruj tę wiadomość.</p>`,
+        text: `Dzień dobry,\\n\\nOtrzymaliśmy prośbę o zapis do newslettera Tata Na Baczności.\\nPotwierdź zapis: ${link}\\n\\nJeśli to nie Ty, zignoruj tę wiadomość.`,
+      });
+      await db.from("email_notification_log").update({ status: "sent", provider_message_id: sent.messageId, attempts: 1, updated_at: new Date().toISOString() }).eq("id", log.id);
+    } catch (error) {
+      const reason = error instanceof Error ? error.message.slice(0, 300) : "smtp_delivery_failed";
+      await db.from("email_notification_log").update({ status: "failed", reason, attempts: 1, updated_at: new Date().toISOString() }).eq("id", log.id);
+      throw new Error("Nie udało się wysłać wiadomości potwierdzającej. Spróbuj ponownie później.");
+    }
+  }
   return { status: double ? "pending" as const : existing ? "resubscribed" as const : "subscribed" as const };
+}
+async function confirm(db: Db, token: string) {
+  const now = new Date().toISOString();
+  const { data: row } = await db.from("newsletter_subscribers").select("id,status").eq("confirm_token", token).maybeSingle();
+  if (row?.status === "pending") {
+    await db.from("newsletter_subscribers").update({ status: "active", confirmed_at: now, confirm_token: null, updated_at: now }).eq("id", row.id).eq("status", "pending");
+  }
+  return { ok: true as const };
 }
 async function unsubscribe(db: Db, data: z.infer<typeof unsubscribeSchema>) {
   if ("website" in data && data.website) throw new Error("Odrzucono.");
