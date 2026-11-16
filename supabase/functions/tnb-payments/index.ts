@@ -241,13 +241,16 @@ async function listProviders(db: Db, userId: string) {
     db.rpc("has_role", { _user_id: userId, _role: "superadmin" }),
   ]);
   const baseUrl = Deno.env.get("SUPABASE_URL") || "";
-  return { canEdit: !!superRole, providers: (data ?? []).map((row: any) => {
+  const rows = (data ?? []) as ProviderRow[];
+  return { canEdit: !!superRole, providers: rows.map((row) => {
     const meta = REQUIREMENTS[row.id as ProviderId];
     return { ...row, label: meta.label, fields: meta.fields, docs: meta.docs, refunds: meta.refunds,
       webhookUrl: baseUrl + "/functions/v1/tnb-payments?provider=" + row.id, status: configStatus(row) };
   }) };
 }
-async function updateProvider(db: Db, userId: string, data: any) {
+type UpdateProviderInput = Extract<z.infer<typeof actions>, { action: "updatePaymentProvider" }>["data"];
+type SetEnvironmentInput = Extract<z.infer<typeof actions>, { action: "setPaymentEnvironment" }>["data"];
+async function updateProvider(db: Db, userId: string, data: UpdateProviderInput) {
   const { data: current } = await db.from("payment_providers").select("*").eq("id", data.id).maybeSingle();
   if (!current) throw new HttpError(404, "Nie znaleziono operatora płatności.");
   const next = { ...current, merchant_id: data.merchant_id || null, pos_id: data.pos_id || null, client_id: data.client_id || null } as ProviderRow;
@@ -270,7 +273,7 @@ async function updateProvider(db: Db, userId: string, data: any) {
   await logEvent(db, { type: "payment_config", actor: userId, objectKind: "payment", objectId: data.id, detail: (data.enabled ? "włączony" : "wyłączony") + (data.isDefault ? ", domyślny" : "") });
   return { ok: true };
 }
-async function setEnvironment(db: Db, userId: string, data: any) {
+async function setEnvironment(db: Db, userId: string, data: SetEnvironmentInput) {
   if (data.environment === "live" && data.confirm !== "URUCHAMIAM PRODUKCJĘ") throw new HttpError(400, "Aby włączyć środowisko produkcyjne, wpisz: URUCHAMIAM PRODUKCJĘ");
   if (data.environment === "live") {
     const { data: current } = await db.from("payment_providers").select("*").eq("id", data.id).maybeSingle();
