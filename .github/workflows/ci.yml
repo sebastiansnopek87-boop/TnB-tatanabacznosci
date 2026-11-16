@@ -62,6 +62,9 @@ jobs:
       - name: TypeScript validation
         run: bun run typecheck
 
+      - name: Unit tests
+        run: bun run test
+
       - name: Scan static build for server-only code and secrets
         shell: bash
         run: |

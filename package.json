@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --config vitest.control-center.config.ts && vitest run --config vitest.pages.config.ts && vitest run --config vitest.podcast.config.ts && vitest run --config vitest.unit.config.ts"
   },
   "overrides": {
     "rolldown": "1.2.1"
