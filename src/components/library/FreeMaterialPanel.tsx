@@ -1,5 +1,4 @@
 import { Link } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
 import { useRef, useState } from "react";
 import { requestFreeMaterial, redeemFreeMaterial } from "@/lib/api/library-delivery";
 import { FREE_CONSENT_TEXT, type FreeDelivery } from "@/lib/library";
@@ -7,8 +6,8 @@ import { FREE_CONSENT_TEXT, type FreeDelivery } from "@/lib/library";
 const input = "mt-1 w-full border border-border/70 bg-background px-3 py-2.5 text-sm text-foreground focus:border-gold focus:outline-none";
 
 export function FreeMaterialPanel({ slug, mode }: { slug: string; mode: Exclude<FreeDelivery, "direct"> }) {
-  const req = useServerFn(requestFreeMaterial);
-  const redeem = useServerFn(redeemFreeMaterial);
+  const req = requestFreeMaterial;
+  const redeem = redeemFreeMaterial;
   const [open, setOpen] = useState(false);
   const [f, setF] = useState({ firstName: "", lastName: "", email: "", consent: false, website: "" });
   const [err, setErr] = useState<string | null>(null);
