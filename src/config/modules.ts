@@ -26,7 +26,7 @@ export function normalizeModuleVisibility(value: unknown): ModuleVisibility {
     const item = raw[module.id];
     if (typeof item !== "object" || item === null || Array.isArray(item)) continue;
     const entry = item as Record<string, unknown>;
-    if (typeof entry.menu === "boolean" || typeof entry.page === "boolean") {
+    if (typeof entry["menu"] === "boolean" || typeof entry["page"] === "boolean") {
       normalized[module.id] = {
         menu: typeof entry.menu === "boolean" ? entry.menu : true,
         page: typeof entry.page === "boolean" ? entry.page : true,
