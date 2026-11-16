@@ -29,11 +29,11 @@ W repozytorium znajduje się 41 plików `*.functions.ts` / `*.server.ts` w `src/
 | `src/lib/editor-materials.functions.ts` | `src/lib/api/editor-materials.ts` | `tnb-editor-materials` | porównać upload i dostęp |
 | `src/lib/guest-comments.functions.ts` | `src/lib/api/guest-comments.ts` | `tnb-guest-comments` | porównać moderację i limity |
 | `src/lib/instagram.server.ts` | brak potwierdzonego adaptera | do ustalenia (możliwy `tnb-media`) | OAuth/sekrety; blokada do audytu przepływu |
-| `src/lib/library-delivery.functions.ts` | `src/lib/api/library-delivery.ts` | `tnb-library-delivery` | porównać autoryzację plików i signed URLs |
-| `src/lib/library.functions.ts` | `src/lib/api/library.ts` | `tnb-library-admin` | porównać operacje administratora |
+| `src/lib/library-delivery.functions.ts` | `src/lib/api/library-delivery.ts` | `tnb-library-delivery` | test kontraktu SPA ↔ Edge dla 4 akcji; auth admin, token hash i związanie tokenu z materiałem objęte kontrolą statyczną; testy CI/E2E oczekują na wynik |
+| `src/lib/library.functions.ts` | `src/lib/api/library.ts` | `tnb-library-admin` | test kontraktu SPA ↔ Edge dla 11 akcji; testy statyczne kontroli admina, uprawnienia direct download i zgodności geometrii watermark; CI/E2E oczekują na wynik |
 | `src/lib/library/pdf.server.ts` | `src/lib/api/library.ts` (pośrednio) | `tnb-library-admin` / `tnb-library-delivery` | PDF; porównać watermark i przechowywanie |
 | `src/lib/library/watermark-logo.server.ts` | brak w przeglądarce | `tnb-library-admin` | zasób serwerowy; usunąć po potwierdzeniu użycia w Edge |
-| `src/lib/library/watermark.server.ts` | brak w przeglądarce | `tnb-library-admin` | logika PDF; porównać piksele/pozycję znaku |
+| `src/lib/library/watermark.server.ts` | brak w przeglądarce | `tnb-library-admin` | logika PDF pozostaje wyłącznie po stronie Edge; testy porównują wymiary/pozycję znaku, minimalną szerokość strony i producer marker; pełny test wizualny PDF nadal wymagany |
 | `src/lib/media.functions.ts` | `src/lib/api/media.ts` | `tnb-media` / `tnb-media-admin` | rozdzielić publiczne i administracyjne akcje |
 | `src/lib/meetings-notify.server.ts` | `src/lib/api/meetings.ts` | `tnb-meetings` / `tnb-notifications` | sprawdzić harmonogram i status wysyłki |
 | `src/lib/meetings.functions.ts` | `src/lib/api/meetings.ts` | `tnb-meetings` | porównać CRUD i role |
