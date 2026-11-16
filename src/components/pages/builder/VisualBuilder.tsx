@@ -30,7 +30,7 @@ const WIDTH: Record<Device, number | null> = { desktop: null, tablet: 820, phone
 let dragTpl: BuilderTemplate | null = null; // template being dragged from "Moje szablony"
 let dragKind: SectionKind | null = null; // native DnD across the preview iframe (same JS realm)
 
-const pick = (p: any): PageDraft => ({ slug: p.slug, title: p.title, intro: p.intro, sections: normalizeSections(p.sections), seo_title: p.seo_title ?? "", seo_description: p.seo_description ?? "" });
+const pick = (p: AdminPage): PageDraft => ({ slug: p.slug, title: p.title, intro: p.intro, sections: normalizeSections(p.sections), seo_title: p.seo_title ?? "", seo_description: p.seo_description ?? "" });
 const same = (a: PageDraft, b: PageDraft) => JSON.stringify(a) === JSON.stringify(b);
 
 export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose: () => void; onFormView: () => void }) {
@@ -111,7 +111,7 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
     const h = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement;
       if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== "z" || t.closest("input,textarea,select")) return;
-      e.preventDefault(); e.shiftKey ? undoRef.current.redo() : undoRef.current.undo();
+      e.preventDefault();\n      if (e.shiftKey) undoRef.current.redo();\n      else undoRef.current.undo();
     };
     window.addEventListener("keydown", h); return () => window.removeEventListener("keydown", h);
   }, []);
@@ -136,7 +136,7 @@ export function VisualBuilder({ id, onClose, onFormView }: { id: string; onClose
   async function exit(to: "list" | "form") {
     if (saveState.dirty && !(await save(false)) && !confirm("Nie udało się zapisać ostatnich zmian. Wyjść mimo to?")) return;
     if (d && meta && !same(d, meta.live)) toast.message("Szkic zapisany — strona publiczna pozostaje bez zmian, dopóki nie klikniesz „Opublikuj”.");
-    to === "list" ? onClose() : onFormView();
+    if (to === "list") onClose();\n    else onFormView();
   }
   async function publish() {
     if (!d || !meta) return;
