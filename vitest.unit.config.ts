@@ -9,6 +9,7 @@ export default defineConfig({
       "src/lib/avatar-rules.test.ts",
       "src/lib/consult.test.ts",
       "src/lib/consult-api.test.ts",
+      "src/lib/orders-payments-api.test.ts",
       "src/lib/library-api.test.ts",
       "src/lib/smtp-provider-contract.test.ts",
       "src/lib/notify/render.test.ts",
