@@ -26,7 +26,7 @@ const WHOLE_CMDS = ["Przeczytaj cały materiał i popraw jego spójność.", "Sk
   "Znajdź wszystkie powtórzenia.", "Sprawdź, czy materiał nie brzmi jak tekst wygenerowany przez AI.", "Przeredaguj tekst tak, aby był naturalny i zgodny z charakterem TNB."];
 const rid = () => Math.random().toString(36).slice(2, 10);
 const fix = async <T extends { ok: boolean }>(p: Promise<T>): Promise<Extract<T, { ok: true }> | MaterialActionError> => {
-  try { const result = await p; return result.ok ? result as Extract<T, { ok: true }> : result as MaterialActionError; } catch (error) { return { ok: false, error: errMsg(error) }; }
+  try { const result = await p; return result.ok ? result as Extract<T, { ok: true }> : result as unknown as MaterialActionError; } catch (error) { return { ok: false, error: errMsg(error) }; }
 };
 const tok = (u?: { input: number; output: number }) => (u ? `${(u.input + u.output).toLocaleString("pl-PL")} tokenów (wejście ${u.input.toLocaleString("pl-PL")}, wyjście ${u.output.toLocaleString("pl-PL")})` : "—");
 export const ImgKey = (id: string) => ["ai-ed", "img", id];
