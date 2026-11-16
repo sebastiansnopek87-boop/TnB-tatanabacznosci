@@ -10,7 +10,6 @@ import {
   createBrandUpload, finalizeBrandUpload, getBrandSettings, saveBrandSettings,
 } from "./api/brand";
 
-const id = "00000000-0000-4000-8000-000000000002";
 const settings = {
   logo: "brand/logo.png", favicon: "brand/favicon.ico", og_image: "", header_image: "",
   header_size: "large", site_name: "Tata Na Baczności", slogan: "Razem", show_slogan: true,
