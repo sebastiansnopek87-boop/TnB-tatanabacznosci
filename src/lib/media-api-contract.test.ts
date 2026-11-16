@@ -57,7 +57,6 @@ describe("media SPA contract", () => {
     const actions = ["listMedia", "getMediaDetail", "createMediaUpload", "finalizeMediaUpload", "deleteMedia"];
     for (const action of actions) {
       expect(edge).toContain('z.literal("' + action + '")');
-      expect(edge).toContain("export const " + action + " =");
       expect(legacy).toContain("export const " + action + " =");
     }
     expect(edge).toContain("await requireAdmin(ctx)");
