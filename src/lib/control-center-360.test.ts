@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { adminRecordSearch } from "./admin-record-search";
-import { historyPage, materialSearchFilter, type HistoryEvent } from "./control-center";
+import { historyPage, materialSearchFilter, searchParts, type HistoryEvent } from "./control-center";
 
 const id = "11111111-1111-4111-8111-111111111111";
 const before = "2026-10-18T18:00:00.000Z";
