@@ -15,7 +15,7 @@ const id = "00000000-0000-4000-8000-000000000002";
 
 beforeEach(() => {
   invoke.mockReset().mockResolvedValue({ data: { ok: true }, error: null });
-  getSession.mockReset().mockResolvedValue({ data: { session: { access_token: "admin-token" }, error: null });
+  getSession.mockReset().mockResolvedValue({ data: { session: { access_token: "admin-token" } }, error: null });
 });
 
 describe("podcast SPA contract", () => {
@@ -89,7 +89,8 @@ describe("podcast SPA contract", () => {
     expect(edge).toContain("const protectedActions = new Set");
     expect(edge).toContain("if (protectedActions.has(input.action)) user = await requireAdmin(db, req)");
     expect(edge).toContain("getEpisodeMedia(db, req, input.data.id)");
-    expect(edge).toContain("library_can_read");
+    expect(edge).toContain('_role: "premium"');
+    expect(edge).toContain('_role: "admin"');
     expect(edge).toContain("createSignedUrl");
   });
 });
