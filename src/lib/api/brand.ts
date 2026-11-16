@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { getSupabaseBaseUrl } from "@/lib/supabase-url";
 
 export type BrandSettings = Record<string, string | boolean>;
 
@@ -65,7 +66,7 @@ async function invokeBrand<T>(body: Record<string, unknown>): Promise<T> {
 export function brandImageUrl(value?: string): string | null {
   if (!value) return null;
   const file = value.replace(/^brand\//, "");
-  const base = supabase.supabaseUrl.replace(/\/+$/, "");
+  const base = getSupabaseBaseUrl();
   return base + "/functions/v1/tnb-brand?file=" + encodeURIComponent(file);
 }
 

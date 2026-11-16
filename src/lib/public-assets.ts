@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { getSupabaseBaseUrl } from "@/lib/supabase-url";
 
 type PublicAssetKind = "library" | "meeting" | "podcast";
 
@@ -7,7 +7,7 @@ type PublicAssetKind = "library" | "meeting" | "podcast";
  * project URL configured. The local route remains as an SSR migration fallback.
  */
 export function publicAssetUrl(kind: PublicAssetKind, id: string, version?: string | null): string {
-  const base = supabase.supabaseUrl.replace(/\/+$/, "");
+  const base = getSupabaseBaseUrl();
   const url = base + "/functions/v1/tnb-assets?kind=" + kind + "&id=" + encodeURIComponent(id);
 
   return version ? url + (url.includes("?") ? "&" : "?") + "v=" + encodeURIComponent(version) : url;
