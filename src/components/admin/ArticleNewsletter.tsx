@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -18,8 +17,8 @@ type C = { subject: string; preheader: string; intro: string; teaser: string; ou
 
 // Article module: AI provenance (admin-only) + optional newsletter announcement.
 export function ArticleNewsletter({ articleId, dirty }: { articleId: string; dirty: boolean }) {
-  const get = useServerFn(getArticleNewsletter), prep = useServerFn(prepareArticleNewsletter), save = useServerFn(saveArticleNewsletter),
-    test = useServerFn(sendArticleNewsletterTest), send = useServerFn(sendArticleNewsletter), unmark = useServerFn(unmarkArticleNewsletter);
+  const get = getArticleNewsletter), prep = prepareArticleNewsletter), save = saveArticleNewsletter),
+    test = sendArticleNewsletterTest), send = sendArticleNewsletter), unmark = unmarkArticleNewsletter);
   const q = useQuery({ queryKey: ["article-nl", articleId], queryFn: () => get({ data: { articleId } }) });
   const [c, setC] = useState<C | null>(null), [edited, setEdited] = useState(false), [busy, setBusy] = useState<string | null>(null), [confirm, setConfirm] = useState(false);
   const nl: any = q.data?.newsletter;
