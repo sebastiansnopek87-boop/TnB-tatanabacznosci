@@ -26,7 +26,7 @@ W repozytorium znajduje się 41 plików `*.functions.ts` / `*.server.ts` w `src/
 | `src/lib/contact.functions.ts` | `src/lib/api/contact.ts` | `tnb-contact` | dodano test kontraktu formularza, błędów Edge, strict schema, allowlisty originów, antyspamu i bezpiecznego renderowania HTML; legacy zachowany do sprawdzenia semantyki powiadomień |
 | `src/lib/control-center.functions.ts` | `src/lib/api/control-center.ts` | `tnb-admin` | test kontraktu SPA ↔ Edge obejmuje wyszukiwanie i historię, walidację zapytań/UUID/paginacji oraz bramkę admin; nadal wymagany audyt kompletności wyników i zgodności semantyki |
 | `src/lib/editor-ai.functions.ts` | `src/lib/api/editor-ai.ts` | `tnb-editor-ai` | porównać kontrakty i uprawnienia |
-| `src/lib/editor-materials.functions.ts` | `src/lib/api/editor-materials.ts` | `tnb-editor-materials` | porównać upload i dostęp |
+| `src/lib/editor-materials.functions.ts` | `src/lib/api/editor-materials.ts` | `tnb-editor-materials` | dodano test kontraktu 15 akcji, dynamicznej allowlisty Edge, walidacji w warstwie logic i wymogu superadmin w Edge oraz legacy; sprawdzić provider AI i handoff E2E |
 | `src/lib/guest-comments.functions.ts` | `src/lib/api/guest-comments.ts` | `tnb-guest-comments` | porównać moderację i limity |
 | `src/lib/instagram.server.ts` | brak potwierdzonego adaptera | do ustalenia (możliwy `tnb-media`) | OAuth/sekrety; blokada do audytu przepływu |
 | `src/lib/library-delivery.functions.ts` | `src/lib/api/library-delivery.ts` | `tnb-library-delivery` | test kontraktu SPA ↔ Edge dla 4 akcji; auth admin, token hash i związanie tokenu z materiałem objęte kontrolą statyczną; testy CI/E2E oczekują na wynik |
