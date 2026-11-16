@@ -133,6 +133,7 @@ describe("admin and control-center SPA contract", () => {
     expect(edge).toContain("const user = await requireAdmin(db, req, needsSuperadmin)");
     expect(edge).toContain("if (status >= 500) console.error(\"tnb-admin error:\"");
     expect(edge).toContain('z.string().uuid()');
-    expect(edge).toContain('z.string().trim().min(2').toContain('max(100)');
+    expect(edge).toContain('z.string().trim().min(2');
+    expect(edge).toContain('max(100)');
   });
 });
