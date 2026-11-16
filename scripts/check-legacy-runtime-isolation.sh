@@ -40,15 +40,15 @@ for path in root.rglob("*"):
     for match in static_or_dynamic_import.finditer(source):
         target = match.group(1)
         if forbidden_import.search(target):
-            line = source.count("\\n", 0, match.start()) + 1
+            line = source[:match.start()].count(chr(10)) + 1
             errors.append(f"{path}:{line}: legacy runtime import {target}")
 
     for match in server_only.finditer(source):
-        line = source.count("\\n", 0, match.start()) + 1
+        line = source[:match.start()].count(chr(10)) + 1
         errors.append(f"{path}:{line}: server-only Supabase reference")
 
 if errors:
-    print("\\n".join(errors))
+    print(chr(10).join(errors))
     raise SystemExit("ERROR: browser/application source references legacy server runtime.")
 
 print(
