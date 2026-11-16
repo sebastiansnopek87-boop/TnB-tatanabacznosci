@@ -34,7 +34,7 @@ W repozytorium znajduje się 41 plików `*.functions.ts` / `*.server.ts` w `src/
 | `src/lib/library/pdf.server.ts` | `src/lib/api/library.ts` (pośrednio) | `tnb-library-admin` / `tnb-library-delivery` | PDF; porównać watermark i przechowywanie |
 | `src/lib/library/watermark-logo.server.ts` | brak w przeglądarce | `tnb-library-admin` | zasób serwerowy; usunąć po potwierdzeniu użycia w Edge |
 | `src/lib/library/watermark.server.ts` | brak w przeglądarce | `tnb-library-admin` | logika PDF pozostaje wyłącznie po stronie Edge; testy porównują wymiary/pozycję znaku, minimalną szerokość strony i producer marker; pełny test wizualny PDF nadal wymagany |
-| `src/lib/media.functions.ts` | `src/lib/api/media.ts` | `tnb-media` / `tnb-media-admin` | rozdzielić publiczne i administracyjne akcje |
+| `src/lib/media.functions.ts` | `src/lib/api/media.ts` | `tnb-media-admin` + publiczne `tnb-media` | dodano test kontraktu 5 akcji admin, token Bearer, brak sesji, 403, walidację uploadu i fail-closed usuwanie plików w użyciu; publiczne serwowanie obrazów pozostaje osobnym przepływem |
 | `src/lib/meetings-notify.server.ts` | `src/lib/api/meetings.ts` | `tnb-meetings` / `tnb-notifications` | sprawdzić harmonogram i status wysyłki |
 | `src/lib/meetings.functions.ts` | `src/lib/api/meetings.ts` | `tnb-meetings` | porównać CRUD i role |
 | `src/lib/newsletter.functions.ts` | `src/lib/api/newsletter.ts` | `tnb-newsletter` | dodano test kontraktu 3 akcji, walidacji zgody, payloadów, błędów, rate limitu, double opt-in, potwierdzania i wypisu; legacy zachowany do porównania pełnych skutków ubocznych |
