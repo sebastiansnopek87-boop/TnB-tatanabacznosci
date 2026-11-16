@@ -21,7 +21,7 @@ type UnsubscribeInput =
 type ApiError = { message?: unknown };
 
 async function invokeNewsletter<T>(
-  action: "subscribe" | "unsubscribe",
+  action: "subscribe" | "unsubscribe" | "confirm",
   data: Record<string, unknown>,
 ): Promise<T> {
   const { data: result, error } = await supabase.functions.invoke<T>("tnb-newsletter", {
@@ -59,4 +59,8 @@ export function unsubscribeNewsletter({
   data: UnsubscribeInput;
 }): Promise<{ ok: true }> {
   return invokeNewsletter<{ ok: true }>("unsubscribe", data);
+}
+
+export function confirmNewsletter({ data }: { data: { token: string } }): Promise<{ ok: true }> {
+  return invokeNewsletter<{ ok: true }>("confirm", data);
 }
