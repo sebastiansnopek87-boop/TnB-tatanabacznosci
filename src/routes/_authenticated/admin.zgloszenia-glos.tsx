@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { adminListSubmissions, adminUpdateSubmission } from "@/lib/api/voice";
@@ -17,8 +16,7 @@ export const Route = createFileRoute("/_authenticated/admin/zgloszenia-glos")({ 
 type Row = Awaited<ReturnType<typeof adminListSubmissions>>[number];
 
 function Submissions() {
-  const listFn = useServerFn(adminListSubmissions);
-  const list = useQuery({ queryKey: ["admin-voice-submissions"], queryFn: () => listFn() });
+  const list = useQuery({ queryKey: ["admin-voice-submissions"], queryFn: () => adminListSubmissions() });
   const [filter, setFilter] = useState<"active" | SubmissionStatus | "all">("active");
   const [openId, setOpenId] = useState<string | null>(null);
   const rows = (list.data ?? []).filter((r) => filter === "all" || (filter === "active" ? r.status !== "archived" : r.status === filter));
@@ -58,13 +56,12 @@ function Submissions() {
 }
 
 function Detail({ r }: { r: Row }) {
-  const upFn = useServerFn(adminUpdateSubmission);
   const qc = useQueryClient();
   const [status, setStatus] = useState<SubmissionStatus>(r.status);
   const [note, setNote] = useState(r.admin_note);
   useEffect(() => { setStatus(r.status); setNote(r.admin_note); }, [r]);
   const save = useMutation({
-    mutationFn: (v: { status: SubmissionStatus; admin_note: string }) => upFn({ data: { id: r.id, ...v } }),
+    mutationFn: (v: { status: SubmissionStatus; admin_note: string }) => adminUpdateSubmission({ data: { id: r.id, ...v } }),
     onSuccess: () => { toast.success("Zapisano."); qc.invalidateQueries({ queryKey: ["admin-voice-submissions"] }); },
     onError: (e) => toast.error(errMsg(e)),
   });

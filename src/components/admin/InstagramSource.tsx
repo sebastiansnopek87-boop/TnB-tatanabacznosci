@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { adminCheckInstagramConfig, adminDisconnectInstagram, adminGetInstagram, adminSaveInstagramOptions, adminStartInstagramConnect, adminSyncInstagram } from "@/lib/api/voice";
 import { errMsg } from "@/components/admin/format";
@@ -11,13 +10,10 @@ const dt = (s?: string | null) => (s ? new Date(s).toLocaleString("pl-PL", { dat
 const RESULT: Record<string, string> = { polaczono: "Konto Instagram połączone.", anulowano: "Autoryzacja Instagrama została anulowana.", blad: "Nie udało się połączyć konta Instagram — szczegóły w dzienniku zdarzeń." };
 
 export function InstagramSource() {
-  const getFn = useServerFn(adminGetInstagram); const startFn = useServerFn(adminStartInstagramConnect);
-  const syncFn = useServerFn(adminSyncInstagram); const discFn = useServerFn(adminDisconnectInstagram);
-  const optFn = useServerFn(adminSaveInstagramOptions); const checkFn = useServerFn(adminCheckInstagramConfig);
-  const check = useMutation({ mutationFn: () => checkFn(), onSuccess: (r) => (r.ok ? toast.success("Konfiguracja kompletna.") : toast.error("Konfiguracja niepełna — zobacz listę poniżej.")), onError: (e) => toast.error(errMsg(e)) });
+  const check = useMutation({ mutationFn: () => adminCheckInstagramConfig(), onSuccess: (r) => (r.ok ? toast.success("Konfiguracja kompletna.") : toast.error("Konfiguracja niepełna — zobacz listę poniżej.")), onError: (e) => toast.error(errMsg(e)) });
   const copy = (v: string) => navigator.clipboard.writeText(v).then(() => toast.success("Skopiowano."), () => toast.error("Nie udało się skopiować."));
   const qc = useQueryClient();
-  const q = useQuery({ queryKey: ["admin-ig"], queryFn: () => getFn() });
+  const q = useQuery({ queryKey: ["admin-ig"], queryFn: () => adminGetInstagram() });
   const refresh = () => ["admin-ig", "voice-instagram"].forEach((k) => qc.invalidateQueries({ queryKey: [k] }));
   const [origin, setOrigin] = useState("");
   useEffect(() => {
@@ -26,10 +22,10 @@ export function InstagramSource() {
     if (r && RESULT[r]) (r === "polaczono" ? toast.success : toast.error)(RESULT[r]);
   }, []);
 
-  const connect = useMutation({ mutationFn: () => startFn({ data: { origin: window.location.origin } }), onSuccess: (r) => { window.location.href = r.url; }, onError: (e) => toast.error(errMsg(e)) });
-  const sync = useMutation({ mutationFn: () => syncFn(), onSuccess: (r) => { toast.success(`Synchronizacja: nowe ${r.added}, razem ${r.total}.`); refresh(); }, onError: (e) => { toast.error(errMsg(e)); refresh(); } });
-  const disc = useMutation({ mutationFn: () => discFn(), onSuccess: () => { toast.success("Konto odłączone."); refresh(); }, onError: (e) => toast.error(errMsg(e)) });
-  const opt = useMutation({ mutationFn: (v: { show_reels: boolean; show_posts: boolean; show_carousels: boolean; display_count: number }) => optFn({ data: v }), onSuccess: () => { toast.success("Zapisano. Zmiana obejmie kolejną synchronizację."); refresh(); }, onError: (e) => toast.error(errMsg(e)) });
+  const connect = useMutation({ mutationFn: () => adminStartInstagramConnect({ data: { origin: window.location.origin } }), onSuccess: (r) => { window.location.href = r.url; }, onError: (e) => toast.error(errMsg(e)) });
+  const sync = useMutation({ mutationFn: () => adminSyncInstagram(), onSuccess: (r) => { toast.success(`Synchronizacja: nowe ${r.added}, razem ${r.total}.`); refresh(); }, onError: (e) => { toast.error(errMsg(e)); refresh(); } });
+  const disc = useMutation({ mutationFn: () => adminDisconnectInstagram(), onSuccess: () => { toast.success("Konto odłączone."); refresh(); }, onError: (e) => toast.error(errMsg(e)) });
+  const opt = useMutation({ mutationFn: (v: { show_reels: boolean; show_posts: boolean; show_carousels: boolean; display_count: number }) => adminSaveInstagramOptions({ data: v }), onSuccess: () => { toast.success("Zapisano. Zmiana obejmie kolejną synchronizację."); refresh(); }, onError: (e) => toast.error(errMsg(e)) });
   const s = q.data;
   const connected = !!s && s.status !== "disconnected" && !!s.username;
   const opts = s ? { show_reels: s.show_reels ?? true, show_posts: s.show_posts ?? false, show_carousels: s.show_carousels ?? false, display_count: s.display_count ?? 6 } : null;
