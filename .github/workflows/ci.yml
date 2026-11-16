@@ -51,7 +51,7 @@ jobs:
             echo "::error::Vite preview did not start."
             exit 1
           fi
-          for route in / /auth /reset-password /artykuly /artykuly/przykladowy /biblioteka /biblioteka/przykladowy /podcast /podcast/przykladowy /spotkania /spotkania/przykladowe /spolecznosc /admin /admin/spotkania /newsletter/wypisz; do
+          for route in / /auth /reset-password /artykuly /artykuly/przykladowy /biblioteka /biblioteka/przykladowy /podcast /podcast/przykladowy /spotkania /spotkania/przykladowe /spolecznosc /admin /admin/spotkania /newsletter/wypisz /newsletter/potwierdz; do
             CODE=$(curl -sS -o /tmp/tnb-route.html -w '%{http_code}' "http://127.0.0.1:4173$route")
             if [[ "$CODE" != "200" ]] || ! grep -q 'id="root"' /tmp/tnb-route.html; then
               echo "::error::SPA route fallback failed for $route (HTTP $CODE)."
