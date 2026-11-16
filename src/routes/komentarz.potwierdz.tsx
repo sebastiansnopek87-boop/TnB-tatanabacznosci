@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { PageHeading, PageShell } from "@/components/tnb/PageShell";
@@ -35,8 +34,6 @@ const TEXT: Record<R["status"], { title: string; body: string }> = {
 
 function Confirm() {
   const { t } = Route.useSearch();
-  const confirm = useServerFn(confirmGuestComment);
-  const resend = useServerFn(resendGuestComment);
   const [r, setR] = useState<R | null>(null);
   const [resent, setResent] = useState(false);
   const ran = useRef(false);
@@ -44,16 +41,16 @@ function Confirm() {
   useEffect(() => {
     if (ran.current) return; ran.current = true;
     if (!t) { setR({ status: "invalid" }); return; }
-    if (!pending.has(t)) pending.set(t, confirm({ data: { token: t } }).catch(() => ({ status: "invalid" }) as R));
+    if (!pending.has(t)) pending.set(t, confirmGuestComment({ data: { token: t } }).catch(() => ({ status: "invalid" }) as R));
     pending.get(t)!.then(setR);
-  }, [t, confirm]);
+  }, [t]);
   const txt = r ? TEXT[r.status] : null;
   return (
     <PageShell>
       <PageHeading eyebrow="Komentarze" title={txt?.title ?? "Sprawdzamy link…"} intro={txt?.body ?? "To potrwa chwilę."} />
       <div className="flex flex-wrap items-center gap-4 px-5 py-10 lg:px-14">
         {r?.status === "expired" && r.canResend && !resent && (
-          <Button onClick={async () => { await resend({ data: { token: t! } }).catch(() => null); setResent(true); }}>Wyślij nowy link</Button>
+          <Button onClick={async () => { await resendGuestComment({ data: { token: t! } }).catch(() => null); setResent(true); }}>Wyślij nowy link</Button>
         )}
         {resent && <p className="text-sm text-foreground/85" role="status">Jeśli było to możliwe, wysłaliśmy nowy link na adres podany przy komentarzu. Nowy link można zamówić najwyżej raz na 10 minut.</p>}
         {r?.slug && <Link to="/artykuly/$slug" params={{ slug: r.slug }} hash="komentarze" className="text-gold underline underline-offset-4">Przejdź do artykułu</Link>}
