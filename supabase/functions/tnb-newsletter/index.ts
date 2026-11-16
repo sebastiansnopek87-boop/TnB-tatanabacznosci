@@ -162,7 +162,7 @@ async function subscribe(db: Db, req: Request, data: z.infer<typeof subscribeSch
         to, from, replyTo: settings?.reply_to ?? null,
         subject: "Potwierdź zapis do newslettera Tata Na Baczności",
         html: `<p>Dzień dobry,</p><p>Otrzymaliśmy prośbę o zapis do newslettera Tata Na Baczności.</p><p><a href="${link}">Potwierdź zapis do newslettera</a></p><p>Jeśli to nie Ty, zignoruj tę wiadomość.</p>`,
-        text: `Dzień dobry,\\n\\nOtrzymaliśmy prośbę o zapis do newslettera Tata Na Baczności.\\nPotwierdź zapis: ${link}\\n\\nJeśli to nie Ty, zignoruj tę wiadomość.`,
+        text: `Dzień dobry,\n\nOtrzymaliśmy prośbę o zapis do newslettera Tata Na Baczności.\nPotwierdź zapis: ${link}\n\nJeśli to nie Ty, zignoruj tę wiadomość.`,
       });
       await db.from("email_notification_log").update({ status: "sent", provider_message_id: sent.messageId, attempts: 1, updated_at: new Date().toISOString() }).eq("id", log.id);
     } catch (error) {
