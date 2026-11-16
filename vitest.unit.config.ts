@@ -29,6 +29,7 @@ export default defineConfig({
       "src/lib/guest-comments-api-contract.test.ts",
       "src/lib/editor-ai-api-contract.test.ts",
       "src/lib/meetings-api-contract.test.ts",
+      "src/lib/podcast-api-contract.test.ts",
       "src/lib/rich-text.test.ts",
     ],
   },
