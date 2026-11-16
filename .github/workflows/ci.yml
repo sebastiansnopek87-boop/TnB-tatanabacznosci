@@ -27,19 +27,6 @@ jobs:
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
 
-      - name: Regenerate and commit Bun lockfile
-        run: |
-          bun install --lockfile-only
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add bun.lock
-          if git diff --cached --quiet; then
-            echo "Bun lockfile is already current."
-          else
-            git commit -m "chore: refresh Bun lockfile for React SPA dependencies"
-            git push origin HEAD:main
-          fi
-
       - name: Install locked dependencies
         run: bun install --frozen-lockfile
 
