@@ -107,3 +107,20 @@ Zakres odczytany z aktualnego brancha: `src/lib/api/orders.ts`, `src/lib/api/pay
 5. **P2 — rozjazd operacyjny po zmianie środowiska operatora.** Zamówienie zapisuje własne `environment`, a webhook porównuje je z aktualnym środowiskiem konfiguracji operatora. Trzeba określić i przetestować procedurę zmiany sandbox/live przy istniejących oczekujących zamówieniach.
 
 Nie wdrażać poprawek w produkcyjnych webhookach przed testami adapterów i potwierdzeniem kontraktów operatorów. Następny krok: wyodrębnić czyste funkcje normalizacji/walidacji referencji, dodać testy P24/Tpay/PayU i kontrakt SPA/Edge; potem zaprojektować outbox i idempotencję zamówień.
+
+
+### Doprecyzowanie kontraktów operatorów i poprawka webhooka (2026-11-16)
+
+Dokumentacja operatorów potwierdza mapowanie referencji używane przez adaptery:
+- P24: `sessionId` jest identyfikatorem sesji z systemu sprzedawcy; zapisujemy go jako `provider_ref` i odbieramy ponownie w notyfikacji. Weryfikacja `transaction/verify` jest obowiązkowa, a P24 ponawia notyfikacje, jeśli nie otrzyma poprawnego potwierdzenia. Źródło: [P24 — Transaction service API](https://developers.przelewy24.pl/).
+- Tpay Open API: `hiddenDescription` wraca jako `tr_crc`; `tr_id` jest tytułem transakcji Tpay. Odpowiedź utworzenia transakcji zawiera `title`, więc obecny wybór `title ?? transactionId` jest zgodny z polem `tr_id`. Źródło: [Tpay — pierwsza transakcja](https://docs-api.tpay.com/pl/first-steps/first-transaction/) i [Tpay — webhooks](https://docs-api.tpay.com/pl/webhooks/).
+- PayU: `extOrderId` jest identyfikatorem nadanym przez sprzedawcę, a `orderId` identyfikatorem nadanym przez PayU. Adapter zapisuje PayU `orderId` i odbiera to samo pole w notyfikacji. Źródło: [PayU Europe — API](https://developers.payu.com/europe/pl/api/).
+
+Wdrożone na branchu:
+- Dodano wspólną funkcję `providerReferenceMatches` i użyto jej w `tnb-payments`: UUID zamówienia służy do znalezienia rekordu, ale nie zastępuje niezależnego porównania referencji operatora z zapisaną referencją.
+- Jeśli referencja nie została jeszcze zapisana (możliwy wyścig pomiędzy utworzeniem transakcji i zapisem `provider_ref`), webhook zwraca HTTP 500 i usuwa tymczasowy wpis idempotencyjny, aby operator mógł ponowić dostarczenie.
+- Jeśli istniejąca referencja jest inna, zamówienie oczekujące/nieudane trafia do `needs_review`; nie przyznaje to dostępu.
+- Naprawiono P24: nieudane lub niejednoznaczne `transaction/verify` nie jest już zamieniane na stan `pending` z ACK. Adapter zwraca brak poprawnej notyfikacji, dzięki czemu P24 nie dostaje potwierdzenia przed udaną weryfikacją i może ponowić webhook.
+- Dodano testy jednostkowe dla porównania referencji i bramki odpowiedzi P24 oraz testy kontraktu adapterów SPA zamówień/płatności.
+
+Pozostałe bramki: idempotencja tworzenia zamówienia, trwały outbox/retry dla `afterPaid`, pełne testy webhooków z symulacją awarii i testy sandbox operatorów. Nie zmieniano danych ani konfiguracji operatorów w Supabase.
