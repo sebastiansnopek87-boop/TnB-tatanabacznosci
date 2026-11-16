@@ -231,12 +231,26 @@ async function retry(db: Db, id: string): Promise<DispatchResult> {
     await db.from("email_notification_log").update({ status: "failed", reason: "missing_variables:" + rendered.missing.join(","), attempts: (row.attempts ?? 0) + 1, updated_at: new Date().toISOString() }).eq("id", id);
     return { status: "failed", id, reason: "missing_variables" };
   }
-  const safe = render(template, maskSensitive(vars), template.required);
-  await db.from("email_notification_log").update({
-    status: "simulated", reason: null, attempts: (row.attempts ?? 0) + 1, mode: "test", updated_at: new Date().toISOString(),
-    rendered_subject: safe.ok ? safe.subject : null, rendered_html: safe.ok ? safe.html : null, rendered_text: safe.ok ? safe.text : null,
-  }).eq("id", id);
-  return { status: "simulated", id };
+  const smtp = smtpConfig();
+  const mode = settings?.delivery_mode === "live" && smtp.configured ? "live" : "test";
+  if (mode === "test") {
+    const safe = render(template, maskSensitive(vars), template.required);
+    await db.from("email_notification_log").update({
+      status: "simulated", reason: null, attempts: (row.attempts ?? 0) + 1, mode: "test", updated_at: new Date().toISOString(),
+      rendered_subject: safe.ok ? safe.subject : null, rendered_html: safe.ok ? safe.html : null, rendered_text: safe.ok ? safe.text : null,
+    }).eq("id", id);
+    return { status: "simulated", id };
+  }
+  try {
+    const from = `${settings?.sender_name ?? "Tata Na Baczności"} <${settings?.sender_local_part ?? "kontakt"}@${settings?.sender_domain ?? "tatanabacznosci.pl"}>`;
+    const sent = await sendSmtpMail({ to: row.recipient, from, replyTo: settings?.reply_to ?? null, subject: rendered.subject, html: rendered.html, text: rendered.text });
+    await db.from("email_notification_log").update({ status: "sent", reason: null, attempts: (row.attempts ?? 0) + 1, mode: "live", provider_message_id: sent.messageId, updated_at: new Date().toISOString() }).eq("id", id);
+    return { status: "sent", id };
+  } catch (error) {
+    const reason = error instanceof Error ? error.message.slice(0, 300) : "smtp_delivery_failed";
+    await db.from("email_notification_log").update({ status: "failed", reason, attempts: (row.attempts ?? 0) + 1, mode: "live", updated_at: new Date().toISOString() }).eq("id", id);
+    return { status: "failed", id, reason: "smtp_delivery_failed" };
+  }
 }
 
 Deno.serve(async (req: Request) => {
