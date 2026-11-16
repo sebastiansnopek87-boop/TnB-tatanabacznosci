@@ -39,7 +39,7 @@ describe("platformSchema", () => {
 });
 
 describe("pola publiczne", () => {
-  it("PUBLIC_COLS nie zawiera pól fakturowych", async () => {
+  it("PUBLIC_COLS nie zawiera pól fakturowych", () => {
     const cols = PUBLIC_COLS;
     expect(cols).not.toContain("billing_");
     expect(cols).toContain("company_legal_name");
