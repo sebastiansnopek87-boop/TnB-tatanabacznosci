@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { corsHeaders as sdkCorsHeaders } from "npm:@supabase/supabase-js@2.117.2/cors";
 import { z } from "zod";
 import { ADAPTERS, REQUIREMENTS, configStatus, type ProviderId, type ProviderRow, type Notice } from "./providers.ts";
+import { providerReferenceMatches } from "../_shared/payment-webhook.ts";
 import { DEFAULT_TEMPLATES, EVENT_MAP } from "./registry.ts";
 import { render, maskSensitive, stripSensitive, type Vars } from "./render.ts";
 
@@ -157,6 +158,18 @@ async function confirmOperatorPayment(db: Db, provider: ProviderRow, notice: Not
     await logOrderEvent(db, order.id, "webhook_rejected", "Powiadomienie ze środowiska " + provider.environment + ", zamówienie ze środowiska " + order.environment + ".");
     return { result: "env_mismatch" };
   }
+  // The local order UUID locates the order; the operator transaction reference
+  // must independently match the reference persisted during checkout creation.
+  if (!order.provider_ref) {
+    await logOrderEvent(db, order.id, "webhook_retry", "Referencja transakcji nie została jeszcze zapisana.");
+    return { result: "provider_ref_pending" };
+  }
+  if (!providerReferenceMatches(order.provider_ref, notice.providerRef)) {
+    const reason = "Referencja transakcji operatora nie zgadza się z zapisanym zamówieniem.";
+    if (["pending", "failed"].includes(order.status)) await flagReview(db, order.id, reason);
+    else await logOrderEvent(db, order.id, "webhook_rejected", reason);
+    return { result: "provider_ref_mismatch" };
+  }
   if (notice.outcome === "pending") {
     await logOrderEvent(db, order.id, "webhook_pending", "Operator: płatność w toku (" + notice.eventId + ").");
     return { result: "pending" };
@@ -197,6 +210,10 @@ async function handleWebhook(db: Db, id: ProviderId, request: Request): Promise<
   if (duplicateError) return new Response("Retry", { status: 500 });
   try {
     const result = await confirmOperatorPayment(db, provider, notice);
+    if (result.result === "provider_ref_pending") {
+      await db.from("payment_webhook_events").delete().eq("event_id", notice.eventId);
+      return new Response("Retry", { status: 500 });
+    }
     await logEvent(db, { type: "payment_webhook", objectKind: "payment", objectId: notice.orderId ?? notice.providerRef, result: ["paid", "failed", "pending", "duplicate", "ignored"].includes(result.result) ? "ok" : "failed", detail: id + ": " + result.result });
     return ADAPTERS[id].ack();
   } catch (error) {
