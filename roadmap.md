@@ -126,3 +126,5 @@
 - [x] Biblioteka — adapter odrzuca pustą odpowiedź Edge Function; test dodano do istniejącego `library-api.test.ts`, bez duplikowania wcześniej pokrytych 11 akcji administracyjnych i 4 akcji dostarczania materiałów.
 
 - [x] Kontakt i newsletter — dodano testy kontraktu adapterów `tnb-contact` i `tnb-newsletter`; obejmują payloady, walidację, błędy, ochronę antyspamową, allowlistę originów, zgodę i double opt-in. Testy Edge nie uruchamiają rzeczywistej wysyłki; produkcyjny SMTP pozostaje nieaktywny.
+
+- [x] Newsletter artykułów — dodano test kontraktu 6 akcji `tnb-article-newsletter`, w tym role admin/superadmin, potwierdzenie liczby odbiorców przed wysyłką, claim statusu, tryb testowy i klucze idempotencji na odbiorcę. Wysłanie produkcyjne nie jest uruchamiane przez testy.
