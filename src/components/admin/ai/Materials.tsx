@@ -52,7 +52,7 @@ export function CreateArticle({ proposal, topic: topic0 = "", aiOn, onCreated, o
     ];
     setSteps(base); setBusy(true);
     const u = { input: 0, output: 0, images: 0 };
-    const r1 = await fix(start({ data: { proposalId: proposal?.id ?? null, topic: info.topic, format, direction: dir, confirmed: true } }));
+    const r1 = await fix(start({ data: { proposalId: proposal?.id ?? null, topic: currentInfo.topic, format, direction: dir, confirmed: true } }));
     if (!r1.ok) { set("src", "error", r1.error); setBusy(false); return; }
     u.input += r1.usage.input; u.output += r1.usage.output; setUsage({ ...u }); set("src", "done"); set("write", "doing");
     const r2 = await fix(write({ data: { id: r1.id } }));
