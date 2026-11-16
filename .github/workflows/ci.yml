@@ -65,6 +65,9 @@ jobs:
       - name: Verify SPA source boundary
         run: bash scripts/check-spa-boundary.sh
 
+      - name: Verify legacy runtime isolation
+        run: bash scripts/check-legacy-runtime-isolation.sh
+
       - name: Verify Supabase Edge Function source/config coverage
         run: bash scripts/check-edge-function-sync.sh
 
