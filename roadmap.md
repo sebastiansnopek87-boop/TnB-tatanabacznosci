@@ -144,3 +144,5 @@
 - [x] Artykuły — dodano test kontraktu 15 akcji Edge `tnb-articles` oraz testy bezpośrednich odczytów admina przez RLS po kontroli roli. Zakres obejmuje trash/restore/purge, upload, ankiety i moderację komentarzy.
 
 - [x] Marka — dodano test kontraktu 4 akcji `tnb-brand`; obejmuje płaskie payloady, Bearer, odmowę bez sesji, admin read/superadmin writes, MIME i limity 2 MB oraz weryfikację metadanych przesłanego pliku.
+
+- [x] Strony CMS — dodano test kontraktu 13 akcji `tnb-pages`; obejmuje public anonymous read, 12 akcji admina, sesję Bearer, walidację, draft/version, kontrolę legalConfirmed i digest przed publikacją.
