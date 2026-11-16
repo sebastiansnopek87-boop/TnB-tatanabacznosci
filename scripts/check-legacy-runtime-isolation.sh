@@ -29,5 +29,5 @@ if grep -RInF \
   exit 1
 fi
 
-legacy_count=$(find src -type f | grep -E '\\.(functions|server)\\.ts$' | wc -l | tr -d ' ')
+legacy_count=$({ find src -type f -name '*.functions.ts'; find src -type f -name '*.server.ts'; } | wc -l | tr -d ' ')
 echo "OK: production UI is isolated from TanStack Start; ${legacy_count} legacy source files remain for test migration and deletion."
