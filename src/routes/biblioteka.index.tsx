@@ -45,7 +45,7 @@ function Library() {
   const [input, setInput] = useState(sp.q);
   const q = sp.q.slice(0, 80);
   type Patch = Partial<{ q: string; kategoria: string; format: string; dostep: string; sort: string }>;
-  const set = (p: Patch) => navigate({ search: (prev) => ({ ...prev, ...p }), replace: true });
+  const set = (p: Patch) => navigate({ search: (prev: typeof sp) => ({ ...prev, ...p }), replace: true });
   const setCategory = (v: string | null) => set({ kategoria: v ?? "" });
   const setAccess = (v: Access | null) => set({ dostep: v ?? "" });
   useEffect(() => { const t = setTimeout(() => { if (input !== sp.q) set({ q: input }); }, 300); return () => clearTimeout(t); }, [input]); // eslint-disable-line react-hooks/exhaustive-deps

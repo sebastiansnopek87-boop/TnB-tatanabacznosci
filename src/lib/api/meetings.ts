@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 import type { MeetingDetail, MyReg, PublicMeeting, RegStatus } from "@/lib/meetings";
 
 type Input<T> = { data: T };
@@ -51,7 +52,8 @@ export const adminListMeetings = () => invoke<Array<{
   registration_open: boolean; cancelled_at: string | null; is_outdoor: boolean; online_link: string | null;
   total: number; pending: number; approved: number; rejected: number;
 }>>("adminListMeetings");
-export const adminGetMeeting = ({ data }: Input<{ id: string }>) => invoke<Record<string, any>>("adminGetMeeting", data);
+export const adminGetMeeting = ({ data }: Input<{ id: string }>): Promise<Tables<"meetings">> =>
+  invoke<Tables<"meetings">>("adminGetMeeting", data);
 export const adminSaveMeeting = ({ data }: Input<MeetingSaveInput>) => invoke<{ id: string }>("adminSaveMeeting", data);
 export const adminSetMeetingStatus = ({ data }: Input<{ id: string; status: "draft" | "published" | "archived" }>) =>
   invoke<{ ok: true }>("adminSetMeetingStatus", data);

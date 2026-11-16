@@ -18,6 +18,7 @@ const REASON: Record<string, string> = { simulated: "Tryb testowy poczty — wia
 const EVENT: Record<string, string> = { created: "Utworzono", checkout_started: "Rozpoczęto płatność u operatora", checkout_error: "Błąd utworzenia transakcji", paid: "Opłacono", failed: "Płatność nieudana", cancelled: "Anulowano", refund_pending: "Zwrot w toku", refunded: "Zwrócono", delivered: "Dostarczono", delivered_manual: "Oznaczono jako przekazany", delivery_failed: "Wysyłka nieudana", duplicate_ignored: "Powtórzone powiadomienie pominięte", access_granted: "Przyznano dostęp", access_resent: "Ponowne wysłanie linku", needs_review: "Wymaga weryfikacji", webhook_pending: "Operator: płatność w toku", webhook_rejected: "Powiadomienie odrzucone" };
 const TestBadge = () => <span className="ml-2 inline-block border border-destructive px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-destructive">TEST</span>;
 const field = "h-10 border border-border/60 bg-background px-3 text-sm";
+const providerLabel = (provider: string | null | undefined) => provider ? PROVIDER[provider] ?? provider : "—";
 
 function Orders() {
   const { record } = Route.useSearch();
@@ -66,7 +67,7 @@ function Orders() {
             <span className="flex justify-between gap-2"><span className="font-mono text-xs">{r.order_number}{r.is_test && <TestBadge />}</span><span className="text-gold">{STATUS[r.status] ?? r.status}</span></span>
             <span className="mt-1 block break-words">{r.library_items?.title}</span>
             <span className="mt-1 block break-all text-xs text-muted-foreground">{r.buyer_email}</span>
-            <span className="mt-1 flex justify-between text-xs text-muted-foreground"><span>{fmtDate(r.created_at)} · {PROVIDER[r.provider] ?? r.provider}{r.environment === "sandbox" && r.provider !== "manual" ? " (test)" : ""}</span><span className="text-foreground">{fmtPrice(r.amount)}</span></span>
+            <span className="mt-1 flex justify-between text-xs text-muted-foreground"><span>{fmtDate(r.created_at)} · {providerLabel(r.provider)}{r.environment === "sandbox" && r.provider !== "manual" ? " (test)" : ""}</span><span className="text-foreground">{fmtPrice(r.amount)}</span></span>
           </button></li>))}</ul>
         <div className="hidden overflow-x-auto border border-border/60 md:block">
           <table className="w-full min-w-[820px] text-sm">
@@ -76,7 +77,7 @@ function Orders() {
               <tr key={r.id} tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter") setOpenId(r.id); }} onClick={() => setOpenId(r.id)} className={`cursor-pointer border-b border-border/40 hover:bg-card ${openId === r.id ? "bg-card" : ""}`}>
                 <td className="whitespace-nowrap p-3 font-mono text-xs">{r.order_number}{r.is_test && <TestBadge />}</td>
                 <td className="p-3">{fmtDate(r.created_at)}</td><td className="p-3">{r.library_items?.title}</td><td className="p-3">{r.buyer_email}</td>
-                <td className="p-3">{fmtPrice(r.amount)}</td><td className="p-3">{PROVIDER[r.provider] ?? r.provider}{r.environment === "sandbox" && r.provider !== "manual" ? " (test)" : ""}</td>
+                <td className="p-3">{fmtPrice(r.amount)}</td><td className="p-3">{providerLabel(r.provider) ?? r.provider}{r.environment === "sandbox" && r.provider !== "manual" ? " (test)" : ""}</td>
                 <td className="p-3">{STATUS[r.status] ?? r.status}</td>
               </tr>))}</tbody>
           </table>
@@ -119,7 +120,7 @@ function OrderDetail({ id, onClose }: { id: string; onClose: () => void }) {
       <div className="mt-4 grid gap-x-8 md:grid-cols-2">
         <div>
           {row("Materiał", o.library_items?.title)}{row("Kwota", `${fmtPrice(o.amount)} (${o.currency})`)}{row("Status", STATUS[o.status] ?? o.status)}
-          {row("Metoda / operator", `${PROVIDER[o.provider] ?? o.provider}${online ? ` — środowisko ${o.environment === "sandbox" ? "testowe" : "produkcyjne"}` : ""}`)}
+          {row("Metoda / operator", `${providerLabel(o.provider)}${online ? ` — środowisko ${o.environment === "sandbox" ? "testowe" : "produkcyjne"}` : ""}`)}
           {row("Id transakcji operatora", o.provider_ref)}{row("Telefon", o.buyer_phone)}{row("Konto", o.user_id ? "Zakup na koncie" : "Gość (dostęp przez link i adres e-mail)")}
           {row("Dostęp do materiału", data.access ? "Przyznany" : o.access_revoked_at ? `Cofnięty ${fmtDate(o.access_revoked_at)}` : "Brak")}
         </div>
@@ -143,7 +144,7 @@ function OrderDetail({ id, onClose }: { id: string; onClose: () => void }) {
       {o.status === "paid" && (
         <div className="mt-5 border border-border/60 p-4">
           <p className="eyebrow text-gold">Rejestracja zwrotu</p>
-          <p className="mt-1 text-xs text-muted-foreground">Automatyczny zwrot nie jest jeszcze dostępny — {online ? `środki zwróć w panelu ${PROVIDER[o.provider]}` : "zwróć środki przelewem"}, a tutaj zarejestruj zwrot.</p>
+          <p className="mt-1 text-xs text-muted-foreground">Automatyczny zwrot nie jest jeszcze dostępny — {online ? `środki zwróć w panelu ${providerLabel(o.provider)}` : "zwróć środki przelewem"}, a tutaj zarejestruj zwrot.</p>
           <Input className="mt-2" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Przyczyna zwrotu" maxLength={500} />
           <Button className="mt-2" variant="outline" onClick={() => typed("refund_start", "Rozpocząć zwrot (status „Zwrot w toku”)?")} disabled={act.isPending || reason.trim().length < 3}>Rozpocznij zwrot</Button>
         </div>

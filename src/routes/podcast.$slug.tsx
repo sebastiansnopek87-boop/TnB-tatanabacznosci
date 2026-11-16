@@ -58,7 +58,7 @@ function EpisodePage() {
               <span className="text-gold">{cats.data?.find((c) => c.slug === e.category)?.name ?? e.category}</span>
               <span>{fmtDay(e.published_at)}</span>
               {d && <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" />{d}</span>}
-              <span className="inline-flex items-center gap-1">{e.access !== "public" && <Lock className="h-3 w-3" />}{EP_ACCESS[e.access]}</span>
+              <span className="inline-flex items-center gap-1">{e.access !== "public" && <Lock className="h-3 w-3" />}{EP_ACCESS[e.access as keyof typeof EP_ACCESS]}</span>
             </div>
             <h1 className="mt-3 break-words font-display text-[2rem] font-semibold uppercase leading-tight text-foreground sm:text-[2.6rem]">{e.episode_number ? `${String(e.episode_number).padStart(2, "0")}. ` : ""}{e.title}</h1>
             {e.subtitle && <p className="mt-2 text-[1.05rem] italic text-foreground/75">{e.subtitle}</p>}
