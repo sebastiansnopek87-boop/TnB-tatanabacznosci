@@ -94,7 +94,7 @@ function PlatformSettings() {
 
       <ModuleVisibilitySettings value={normalizeModuleVisibility(data.settings.module_visibility)} canEdit={!ro} />
 
-      <VisualEffectsSettings value={(data.settings as any).visual_effects} canEdit={!ro} />
+      <VisualEffectsSettings value={data.settings.visual_effects} canEdit={!ro} />
 
       <Section title="Podstawowe informacje" hint="Nazwa pojawia się w stopce strony i na ekranie przerwy technicznej.">
         <div className="space-y-2"><Label htmlFor="pn">Nazwa platformy</Label>
