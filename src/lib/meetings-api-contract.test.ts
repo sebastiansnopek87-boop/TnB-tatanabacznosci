@@ -19,16 +19,16 @@ const token = "00000000-0000-4000-8000-000000000003";
 beforeEach(() => invoke.mockReset().mockResolvedValue({ data: { ok: true }, error: null }));
 
 describe("meetings SPA contract", () => {
-  it("routes all seventeen public, user and admin actions through tnb-meetings", async () => {
+  it("routes all sixteen public, user and admin actions through tnb-meetings", async () => {
     const meeting = {
-      id: null, slug: "spotkanie-testowe", title: "Spotkanie testowe", kind: "online",
+      id: null, slug: "spotkanie-testowe", title: "Spotkanie testowe", kind: "online" as const,
       summary: "Opis", description: "Opis dłuższy", rules: "", starts_at: "2026-12-01T10:00:00Z",
       ends_at: null, location: "", location_public: false, capacity: null, registration_open: true,
       requires_login: false, requires_approval: false, online_link: "", host: "", venue_name: "",
       address: "", map_url: "", equipment: "", fee_info: "", organizer_contact: "",
       cancellation_policy: "", is_outdoor: false, route_length: "", route_duration: "",
-      difficulty: "", meeting_point: "", preparation: "", org_notes: "", join_open_minutes: 0,
-      user_can_cancel: true, recording_url: "", recording_access: "participants",
+      difficulty: "" as const, meeting_point: "", preparation: "", org_notes: "", join_open_minutes: 0,
+      user_can_cancel: true, recording_url: "", recording_access: "participants" as const,
     };
     const actions = [
       listMeetings(),
