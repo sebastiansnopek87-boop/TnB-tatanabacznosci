@@ -139,25 +139,20 @@ function AuthPage() {
   async function oauth(provider: "google" | "apple") {
     if (busy) return;
     setMsg(null); setBusy(true);
-    const { error } = await supabase.auth.signInWithOAuth({
+    const result = await supabase.auth.signInWithOAuth({
       provider,
       options: { redirectTo: `${window.location.origin}/auth` },
-    }).then(({ error }) => ({ error, redirected: !error })).catch((cause: unknown) => ({
+    }).catch((cause: unknown) => ({
       error: cause instanceof Error ? cause : new Error(String(cause)),
-      redirected: false,
-    })).then(({ error: oauthError, redirected }) => {
-      if (oauthError) return { error: oauthError, redirected: false };
-      return { error: null, redirected };
-    });
-    const res = { error, redirected: !error };
+    }));
     setBusy(false);
-    if (res.error) {
-      const cancelled = /cancel|closed|denied/i.test(String((res.error as Error).message ?? res.error));
+    if (result.error) {
+      const cancelled = /cancel|closed|denied/i.test(String(result.error.message ?? result.error));
       return setMsg({ tone: cancelled ? "info" : "error", text: cancelled ? "Logowanie zostało anulowane." : "Nie udało się zalogować. Spróbuj ponownie." });
     }
-    if (res.redirected) return;
-    goAfter();
+    return;
   }
+
 
   const social = (
     <div className="space-y-3">
