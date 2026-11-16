@@ -138,3 +138,5 @@
 - [x] Asystent redakcyjny AI — dodano test kontraktu 15 akcji `tnb-editor-ai`; sprawdza zgodność SPA/legacy/Edge, bramkę superadmin, schematy wejścia i filtrowanie danych osobowych. Nie uruchamiano zewnętrznego dostawcy AI ani rzeczywistych analiz.
 
 - [x] Spotkania — dodano test kontraktu 16 akcji `tnb-meetings`; obejmuje publiczne odczyty, operacje zalogowanego użytkownika, panel admina, zgody, antyspam i limity uploadu. Test nie tworzy rezerwacji ani nie uruchamia powiadomień.
+
+- [x] Podcast — dodano test kontraktu 11 akcji `tnb-podcast`; obejmuje anonimowe odczyty publiczne, wymóg sesji dla panelu, błędy Edge, dostęp premium/admin do audio i signed URL. Test nie publikuje odcinków ani nie przesyła plików.
