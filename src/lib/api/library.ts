@@ -13,6 +13,7 @@ async function invokeLibrary<T>(action: string, data: Record<string, any>): Prom
     }
     throw new Error(error.message || "Nie udało się połączyć z usługą Biblioteki.");
   }
+  if (result == null) throw new Error("Usługa Biblioteki zwróciła pustą odpowiedź.");
   return result as T;
 }
 
