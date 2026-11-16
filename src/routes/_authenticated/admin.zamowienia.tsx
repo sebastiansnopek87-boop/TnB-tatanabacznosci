@@ -151,7 +151,7 @@ function OrderDetail({ id, onClose }: { id: string; onClose: () => void }) {
       {o.status === "refund_pending" && (
         <div className="mt-5 border border-border/60 p-4">
           <p className="eyebrow text-gold">Zakończenie zwrotu</p>
-          <p className="mt-1 text-xs text-muted-foreground">Zakończ dopiero, gdy zwrot został wykonany {online ? `w panelu ${PROVIDER[o.provider]}` : "przelewem"}.</p>
+          <p className="mt-1 text-xs text-muted-foreground">Zakończ dopiero, gdy zwrot został wykonany {online ? `w panelu ${o.provider ? PROVIDER[o.provider] ?? o.provider : "operator płatności"}` : "przelewem"}.</p>
           <label className="mt-2 flex items-center gap-2"><input type="checkbox" checked={revoke} onChange={(e) => setRevoke(e.target.checked)} /> Cofnij kupującemu dostęp do materiału</label>
           <Button className="mt-2" variant="outline" onClick={() => typed("refund_complete", revoke ? "Zakończyć zwrot i COFNĄĆ dostęp?" : "Zakończyć zwrot i POZOSTAWIĆ dostęp?")} disabled={act.isPending}>Oznacz jako zwrócone</Button>
         </div>
