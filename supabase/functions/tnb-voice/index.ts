@@ -363,6 +363,43 @@ async function handle(s: Db, req: Request, raw: unknown) {
 }
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
+
+  // Meta redirects the browser to the existing site callback URL. Static hosting
+  // forwards that GET to this function; the single-use state remains the trust boundary.
+  if (req.method === "GET") {
+    const url = new URL(req.url);
+    const state = url.searchParams.get("state") ?? "";
+    const code = url.searchParams.get("code") ?? "";
+    let appOrigin = productionOrigin() ?? "https://tatanabacznosci.pl";
+    let db: ReturnType<typeof service> | null = null;
+    const back = (result: "polaczono" | "anulowano" | "blad") => {
+      const target = new URL("/admin/podcast", appOrigin);
+      target.searchParams.set("instagram", result);
+      target.hash = "instagram";
+      return new Response(null, { status: 302, headers: {
+        Location: target.toString(), "Cache-Control": "no-store", "Referrer-Policy": "no-referrer"
+      } });
+    };
+    try {
+      db = service();
+      if (state) {
+        const { data: pending } = await db.from("instagram_secret").select("oauth_redirect")
+          .eq("id", 1).eq("oauth_state", state).maybeSingle();
+        if (pending?.oauth_redirect) {
+          try { appOrigin = new URL(pending.oauth_redirect).origin; } catch { /* keep configured fallback */ }
+        }
+      }
+      if (url.searchParams.has("error") || !state || !code) return back("anulowano");
+      await handle(db, req, { action: "finishInstagramOAuth", data: { state, code } });
+      return back("polaczono");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Błąd OAuth Instagram";
+      console.error("tnb-voice OAuth callback:", message);
+      if (db) await logEvent(db, { type: "instagram_connect", objectKind: "instagram_source", result: "failed", detail: message.slice(0, 300) }).catch(() => {});
+      return back("blad");
+    }
+  }
+
   if (req.method !== "POST") return json({ message: "Niedozwolona metoda." }, 405);
   try {
     const s = service(), body = await req.json().catch(() => null);

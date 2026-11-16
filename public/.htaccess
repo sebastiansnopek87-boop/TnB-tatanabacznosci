@@ -1,5 +1,6 @@
 RewriteEngine On
 RewriteBase /
+RewriteRule ^api/public/instagram/callback/?$ https://pmdfiipontreuclfumdh.supabase.co/functions/v1/tnb-voice [R=302,L,QSA,NE]
 RewriteRule ^index\.html$ - [L]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
