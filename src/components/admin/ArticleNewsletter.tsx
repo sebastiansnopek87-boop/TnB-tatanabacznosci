@@ -40,7 +40,7 @@ export function ArticleNewsletter({ articleId, dirty }: { articleId: string; dir
       {o && <div className="space-y-1 border border-gold/40 p-4 text-sm">
         <h2 className="font-display text-lg font-semibold uppercase">Pochodzenie: Asystent AI</h2>
         <p className="text-muted-foreground">Przygotowano przy pomocy Asystenta AI · materiał {o.material_id?.slice(0, 8) ?? "—"} · wersja {o.version_n ?? "—"} · przekazano {o.handed_off_at ? new Date(o.handed_off_at).toLocaleString("pl-PL") : "—"}. Widoczne tylko w panelu.</p>
-        {o.tags?.length > 0 && <p>Tagi: {o.tags.join(", ")}</p>}
+        {(o.tags?.length ?? 0) > 0 && <p>Tagi: {o.tags.join(", ")}</p>}
         {o.cta && <p>Propozycja CTA: {o.cta}</p>}
         <p>Źródła AI: {(o.sources ?? []).length ? o.sources?.map((source) => source.title).join("; ") : "brak"}</p>
       </div>}
