@@ -1,8 +1,9 @@
 // Operator adapters: Przelewy24 (REST v1), Tpay (OpenAPI), PayU (REST v2.1).
 // Each adapter only talks to its own operator; the shared order logic lives in core.server.ts.
 // Secrets come from server env only; non-secret identifiers from payment_providers.
-import { createHash } from "node:crypto";
 import { Buffer } from "node:buffer";
+import { md5, p24NotifySign, p24RegisterSign, payuCheckSignature, safeEq, sha256, sha384, tpayMd5 } from "./signatures.ts";
+export { p24NotifySign, p24RegisterSign, payuCheckSignature, tpayMd5 } from "./signatures.ts";
 
 export type ProviderId = "p24" | "tpay" | "payu";
 export type Env = "sandbox" | "live";
@@ -14,15 +15,7 @@ export type CreateResult = { ok: true; redirectUrl: string; providerRef: string 
 // Normalized, signature-verified notification.
 export type Notice = { orderId: string | null; providerRef: string; amount: number; currency: string; outcome: "paid" | "failed" | "pending"; eventId: string };
 
-const sha384 = (s: string) => createHash("sha384").update(s, "utf8").digest("hex");
-const md5 = (s: string) => createHash("md5").update(s, "utf8").digest("hex");
-const sha256 = (s: string) => createHash("sha256").update(s, "utf8").digest("hex");
 const env = (k: string) => Deno.env.get(k) || "";
-function safeEq(a: string, b: string) {
-  if (!a || a.length !== b.length) return false;
-  let r = 0; for (let i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return r === 0;
-}
 
 // Required data per operator: [field, label, secret env name?]
 export const REQUIREMENTS: Record<ProviderId, { label: string; fields: { key: "merchant_id" | "pos_id" | "client_id"; label: string }[]; secrets: { name: string; label: string }[]; docs: string; refunds: string }> = {
@@ -68,12 +61,6 @@ async function timed(url: string, init: RequestInit) {
 // ---------------- Przelewy24 ----------------
 const p24Auth = (p: ProviderRow) => "Basic " + Buffer.from(`${p.pos_id}:${env("P24_API_KEY")}`).toString("base64");
 
-export function p24RegisterSign(sessionId: string, merchantId: number, amount: number, currency: string, crc: string) {
-  return sha384(JSON.stringify({ sessionId, merchantId, amount, currency, crc }));
-}
-export function p24NotifySign(b: Record<string, unknown>, crc: string) {
-  return sha384(JSON.stringify({ merchantId: b["merchantId"], posId: b["posId"], sessionId: b["sessionId"], amount: b["amount"], originAmount: b["originAmount"], currency: b["currency"], orderId: b["orderId"], methodId: b["methodId"], statement: b["statement"], crc }));
-}
 
 async function p24Create(p: ProviderRow, i: CreateInput): Promise<CreateResult> {
   const merchantId = Number(p.merchant_id);
@@ -116,9 +103,6 @@ async function tpayToken(p: ProviderRow) {
   return j?.access_token ?? null;
 }
 
-export function tpayMd5(f: Record<string, string>, code: string) {
-  return md5(`${f["id"] ?? ""}${f["tr_id"] ?? ""}${f["tr_amount"] ?? ""}${f["tr_crc"] ?? ""}${code}`);
-}
 
 async function tpayCreate(p: ProviderRow, i: CreateInput): Promise<CreateResult> {
   const t = await tpayToken(p); if (!t) return { ok: false, reason: "tpay_auth" };
@@ -152,12 +136,6 @@ async function payuToken(p: ProviderRow) {
   return j?.access_token ?? null;
 }
 
-export function payuCheckSignature(raw: string, header: string, secondKey: string) {
-  const parts = Object.fromEntries(header.split(";").map((x) => x.split("=").map((s) => s.trim()) as [string, string]));
-  const alg = (parts["algorithm"] ?? "MD5").toUpperCase();
-  const expected = alg === "SHA-256" || alg === "SHA256" ? sha256(raw + secondKey) : alg === "MD5" ? md5(raw + secondKey) : "";
-  return !!expected && safeEq(String(parts["signature"] ?? "").toLowerCase(), expected);
-}
 
 async function payuCreate(p: ProviderRow, i: CreateInput): Promise<CreateResult> {
   const t = await payuToken(p); if (!t) return { ok: false, reason: "payu_auth" };
