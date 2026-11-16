@@ -74,7 +74,8 @@
 - [x] Library administration: list/edit/status, signed downloads, cover previews, secure file upload and PDF watermark processing use `tnb-library-admin`; uploads use signed Storage upload URLs followed by server-side validation/finalization.
 - [x] Library AI recommender invokes the public `tnb-recommend` Edge Function directly.
 - [x] Removed remaining `useServerFn` wrappers from the consultation history/cancellation UI and free-library request/redeem UI; route and custom-component inventory now has no remaining `useServerFn` call sites.
-- [ ] Move remaining SSR/API route handlers (OAuth callbacks, cron, signed media, payment callbacks) to explicit Supabase Edge Function or hosting-compatible endpoints while preserving webhook signature verification and private-media access checks.
+- [x] Payment callbacks: `tnb-orders` sends new provider notifications directly to `tnb-payments?provider=...`; P24/Tpay/PayU signature checks and provider confirmation remain in the Edge Function. The live database had no orders for these providers, so the three obsolete TanStack webhook routes were removed.
+- [ ] Move remaining SSR/API route handlers (OAuth callback, cron jobs, signed media) to explicit Supabase Edge Function or hosting-compatible endpoints while preserving private-media access checks.
 - [ ] Remove TanStack Start/Nitro server runtime only after no production path depends on it; replace with a static Vite React SPA and configure CyberFolks routing/fallbacks.
 - [ ] Run production build, typecheck, lint, unit tests, route smoke tests and authenticated E2E across guest/user/admin/superadmin; validate on CyberFolks staging before production cutover.
 - [ ] Reconcile the generated Supabase types and migration inventory with the live project; no database schema or production data changes were made in this continuation.
