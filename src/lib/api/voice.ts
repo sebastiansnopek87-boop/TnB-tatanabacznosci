@@ -43,7 +43,7 @@ async function invokeVoice<T>(action: string, data?: Data, options: InvokeOption
   if (!token && !options.allowAnonymous) throw new Error("Sesja wygasła. Zaloguj się ponownie.");
   const body = data === undefined ? { action } : { action, data };
   const headers: Record<string, string> = {};
-  if (token) headers.Authorization = "Bearer " + token;
+  if (token) headers["Authorization"] = "Bearer " + token;
   const { data: result, error } = await supabase.functions.invoke<T>("tnb-voice", { body, headers });
   if (error) {
     const context = (error as { context?: unknown }).context;
