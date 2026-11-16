@@ -1,0 +1,175 @@
+// Notification registry: events, default templates and variables. Pure data,
+// safe for client and server. Stored overrides live in email_templates;
+// enable/disable overrides in notification_rules (or email_settings for the
+// two legacy admin toggles).
+
+export type VarDef = { key: string; label: string; sample: string; sensitive?: boolean; url?: boolean };
+
+export const VARIABLES: VarDef[] = [
+  { key: "imie", label: "Imię", sample: "Jan" },
+  { key: "nazwisko", label: "Nazwisko", sample: "Kowalski" },
+  { key: "email", label: "Adres e-mail", sample: "jan@example.com" },
+  { key: "nazwa_platformy", label: "Nazwa platformy (automatycznie)", sample: "Tata Na Baczności" },
+  { key: "tytul_materialu", label: "Tytuł materiału", sample: "Ojciec w czasach próby" },
+  { key: "kwota", label: "Kwota", sample: "49,00 zł" },
+  { key: "numer_zamowienia", label: "Numer zamówienia", sample: "TNB-2026-0042" },
+  { key: "link_do_materialu", label: "Link do materiału", sample: "https://tatanabacznosci.pl/biblioteka/przyklad", url: true, sensitive: true },
+  { key: "link_do_logowania", label: "Link do logowania", sample: "https://tatanabacznosci.pl/auth", url: true },
+  { key: "link_do_potwierdzenia", label: "Link do potwierdzenia", sample: "https://tatanabacznosci.pl/potwierdz/przyklad", url: true, sensitive: true },
+  { key: "data_spotkania", label: "Data spotkania", sample: "12.10.2026" },
+  { key: "godzina_spotkania", label: "Godzina spotkania", sample: "19:00" },
+  { key: "link_do_spotkania", label: "Link do spotkania", sample: "https://meet.example.com/abc", url: true, sensitive: true },
+  { key: "temat_wiadomosci", label: "Temat wiadomości", sample: "Pytanie o spotkania" },
+  { key: "tytul_artykulu", label: "Tytuł artykułu", sample: "Nie każdy, kto milczy, jest silny" },
+  { key: "waznosc_linku", label: "Ważność linku", sample: "48 godzin" },
+  { key: "link_do_panelu", label: "Link do panelu", sample: "https://tatanabacznosci.pl/admin", url: true },
+  { key: "opis_materialu", label: "Krótki opis materiału", sample: "O sile, której nie trzeba udowadniać." },
+  { key: "temat_newslettera", label: "Temat newslettera", sample: "Nowy tekst: o milczeniu ojców" },
+  { key: "preheader", label: "Preheader (podgląd w skrzynce)", sample: "Kilka myśli na spokojny wieczór." },
+  { key: "wprowadzenie", label: "Wprowadzenie newslettera", sample: "Dzień dobry," },
+  { key: "zajawka", label: "Zajawka artykułu", sample: "Krótko o tym, czego dotyczy nowy tekst." },
+  { key: "zakonczenie", label: "Zakończenie newslettera", sample: "Do przeczytania — Sebastian" },
+  { key: "link_do_artykulu", label: "Link do artykułu", sample: "https://tatanabacznosci.pl/artykuly/przyklad", url: true },
+  { key: "link_wypisu", label: "Link do wypisania z newslettera", sample: "https://tatanabacznosci.pl/newsletter/wypisz?token=przyklad", url: true, sensitive: true },
+];
+export const VAR_MAP: Record<string, VarDef> = Object.fromEntries(VARIABLES.map((v) => [v.key, v]));
+export const AUTO_VARS = ["nazwa_platformy"];
+
+export type TemplateDef = { key: string; name: string; subject: string; html: string; text: string; required: string[] };
+
+type Spec = { subject: string; heading: string; lines: string[]; cta?: { label: string; v: string } };
+
+function build(key: string, name: string, s: Spec): TemplateDef {
+  const html = [
+    `<h1>${s.heading}</h1>`,
+    ...s.lines.map((l) => `<p>${l}</p>`),
+    s.cta ? `<p><a class="btn" href="{{${s.cta.v}}}">${s.cta.label}</a></p>` : "",
+  ].filter(Boolean).join("\n");
+  const text = [s.heading, "", ...s.lines, ...(s.cta ? ["", `${s.cta.label}: {{${s.cta.v}}}`] : []), "", "— {{nazwa_platformy}}"].join("\n");
+  const required = Array.from(new Set((s.subject + html).match(/\{\{\s*([a-z_]+)\s*\}\}/g)?.map((m) => m.replace(/[{}\s]/g, "")) ?? []))
+    .filter((k) => !AUTO_VARS.includes(k));
+  return { key, name, subject: s.subject, html, text, required };
+}
+
+export type Module = "newsletter" | "konto" | "biblioteka" | "zamowienia" | "spotkania" | "rozmowy" | "formularze" | "system";
+export const MODULE_LABEL: Record<Module, string> = {
+  newsletter: "Newsletter",
+  konto: "Konto użytkownika", biblioteka: "Biblioteka i podcast", zamowienia: "Materiały premium i zamówienia",
+  spotkania: "Spotkania", rozmowy: "Rozmowy 1:1", formularze: "Społeczność i formularze", system: "System",
+};
+
+// integrated = the module really emits this event; pending = template ready,
+// module does not call it yet; auth = sent by the built-in sign-in system.
+export type Integration = "integrated" | "pending" | "auth";
+export type EventDef = { key: string; module: Module; name: string; description: string; recipient: "user" | "admin"; integration: Integration };
+
+const E = (key: string, module: Module, name: string, description: string, recipient: "user" | "admin", integration: Integration, spec: Spec) =>
+  ({ ev: { key, module, name, description, recipient, integration } as EventDef, tpl: build(key, name, spec) });
+
+const hi = "Dzień dobry {{imie}},";
+const DEFS_RAW = [
+  E("account_registered", "konto", "Rejestracja", "Nowe konto zostało założone.", "user", "auth",
+    { subject: "Witamy w {{nazwa_platformy}}", heading: "Dziękujemy za rejestrację", lines: [hi, "Twoje konto zostało utworzone. Potwierdź adres e-mail, aby z niego korzystać."], cta: { label: "Potwierdź adres e-mail", v: "link_do_potwierdzenia" } }),
+  E("account_email_confirm", "konto", "Potwierdzenie adresu e-mail", "Prośba o potwierdzenie adresu.", "user", "auth",
+    { subject: "Potwierdź adres e-mail", heading: "Potwierdź adres e-mail", lines: [hi, "Kliknij przycisk, aby potwierdzić adres {{email}}."], cta: { label: "Potwierdzam", v: "link_do_potwierdzenia" } }),
+  E("account_welcome", "konto", "Powitanie po aktywacji konta", "Wysyłane po potwierdzeniu adresu.", "user", "pending",
+    { subject: "Twoje konto jest aktywne", heading: "Witaj na pokładzie", lines: [hi, "Twoje konto w {{nazwa_platformy}} jest aktywne."], cta: { label: "Zaloguj się", v: "link_do_logowania" } }),
+  E("account_password_reset", "konto", "Reset hasła", "Link do ustawienia nowego hasła.", "user", "auth",
+    { subject: "Ustaw nowe hasło", heading: "Reset hasła", lines: [hi, "Otrzymaliśmy prośbę o zmianę hasła. Jeśli to nie Ty, zignoruj tę wiadomość."], cta: { label: "Ustaw nowe hasło", v: "link_do_potwierdzenia" } }),
+  E("account_email_change", "konto", "Zmiana adresu e-mail", "Potwierdzenie nowego adresu.", "user", "auth",
+    { subject: "Potwierdź zmianę adresu e-mail", heading: "Zmiana adresu e-mail", lines: [hi, "Potwierdź, że chcesz używać adresu {{email}}."], cta: { label: "Potwierdź zmianę", v: "link_do_potwierdzenia" } }),
+
+  E("library_access_granted", "biblioteka", "Przyznanie dostępu do materiału", "Administrator przyznał dostęp.", "user", "pending",
+    { subject: "Masz dostęp: {{tytul_materialu}}", heading: "Dostęp przyznany", lines: [hi, "Otrzymałeś dostęp do materiału „{{tytul_materialu}}”."], cta: { label: "Otwórz materiał", v: "link_do_materialu" } }),
+  E("library_purchase", "biblioteka", "Zakup materiału", "Złożono zamówienie na materiał.", "user", "pending",
+    { subject: "Zamówienie {{numer_zamowienia}}", heading: "Dziękujemy za zamówienie", lines: [hi, "Zamówiłeś „{{tytul_materialu}}” za {{kwota}}. Numer zamówienia: {{numer_zamowienia}}."] }),
+  E("library_payment_confirmed", "biblioteka", "Potwierdzenie płatności", "Wpłata potwierdzona przez administratora.", "user", "pending",
+    { subject: "Płatność potwierdzona — {{numer_zamowienia}}", heading: "Płatność potwierdzona", lines: [hi, "Otrzymaliśmy wpłatę {{kwota}} za „{{tytul_materialu}}”."], cta: { label: "Otwórz materiał", v: "link_do_materialu" } }),
+  E("library_payment_failed", "biblioteka", "Nieudana płatność", "Płatność nie została zaksięgowana.", "user", "pending",
+    { subject: "Problem z płatnością — {{numer_zamowienia}}", heading: "Płatność nieudana", lines: [hi, "Nie udało się zaksięgować płatności {{kwota}} za zamówienie {{numer_zamowienia}}."] }),
+  E("library_new_material", "biblioteka", "Nowy materiał dla użytkownika", "Udostępnienie nowego materiału (wymaga włączenia).", "user", "pending",
+    { subject: "Nowy materiał: {{tytul_materialu}}", heading: "Nowy materiał", lines: [hi, "Udostępniliśmy Ci „{{tytul_materialu}}”."], cta: { label: "Zobacz", v: "link_do_materialu" } }),
+  E("library_free_material", "biblioteka", "Bezpłatny materiał na e-mail", "Link do pobrania bezpłatnego materiału po wypełnieniu formularza.", "user", "integrated",
+    { subject: "Twój bezpłatny materiał: {{tytul_materialu}}", heading: "Twój materiał jest gotowy", lines: [hi, "dziękujemy za zainteresowanie materiałem „{{tytul_materialu}}”.", "{{opis_materialu}}", "Plik pobierzesz przyciskiem poniżej. Link prowadzi tylko do tego materiału i jest ważny {{waznosc_linku}}.", "Jeśli to nie Ty wypełniłeś formularz, zignoruj tę wiadomość.", "Zespół TATA NA BACZNOŚCI · kontakt@tatanabacznosci.pl"], cta: { label: "Pobierz PDF", v: "link_do_materialu" } }),
+
+
+  E("order_created", "zamowienia", "Utworzenie zamówienia", "Potwierdzenie złożenia zamówienia (przelew lub operator płatności).", "user", "integrated",
+    { subject: "Zamówienie {{numer_zamowienia}} przyjęte", heading: "Zamówienie przyjęte", lines: [hi, "Przyjęliśmy zamówienie {{numer_zamowienia}} na kwotę {{kwota}}. Dostęp do materiału „{{tytul_materialu}}” otrzymasz po potwierdzeniu płatności."], cta: { label: "Status zamówienia", v: "link_do_materialu" } }),
+  E("order_paid", "zamowienia", "Potwierdzenie płatności", "Wysyłane dopiero po potwierdzeniu wpłaty na serwerze.", "user", "integrated",
+    { subject: "Płatność za {{numer_zamowienia}} potwierdzona", heading: "Dziękujemy za wpłatę", lines: [hi, "Potwierdziliśmy wpłatę {{kwota}} za zamówienie {{numer_zamowienia}}."] }),
+  E("order_access_delivered", "zamowienia", "Przekazanie dostępu", "Dostęp do zakupionej treści.", "user", "integrated",
+    { subject: "Twój dostęp: {{tytul_materialu}}", heading: "Materiał gotowy", lines: [hi, "„{{tytul_materialu}}” czeka na Ciebie."], cta: { label: "Otwórz materiał", v: "link_do_materialu" } }),
+  E("order_payment_failed", "zamowienia", "Nieudana płatność", "Operator zgłosił nieudaną płatność.", "user", "integrated",
+    { subject: "Płatność za {{numer_zamowienia}} nie powiodła się", heading: "Płatność nieudana", lines: [hi, "Płatność {{kwota}} za zamówienie {{numer_zamowienia}} nie została zrealizowana. Nie przyznaliśmy dostępu i nie pobraliśmy środków przez naszą platformę. Możesz spróbować ponownie na stronie materiału."] }),
+  E("order_guest_access", "zamowienia", "Odbiór materiału (zakup bez konta)", "Instrukcja odbioru materiału kupionego jako gość.", "user", "integrated",
+    { subject: "Odbierz materiał: {{tytul_materialu}}", heading: "Twój materiał jest gotowy", lines: [hi, "Dziękujemy za zakup „{{tytul_materialu}}” (zamówienie {{numer_zamowienia}}).", "Materiał otworzysz przyciskiem poniżej — to Twój prywatny link, nie udostępniaj go. Możesz też założyć konto na adres {{email}}: zakup pojawi się wtedy w Moim TNB.", "Jeśli zgubisz link, poproś o nowy na stronie materiału, podając adres e-mail i numer zamówienia."], cta: { label: "Otwórz materiał", v: "link_do_materialu" } }),
+  E("order_cancelled", "zamowienia", "Anulowanie zamówienia", "Zamówienie zostało anulowane.", "user", "integrated",
+    { subject: "Zamówienie {{numer_zamowienia}} anulowane", heading: "Zamówienie anulowane", lines: [hi, "Zamówienie {{numer_zamowienia}} zostało anulowane."] }),
+  E("order_refunded", "zamowienia", "Zwrot płatności", "Zwrot środków za zamówienie.", "user", "integrated",
+    { subject: "Zwrot za {{numer_zamowienia}}", heading: "Zwrot płatności", lines: [hi, "Zwróciliśmy {{kwota}} za zamówienie {{numer_zamowienia}}."] }),
+  E("order_admin_new", "zamowienia", "Nowe zamówienie (administrator)", "Powiadomienie administratora o nowym zamówieniu.", "admin", "integrated",
+    { subject: "Nowe zamówienie {{numer_zamowienia}}", heading: "Nowe zamówienie", lines: ["Złożono zamówienie {{numer_zamowienia}} na „{{tytul_materialu}}” ({{kwota}})."], cta: { label: "Otwórz panel", v: "link_do_panelu" } }),
+
+  E("meeting_registration", "spotkania", "Zgłoszenie na spotkanie", "Potwierdzenie przyjęcia zgłoszenia.", "user", "integrated",
+    { subject: "Zgłoszenie przyjęte — {{data_spotkania}}", heading: "Zgłoszenie przyjęte", lines: [hi, "Przyjęliśmy zgłoszenie na spotkanie {{data_spotkania}} o {{godzina_spotkania}}."] }),
+  E("meeting_approved", "spotkania", "Potwierdzenie udziału", "Zgłoszenie zatwierdzone.", "user", "integrated",
+    { subject: "Do zobaczenia {{data_spotkania}}", heading: "Udział potwierdzony", lines: [hi, "Twój udział w spotkaniu {{data_spotkania}} o {{godzina_spotkania}} jest potwierdzony."], cta: { label: "Dołącz do spotkania", v: "link_do_spotkania" } }),
+  E("meeting_rejected", "spotkania", "Odrzucenie zgłoszenia", "Zgłoszenie odrzucone.", "user", "integrated",
+    { subject: "Informacja o zgłoszeniu", heading: "Zgłoszenie nieprzyjęte", lines: [hi, "Niestety nie możemy przyjąć zgłoszenia na spotkanie {{data_spotkania}}."] }),
+  E("meeting_rescheduled", "spotkania", "Zmiana terminu spotkania", "Nowy termin spotkania.", "user", "integrated",
+    { subject: "Nowy termin spotkania", heading: "Zmiana terminu", lines: [hi, "Spotkanie odbędzie się {{data_spotkania}} o {{godzina_spotkania}}."] }),
+  E("meeting_changed", "spotkania", "Zmiana miejsca spotkania", "Zmiana lokalizacji lub punktu zbiórki.", "user", "integrated",
+    { subject: "Zmiana miejsca spotkania {{data_spotkania}}", heading: "Zmiana miejsca", lines: [hi, "Zmieniły się szczegóły miejsca spotkania {{data_spotkania}} o {{godzina_spotkania}}. Aktualne informacje znajdziesz na stronie zgłoszenia."], cta: { label: "Zobacz szczegóły", v: "link_do_spotkania" } }),
+  E("meeting_cancelled", "spotkania", "Odwołanie spotkania", "Spotkanie odwołane.", "user", "integrated",
+    { subject: "Spotkanie odwołane", heading: "Spotkanie odwołane", lines: [hi, "Spotkanie zaplanowane na {{data_spotkania}} zostało odwołane."] }),
+  E("meeting_reminder", "spotkania", "Przypomnienie o spotkaniu", "Przed nadchodzącym spotkaniem.", "user", "pending",
+    { subject: "Przypomnienie: spotkanie {{data_spotkania}}", heading: "Przypomnienie", lines: [hi, "Przypominamy o spotkaniu {{data_spotkania}} o {{godzina_spotkania}}."], cta: { label: "Dołącz", v: "link_do_spotkania" } }),
+
+  E("booking_created", "rozmowy", "Utworzenie rezerwacji", "Rezerwacja rozmowy 1:1.", "user", "integrated",
+    { subject: "Rezerwacja rozmowy {{data_spotkania}}", heading: "Rezerwacja przyjęta", lines: [hi, "Zarezerwowałeś rozmowę 1:1 na {{data_spotkania}}, godz. {{godzina_spotkania}}."] }),
+  E("booking_confirmed", "rozmowy", "Potwierdzenie rezerwacji", "Rozmowa potwierdzona.", "user", "pending",
+    { subject: "Rozmowa potwierdzona", heading: "Rozmowa potwierdzona", lines: [hi, "Rozmowa 1:1 odbędzie się {{data_spotkania}} o {{godzina_spotkania}}."], cta: { label: "Link do rozmowy", v: "link_do_spotkania" } }),
+  E("booking_rescheduled", "rozmowy", "Zmiana terminu rozmowy", "Nowy termin rozmowy.", "user", "pending",
+    { subject: "Nowy termin rozmowy", heading: "Zmiana terminu", lines: [hi, "Nowy termin rozmowy: {{data_spotkania}}, {{godzina_spotkania}}."] }),
+  E("booking_cancelled", "rozmowy", "Odwołanie rozmowy", "Rozmowa odwołana.", "user", "integrated",
+    { subject: "Rozmowa odwołana", heading: "Rozmowa odwołana", lines: [hi, "Rozmowa zaplanowana na {{data_spotkania}} została odwołana."] }),
+  E("booking_reminder", "rozmowy", "Przypomnienie przed rozmową", "Przed zaplanowaną rozmową.", "user", "pending",
+    { subject: "Przypomnienie o rozmowie", heading: "Przypomnienie", lines: [hi, "Twoja rozmowa 1:1: {{data_spotkania}}, {{godzina_spotkania}}."], cta: { label: "Link do rozmowy", v: "link_do_spotkania" } }),
+
+  E("contact_message", "formularze", "Nowa wiadomość z formularza kontaktowego", "Powiadomienie administratora.", "admin", "integrated",
+    { subject: "Nowa wiadomość: {{temat_wiadomosci}}", heading: "Nowa wiadomość z Kontaktu", lines: ["Od: {{imie}} ({{email}})", "Temat: {{temat_wiadomosci}}"], cta: { label: "Otwórz skrzynkę", v: "link_do_panelu" } }),
+  E("voice_submission_admin", "formularze", "Nowe zgłoszenie do Głosu TNB", "Powiadomienie administratora.", "admin", "integrated",
+    { subject: "Głos TNB: nowa historia od {{imie}}", heading: "Nowe zgłoszenie do Głosu TNB", lines: ["Od: {{imie}} ({{email}})", "Temat: {{temat_wiadomosci}}"], cta: { label: "Otwórz zgłoszenia", v: "link_do_panelu" } }),
+  E("newsletter_signup", "formularze", "Nowy zapis do newslettera", "Powiadomienie administratora.", "admin", "integrated",
+    { subject: "Nowy zapis do newslettera", heading: "Nowy subskrybent", lines: ["Ktoś zapisał się do newslettera {{nazwa_platformy}}."], cta: { label: "Otwórz panel", v: "link_do_panelu" } }),
+  E("consult_request_admin", "formularze", "Nowe zgłoszenie do konsultacji", "Powiadomienie administratora.", "admin", "integrated",
+    { subject: "Nowe zgłoszenie: {{imie}}", heading: "Nowe zgłoszenie do konsultacji", lines: ["{{imie}} ({{email}}) zgłosił się na {{data_spotkania}}, {{godzina_spotkania}}."], cta: { label: "Otwórz panel", v: "link_do_panelu" } }),
+  E("community_reply", "formularze", "Odpowiedź w Społeczności", "Odpowiedź na post użytkownika.", "user", "pending",
+    { subject: "Nowa odpowiedź na Twój post", heading: "Ktoś odpowiedział", lines: [hi, "Pojawiła się odpowiedź na Twój post w Społeczności."], cta: { label: "Zaloguj się", v: "link_do_logowania" } }),
+  E("report_admin_new", "formularze", "Nowe zgłoszenie moderacyjne", "Powiadomienie administratora.", "admin", "pending",
+    { subject: "Nowe zgłoszenie w Społeczności", heading: "Nowe zgłoszenie", lines: ["W Społeczności zgłoszono treść do sprawdzenia."], cta: { label: "Otwórz panel", v: "link_do_panelu" } }),
+
+  E("article_comment_confirm", "formularze", "Potwierdzenie komentarza gościa", "Link potwierdzający komentarz dodany bez konta.", "user", "integrated",
+    { subject: "Potwierdź swój komentarz w TATA NA BACZNOŚCI", heading: "Potwierdź swój komentarz", lines: ["Cześć {{imie}},", "otrzymaliśmy Twój komentarz pod artykułem „{{tytul_artykulu}}”.", "Aby potwierdzić, że to Ty przesłałeś komentarz i że chcesz opublikować go na portalu TATA NA BACZNOŚCI, kliknij poniższy przycisk. Link jest jednorazowy i ważny {{waznosc_linku}}.", "Jeśli to nie Ty wysłałeś komentarz, zignoruj tę wiadomość. Komentarz nie zostanie opublikowany.", "Dziękujemy za udział w rozmowie.<br>Zespół TATA NA BACZNOŚCI"], cta: { label: "Potwierdzam komentarz", v: "link_do_potwierdzenia" } }),
+
+  E("newsletter_article", "newsletter", "Newsletter z artykułem", "Zapowiedź opublikowanego artykułu — wysyłana tylko po ręcznym zatwierdzeniu w module Artykuły.", "user", "integrated",
+    { subject: "{{temat_newslettera}}", heading: "{{tytul_artykulu}}", lines: ["{{wprowadzenie}}", "{{zajawka}}", "{{zakonczenie}}"], cta: { label: "PRZECZYTAJ ARTYKUŁ", v: "link_do_artykulu" } }),
+
+  E("test_message", "system", "Wiadomość testowa", "Sprawdzenie konfiguracji wysyłki.", "user", "integrated",
+    { subject: "Wiadomość testowa — {{nazwa_platformy}}", heading: "Test wysyłki", lines: [hi, "To jest wiadomość testowa z panelu {{nazwa_platformy}}."] }),
+];
+
+// Newsletter: hidden preheader + unsubscribe footer (every subscriber gets a personal link).
+const DEFS = DEFS_RAW.map((d) => d.ev.key !== "newsletter_article" ? d : { ev: d.ev, tpl: { ...d.tpl,
+  html: `<span style="display:none;max-height:0;overflow:hidden;">{{preheader}}</span>\n${d.tpl.html}\n<p>Otrzymujesz tę wiadomość, bo zapisałeś się do newslettera. <a href="{{link_wypisu}}">Wypisz się</a></p>`,
+  text: `${d.tpl.text}\n\nWypisz się z newslettera: {{link_wypisu}}`, required: [...d.tpl.required, "preheader", "link_wypisu"] } });
+
+export const EVENTS: EventDef[] = DEFS.map((d) => d.ev);
+export const EVENT_MAP: Record<string, EventDef> = Object.fromEntries(EVENTS.map((e) => [e.key, e]));
+export const DEFAULT_TEMPLATES: Record<string, TemplateDef> = Object.fromEntries(DEFS.map((d) => [d.tpl.key, d.tpl]));
+
+export const INTEGRATION_LABEL: Record<Integration, string> = {
+  integrated: "Zintegrowane", pending: "Oczekuje na integrację", auth: "Obsługiwane przez system logowania",
+};
+
+export const sampleVars = () => Object.fromEntries(VARIABLES.map((v) => [v.key, v.sample]));
