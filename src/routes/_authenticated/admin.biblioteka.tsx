@@ -285,8 +285,6 @@ const REQ_STATUS: Record<string, string> = {
 };
 
 function History({ items }: { items: { id: string; title: string }[] }) {
-  const listFn = useServerFn(adminListLibraryRequests);
-  const eraseFn = useServerFn(adminEraseLibraryRequest);
   const qc = useQueryClient();
   const [itemId, setItemId] = useState<string | null>(null);
   const [emailIn, setEmailIn] = useState(""); const [email, setEmail] = useState("");
@@ -294,10 +292,10 @@ function History({ items }: { items: { id: string; title: string }[] }) {
   const [st, setSt] = useState<string | null>(null);
   const [open, setOpen] = useState<string | null>(null);
   useEffect(() => { const t = setTimeout(() => setEmail(emailIn), 300); return () => clearTimeout(t); }, [emailIn]);
-  const q = useQuery({ queryKey: ["admin-lib-req", itemId, email, mode, st], queryFn: () => listFn({ data: { itemId, email, mode, status: st } }) });
+  const q = useQuery({ queryKey: ["admin-lib-req", itemId, email, mode, st], queryFn: () => adminListLibraryRequests({ data: { itemId, email, mode, status: st } }) });
   const erase = async (id: string) => {
     if (!confirm("Usunąć dane osobowe z tego zgłoszenia? Zostanie tylko anonimowy wpis.")) return;
-    try { await eraseFn({ data: { id } }); toast.success("Dane usunięte."); qc.invalidateQueries({ queryKey: ["admin-lib-req"] }); } catch (e) { toast.error(errMsg(e)); }
+    try { await adminEraseLibraryRequest({ data: { id } }); toast.success("Dane usunięte."); qc.invalidateQueries({ queryKey: ["admin-lib-req"] }); } catch (e) { toast.error(errMsg(e)); }
   };
   return (
     <div>
