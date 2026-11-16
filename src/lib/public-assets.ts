@@ -23,7 +23,7 @@ export function publicArticleAssetUrl(id: string, file: string, version?: string
 
 /** Avatar assets stay private in Storage and are served by tnb-media after checking the viewer and post visibility. */
 export function publicAvatarUrl(scope: "own" | "post" | "comment", id: string, version?: string | null): string {
-  const base = supabase.supabaseUrl.replace(/\/+$/, "");
+  const base = getSupabaseBaseUrl();
   const url = base + "/functions/v1/tnb-media?kind=avatar&avatarKind=" + scope + "&id=" + encodeURIComponent(id);
 
   return version ? url + (url.includes("?") ? "&" : "?") + "v=" + encodeURIComponent(version) : url;

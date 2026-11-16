@@ -98,7 +98,7 @@ function OrderDetail({ id, onClose }: { id: string; onClose: () => void }) {
   const refresh = () => { qc.invalidateQueries({ queryKey: ["admin-order", id] }); qc.invalidateQueries({ queryKey: ["admin-orders"] }); qc.invalidateQueries({ queryKey: ["admin-sales"] }); };
   const m = useMutation({
     mutationFn: () => resend({ data: { id } }),
-    onSuccess: (r) => { r.ok ? toast.success("Link do materiału wysłany.") : toast.message(REASON[r.reason] ?? r.reason); refresh(); },
+    onSuccess: (r) => { r.ok ? toast.success("Link do materiału wysłany.") : toast.message(r.reason ? REASON[r.reason] ?? r.reason : "Nie udało się wysłać linku."); refresh(); },
     onError: (e) => toast.error(errMsg(e)),
   });
   const act = useMutation({
