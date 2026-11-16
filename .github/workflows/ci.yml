@@ -62,6 +62,9 @@ jobs:
       - name: TypeScript validation
         run: bun run typecheck
 
+      - name: Verify SPA source boundary
+        run: bash scripts/check-spa-boundary.sh
+
       - name: Unit tests
         run: bun run test
 
