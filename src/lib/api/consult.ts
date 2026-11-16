@@ -40,7 +40,30 @@ export type ConsultAvailability = {
   blocked: Array<{ day: string; reason: string | null }>;
   defaultLink: string;
 };
-export type ConsultBookingDetail = { booking: Record<string, unknown>; events: Array<{ type: string; detail: string | null; created_at: string }> };
+export type ConsultBookingDetail = {
+  booking: {
+    id: string;
+    booking_number: string;
+    starts_at: string;
+    ends_at: string;
+    status: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone: string | null;
+    user_id: string | null;
+    confirmation_status: string;
+    confirmation_error: string | null;
+    reminder_status: string;
+    topic: string;
+    reason: string;
+    question: string;
+    cancel_reason: string | null;
+    cancelled_at: string | null;
+    meeting_link: string | null;
+  };
+  events: Array<{ type: string; detail: string | null; created_at: string }>;
+};
 
 async function invoke<T>(action: string, data?: unknown): Promise<T> {
   const body = data === undefined ? { action } : { action, data };
