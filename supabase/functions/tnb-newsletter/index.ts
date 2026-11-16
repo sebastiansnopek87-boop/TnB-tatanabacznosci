@@ -117,8 +117,9 @@ async function subscribe(db: Db, req: Request, data: z.infer<typeof subscribeSch
     const { count } = await db.from("newsletter_subscribers").select("id", { count: "exact", head: true }).eq("ip_hash", ipHash).gte("updated_at", since);
     if ((count ?? 0) >= 5) throw new Error("Zbyt wiele prób. Spróbuj ponownie później.");
   }
-  const { data: settings } = await db.from("email_settings").select("newsletter_double_opt_in").eq("id", 1).maybeSingle();
+  const { data: settings } = await db.from("email_settings").select("newsletter_double_opt_in,delivery_mode,sender_name,sender_local_part,sender_domain,reply_to").eq("id", 1).maybeSingle();
   const double = !!settings?.newsletter_double_opt_in;
+  if (double && (settings?.delivery_mode !== "live" || !smtpConfig().configured)) throw new Error("Potwierdzanie zapisu wymaga aktywnej i skonfigurowanej wysyłki SMTP.");
   const now = new Date().toISOString();
   const status = double ? "pending" : "active";
   const consent = {
@@ -129,6 +130,7 @@ async function subscribe(db: Db, req: Request, data: z.infer<typeof subscribeSch
     .select("id,status,subscribe_count").ilike("email", data.email).maybeSingle();
   if (existing?.status === "active") return { status: "already" as const };
   let id: string;
+  const confirmToken = crypto.randomUUID();
   if (existing) {
     const { error } = await db.from("newsletter_subscribers").update({
       ...consent, status, unsubscribed_at: null, confirmed_at: double ? null : now,
@@ -139,7 +141,7 @@ async function subscribe(db: Db, req: Request, data: z.infer<typeof subscribeSch
   } else {
     const { data: row, error } = await db.from("newsletter_subscribers").insert({
       ...consent, email: data.email, status, source: "homepage", confirmed_at: double ? null : now,
-      confirm_token: crypto.randomUUID(),
+      confirm_token: confirmToken,
     }).select("id").single();
     if (error || !row) { console.error("newsletter insert", error?.message); throw new Error("Nie udało się zapisać adresu."); }
     id = row.id;
@@ -195,6 +197,7 @@ Deno.serve(async (req: Request) => {
     if (!parsed.success) return json({ message: "Nieprawidłowe żądanie." }, 400);
     const db = supabaseClient();
     if (parsed.data.action === "subscribe") return json(await subscribe(db, req, parsed.data.data));
+    if (parsed.data.action === "confirm") return json(await confirm(db, parsed.data.data.token));
     return json(await unsubscribe(db, parsed.data.data));
   } catch (error) {
     const status = error instanceof Error && error.message === "Zapis odrzucony przez filtr antyspamowy." ? 400 : 400;
