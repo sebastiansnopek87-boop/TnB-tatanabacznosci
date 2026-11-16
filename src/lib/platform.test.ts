@@ -48,7 +48,6 @@ describe("pola publiczne", () => {
   });
 
   it("proponowana migracja przyznaje odczyt tylko kolumnom z PUBLIC_COLS (oraz id)", async () => {
-    const { PUBLIC_COLS } = await import("./platform.functions");
     const fs = await import("node:fs/promises");
     const sql = await fs.readFile(new URL("../../db-proposals/platform_settings_least_privilege.sql", import.meta.url), "utf8");
     const m = sql.match(/GRANT SELECT \(([^)]+)\) ON public\.platform_settings TO anon, authenticated;/);
