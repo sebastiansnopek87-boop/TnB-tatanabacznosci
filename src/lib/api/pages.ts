@@ -67,7 +67,7 @@ async function invokePublicPages<T>(body: Record<string, unknown>): Promise<T> {
     }
     throw new Error(error.message || "Nie udało się pobrać opublikowanej strony.");
   }
-  return data;
+  return data as T;
 }
 
 export function getPublicPage({ data }: { data: { key?: string; slug?: string } }): Promise<PublicPage | null> {
