@@ -3,6 +3,7 @@ import { corsHeaders as sdkCorsHeaders } from "npm:@supabase/supabase-js@2.117.2
 import { z } from "zod";
 import { DEFAULT_TEMPLATES, EVENT_MAP } from "./registry.ts";
 import { render, maskSensitive, stripSensitive, type Vars } from "./render.ts";
+import { sendSmtpMail, smtpConfig } from "../_shared/smtp.ts";
 
 const CORS = new Headers({
   ...sdkCorsHeaders,
@@ -77,20 +78,31 @@ async function notifyAdmin(db: Db, id: string, now: string) {
     if (!rendered.ok) return;
     const { data: log, error } = await db.from("email_notification_log").insert({
       kind: "newsletter_signup", related_id: id, template_key: "newsletter_signup",
-      idempotency_key: "newsletter_signup-" + id, mode: "test", recipient: to,
+      idempotency_key: "newsletter_signup-" + id, mode, recipient: to,
       payload: stripSensitive(vars), retryable: !rendered.usesSensitive, status: "sending",
     }).select("id").single();
     if (error) {
       if (error.code !== "23505") console.error("newsletter notification log", error.message);
       return;
     }
-    const safe = render(template, maskSensitive(vars), template.required);
-    await db.from("email_notification_log").update({
-      status: "simulated", mode: "test", attempts: 1, reason: null, updated_at: now,
-      rendered_subject: safe.ok ? safe.subject : null,
-      rendered_html: safe.ok ? safe.html : null,
-      rendered_text: safe.ok ? safe.text : null,
-    }).eq("id", log.id);
+    if (mode === "test") {
+      const safe = render(template, maskSensitive(vars), template.required);
+      await db.from("email_notification_log").update({
+        status: "simulated", mode: "test", attempts: 1, reason: null, updated_at: now,
+        rendered_subject: safe.ok ? safe.subject : null,
+        rendered_html: safe.ok ? safe.html : null,
+        rendered_text: safe.ok ? safe.text : null,
+      }).eq("id", log.id);
+      return;
+    }
+    const from = `${settings?.sender_name ?? "Tata Na Baczności"} <${settings?.sender_local_part ?? "kontakt"}@${settings?.sender_domain ?? "tatanabacznosci.pl"}>`;
+    try {
+      const sent = await sendSmtpMail({ to, from, replyTo: settings?.reply_to ?? null, subject: rendered.subject, html: rendered.html, text: rendered.text });
+      await db.from("email_notification_log").update({ status: "sent", mode: "live", attempts: 1, reason: null, provider_message_id: sent.messageId, updated_at: now }).eq("id", log.id);
+    } catch (error) {
+      const reason = error instanceof Error ? error.message.slice(0, 300) : "smtp_delivery_failed";
+      await db.from("email_notification_log").update({ status: "failed", mode: "live", attempts: 1, reason, updated_at: now }).eq("id", log.id);
+    }
   } catch (error) { console.error("newsletter admin notification", error); }
 }
 
