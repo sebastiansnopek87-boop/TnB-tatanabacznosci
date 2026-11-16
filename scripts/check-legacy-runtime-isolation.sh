@@ -7,6 +7,12 @@ import re
 
 root = Path("src")
 legacy_suffixes = (".functions.ts", ".server.ts")
+# Only these two integration suites still exercise Start handlers behind mocks.
+# Keep the exception explicit so new tests cannot silently import legacy code.
+legacy_test_allowlist = {
+    Path("lib/control-center-360.test.ts"),
+    Path("lib/legal-pages.test.ts"),
+}
 # These generated TanStack middleware files are retained only as migration
 # inventory. They are not part of the Vite SPA entry graph.
 retained_legacy = {
@@ -31,9 +37,7 @@ for path in root.rglob("*"):
         legacy_count += 1
         continue
 
-    # Unit/integration tests may intentionally import legacy handlers behind
-    # mocks; they are not shipped in the browser bundle.
-    if path.name.endswith((".test.ts", ".spec.ts", ".test.tsx", ".spec.tsx")):
+    if relative in legacy_test_allowlist:
         continue
 
     source = path.read_text(errors="replace")
