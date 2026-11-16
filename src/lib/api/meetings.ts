@@ -148,7 +148,7 @@ export type AdminMeetingSummary = {
 export function adminListMeetings(): Promise<AdminMeetingSummary[]> {
   return invokeMeetings("adminListMeetings");
 }
-export function adminGetMeeting({ data }: { data: { id: string } }): Promise<AdminMeetingInput & Record<string, unknown>> {
+export function adminGetMeeting({ data }: { data: { id: string } }): Promise<AdminMeetingInput & { image_url: string | null; status: "draft" | "published" | "archived" }> {
   return invokeMeetings("adminGetMeeting", data);
 }
 export function adminSaveMeeting({ data }: { data: AdminMeetingInput }): Promise<{ id: string }> {
