@@ -20,7 +20,7 @@ W repozytorium znajduje się 41 plików `*.functions.ts` / `*.server.ts` w `src/
 | `src/lib/ai/run-id.server.ts` | do ustalenia | do ustalenia | pomocniczy moduł; ustalić wszystkich konsumentów |
 | `src/lib/article-newsletter.functions.ts` | `src/lib/api/article-newsletter.ts` | `tnb-article-newsletter` | dodano test kontraktu 6 akcji, parity legacy/Edge, admin/superadmin, potwierdzenia liczby odbiorców, blokady wysyłki i idempotency key na subskrybenta |
 | `src/lib/articles.functions.ts` | `src/lib/api/articles.ts` | `tnb-articles` | dodano test kontraktu 15 akcji Edge z bearer tokenem, direct reads przez RLS po kontroli admina, walidacji, purge/trash, uploadu, ankiet i moderacji komentarzy |
-| `src/lib/brand.functions.ts` | `src/lib/api/brand.ts` | `tnb-brand` | porównać walidację i zapis |
+| `src/lib/brand.functions.ts` | `src/lib/api/brand.ts` | `tnb-brand` | dodano test kontraktu 4 akcji, flat payload parity, Bearer, odmowę bez sesji, admin read/superadmin writes, MIME/rozmiar uploadu i weryfikację metadanych po przesłaniu |
 | `src/lib/consult.functions.ts` | `src/lib/api/consult.ts` | `tnb-consult` | częściowe testy kalendarza; pełna zgodność nadal do sprawdzenia |
 | `src/lib/consult.server.ts` | `src/lib/api/consult.ts` | `tnb-consult` | sprawdzić wspólne reguły terminów i powiadomień |
 | `src/lib/contact.functions.ts` | `src/lib/api/contact.ts` | `tnb-contact` | dodano test kontraktu formularza, błędów Edge, strict schema, allowlisty originów, antyspamu i bezpiecznego renderowania HTML; legacy zachowany do sprawdzenia semantyki powiadomień |
