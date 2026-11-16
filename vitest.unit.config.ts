@@ -7,6 +7,7 @@ export default defineConfig({
     include: [
       "src/config/modules.test.ts",
       "src/lib/avatar-rules.test.ts",
+      "src/lib/consult.test.ts",
       "src/lib/notify/render.test.ts",
       "src/lib/payments/providers.test.ts",
       "src/lib/platform.test.ts",
