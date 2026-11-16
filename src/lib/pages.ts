@@ -1,3 +1,4 @@
+import { supabase } from "@/integrations/supabase/client";
 import type { TextFormat } from "./rich-text";
 // Shared, browser-safe model for CMS pages (O TNB, Moja historia and future subpages).
 export type PageButton = { label: string; href: string };
@@ -65,11 +66,8 @@ export const normalizeSections = (raw: unknown): PageSection[] =>
   (Array.isArray(raw) ? raw : []).map((s: any) => ({ ...newSection(s?.kind ?? "text"), ...s, items: Array.isArray(s?.items) ? s.items : [], buttons: Array.isArray(s?.buttons) ? s.buttons : [] }));
 
 export const pageImageUrl = (pageId: string, file: string) => {
-  let base = String(import.meta.env["VITE_SUPABASE_URL"] ?? "");
-  while (base.endsWith("/")) base = base.slice(0, -1);
-  return base
-    ? base + "/functions/v1/tnb-pages?image=" + encodeURIComponent(pageId + "/" + file)
-    : "/api/public/page-image/" + pageId + "/" + encodeURIComponent(file);
+  const base = supabase.supabaseUrl.replace(/\/+$/, "");
+  return base + "/functions/v1/tnb-pages?image=" + encodeURIComponent(pageId + "/" + file);
 };
 
 // Internal links start with "/", external must be https; anything else is rejected.
