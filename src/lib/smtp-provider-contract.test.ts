@@ -46,7 +46,7 @@ describe("Cyber_Folks SMTP provider contract", () => {
     for (const path of functions) {
       const source = read(path);
       expect(source).toContain("smtpConfig()");
-      expect(source).toContain('settings?.delivery_mode === "live"');
+      expect(source).toMatch(/(?:settings|mailSettings)\\?\.delivery_mode === "live"/);
     }
   });
 
