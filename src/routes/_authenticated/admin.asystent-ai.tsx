@@ -33,7 +33,7 @@ const input = "w-full border border-border/60 bg-background p-2 text-sm";
 function EditorAi() {
   const [tab, setTab] = useState<Tab>("pulpit");
   const [matId, setMatId] = useState<string | null>(null);
-  const dash = useServerFn(getEditorDashboard);
+  const dash = getEditorDashboard;
   const q = useQuery({ queryKey: ["ai-ed", "dash"], queryFn: () => dash(), retry: false });
   if (q.isLoading) return <p className="text-muted-foreground">Ładowanie…</p>;
   if (q.error) return <div className="max-w-xl"><h1 className="font-display text-3xl font-semibold uppercase">Asystent redakcyjny AI</h1><p role="alert" className="mt-4 text-sm text-destructive">{errMsg(q.error)}</p></div>;
@@ -88,7 +88,7 @@ function Dashboard({ d, go, open }: { d: Awaited<ReturnType<typeof getEditorDash
 
 function Sources() {
   const qc = useQueryClient();
-  const list = useServerFn(listSources), addWeb = useServerFn(addWebSource), addNote = useServerFn(addNoteSource), upd = useServerFn(updateSource), del = useServerFn(deleteSource);
+  const list = listSources, addWeb = addWebSource, addNote = addNoteSource, upd = updateSource, del = deleteSource;
   const q = useQuery({ queryKey: ["ai-ed", "sources"], queryFn: () => list() });
   const [url, setUrl] = useState(""), [comment, setComment] = useState(""), [busy, setBusy] = useState(false);
   const [note, setNote] = useState({ kind: "note" as "note" | "idea", title: "", content: "" });
@@ -155,7 +155,7 @@ function SourceEditor({ s, save }: { s: any; save: (p: any) => void }) {
 
 function Analysis({ aiOn, go }: { aiOn: boolean; go: (t: Tab) => void }) {
   const qc = useQueryClient();
-  const preview = useServerFn(previewAnalysisData), run = useServerFn(runAnalysis);
+  const preview = previewAnalysisData, run = runAnalysis;
   const [scopes, setScopes] = useState<string[]>(["articles", "library", "web", "notes"]);
   const [from, setFrom] = useState(""), [to, setTo] = useState(""), [focus, setFocus] = useState("");
   const [pv, setPv] = useState<Awaited<ReturnType<typeof previewAnalysisData>> | null>(null);
@@ -198,7 +198,7 @@ function RefList({ refs }: { refs: Array<{ ref: string; kind: string; title: str
 
 function Proposals({ aiOn, onCreated }: { aiOn: boolean; onCreated: (id: string) => void }) {
   const qc = useQueryClient();
-  const list = useServerFn(listProposals), upd = useServerFn(updateProposal), dev = useServerFn(developProposal);
+  const list = listProposals, upd = updateProposal, dev = developProposal;
   const q = useQuery({ queryKey: ["ai-ed", "proposals"], queryFn: () => list() });
   const [filter, setFilter] = useState("active"), [open, setOpen] = useState<string | null>(null), [busy, setBusy] = useState<string | null>(null);
   const refresh = () => qc.invalidateQueries({ queryKey: ["ai-ed"] });
@@ -266,7 +266,7 @@ function EditTitle({ p, save }: { p: any; save: (t: string, d: string) => void }
 }
 
 function History() {
-  const list = useServerFn(listAnalyses);
+  const list = listAnalyses;
   const q = useQuery({ queryKey: ["ai-ed", "analyses"], queryFn: () => list() });
   const [open, setOpen] = useState<string | null>(null);
   if (q.isLoading) return <p className="text-muted-foreground">Ładowanie…</p>;
@@ -291,7 +291,7 @@ function History() {
 
 function Settings({ d }: { d: Awaited<ReturnType<typeof getEditorDashboard>> }) {
   const qc = useQueryClient();
-  const get = useServerFn(getEditorSettings), save = useServerFn(saveEditorSettings), test = useServerFn(testAiConnection);
+  const get = getEditorSettings, save = saveEditorSettings, test = testAiConnection;
   const q = useQuery({ queryKey: ["ai-ed", "settings"], queryFn: () => get() });
   const [f, setF] = useState<{ guidelines: string; community_enabled: boolean; community_decision_note: string } | null>(null);
   const [testing, setTesting] = useState(false);
