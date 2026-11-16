@@ -48,7 +48,7 @@ W repozytorium znajduje się 41 plików `*.functions.ts` / `*.server.ts` w `src/
 | `src/lib/payments/providers.server.ts` | `src/lib/api/payments.ts` | `tnb-payments` | przeniesiono współdzielone podpisy do Edge; porównać pełną konfigurację |
 | `src/lib/platform.functions.ts` | `src/lib/api/platform.ts` | `tnb-platform` | test least-privilege istnieje; sprawdzić role i kolumny |
 | `src/lib/podcast.functions.ts` | `src/lib/api/podcast.ts` | `tnb-podcast` | porównać publikację i dostęp |
-| `src/lib/recommend.functions.ts` | `src/lib/api/recommend.ts` | `tnb-recommend` | porównać reguły i limity |
+| `src/lib/recommend.functions.ts` | `src/lib/api/recommend.ts` | `tnb-recommend` | test kontraktu SPA ↔ Edge dodany: akcja, walidacja 10–600 znaków, brak fragmentów premium, payload i obsługa błędów; test uruchamiany w CI; logika legacy nadal zachowana do czasu pełnej weryfikacji równoważności |
 | `src/lib/templates.functions.ts` | `src/lib/api/templates.ts` | `tnb-templates` | porównać operacje szablonów |
 | `src/lib/users.functions.ts` | `src/lib/api/users.ts` | `tnb-users` | role i operacje admin wymagają testów |
 | `src/lib/voice.functions.ts` | `src/lib/api/voice.ts` | `tnb-voice` | porównać upload, limity i prywatność |
