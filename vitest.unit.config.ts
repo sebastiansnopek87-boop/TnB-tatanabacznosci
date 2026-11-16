@@ -20,6 +20,8 @@ export default defineConfig({
       "src/lib/platform-api.test.ts",
       "src/lib/admin-api.test.ts",
       "src/lib/users-api.test.ts",
+      "src/lib/library-api-contract.test.ts",
+      "src/lib/notifications-api-contract.test.ts",
       "src/lib/rich-text.test.ts",
     ],
   },
