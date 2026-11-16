@@ -1,11 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { adminGetLibraryItem, adminListLibrary, adminRemoveLibraryFile, adminSaveLibraryItem, adminSetLibraryStatus, adminUploadLibraryFile, adminRetryWatermark, adminLibraryFileUrl } from "@/lib/api/library";
+import { adminGetLibraryItem, adminListLibrary, adminRemoveLibraryFile, adminSaveLibraryItem, adminSetLibraryStatus, adminCreateLibraryUpload, adminFinalizeLibraryUpload, adminRetryWatermark, adminLibraryFileUrl } from "@/lib/api/library";
 import { adminListLibraryRequests, adminEraseLibraryRequest } from "@/lib/api/library-delivery";
 import { FREE_DELIVERY, type FreeDelivery } from "@/lib/library";
+import { supabase } from "@/integrations/supabase/client";
 import { ACCESS, DELIVERY, KINDS, STATUS, accessLabel, listCategories, slugify, type Access, type Delivery, type Kind, type Status } from "@/lib/library";
 import { errMsg, fmtDate } from "@/components/admin/format";
 import { Button } from "@/components/ui/button";
@@ -21,8 +21,8 @@ type Form = { id: string | null; title: string; slug: string; summary: string; c
 const EMPTY: Form = { id: null, title: "", slug: "", summary: "", category: "", kind: "article", access: "members", status: "draft", author_name: "Redakcja TNB", body: "", external_url: "", price: "", purchasable: false, payment_product_id: "", delivery_method: "email_link", free_delivery: "direct" };
 
 function AdminLibrary() {
-  const listFn = useServerFn(adminListLibrary);
-  const statusFn = useServerFn(adminSetLibraryStatus);
+  const listFn = adminListLibrary;
+  const statusFn = adminSetLibraryStatus;
   const qc = useQueryClient();
   const [input, setInput] = useState(""); const [q, setQ] = useState("");
   const [status, setStatus] = useState<"all" | Status>("all");
@@ -100,17 +100,13 @@ function AdminLibrary() {
   );
 }
 
-function toBase64(f: File) {
-  return new Promise<string>((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1] ?? ""); r.onerror = rej; r.readAsDataURL(f); });
-}
-
 function Editor({ id, cats, onClose, onSaved }: { id: string | null; cats: { slug: string; name: string }[]; onClose: () => void; onSaved: (id: string) => void }) {
-  const getFn = useServerFn(adminGetLibraryItem);
-  const saveFn = useServerFn(adminSaveLibraryItem);
-  const upFn = useServerFn(adminUploadLibraryFile);
-  const rmFn = useServerFn(adminRemoveLibraryFile);
-  const retryFn = useServerFn(adminRetryWatermark);
-  const urlFn = useServerFn(adminLibraryFileUrl);
+  const getFn = adminGetLibraryItem;
+  const saveFn = adminSaveLibraryItem;
+  const upFn = adminCreateLibraryUpload;
+  const rmFn = adminRemoveLibraryFile;
+  const retryFn = adminRetryWatermark;
+  const urlFn = adminLibraryFileUrl;
   const [premarked, setPremarked] = useState(false);
   const qc = useQueryClient();
   const [f, setF] = useState<Form>(EMPTY);
@@ -146,7 +142,10 @@ function Editor({ id, cats, onClose, onSaved }: { id: string | null; cats: { slu
     if (!file || !f.id) return;
     setUploading(target);
     try {
-      const r = await upFn({ data: { id: f.id, target, name: file.name, type: file.type, base64: await toBase64(file), premarked } });
+      const prepared = await upFn({ data: { id: f.id, target, name: file.name, type: file.type, size: file.size, premarked } });
+      const { error: uploadError } = await supabase.storage.from("library-files").uploadToSignedUrl(prepared.path, prepared.token, file, { contentType: file.type, upsert: false });
+      if (uploadError) throw new Error("Nie udało się przesłać pliku.");
+      const r = await adminFinalizeLibraryUpload({ data: { id: f.id, target, path: prepared.path, name: file.name, type: file.type, premarked } });
       if (r.watermark?.status === "failed") toast.error(`Błąd przetwarzania: ${r.watermark.error}`);
       else toast.success(target === "cover" ? "Okładka zapisana." : r.watermark ? "PDF oznaczony znakiem wodnym TNB." : "Plik zapisany.");
       qc.invalidateQueries({ queryKey: ["admin-library-item", f.id] }); qc.invalidateQueries({ queryKey: ["admin-library"] });
