@@ -19,7 +19,7 @@ W repozytorium znajduje się 41 plików `*.functions.ts` / `*.server.ts` w `src/
 | `src/lib/ai/recommend.server.ts` | `src/lib/api/recommend.ts` | `tnb-recommend` | porównać wejście/wyjście i uprawnienia |
 | `src/lib/ai/run-id.server.ts` | do ustalenia | do ustalenia | pomocniczy moduł; ustalić wszystkich konsumentów |
 | `src/lib/article-newsletter.functions.ts` | `src/lib/api/article-newsletter.ts` | `tnb-article-newsletter` | dodano test kontraktu 6 akcji, parity legacy/Edge, admin/superadmin, potwierdzenia liczby odbiorców, blokady wysyłki i idempotency key na subskrybenta |
-| `src/lib/articles.functions.ts` | `src/lib/api/articles.ts` | `tnb-articles` | porównać publiczne/admin operacje |
+| `src/lib/articles.functions.ts` | `src/lib/api/articles.ts` | `tnb-articles` | dodano test kontraktu 15 akcji Edge z bearer tokenem, direct reads przez RLS po kontroli admina, walidacji, purge/trash, uploadu, ankiet i moderacji komentarzy |
 | `src/lib/brand.functions.ts` | `src/lib/api/brand.ts` | `tnb-brand` | porównać walidację i zapis |
 | `src/lib/consult.functions.ts` | `src/lib/api/consult.ts` | `tnb-consult` | częściowe testy kalendarza; pełna zgodność nadal do sprawdzenia |
 | `src/lib/consult.server.ts` | `src/lib/api/consult.ts` | `tnb-consult` | sprawdzić wspólne reguły terminów i powiadomień |
