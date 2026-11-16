@@ -128,3 +128,5 @@
 - [x] Kontakt i newsletter — dodano testy kontraktu adapterów `tnb-contact` i `tnb-newsletter`; obejmują payloady, walidację, błędy, ochronę antyspamową, allowlistę originów, zgodę i double opt-in. Testy Edge nie uruchamiają rzeczywistej wysyłki; produkcyjny SMTP pozostaje nieaktywny.
 
 - [x] Newsletter artykułów — dodano test kontraktu 6 akcji `tnb-article-newsletter`, w tym role admin/superadmin, potwierdzenie liczby odbiorców przed wysyłką, claim statusu, tryb testowy i klucze idempotencji na odbiorcę. Wysłanie produkcyjne nie jest uruchamiane przez testy.
+
+- [x] Multimedia — dodano test kontraktu 5 akcji `tnb-media-admin`: token Bearer, brak sesji, błędy 403, walidacja typu/rozmiaru uploadu, finalna weryfikacja metadanych pliku oraz fail-closed przy usuwaniu obiektów używanych przez inne moduły. Publiczne serwowanie okładek i avatarów pozostaje osobną Edge Function.
