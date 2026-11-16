@@ -7,6 +7,8 @@ dir_slugs=()
 for dir in "${function_dirs[@]}"; do
   [[ -d "$dir" ]] || continue
   slug="${dir##*/}"
+  # Shared Deno modules live beside deployable functions but are not function entrypoints.
+  [[ "$slug" == _* ]] && continue
   if [[ ! -f "$dir/index.ts" ]]; then
     echo "ERROR: $slug has no index.ts entrypoint in Git."
     exit 1
