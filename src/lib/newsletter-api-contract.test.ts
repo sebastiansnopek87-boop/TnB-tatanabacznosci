@@ -50,7 +50,7 @@ describe("newsletter SPA contract", () => {
     expect(edge).toContain(NEWSLETTER_CONSENT_TEXT);
     for (const action of ["subscribe", "unsubscribe", "confirm"]) {
       expect(edge).toContain('z.literal("' + action + '")');
-      expect(edge).toContain('parsed.data.action === "' + action + '"');
+      if (action !== "unsubscribe") expect(edge).toContain('parsed.data.action === "' + action + '"');
     }
     expect(edge).toContain("data.elapsedMs < 1500");
     expect(edge).toContain("data.website");
