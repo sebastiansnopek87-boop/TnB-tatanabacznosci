@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { corsHeaders as sdkCorsHeaders } from "npm:@supabase/supabase-js@2.117.2/cors";
+import { smtpConfig, verifySmtp } from "../_shared/smtp.ts";
 import { z } from "zod";
 
 const CORS = new Headers({
@@ -272,6 +273,12 @@ async function getEmailSettings(db: Db) {
 }
 
 async function updateEmailSettings(db: Db, input: z.infer<typeof emailSettingsSchema>, actor: string) {
+  const { data: current } = await db.from("email_settings").select("newsletter_double_opt_in,delivery_mode").eq("id", 1).maybeSingle();
+  if (input.newsletter_double_opt_in && !current?.newsletter_double_opt_in) {
+    if (current?.delivery_mode !== "live" || !smtpConfig().configured) throw new HttpError(409, "Najpierw skonfiguruj SMTP i włącz rzeczywistą wysyłkę.");
+    try { await verifySmtp(); }
+    catch { throw new HttpError(409, "Nie można włączyć double opt-in: połączenie SMTP nie przeszło testu."); }
+  }
   const { error, count } = await db.from("email_settings")
     .update({ ...input, updated_at: new Date().toISOString() }, { count: "exact" }).eq("id", 1);
   if (error || !count) {
