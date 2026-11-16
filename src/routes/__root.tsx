@@ -13,8 +13,8 @@ import { ModuleGate } from "@/components/tnb/ModuleGate";
 import { brandSrc, useBrand } from "@/hooks/use-brand-settings";
 
 // Applies admin-set branding (favicon, share image, homepage SEO) to the document head.
-// Favicon and og:image point to /api/public/brand/<file>, which serves the image only
-// when platform_settings.brand_settings references it.
+// Public brand asset URLs are served through Supabase Edge Functions and validated
+// against the active platform_settings.brand_settings references.
 function BrandHead() {
   const brand = useBrand();
   const path = useRouterState({ select: (s) => s.location.pathname });
