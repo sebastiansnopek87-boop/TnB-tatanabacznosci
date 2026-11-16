@@ -25,8 +25,8 @@ const FRAG_CMDS = ["Napisz to mocniej.", "Napisz bardziej po ludzku.", "Skróć 
 const WHOLE_CMDS = ["Przeczytaj cały materiał i popraw jego spójność.", "Skróć materiał o około 20%, zachowując najważniejsze treści.", "Przygotuj mocniejszy początek.",
   "Znajdź wszystkie powtórzenia.", "Sprawdź, czy materiał nie brzmi jak tekst wygenerowany przez AI.", "Przeredaguj tekst tak, aby był naturalny i zgodny z charakterem TNB."];
 const rid = () => Math.random().toString(36).slice(2, 10);
-const fix = async <T extends { ok: boolean }>(p: Promise<T>): Promise<T | MaterialActionError> => {
-  try { return await p; } catch (error) { return { ok: false, error: errMsg(error) }; }
+const fix = async <T extends { ok: boolean }>(p: Promise<T>): Promise<Extract<T, { ok: true }> | MaterialActionError> => {
+  try { const result = await p; return result.ok ? result as Extract<T, { ok: true }> : result as MaterialActionError; } catch (error) { return { ok: false, error: errMsg(error) }; }
 };
 const tok = (u?: { input: number; output: number }) => (u ? `${(u.input + u.output).toLocaleString("pl-PL")} tokenów (wejście ${u.input.toLocaleString("pl-PL")}, wyjście ${u.output.toLocaleString("pl-PL")})` : "—");
 export const ImgKey = (id: string) => ["ai-ed", "img", id];
@@ -44,6 +44,8 @@ export function CreateArticle({ proposal, topic: topic0 = "", aiOn, onCreated, o
   };
   const set = (k: string, state: Step["state"], note?: string) => setSteps((s) => s!.map((x) => (x.key === k ? { ...x, state, note: note ?? x.note } : x)));
   const run = async () => {
+    if (!info) return;
+    const currentInfo = info;
     const base: Step[] = [
       { key: "src", label: currentInfo.summaries ? `Przygotowanie źródeł (pełna treść + ${currentInfo.summaries} streszczenie/a)` : "Przygotowanie źródeł (pełna treść)", state: "doing" },
       { key: "write", label: format === "artykuł" ? "Pisanie artykułu, SEO i uwag redakcyjnych" : "Pisanie materiału", state: "todo" },
@@ -280,7 +282,8 @@ function Editor({ id, aiOn, close }: { id: string; aiOn: boolean; close: () => v
         <textarea className={input} rows={2} placeholder="Własne polecenie" value={instr} onChange={(e) => setInstr(e.target.value)} />
         <Button className="mt-2" size="sm" disabled={!aiOn || !sel || instr.trim().length < 2 || !!busy || dirty} onClick={async () => {
           setBusy("frag"); const r = await fix(frag({ data: { id, sectionId: sel!.sectionId, selection: sel!.text, instruction: instr } })); setBusy(null);
-          if (!r.ok) { toast.error(r.error); return; }\n          if (await done(r, `AI zmieniło fragment — nowa wersja (zużycie: ${tok(r.usage)})`)) setSel(null);
+          if (!r.ok) { toast.error(r.error); return; }
+          if (await done(r, `AI zmieniło fragment — nowa wersja (zużycie: ${tok(r.usage)})`)) setSel(null);
         }}>{busy === "frag" ? "AI poprawia fragment…" : "Wykonaj (1 wywołanie AI)"}</Button>
         {dirty && <p className="mt-1 text-xs text-gold">Najpierw zapisz swoje zmiany, aby AI pracowało na aktualnej wersji.</p>}
 
