@@ -183,7 +183,7 @@ function Analysis({ aiOn, go }: { aiOn: boolean; go: (t: Tab) => void }) {
         <p className="font-medium">Do dostawcy AI (Lovable AI, model OpenAI) zostanie wysłanych {pv.docs.length} źródeł, ok. {Math.round(pv.totalChars / 1000)} tys. znaków, wraz z wytycznymi redakcyjnymi i tytułami wcześniej ocenionych propozycji.</p>
         <p className="mt-1 text-xs text-muted-foreground">Nie wysyłamy e-maili, numerów telefonów, imion autorów wpisów ani danych kont. Każde uruchomienie zużywa kredyty AI obszaru roboczego.</p>
         {pv.communityBlocked && <p className="mt-2 text-xs text-gold">Analiza społeczności jest wyłączona w ustawieniach — wpisy nie zostaną użyte.</p>}
-        <ul className="mt-2 max-h-64 list-disc overflow-y-auto pl-5 text-xs">{pv.docs.map((d) => <li key={d.ref}>{d.ref} · {d.kind} · {d.title} ({d.chars} zn.)</li>)}</ul>
+        <ul className="mt-2 max-h-64 list-disc overflow-y-auto pl-5 text-xs">{pv.docs.map((d: { ref: string; kind: string; title: string; chars: number }) => <li key={d.ref}>{d.ref} · {d.kind} · {d.title} ({d.chars} zn.)</li>)}</ul>
         {!pv.docs.length && <p className="mt-2 text-destructive">Brak danych w wybranym zakresie.</p>}
       </div>}
     </div>

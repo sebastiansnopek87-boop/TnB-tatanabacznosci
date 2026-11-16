@@ -94,7 +94,7 @@ function Editor({ id, onClose, onSaved }: { id: string | null; onClose: () => vo
   const preview = useQuery({ queryKey: ["admin-episode-audio", id, cur.data?.audio_path], queryFn: () => prevFn({ data: { id: id! } }), enabled: !!cur.data?.audio_path });
   useEffect(() => {
     const e = cur.data; if (!e) return;
-    setF({ subtitle: e.subtitle ?? "", number: e.episode_number ? String(e.episode_number) : "", script: e.script ?? "", title: e.title, slug: e.slug, summary: e.summary, description: e.description, category: e.category, access: e.access, external_url: e.external_url ?? "",
+    setF({ subtitle: e.subtitle ?? "", number: e.episode_number ? String(e.episode_number) : "", script: e.script ?? "", title: e.title, slug: e.slug, summary: e.summary, description: e.description, category: e.category, access: e.access as EpAccess, external_url: e.external_url ?? "",
       duration: fmtDuration(e.duration_seconds) ?? "", featured: e.featured, sort_order: String(e.sort_order), published: toLocal(e.published_at) });
   }, [cur.data]);
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setF((p) => ({ ...p, [k]: v }));

@@ -22,7 +22,7 @@ type Dashboard = {
   meetings: number | null; bookings: number | null; orders: number | null; pendingOrders: number | null;
   newMsgs: number | null; reports: number | null; failedMail: number | null; pendingRegs: number | null;
   deniedWeek: number | null; active: number; pending: number; unsub: number; paidTotal: number | null;
-  paidCurrency: string; recent: Array<Record<string, unknown>>;
+  paidCurrency: string; recent: AdminEvent[];
 };
 type MessageRow = { id: string; name: string; email: string; subject: string; message: string; status: string; created_at: string; read_at: string | null; archived_at: string | null };
 type SubscriberRow = {
