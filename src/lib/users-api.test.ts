@@ -59,9 +59,10 @@ describe("users SPA contract", () => {
     }
     expect(edge).toContain("await requireAdmin(ctx, actorId)");
     expect(edge).toContain("await requireSuperadmin(ctx, actorId)");
-    expect(edge).toContain('data.role === "superadmin"');
-    expect(edge).toContain("Nie można odebrać roli ostatniemu superadministratorowi.");
-    expect(edge).toContain("Najpierw nadaj rolę Administrator.");
-    expect(edge).toContain("Najpierw odbierz rolę Superadministrator.");
+    expect(edge).toContain('await ctx.supabaseAdmin.rpc("admin_set_user_role"');
+    expect(edge).toContain("roleErrorMessages");
+    expect(legacy).toContain("Nie można odebrać roli ostatniemu superadministratorowi.");
+    expect(legacy).toContain("Najpierw nadaj rolę Administrator.");
+    expect(legacy).toContain("Najpierw odbierz rolę Superadministrator.");
   });
 });
