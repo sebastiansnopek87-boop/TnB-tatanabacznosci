@@ -1,6 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { CalendarDays, MapPin, Users, Mic, Mountain, Wallet } from "lucide-react";
 import { MeetingBadges } from "@/components/meetings/MeetingBadges";
@@ -115,8 +114,6 @@ const btn = "bg-gold px-6 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-p
 function Registration({ m }: { m: MeetingDetail }) {
   const st = regState(m);
   const navigate = useNavigate();
-  const regFn = useServerFn(registerForMeeting);
-  const myFn = useServerFn(getMyRegistration);
   const [userId, setUserId] = useState<string | null | undefined>(undefined);
   const [name, setName] = useState(""); const [email, setEmail] = useState(""); const [phone, setPhone] = useState("");
   const [message, setMessage] = useState(""); const [consent, setConsent] = useState(false); const [website, setWebsite] = useState("");
@@ -130,7 +127,7 @@ function Registration({ m }: { m: MeetingDetail }) {
       setName((v) => v || md["full_name"] || md["name"] || ""); setEmail((v) => v || u.email || "");
     });
   }, []);
-  const mine = useQuery({ queryKey: ["my-meeting-reg", m.id, userId], queryFn: () => myFn({ data: { meetingId: m.id } }), enabled: !!userId });
+  const mine = useQuery({ queryKey: ["my-meeting-reg", m.id, userId], queryFn: () => getMyRegistration({ data: { meetingId: m.id } }), enabled: !!userId });
 
   const box = "mt-12 border border-gold/40 bg-surface-deep p-6";
   if (mine.data && !(mine.data.status === "cancelled" && st.canRegister)) return <section className={box}><MyRegBox m={m} reg={mine.data} onChange={() => mine.refetch()} /></section>;
@@ -156,7 +153,7 @@ function Registration({ m }: { m: MeetingDetail }) {
     if (!consent) return setErr("Zaakceptuj wymagane zgody.");
     setBusy(true);
     try {
-      const r = await regFn({ data: { meetingId: m.id, name, email, phone, message, consent: true, website, elapsedMs: Date.now() - started.current } });
+      const r = await registerForMeeting({ data: { meetingId: m.id, name, email, phone, message, consent: true, website, elapsedMs: Date.now() - started.current } });
       if ("error" in r) { setErr(r.error); setBusy(false); return; }
       navigate({ to: "/spotkania/zgloszenie/$token", params: { token: r.token } });
     } catch { setErr("Nie udało się wysłać zgłoszenia. Sprawdź dane i spróbuj ponownie."); setBusy(false); }

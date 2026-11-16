@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -30,18 +29,15 @@ function AdminMeetings() {
 }
 
 function List({ onEdit, onRegs }: { onEdit: (id: string | null) => void; onRegs: (id: string, t: string, c: number | null) => void }) {
-  const listFn = useServerFn(adminListMeetings);
-  const statusFn = useServerFn(adminSetMeetingStatus);
   const qc = useQueryClient();
-  const list = useQuery({ queryKey: ["admin-meetings"], queryFn: () => listFn() });
-  const cancelFn = useServerFn(adminCancelMeeting);
+  const list = useQuery({ queryKey: ["admin-meetings"], queryFn: () => adminListMeetings() });
   const cancel = useMutation({
-    mutationFn: (v: { id: string; reason: string }) => cancelFn({ data: v }),
+    mutationFn: (v: { id: string; reason: string }) => adminCancelMeeting({ data: v }),
     onSuccess: (r) => { toast.success(`Spotkanie odwołane. Anulowane zgłoszenia: ${r.affected}.`); qc.invalidateQueries({ queryKey: ["admin-meetings"] }); qc.invalidateQueries({ queryKey: ["meetings"] }); },
     onError: (e) => toast.error(errMsg(e)),
   });
   const setSt = useMutation({
-    mutationFn: (v: { id: string; status: MeetingStatus }) => statusFn({ data: v }),
+    mutationFn: (v: { id: string; status: MeetingStatus }) => adminSetMeetingStatus({ data: v }),
     onSuccess: (_r, v) => { toast.success(`Status: ${MEETING_STATUS[v.status]}`); qc.invalidateQueries({ queryKey: ["admin-meetings"] }); qc.invalidateQueries({ queryKey: ["meetings"] }); },
     onError: (e) => toast.error(errMsg(e)),
   });
@@ -104,11 +100,9 @@ const toLocal = (iso: string | null) => { if (!iso) return ""; const d = new Dat
 const toBase64 = (f: File) => new Promise<string>((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1] ?? ""); r.onerror = rej; r.readAsDataURL(f); });
 
 function Editor({ id, onClose, onSaved }: { id: string | null; onClose: () => void; onSaved: (id: string) => void }) {
-  const getFn = useServerFn(adminGetMeeting); const saveFn = useServerFn(adminSaveMeeting);
-  const upFn = useServerFn(adminUploadMeetingImage); const rmFn = useServerFn(adminRemoveMeetingImage);
   const qc = useQueryClient();
   const [f, setF] = useState<Form>(EMPTY); const [slugTouched, setSlugTouched] = useState(!!id);
-  const cur = useQuery({ queryKey: ["admin-meeting", id], queryFn: () => getFn({ data: { id: id! } }), enabled: !!id });
+  const cur = useQuery({ queryKey: ["admin-meeting", id], queryFn: () => adminGetMeeting({ data: { id: id! } }), enabled: !!id });
   useEffect(() => {
     const m = cur.data; if (!m) return;
     setF({ title: m.title, slug: m.slug, kind: m.kind as MeetingKind, summary: m.summary, description: m.description, rules: m.rules, starts: toLocal(m.starts_at), ends: toLocal(m.ends_at),
@@ -126,7 +120,7 @@ function Editor({ id, onClose, onSaved }: { id: string | null; onClose: () => vo
       if (!f.starts) throw new Error("Podaj datę i godzinę rozpoczęcia.");
       const cap = f.capacity.trim() ? Number(f.capacity) : null;
       if (cap !== null && (!Number.isInteger(cap) || cap < 1)) throw new Error("Limit uczestników musi być liczbą całkowitą większą od zera.");
-      return saveFn({ data: {
+      return adminSaveMeeting({ data: {
         id, slug: f.slug, title: f.title, kind: f.kind, summary: f.summary, description: f.description, rules: f.rules,
         starts_at: new Date(f.starts).toISOString(), ends_at: f.ends ? new Date(f.ends).toISOString() : null,
         location: f.location, location_public: f.location_public, capacity: cap, registration_open: f.registration_open,
@@ -141,10 +135,10 @@ function Editor({ id, onClose, onSaved }: { id: string | null; onClose: () => vo
     onError: (e) => toast.error(errMsg(e)),
   });
   const upload = useMutation({
-    mutationFn: async (file: File) => upFn({ data: { id: id!, name: file.name, type: file.type, base64: await toBase64(file) } }),
+    mutationFn: async (file: File) => adminUploadMeetingImage({ data: { id: id!, name: file.name, type: file.type, base64: await toBase64(file) } }),
     onSuccess: () => { toast.success("Grafika dodana."); qc.invalidateQueries({ queryKey: ["admin-meeting", id] }); }, onError: (e) => toast.error(errMsg(e)),
   });
-  const removeImg = useMutation({ mutationFn: () => rmFn({ data: { id: id! } }), onSuccess: () => { toast.success("Grafika usunięta."); qc.invalidateQueries({ queryKey: ["admin-meeting", id] }); }, onError: (e) => toast.error(errMsg(e)) });
+  const removeImg = useMutation({ mutationFn: () => adminRemoveMeetingImage({ data: { id: id! } }), onSuccess: () => { toast.success("Grafika usunięta."); qc.invalidateQueries({ queryKey: ["admin-meeting", id] }); }, onError: (e) => toast.error(errMsg(e)) });
 
   if (id && cur.isLoading) return <p className="text-sm text-muted-foreground">Ładowanie…</p>;
   const sw = (k: "location_public" | "registration_open" | "requires_login" | "requires_approval" | "is_outdoor" | "user_can_cancel", label: string) => (
@@ -244,11 +238,10 @@ function Editor({ id, onClose, onSaved }: { id: string | null; onClose: () => vo
 function csvCell(v: unknown) { const s = String(v ?? ""); return /[",;\n\r]/.test(s) || /^[=+\-@]/.test(s) ? `"${(/^[=+\-@]/.test(s) ? "'" : "") + s.replace(/"/g, '""')}"` : s; }
 
 function Registrations({ id, title, capacity, onClose }: { id: string; title: string; capacity: number | null; onClose: () => void }) {
-  const listFn = useServerFn(adminListRegistrations); const updFn = useServerFn(adminUpdateRegistration);
   const qc = useQueryClient();
-  const q = useQuery({ queryKey: ["admin-meeting-regs", id], queryFn: () => listFn({ data: { meetingId: id } }) });
+  const q = useQuery({ queryKey: ["admin-meeting-regs", id], queryFn: () => adminListRegistrations({ data: { meetingId: id } }) });
   const upd = useMutation({
-    mutationFn: (v: { id: string; status?: RegStatus; attended?: boolean }) => updFn({ data: v }),
+    mutationFn: (v: { id: string; status?: RegStatus; attended?: boolean }) => adminUpdateRegistration({ data: v }),
     onSuccess: () => { toast.success("Zaktualizowano."); qc.invalidateQueries({ queryKey: ["admin-meeting-regs", id] }); qc.invalidateQueries({ queryKey: ["admin-meetings"] }); qc.invalidateQueries({ queryKey: ["meetings"] }); },
     onError: (e) => toast.error(errMsg(e)),
   });
