@@ -3,6 +3,7 @@ import { corsHeaders as sdkCorsHeaders } from "npm:@supabase/supabase-js@2.117.2
 import { z } from "zod";
 import { DEFAULT_TEMPLATES, EVENTS, EVENT_MAP, sampleVars } from "./registry.ts";
 import { render, maskSensitive, stripSensitive, type Vars } from "./render.ts";
+import { sendSmtpMail, smtpConfig } from "../_shared/smtp.ts";
 
 const CORS = new Headers({
   ...sdkCorsHeaders,
@@ -138,7 +139,8 @@ async function dispatch(db: Db, input: { event: string; to?: string | null; vars
     if (!event) return { status: "failed", reason: "unknown_event" };
     const { settings, platform } = await context(db);
     const base = { kind: input.event, related_id: input.relatedId ?? null, template_key: input.event, idempotency_key: input.idempotencyKey };
-    const mode = "test"; // providerStatus() is deliberately disconnected until the real mail provider is configured.
+    const smtp = smtpConfig();
+    const mode = input.forceTest || settings?.delivery_mode !== "live" || !smtp.configured ? "test" : "live";
     const insert = async (row: Record<string, unknown>) => {
       const { data, error } = await db.from("email_notification_log").insert({ ...base, mode, ...row }).select("id").single();
       if (error) { if (error.code === "23505") return null; throw error; }
@@ -164,14 +166,28 @@ async function dispatch(db: Db, input: { event: string; to?: string | null; vars
     }
     const id = await insert({ status: "sending", recipient: to, payload, retryable: !rendered.usesSensitive });
     if (!id) return { status: "duplicate" };
-    const safe = render(template, maskSensitive(vars), template.required);
-    await db.from("email_notification_log").update({
-      status: "simulated", reason: null, attempts: 1, mode: "test", updated_at: new Date().toISOString(),
-      rendered_subject: safe.ok ? safe.subject : null,
-      rendered_html: safe.ok ? safe.html : null,
-      rendered_text: safe.ok ? safe.text : null,
-    }).eq("id", id);
-    return { status: "simulated", id };
+    if (mode === "test") {
+      const safe = render(template, maskSensitive(vars), template.required);
+      await db.from("email_notification_log").update({
+        status: "simulated", reason: null, attempts: 1, mode: "test", updated_at: new Date().toISOString(),
+        rendered_subject: safe.ok ? safe.subject : null,
+        rendered_html: safe.ok ? safe.html : null,
+        rendered_text: safe.ok ? safe.text : null,
+      }).eq("id", id);
+      return { status: "simulated", id };
+    }
+    try {
+      const from = `${settings?.sender_name ?? "Tata Na Baczności"} <${settings?.sender_local_part ?? "kontakt"}@${settings?.sender_domain ?? "tatanabacznosci.pl"}>`;
+      const sent = await sendSmtpMail({ to, from, replyTo: settings?.reply_to ?? null, subject: rendered.subject, html: rendered.html, text: rendered.text });
+      await db.from("email_notification_log").update({
+        status: "sent", reason: null, attempts: 1, mode: "live", provider_message_id: sent.messageId, updated_at: new Date().toISOString(),
+      }).eq("id", id);
+      return { status: "sent", id };
+    } catch (error) {
+      const reason = error instanceof Error ? error.message.slice(0, 300) : "smtp_delivery_failed";
+      await db.from("email_notification_log").update({ status: "failed", reason, attempts: 1, mode: "live", updated_at: new Date().toISOString() }).eq("id", id);
+      return { status: "failed", id, reason: "smtp_delivery_failed" };
+    }
   } catch (error) {
     console.error("notification dispatch failed", error instanceof Error ? error.message : error);
     return { status: "failed", reason: "internal_error" };
@@ -187,12 +203,12 @@ async function overview(db: Db, userId: string) {
   const events = await Promise.all(EVENTS.map(async (event) => ({ ...event, enabled: await eventEnabled(db, event.key, settings), customized: custom.has(event.key) })));
   return {
     canEdit: !!superResult.data,
-    provider: { name: "Lovable — wbudowana poczta", connected: false, domainStatus: "pending" },
+    provider: { name: "Cyber_Folks SMTP", connected: smtpConfig().configured, domainStatus: smtpConfig().configured ? "configured" : "pending" },
     settings: {
       sender: (settings?.sender_local_part ?? "kontakt") + "@" + (settings?.sender_domain ?? "—"),
       sender_name: settings?.sender_name ?? "",
       reply_to: settings?.reply_to ?? null,
-      delivery_mode: "test" as const,
+      delivery_mode: settings?.delivery_mode === "live" && smtpConfig().configured ? "live" as const : "test" as const,
       recipient: settings?.notification_recipient ?? null,
     },
     events,
@@ -275,7 +291,7 @@ Deno.serve(async (req: Request) => {
         return json({ ok: true });
       }
       case "updateDeliveryConfig": {
-        if (input.data.delivery_mode === "live") throw new HttpError(409, "Rzeczywistej wysyłki nie można włączyć: dostawca poczty nie jest skonfigurowany i zweryfikowany.");
+        if (input.data.delivery_mode === "live" && !smtpConfig().configured) throw new HttpError(409, "Rzeczywistej wysyłki nie można włączyć: brakuje poprawnej konfiguracji SMTP w sekretach Supabase.");
         const { error } = await db.from("email_settings").update({ ...input.data, updated_at: new Date().toISOString() }).eq("id", 1);
         if (error) throw new HttpError(500, "Nie udało się zapisać konfiguracji.");
         await logEvent(db, { type: "settings_update", actor: user.id, objectKind: "settings", objectId: "email_provider" });
