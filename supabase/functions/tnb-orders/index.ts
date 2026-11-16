@@ -246,7 +246,6 @@ async function resendAccess(db: Db, orderId: string, key: string) {
   if (!order || !hasAccess(order)) return { ok: false as const, reason: "not_paid" };
   const result = await notifyOrder(db, orderId, order.user_id ? "order_access_delivered" : "order_guest_access", key);
   await logOrderEvent(db, orderId, "access_resent",
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
     result.status === "sent" ? "Link do materiału wysłany ponownie." :
     "Link do materiału przygotowany ponownie (" + (result.status === "simulated" ? "symulacja — nie wysłano" : result.reason ?? result.status) + ").");
   return result.status === "sent" ? { ok: true as const } : { ok: false as const, reason: result.status === "simulated" ? "simulated" : result.reason ?? result.status };
