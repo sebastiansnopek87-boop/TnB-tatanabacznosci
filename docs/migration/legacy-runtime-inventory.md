@@ -30,7 +30,7 @@ W repozytorium znajduje się 41 plików `*.functions.ts` / `*.server.ts` w `src/
 | `src/lib/guest-comments.functions.ts` | `src/lib/api/guest-comments.ts` | `tnb-guest-comments` | dodano test kontraktu 3 akcji, zgodności payloadów, błędów, zgody, filtrów antyspamowych, limitów IP/e-mail oraz tokenów SHA-256 z TTL i jednokrotnym użyciem |
 | `src/lib/instagram.server.ts` | brak potwierdzonego adaptera | do ustalenia (możliwy `tnb-media`) | OAuth/sekrety; blokada do audytu przepływu |
 | `src/lib/library-delivery.functions.ts` | `src/lib/api/library-delivery.ts` | `tnb-library-delivery` | test kontraktu SPA ↔ Edge dla 4 akcji; auth admin, token hash i związanie tokenu z materiałem objęte kontrolą statyczną; testy CI/E2E oczekują na wynik |
-| `src/lib/library.functions.ts` | `src/lib/api/library.ts` | `tnb-library-admin` | istniejący test kontraktu obejmuje 11 akcji, upload/finalize, bramkę admin, direct-download entitlement i zgodność watermark; dodano odrzucanie pustej odpowiedzi w adapterze SPA; CI aktualnie oczekuje na wynik |
+| `src/lib/library.functions.ts` | `src/lib/api/library.ts` | `tnb-library-admin` | istniejący test kontraktu obejmuje 11 akcji, upload/finalize, bramkę admin, direct-download entitlement i zgodność watermark; dodano odrzucanie pustej odpowiedzi w adapterze SPA; CI PASS (pełny pipeline) |
 | `src/lib/library/pdf.server.ts` | `src/lib/api/library.ts` (pośrednio) | `tnb-library-admin` / `tnb-library-delivery` | PDF; porównać watermark i przechowywanie |
 | `src/lib/library/watermark-logo.server.ts` | brak w przeglądarce | `tnb-library-admin` | zasób serwerowy; usunąć po potwierdzeniu użycia w Edge |
 | `src/lib/library/watermark.server.ts` | brak w przeglądarce | `tnb-library-admin` | logika PDF pozostaje wyłącznie po stronie Edge; testy porównują wymiary/pozycję znaku, minimalną szerokość strony i producer marker; pełny test wizualny PDF nadal wymagany |
@@ -43,7 +43,7 @@ W repozytorium znajduje się 41 plików `*.functions.ts` / `*.server.ts` w `src/
 | `src/lib/notifications.server.ts` | `src/lib/api/notifications.ts` | `tnb-notifications` | provider/sekrety; obecnie tryb testowy |
 | `src/lib/orders.functions.ts` | `src/lib/api/orders.ts` | `tnb-orders` | porównać statusy i idempotencję |
 | `src/lib/orders.server.ts` | `src/lib/api/orders.ts` | `tnb-orders` | porównać operacje uprzywilejowane |
-| `src/lib/pages.functions.ts` | `src/lib/api/pages.ts` | `tnb-pages` | testy publikacji istnieją; sprawdzić uprawnienia |
+| `src/lib/pages.functions.ts` | `src/lib/api/pages.ts` | `tnb-pages` | dodano test kontraktu 13 akcji public/admin, bearer, public anonymous read, brak sesji, 403, draft/version, legalConfirmed i expectedDigest przed publikacją |
 | `src/lib/payments.functions.ts` | `src/lib/api/payments.ts` | `tnb-payments` | testy podpisów Edge; pełne testy webhooków i refundów wymagane |
 | `src/lib/payments/providers.server.ts` | `src/lib/api/payments.ts` | `tnb-payments` | przeniesiono współdzielone podpisy do Edge; porównać pełną konfigurację |
 | `src/lib/platform.functions.ts` | `src/lib/api/platform.ts` | `tnb-platform` | test kontraktu SPA ↔ Edge dodany: wszystkie 6 akcji, bearer token, odmowa bez sesji, obsługa błędów, oddzielenie publicznych od chronionych odczytów i kontrola allowlisty kolumn/role gates; test dołączony do CI; moduł legacy zachowany do czasu pełnego porównania semantyki |
@@ -157,3 +157,10 @@ Pozostałe bramki: idempotencja tworzenia zamówienia, trwały outbox/retry dla 
 - Dodano test adaptera `tnb-guest-comments` dla wysłania, potwierdzenia i ponownej wysyłki linku. Test statyczny obejmuje zgodę na zasady, minimalny czas wypełnienia, limity IP (1/min i 5/h) oraz e-mail (5/h), token przechowywany jako SHA-256, 48-godzinny TTL, maksymalnie 3 wysyłki i limit ponowienia co 10 minut.
 - W porównaniu z legacy zachowano te same kluczowe granice bezpieczeństwa i ochronę tokenu. Edge wykonuje cleanup rekordu komentarza, jeśli zapis powiązanych danych gościa się nie powiedzie.
 - Test nie tworzy rzeczywistych komentarzy ani nie wysyła e-maili; nie zmieniano danych produkcyjnych.
+
+
+## Audyt stron CMS — 2026-11-16
+
+- Dodano test kontraktu `tnb-pages` dla publicznego odczytu oraz 12 operacji administracyjnych: list/get, kontrola slug, zapis, status, upload, signed image URLs, draft, publikacja, wersje, przywracanie i draft strony głównej.
+- Test potwierdza anonimowy odczyt publicznej strony, token Bearer dla operacji admina, odmowę bez sesji i propagację 403. Kontrola publikacji obejmuje `legalConfirmed` i opcjonalny digest oczekiwanej wersji; operacje pozostają za bramką administratora.
+- Nie publikowano stron i nie modyfikowano rekordów CMS.
