@@ -61,7 +61,7 @@ function Orders() {
       {isLoading ? <p className="text-sm text-muted-foreground">Ładowanie…</p> : error ? <p className="text-sm text-destructive">{errMsg(error)}</p> : !data?.length ? (
         <p className="border border-border/60 p-6 text-sm text-muted-foreground">Brak zamówień.</p>
       ) : (
-        <><ul className="space-y-2 md:hidden">{data.map((r: any) => (
+        <><ul className="space-y-2 md:hidden">{data.map((r) => (
           <li key={r.id}><button type="button" onClick={() => setOpenId(r.id)} className={`w-full border p-4 text-left text-sm ${openId === r.id ? "border-gold bg-card" : "border-border/60"}`}>
             <span className="flex justify-between gap-2"><span className="font-mono text-xs">{r.order_number}{r.is_test && <TestBadge />}</span><span className="text-gold">{STATUS[r.status] ?? r.status}</span></span>
             <span className="mt-1 block break-words">{r.library_items?.title}</span>
@@ -97,7 +97,7 @@ function OrderDetail({ id, onClose }: { id: string; onClose: () => void }) {
   const refresh = () => { qc.invalidateQueries({ queryKey: ["admin-order", id] }); qc.invalidateQueries({ queryKey: ["admin-orders"] }); qc.invalidateQueries({ queryKey: ["admin-sales"] }); };
   const m = useMutation({
     mutationFn: () => resend({ data: { id } }),
-    onSuccess: (r) => { r.ok ? toast.success("Link do materiału wysłany.") : toast.message(r.reason ? REASON[r.reason] ?? r.reason : "Nie udało się wysłać linku."); refresh(); },
+    onSuccess: (r) => { if (r.ok) toast.success("Link do materiału wysłany."); else toast.message(r.reason ? REASON[r.reason] ?? r.reason : "Nie udało się wysłać linku."); refresh(); },
     onError: (e) => toast.error(errMsg(e)),
   });
   const act = useMutation({
@@ -157,9 +157,9 @@ function OrderDetail({ id, onClose }: { id: string; onClose: () => void }) {
         </div>
       )}
       <h3 className="mt-6 eyebrow text-gold">Historia zamówienia i płatności</h3>
-      <ul className="mt-2 space-y-1">{data.events.map((e: any, i: number) => <li key={i}><span className="text-muted-foreground">{fmtDate(e.created_at)}</span> — {EVENT[e.type] ?? e.type}{e.detail ? `: ${e.detail}` : ""}</li>)}</ul>
+      <ul className="mt-2 space-y-1">{data.events.map((e, i) => <li key={i}><span className="text-muted-foreground">{fmtDate(e.created_at)}</span> — {EVENT[e.type] ?? e.type}{e.detail ? `: ${e.detail}` : ""}</li>)}</ul>
       <h3 className="mt-6 eyebrow text-gold">Wiadomości e-mail</h3>
-      {!data.mails.length ? <p className="mt-2 text-muted-foreground">Brak.</p> : <ul className="mt-2 space-y-1">{data.mails.map((e: any, i: number) => <li key={i}><span className="text-muted-foreground">{fmtDate(e.created_at)}</span> — {EVENT_MAP[e.template_key ?? e.kind]?.name ?? e.template_key ?? e.kind}: {e.status === "sent" ? "wysłano" : e.status === "simulated" ? "symulacja (nie wysłano)" : `${e.status}${e.reason ? ` (${e.reason})` : ""}`}</li>)}</ul>}
+      {!data.mails.length ? <p className="mt-2 text-muted-foreground">Brak.</p> : <ul className="mt-2 space-y-1">{data.mails.map((e, i) => <li key={i}><span className="text-muted-foreground">{fmtDate(e.created_at)}</span> — {EVENT_MAP[e.template_key ?? e.kind]?.name ?? e.template_key ?? e.kind}: {e.status === "sent" ? "wysłano" : e.status === "simulated" ? "symulacja (nie wysłano)" : `${e.status}${e.reason ? ` (${e.reason})` : ""}`}</li>)}</ul>}
     </section>
   );
 }
