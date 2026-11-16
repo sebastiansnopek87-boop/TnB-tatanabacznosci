@@ -66,7 +66,8 @@
 - [x] Guest article comments now call `tnb-guest-comments` directly from the browser API adapter; form and confirmation route no longer use `useServerFn` for these actions.
 - [x] Free library delivery/history now calls `tnb-library-delivery` directly; history UI no longer wraps those actions with `useServerFn`.
 - [x] Consultations: `src/lib/api/consult.ts` now invokes `tnb-consult` directly; public booking, token lookup, user booking history/cancellation and all admin actions use the Edge Function. Admin route no longer wraps these calls in `useServerFn`. Existing server implementation retained as rollback reference; build/E2E still pending.
-- [ ] Migrate remaining adapters still re-exporting TanStack server functions: meetings, editor AI, and Głos TNB/Instagram.
+- [x] Editorial AI assistant: all 14 actions now invoke `tnb-editor-ai` through the browser API adapter; the admin route no longer wraps those actions in `useServerFn` (one remaining `useServerFn` is retained for the separate editor-materials module).
+- [ ] Migrate remaining adapters still re-exporting TanStack server functions: meetings and Głos TNB/Instagram.
 - [ ] Move remaining SSR/API route handlers (OAuth callbacks, cron, signed media, payment callbacks) to explicit Supabase Edge Function or hosting-compatible endpoints while preserving webhook signature verification and private-media access checks.
 - [ ] Remove TanStack Start/Nitro server runtime only after no production path depends on it; replace with a static Vite React SPA and configure CyberFolks routing/fallbacks.
 - [ ] Run production build, typecheck, lint, unit tests, route smoke tests and authenticated E2E across guest/user/admin/superadmin; validate on CyberFolks staging before production cutover.
