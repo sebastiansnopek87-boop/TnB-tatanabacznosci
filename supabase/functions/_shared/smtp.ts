@@ -31,7 +31,7 @@ export function smtpConfig(): { configured: boolean; host: string | null; port: 
   const secureRaw = env("SMTP_SECURE").toLowerCase();
   const secure = secureRaw ? secureRaw === "true" || secureRaw === "1" : port === 465;
 
-  if (!host || !Number.isInteger(port) || port < 1 || port > 65535 || !user || !password || !sender) {
+  if (!host || !Number.isInteger(port) || port < 1 || port > 65535 || !user || !password || !/^[^\s@<>"]+@[^\s@<>]+\.[a-z]{2,}$/i.test(sender)) {
     return { configured: false, host: host || null, port: port || null, secure, reason: !sender ? "smtp_sender_missing" : "smtp_credentials_missing" };
   }
   // Supabase Edge Functions block outbound SMTP ports 25 and 587.
@@ -85,8 +85,11 @@ export async function sendSmtpMail(message: SmtpMessage): Promise<{ messageId: s
     user: env("SMTP_USERNAME") || env("SMTP_USER"),
     password: Deno.env.get("SMTP_PASSWORD") ?? Deno.env.get("SMTP_PASS") ?? "",
   };
+  const configuredSender = env("SMTP_FROM").toLowerCase();
+  const messageSender = (message.from.match(/<([^>]+)>/)?.[1] ?? message.from).trim().toLowerCase();
+  if (messageSender !== configuredSender) throw new Error("smtp_sender_mismatch");
   const result = await transport(config).sendMail({
-    from: env("SMTP_FROM") || message.from,
+    from: message.from,
     to: message.to,
     ...(message.replyTo ? { replyTo: message.replyTo } : {}),
     subject: message.subject,
