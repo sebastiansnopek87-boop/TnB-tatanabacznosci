@@ -50,7 +50,7 @@ W repozytorium znajduje się 41 plików `*.functions.ts` / `*.server.ts` w `src/
 | `src/lib/podcast.functions.ts` | `src/lib/api/podcast.ts` | `tnb-podcast` | porównać publikację i dostęp |
 | `src/lib/recommend.functions.ts` | `src/lib/api/recommend.ts` | `tnb-recommend` | test kontraktu SPA ↔ Edge dodany: akcja, walidacja 10–600 znaków, brak fragmentów premium, payload i obsługa błędów; test uruchamiany w CI; logika legacy nadal zachowana do czasu pełnej weryfikacji równoważności |
 | `src/lib/templates.functions.ts` | `src/lib/api/templates.ts` | `tnb-templates` | porównać operacje szablonów |
-| `src/lib/users.functions.ts` | `src/lib/api/users.ts` | `tnb-users` | role i operacje admin wymagają testów |
+| `src/lib/users.functions.ts` | `src/lib/api/users.ts` | `tnb-users` | test kontraktu SPA ↔ Edge obejmuje 3 akcje, bearer token, brak sesji, 403 i bramki admin/superadmin; Edge zmienia role przez atomową procedurę DB `admin_set_user_role`; legacy zachowany do pełnej weryfikacji semantyki |
 | `src/lib/voice.functions.ts` | `src/lib/api/voice.ts` | `tnb-voice` | porównać upload, limity i prywatność |
 | `src/lib/youtube.server.ts` | `src/lib/api/youtube.ts` | `tnb-youtube` | OAuth/sekrety; sprawdzić callback i odświeżanie tokenów |
 
@@ -124,3 +124,12 @@ Wdrożone na branchu:
 - Dodano testy jednostkowe dla porównania referencji i bramki odpowiedzi P24 oraz testy kontraktu adapterów SPA zamówień/płatności.
 
 Pozostałe bramki: idempotencja tworzenia zamówienia, trwały outbox/retry dla `afterPaid`, pełne testy webhooków z symulacją awarii i testy sandbox operatorów. Nie zmieniano danych ani konfiguracji operatorów w Supabase.
+
+
+## Audyt modułu użytkowników — 2026-11-16
+
+- Dodano test kontraktu SPA ↔ Edge dla `listUsers`, `getUserDetail` i `setUserRole`; test sprawdza payloady, token Bearer, odmowę bez sesji, propagację 403, allowlistę akcji i bramki admin/superadmin.
+- Edge Function nie wykonuje ręcznych INSERT/DELETE dla `user_roles`. Zmiana roli wywołuje `public.admin_set_user_role(uuid,uuid,app_role,boolean)`, która blokuje tabelę `user_roles`, sprawdza role aktora, istnienie użytkownika docelowego, zależność superadmin → admin i ochronę ostatniego superadministratora. Zapis zmiany roli i wpisu `admin_events` jest wykonywany wewnątrz procedury.
+- Odczyt ACL w aktywnej bazie: funkcja ma `SECURITY DEFINER`, `search_path=public, pg_temp`, właściciela `postgres`; EXECUTE ma wyłącznie `service_role`. Role `authenticated`, `anon` i `public` nie mają EXECUTE. To ogranicza bezpośrednie wywołanie RPC z klienta.
+- Historia Supabase zawiera migrację `20261115150058 / 0061_admin_set_user_role_atomic`, ale plik źródłowy tej migracji nie jest obecny w repo. Nie odtwarzano go z samej nazwy ani nie zmieniano bazy. Wymagane odzyskanie oryginalnej treści migracji w ramach uzgadniania brakujących plików.
+- Nie usuwano `src/lib/users.functions.ts`; pozostaje potrzebny do porównania zachowania i nie został wykazany jako zbędny.
