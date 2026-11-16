@@ -156,6 +156,11 @@ describe("library SPA adapter contracts", () => {
     }
   });
 
+  it("rejects an empty Edge response", async () => {
+    invoke.mockResolvedValueOnce({ data: null, error: null });
+    await expect(adminListLibrary({ data: {} })).rejects.toThrow("pustą odpowiedź");
+  });
+
   it("does not turn a failed Edge invocation into a successful library result", async () => {
     const failure = new Error("Brak uprawnień administratora.");
     invoke.mockResolvedValueOnce({ data: null, error: failure });
