@@ -5,12 +5,12 @@ export const FX_DEFAULT: VisualEffects = { enabled: true, intensity: "subtle", s
 export function normalizeFx(v: unknown): VisualEffects {
   const raw = typeof v === "object" && v !== null && !Array.isArray(v) ? v as Record<string, unknown> : {};
   return {
-    enabled: typeof raw.enabled === "boolean" ? raw.enabled : FX_DEFAULT.enabled,
-    intensity: raw.intensity === "subtle" || raw.intensity === "standard" || raw.intensity === "off" ? raw.intensity : FX_DEFAULT.intensity,
-    speed: raw.speed === "fast" || raw.speed === "standard" || raw.speed === "calm" ? raw.speed : FX_DEFAULT.speed,
-    reveal: typeof raw.reveal === "boolean" ? raw.reveal : FX_DEFAULT.reveal,
-    interactive: typeof raw.interactive === "boolean" ? raw.interactive : FX_DEFAULT.interactive,
-    panels: typeof raw.panels === "boolean" ? raw.panels : FX_DEFAULT.panels,
+    enabled: typeof raw["enabled"] === "boolean" ? raw["enabled"] : FX_DEFAULT.enabled,
+    intensity: raw["intensity"] === "subtle" || raw["intensity"] === "standard" || raw["intensity"] === "off" ? raw["intensity"] : FX_DEFAULT.intensity,
+    speed: raw["speed"] === "fast" || raw["speed"] === "standard" || raw["speed"] === "calm" ? raw["speed"] : FX_DEFAULT.speed,
+    reveal: typeof raw["reveal"] === "boolean" ? raw["reveal"] : FX_DEFAULT.reveal,
+    interactive: typeof raw["interactive"] === "boolean" ? raw["interactive"] : FX_DEFAULT.interactive,
+    panels: typeof raw["panels"] === "boolean" ? raw["panels"] : FX_DEFAULT.panels,
   };
 }
 
