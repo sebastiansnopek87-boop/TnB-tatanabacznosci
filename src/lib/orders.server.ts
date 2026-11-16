@@ -19,9 +19,8 @@ export function siteOrigin(): string {
 }
 
 const zl = (a: number) => `${(a / 100).toLocaleString("pl-PL", { minimumFractionDigits: 2 })} zł`;
-const ACCESS_STATUSES = ["paid", "refund_pending", "refunded"];
-export const hasAccess = (o: { status: string; paid_at: string | null; access_revoked_at: string | null }) =>
-  !!o.paid_at && !o.access_revoked_at && ACCESS_STATUSES.includes(o.status);
+import { hasAccess } from "./orders-access";
+export { hasAccess } from "./orders-access";
 
 type OrderEvent = "order_created" | "order_paid" | "order_access_delivered" | "order_guest_access" | "order_payment_failed" | "order_cancelled" | "order_refunded" | "order_admin_new";
 
