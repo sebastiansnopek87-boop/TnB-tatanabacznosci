@@ -7,7 +7,7 @@ set -euo pipefail
 if grep -RInE \
   --include='*.ts' --include='*.tsx' \
   --exclude='*.functions.ts' --exclude='*.server.ts' \
-  '(from[[:space:]]+["'\'''][^"'\''']*\\.(functions|server)["'\''']|import[[:space:]]*\\([[:space:]]*["'\'''][^"'\''']*\\.(functions|server)["'\''']|@tanstack/react-start)' \
+  '(functions|server)["'\''']|@tanstack/react-start' \
   src; then
   echo "ERROR: non-legacy application source imports a TanStack Start/server module."
   exit 1
@@ -17,7 +17,7 @@ fi
 if grep -RInE \
   --include='*.ts' --include='*.tsx' \
   --exclude='*.functions.ts' --exclude='*.server.ts' \
-  'client\\.server|supabaseAdmin|SUPABASE_SERVICE_ROLE_KEY' \
+  'client.server|supabaseAdmin|SUPABASE_SERVICE_ROLE_KEY' \
   src; then
   echo "ERROR: server-only Supabase credentials/client referenced outside legacy server modules."
   exit 1
