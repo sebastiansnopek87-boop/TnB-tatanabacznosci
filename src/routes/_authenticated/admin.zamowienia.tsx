@@ -97,7 +97,7 @@ function OrderDetail({ id, onClose }: { id: string; onClose: () => void }) {
   const refresh = () => { qc.invalidateQueries({ queryKey: ["admin-order", id] }); qc.invalidateQueries({ queryKey: ["admin-orders"] }); qc.invalidateQueries({ queryKey: ["admin-sales"] }); };
   const m = useMutation({
     mutationFn: () => resend({ data: { id } }),
-    onSuccess: (r) => { r.ok ? toast.success("Link do materiału wysłany.") : toast.message(REASON[r.reason] ?? r.reason); refresh(); },
+    onSuccess: (r) => { r.ok ? toast.success("Link do materiału wysłany.") : toast.message(r.reason ? REASON[r.reason] ?? r.reason : "Nie udało się wysłać linku."); refresh(); },
     onError: (e) => toast.error(errMsg(e)),
   });
   const act = useMutation({
@@ -119,7 +119,7 @@ function OrderDetail({ id, onClose }: { id: string; onClose: () => void }) {
       <div className="mt-4 grid gap-x-8 md:grid-cols-2">
         <div>
           {row("Materiał", o.library_items?.title)}{row("Kwota", `${fmtPrice(o.amount)} (${o.currency})`)}{row("Status", STATUS[o.status] ?? o.status)}
-          {row("Metoda / operator", `${PROVIDER[o.provider] ?? o.provider}${online ? ` — środowisko ${o.environment === "sandbox" ? "testowe" : "produkcyjne"}` : ""}`)}
+          {row("Metoda / operator", `${o.provider ? PROVIDER[o.provider] ?? o.provider : "—"}${online ? ` — środowisko ${o.environment === "sandbox" ? "testowe" : "produkcyjne"}` : ""}`)}
           {row("Id transakcji operatora", o.provider_ref)}{row("Telefon", o.buyer_phone)}{row("Konto", o.user_id ? "Zakup na koncie" : "Gość (dostęp przez link i adres e-mail)")}
           {row("Dostęp do materiału", data.access ? "Przyznany" : o.access_revoked_at ? `Cofnięty ${fmtDate(o.access_revoked_at)}` : "Brak")}
         </div>
@@ -127,7 +127,7 @@ function OrderDetail({ id, onClose }: { id: string; onClose: () => void }) {
           {row("Kupujący", o.buyer_name)}{row("E-mail", o.buyer_email)}{row("Utworzono", fmtDate(o.created_at))}
           {row("Opłacono", o.paid_at && fmtDate(o.paid_at))}{row("Opłacone oznaczył", o.paid_marked_by ? (data.names[o.paid_marked_by] ?? o.paid_marked_by) : o.paid_at && online ? "Operator (automatycznie)" : null)}
           {row("Przyczyna weryfikacji", o.review_reason)}{row("Przyczyna zwrotu", o.refund_reason)}
-          {row("Ostatnia zmiana", o.status_changed_at && `${fmtDate(o.status_changed_at)} — ${data.names[o.status_changed_by] ?? "system"}`)}
+          {row("Ostatnia zmiana", o.status_changed_at && `${fmtDate(o.status_changed_at)} — ${(o.status_changed_by ? data.names[o.status_changed_by] : null) ?? "system"}`)}
         </div>
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
@@ -143,7 +143,7 @@ function OrderDetail({ id, onClose }: { id: string; onClose: () => void }) {
       {o.status === "paid" && (
         <div className="mt-5 border border-border/60 p-4">
           <p className="eyebrow text-gold">Rejestracja zwrotu</p>
-          <p className="mt-1 text-xs text-muted-foreground">Automatyczny zwrot nie jest jeszcze dostępny — {online ? `środki zwróć w panelu ${PROVIDER[o.provider]}` : "zwróć środki przelewem"}, a tutaj zarejestruj zwrot.</p>
+          <p className="mt-1 text-xs text-muted-foreground">Automatyczny zwrot nie jest jeszcze dostępny — {online ? `środki zwróć w panelu ${(o.provider ? PROVIDER[o.provider] ?? o.provider : "operator płatności")}` : "zwróć środki przelewem"}, a tutaj zarejestruj zwrot.</p>
           <Input className="mt-2" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Przyczyna zwrotu" maxLength={500} />
           <Button className="mt-2" variant="outline" onClick={() => typed("refund_start", "Rozpocząć zwrot (status „Zwrot w toku”)?")} disabled={act.isPending || reason.trim().length < 3}>Rozpocznij zwrot</Button>
         </div>
