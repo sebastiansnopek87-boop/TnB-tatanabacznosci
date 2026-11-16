@@ -246,6 +246,7 @@ async function resendAccess(db: Db, orderId: string, key: string) {
   if (!order || !hasAccess(order)) return { ok: false as const, reason: "not_paid" };
   const result = await notifyOrder(db, orderId, order.user_id ? "order_access_delivered" : "order_guest_access", key);
   await logOrderEvent(db, orderId, "access_resent",
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
     result.status === "sent" ? "Link do materiału wysłany ponownie." :
     "Link do materiału przygotowany ponownie (" + (result.status === "simulated" ? "symulacja — nie wysłano" : result.reason ?? result.status) + ").");
   return result.status === "sent" ? { ok: true as const } : { ok: false as const, reason: result.status === "simulated" ? "simulated" : result.reason ?? result.status };
@@ -289,7 +290,9 @@ const actionSchema = z.discriminatedUnion("action", [
 async function getCheckoutOptions(db: Db) {
   const { data, error } = await db.from("payment_providers").select("id, enabled, is_default, environment, merchant_id, pos_id, client_id");
   if (error) throw new HttpError(500, "Nie udało się pobrać metod płatności.");
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
   const providers = (data ?? []).filter((p: any) => p.enabled && configStatus(p).configured)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
     .map((p: any) => ({ id: p.id as ProviderId, label: PROVIDER_LABEL[p.id]!, isDefault: p.is_default, test: p.environment === "sandbox" }));
   return { providers };
 }
@@ -372,11 +375,13 @@ async function listMyPurchases(db: Db, userId: string, email: string | null) {
   query = email ? query.or("user_id.eq." + userId + ",buyer_email.eq." + email) : query.eq("user_id", userId);
   const { data, error } = await query.order("paid_at", { ascending: false });
   if (error) throw new HttpError(500, "Nie udało się pobrać zakupów.");
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
   return (data ?? []).map((order: any) => ({
     id: order.id, paid_at: order.paid_at, amount: order.amount, title: order.library_items?.title ?? "",
     slug: order.library_items?.slug ?? "", token: order.access_token,
   }));
 }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
 async function adminListOrders(db: Db, input: any) {
   let query = db.from("library_orders").select("id, order_number, created_at, paid_at, delivered_at, status, delivery_status, buyer_email, buyer_name, amount, currency, payment_method, provider, environment, is_test, access_revoked_at, library_items!inner(title)")
     .order("created_at", { ascending: false }).limit(500);
@@ -388,6 +393,7 @@ async function adminListOrders(db: Db, input: any) {
   const { data, error } = await query;
   if (error) throw new HttpError(500, "Nie udało się pobrać zamówień.");
   const search = input.q.toLowerCase();
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
   return (data as any[]).filter((row) => !search ||
     row.order_number.toLowerCase().includes(search) || row.buyer_email.toLowerCase().includes(search) ||
     (row.buyer_name ?? "").toLowerCase().includes(search) || (row.library_items?.title ?? "").toLowerCase().includes(search));
@@ -396,9 +402,11 @@ async function adminSalesSummary(db: Db) {
   const { data, error } = await db.from("library_orders")
     .select("status, amount, provider, environment, is_test, paid_at, created_at").limit(20000);
   if (error) throw new HttpError(500, "Nie udało się pobrać podsumowania sprzedaży.");
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
   const rows = (data ?? []) as any[];
   const real = rows.filter((row) => row.environment !== "sandbox" && !row.is_test);
   const paid = real.filter((row) => row.paid_at && ["paid", "refund_pending"].includes(row.status));
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
   const sum = (items: any[]) => items.reduce((total, row) => total + row.amount, 0);
   const byProvider: Record<string, { count: number; amount: number }> = {};
   for (const row of paid) {
@@ -440,6 +448,7 @@ async function adminResendDelivery(db: Db, id: string, actor: string) {
   await logEvent(db, { type: "order_resend", actor, objectKind: "order", objectId: id, result: result.ok ? "ok" : "failed", detail: result.ok ? undefined : result.reason });
   return result;
 }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
 async function adminSetOrderStatus(db: Db, userId: string, input: any) {
   if (input.action.startsWith("refund") || input.action.startsWith("review")) {
     const { data: order } = await db.from("library_orders").select("order_number").eq("id", input.id).maybeSingle();
