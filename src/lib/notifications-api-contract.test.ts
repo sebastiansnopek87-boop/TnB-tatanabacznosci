@@ -69,6 +69,7 @@ describe("notifications SPA contract", () => {
 
   it("keeps Edge actions, admin/superadmin authorization and SMTP live-mode safeguards explicit", () => {
     const edge = readFileSync(new URL("../../supabase/functions/tnb-notifications/index.ts", import.meta.url), "utf8");
+    const legacy = readFileSync(new URL("./notifications.functions.ts", import.meta.url), "utf8");
     const actions = [
       "getNotificationOverview", "getTemplate", "previewTemplate", "saveTemplate", "resetTemplate",
       "setEventEnabled", "updateDeliveryConfig", "sendTestMessage", "runDuplicateCheck",
@@ -77,9 +78,16 @@ describe("notifications SPA contract", () => {
     for (const action of actions) {
       expect(edge).toContain('z.literal("' + action + '")');
       expect(edge).toContain('case "' + action + '"');
+      expect(legacy).toContain("export const " + action + " =");
     }
     expect(edge).toContain("const superOnly = new Set");
     expect(edge).toContain("const user = await requireRole(db, req, superOnly.has(input.action))");
+    const privileged = edge.slice(edge.indexOf("const superOnly = new Set"), edge.indexOf("const user = await requireRole"));
+    for (const action of ["saveTemplate", "resetTemplate", "setEventEnabled", "updateDeliveryConfig", "sendTestMessage", "runDuplicateCheck", "retryNotification"]) {
+      expect(privileged).toContain('"' + action + '"');
+    }
+    expect(privileged).not.toContain('"getNotificationOverview"');
+    expect(privileged).not.toContain('"getLogPreview"');
     expect(edge).toContain("await verifySmtp()");
     expect(edge).toContain('if (!smtpConfig().configured)');
     expect(edge).toContain("maskSensitive");
