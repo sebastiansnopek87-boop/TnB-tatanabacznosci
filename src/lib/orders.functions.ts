@@ -75,10 +75,10 @@ export const createLibraryOrder = createServerFn({ method: "POST" })
     const { data: order, error } = await s.from("library_orders").insert({
       item_id: item.id, user_id: user?.id ?? null, buyer_email: data.email, buyer_name: data.name, buyer_phone: data.phone || null,
       amount: item.price_amount, currency: "PLN", status: "pending", provider: online ? data.method : "manual", payment_method: online ? "online" : "bank_transfer",
-      environment: online ? provider.environment : "live", consent_text: CONSENT,
+      environment: online ? provider!.environment : "live", consent_text: CONSENT,
     }).select("id, access_token, order_number").single();
     if (error || !order) return { error: "Nie udało się złożyć zamówienia. Spróbuj ponownie." };
-    await core.logOrderEvent(order.id, "created", `Zamówienie złożone ${user ? "na koncie" : "bez konta"}, metoda: ${online ? `${PROVIDER_LABEL[data.method]}${provider.environment === "sandbox" ? " (test)" : ""}` : "przelew tradycyjny"}.`);
+    await core.logOrderEvent(order.id, "created", `Zamówienie złożone ${user ? "na koncie" : "bez konta"}, metoda: ${online ? `${PROVIDER_LABEL[data.method]}${provider!.environment === "sandbox" ? " (test)" : ""}` : "przelew tradycyjny"}.`);
     await core.notifyOrder(order.id, "order_created");
     await core.notifyOrder(order.id, "order_admin_new");
     if (!online) return { token: order.access_token };

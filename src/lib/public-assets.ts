@@ -15,7 +15,7 @@ export function publicAssetUrl(kind: PublicAssetKind, id: string, version?: stri
 
 /** Public article images are served only when the published article references the requested file. */
 export function publicArticleAssetUrl(id: string, file: string, version?: string | null): string {
-  const base = supabase.supabaseUrl.replace(/\/+$/, "");
+  const base = getSupabaseBaseUrl();
   const url = base + "/functions/v1/tnb-articles?image=" + encodeURIComponent(id + "/" + file);
 
   return version ? url + (url.includes("?") ? "&" : "?") + "v=" + encodeURIComponent(version) : url;
