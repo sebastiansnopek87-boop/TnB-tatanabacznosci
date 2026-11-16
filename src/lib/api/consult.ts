@@ -94,7 +94,14 @@ export function cancelMyBooking({ data }: { data: { id: string; reason: string; 
 export function adminListBookings({ data }: { data: { from: string | null; to: string | null; status: string | null } }): Promise<AdminConsultBooking[]> {
   return invokeConsult<AdminConsultBooking[]>("adminListBookings", data);
 }
-export type AdminConsultBookingDetails = AdminConsultBooking & {\n  ends_at: string; question: string; user_id: string | null; confirmation_error: string | null; cancelled_at: string | null;\n};\nexport function adminGetBooking({ data }: { data: { id: string } }): Promise<{ booking: AdminConsultBookingDetails; events: Array<{ type: string; detail: string | null; created_at: string }> }> {
+export type AdminConsultBookingDetails = AdminConsultBooking & {
+  ends_at: string;
+  question: string;
+  user_id: string | null;
+  confirmation_error: string | null;
+  cancelled_at: string | null;
+};
+export function adminGetBooking({ data }: { data: { id: string } }): Promise<{ booking: AdminConsultBookingDetails; events: Array<{ type: string; detail: string | null; created_at: string }> }> {
   return invokeConsult("adminGetBooking", data);
 }
 export function adminUpdateBooking({ data }: { data: { id: string; action: "cancel" | "completed" | "no_show" | "set_link"; link?: string; reason?: string } }): Promise<{ ok: true }> {
