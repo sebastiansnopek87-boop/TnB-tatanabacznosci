@@ -133,6 +133,6 @@ describe("orders and payments SPA adapter contracts", () => {
     await expect(testPaymentProvider({ data: { id: "p24" } })).rejects.toThrow("Brak uprawnień administratora.");
 
     invoke.mockResolvedValueOnce({ data: null, error: null });
-    await expect(getCheckoutOptions()).rejects.toThrow("pusta odpowiedź");
+    await expect(getCheckoutOptions()).rejects.toThrow("pustą odpowiedź");
   });
 });
