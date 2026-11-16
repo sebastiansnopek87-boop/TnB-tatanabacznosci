@@ -6,7 +6,7 @@ Stan na 2026-11-16, branch `chore/legacy-runtime-audit`.
 
 Ta lista jest mapą migracyjną, a nie potwierdzeniem równoważności funkcjonalnej. Obecność adaptera SPA i Edge Function o pasującej nazwie nie dowodzi zgodności payloadów, uprawnień, RLS, walidacji, obsługi błędów ani skutków ubocznych. Żaden plik legacy nie może zostać usunięty przed porównaniem tych elementów i testem regresji.
 
-W repozytorium znajduje się 41 plików `*.functions.ts` / `*.server.ts` w `src/`, 32 adaptery w `src/lib/api/` oraz 29 katalogów Supabase Edge Functions.
+W repozytorium znajduje się 41 plików `*.functions.ts` / `*.server.ts` w `src/` oraz 2 pliki middleware (`auth-middleware.ts`, `auth-attacher.ts`) importujące TanStack Start — łącznie 43 pozostałe pliki legacy. Repo zawiera 32 adaptery w `src/lib/api/` oraz 29 katalogów Supabase Edge Functions. Szczegółowy stan entrypointu i zależności opisano również w `docs/migration/supabase-migration-reconciliation.md`.
 
 ## Mapa plików
 
