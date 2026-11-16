@@ -1,5 +1,4 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { cancelMyRegistration } from "@/lib/api/meetings";
 import { REG_STATUS, countdown, endOf, fmtTime, type RegStatus } from "@/lib/meetings";
@@ -12,7 +11,7 @@ export function MyRegBox({ m, reg, onChange }: { m: { kind: string; starts_at: s
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 30_000); return () => clearInterval(t); }, []);
   const opensAt = reg.joinOpensAt ? new Date(reg.joinOpensAt).getTime() : null;
   useEffect(() => { if (opensAt && now >= opensAt) onChange(); }, [opensAt, now >= (opensAt ?? Infinity)]); // refetch to receive link
-  const cancelFn = useServerFn(cancelMyRegistration);
+  const cancelFn = cancelMyRegistration;
   const qc = useQueryClient();
   const cancel = useMutation({
     mutationFn: () => cancelFn({ data: { token: reg.token } }),
