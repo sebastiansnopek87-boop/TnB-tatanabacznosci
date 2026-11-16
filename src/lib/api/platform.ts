@@ -1,11 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { ModuleVisibility } from "@/config/modules";
-import type {
-  BillingSettings,
-  PodcastLayout,
-  PublicPlatformSettings,
-  VisualEffects,
-} from "@/lib/platform.functions";
+import type { BillingSettings, PodcastLayout, PublicPlatformSettings, VisualEffects } from "@/lib/platform-types";
+export type { BillingSettings, PodcastLayout, PublicPlatformSettings, VisualEffects } from "@/lib/platform-types";
 
 type PlatformEmailSettings = {
   notification_recipient: string | null;
