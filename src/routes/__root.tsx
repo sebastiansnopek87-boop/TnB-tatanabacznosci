@@ -1,7 +1,8 @@
 import type { ErrorComponentProps } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Outlet, Link, createRootRouteWithContext, useRouter, useRouterState } from "@tanstack/react-router";
+import { Outlet, Link, createRootRouteWithContext, useRouter, useRouterState, HeadContent } from "@tanstack/react-router";
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 
 import { Toaster } from "../components/ui/sonner";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -138,6 +139,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      {createPortal(<HeadContent />, document.head)}
       <BrandHead />
       <VisualEffects />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
