@@ -58,3 +58,16 @@
 - [ ] Zastosowanie migracji w bazie projektu — czeka na akceptację właściciela
 
 - [x] Filmowa sekcja „pięć etapów życia”: jeden blok na początku istniejącego szkicu home, pięć obrazów i edytowalne pola; 33 testy stron i 19 regresji PASS, build OK, zapis/odczyt i przywrócenie próbnego nagłówka PASS; 7 dotychczasowych sekcji oraz publiczna / niezmienione, bez publikacji. Przesyłanie nowych zdjęć w tym etapie nie było testowane.
+
+## React SPA migration — continuation 2026-11-16
+- [x] Synchronize the 10 deployed Supabase Edge Functions missing from the repository into `supabase/functions`, including their deployed source files and Deno import maps.
+- [x] Align `supabase/config.toml` JWT settings for those functions with the active Supabase deployment.
+- [x] Verify exact function inventory: 29 deployed Edge Functions and 29 corresponding source directories in GitHub; no unmatched function names.
+- [x] Guest article comments now call `tnb-guest-comments` directly from the browser API adapter; form and confirmation route no longer use `useServerFn` for these actions.
+- [x] Free library delivery/history now calls `tnb-library-delivery` directly; history UI no longer wraps those actions with `useServerFn`.
+- [ ] Migrate remaining adapters still re-exporting TanStack server functions: consult, meetings, editor AI, and Głos TNB/Instagram.
+- [ ] Move remaining SSR/API route handlers (OAuth callbacks, cron, signed media, payment callbacks) to explicit Supabase Edge Function or hosting-compatible endpoints while preserving webhook signature verification and private-media access checks.
+- [ ] Remove TanStack Start/Nitro server runtime only after no production path depends on it; replace with a static Vite React SPA and configure CyberFolks routing/fallbacks.
+- [ ] Run production build, typecheck, lint, unit tests, route smoke tests and authenticated E2E across guest/user/admin/superadmin; validate on CyberFolks staging before production cutover.
+- [ ] Reconcile the generated Supabase types and migration inventory with the live project; no database schema or production data changes were made in this continuation.
+
