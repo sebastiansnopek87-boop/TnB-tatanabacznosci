@@ -27,7 +27,7 @@ W repozytorium znajduje się 41 plików `*.functions.ts` / `*.server.ts` w `src/
 | `src/lib/control-center.functions.ts` | `src/lib/api/control-center.ts` | `tnb-admin` | test kontraktu SPA ↔ Edge obejmuje wyszukiwanie i historię, walidację zapytań/UUID/paginacji oraz bramkę admin; nadal wymagany audyt kompletności wyników i zgodności semantyki |
 | `src/lib/editor-ai.functions.ts` | `src/lib/api/editor-ai.ts` | `tnb-editor-ai` | porównać kontrakty i uprawnienia |
 | `src/lib/editor-materials.functions.ts` | `src/lib/api/editor-materials.ts` | `tnb-editor-materials` | dodano test kontraktu 15 akcji, dynamicznej allowlisty Edge, walidacji w warstwie logic i wymogu superadmin w Edge oraz legacy; sprawdzić provider AI i handoff E2E |
-| `src/lib/guest-comments.functions.ts` | `src/lib/api/guest-comments.ts` | `tnb-guest-comments` | porównać moderację i limity |
+| `src/lib/guest-comments.functions.ts` | `src/lib/api/guest-comments.ts` | `tnb-guest-comments` | dodano test kontraktu 3 akcji, zgodności payloadów, błędów, zgody, filtrów antyspamowych, limitów IP/e-mail oraz tokenów SHA-256 z TTL i jednokrotnym użyciem |
 | `src/lib/instagram.server.ts` | brak potwierdzonego adaptera | do ustalenia (możliwy `tnb-media`) | OAuth/sekrety; blokada do audytu przepływu |
 | `src/lib/library-delivery.functions.ts` | `src/lib/api/library-delivery.ts` | `tnb-library-delivery` | test kontraktu SPA ↔ Edge dla 4 akcji; auth admin, token hash i związanie tokenu z materiałem objęte kontrolą statyczną; testy CI/E2E oczekują na wynik |
 | `src/lib/library.functions.ts` | `src/lib/api/library.ts` | `tnb-library-admin` | istniejący test kontraktu obejmuje 11 akcji, upload/finalize, bramkę admin, direct-download entitlement i zgodność watermark; dodano odrzucanie pustej odpowiedzi w adapterze SPA; CI aktualnie oczekuje na wynik |
@@ -150,3 +150,10 @@ Pozostałe bramki: idempotencja tworzenia zamówienia, trwały outbox/retry dla 
 - Newsletter: test adaptera obejmuje `subscribe`, `unsubscribe` i `confirm`, normalizację adresu, wymóg zgody, błędy Edge i pustą odpowiedź. Test statyczny potwierdza filtr antyspamowy, limit prób IP, double opt-in, potwierdzenie tokenem i wypis.
 - Newsletter double opt-in wymaga aktywnego trybu live i poprawnie skonfigurowanego SMTP; produkcyjny SMTP nadal nie jest skonfigurowany, więc testy nie wysyłają prawdziwych wiadomości.
 - Testy są włączone do `vitest.unit.config.ts`. Nie usuwano modułów legacy ani nie zmieniano produkcyjnych rekordów kontaktowych/subskrybentów.
+
+
+## Audyt komentarzy gościnnych — 2026-11-16
+
+- Dodano test adaptera `tnb-guest-comments` dla wysłania, potwierdzenia i ponownej wysyłki linku. Test statyczny obejmuje zgodę na zasady, minimalny czas wypełnienia, limity IP (1/min i 5/h) oraz e-mail (5/h), token przechowywany jako SHA-256, 48-godzinny TTL, maksymalnie 3 wysyłki i limit ponowienia co 10 minut.
+- W porównaniu z legacy zachowano te same kluczowe granice bezpieczeństwa i ochronę tokenu. Edge wykonuje cleanup rekordu komentarza, jeśli zapis powiązanych danych gościa się nie powiedzie.
+- Test nie tworzy rzeczywistych komentarzy ani nie wysyła e-maili; nie zmieniano danych produkcyjnych.
