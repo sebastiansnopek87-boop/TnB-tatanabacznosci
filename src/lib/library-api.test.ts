@@ -98,7 +98,7 @@ describe("library SPA adapter contracts", () => {
     await Promise.all([
       requestFreeMaterial({ data: { slug: "material", firstName: "Jan", lastName: "Kowalski", email: "jan@example.com", consent: true, elapsedMs: 3000 } }),
       redeemFreeMaterial({ data: { token: "x".repeat(32) } }),
-      adminListLibraryRequests({ data }),
+      adminListLibraryRequests({ data: { itemId: null, email: "", mode: null, status: null } }),
       adminEraseLibraryRequest({ data: { id: "11111111-1111-4111-8111-111111111111" } }),
     ]);
 
