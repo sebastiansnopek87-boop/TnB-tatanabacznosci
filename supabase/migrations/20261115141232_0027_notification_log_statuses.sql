@@ -1,0 +1,3 @@
+ALTER TABLE public.email_notification_log DROP CONSTRAINT email_notification_log_status_check;
+ALTER TABLE public.email_notification_log ADD CONSTRAINT email_notification_log_status_check CHECK (status IN ('pending','sending','sent','delivered','failed','cancelled','skipped','suppressed','simulated'));
+ALTER TABLE public.email_notification_log ADD CONSTRAINT email_notification_log_mode_check CHECK (mode IN ('test','live'));

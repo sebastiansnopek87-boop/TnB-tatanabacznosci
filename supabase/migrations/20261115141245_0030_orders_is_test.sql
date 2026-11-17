@@ -1,0 +1,2 @@
+ALTER TABLE public.library_orders ADD COLUMN is_test boolean NOT NULL DEFAULT false;
+COMMENT ON COLUMN public.library_orders.is_test IS 'Admin-only marker for test orders; excluded from sales statistics; never affects access.';

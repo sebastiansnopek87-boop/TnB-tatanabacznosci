@@ -1,0 +1,1 @@
+ALTER TABLE public.platform_settings ADD COLUMN IF NOT EXISTS podcast_layout text NOT NULL DEFAULT 'list' CHECK (podcast_layout IN ('list','grid'));
