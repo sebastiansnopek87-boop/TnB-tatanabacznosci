@@ -50,3 +50,8 @@ The branch also contains SMTP helper imports in multiple functions. Before deplo
 - No Supabase secrets were read or changed.
 - No production migration or table change was executed.
 - Do not bulk-deploy the branch's Edge Functions based only on CI success.
+
+
+## Additional payment notification finding
+
+The branch `tnb-payments/index.ts` currently records order notifications with `mode: "test"` and transitions them to `status: "simulated"`; this code path does not call `sendSmtpMail`. The subsequent delivery status is therefore recorded as `not_sent` for this path. Treat payment confirmation/access email delivery as unverified until the production notification path is explicitly connected and tested end-to-end. Do not assume that the presence of the shared SMTP helper in other Edge Functions means payment emails are being delivered.
