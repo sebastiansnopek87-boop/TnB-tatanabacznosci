@@ -245,6 +245,7 @@ const actionSchema = z.discriminatedUnion("action", [
     phone: z.string().trim().max(20).regex(/^$|^\+?[0-9 ()-]{7,20}$/, "Podaj poprawny numer telefonu.").default(""),
     method: z.enum(["bank_transfer", ...PROVIDERS], { errorMap: () => ({ message: "Wybierz dostępną metodę płatności." }) }),
     consent: z.literal(true, { errorMap: () => ({ message: "Zaakceptuj wymagane zgody." }) }),
+    idempotencyKey: z.string().uuid(),
   }) }),
   z.object({ action: z.literal("getPurchasedMaterial"), data: z.object({ token: z.string().uuid(), file: z.boolean().default(false) }) }),
   z.object({ action: z.literal("recoverAccess"), data: z.object({
@@ -279,6 +280,20 @@ async function getCheckoutOptions(db: Db) {
   return { providers };
 }
 
+async function checkoutFingerprint(input: {
+  itemId: string; method: ProviderId; email: string; name: string; phone: string;
+  amount: number; currency: string; userId: string | null;
+}) {
+  const canonical = JSON.stringify({
+    itemId: input.itemId, method: input.method, email: input.email.trim().toLowerCase(),
+    name: input.name.trim(), phone: input.phone.trim(), amount: input.amount,
+    currency: input.currency, userId: input.userId,
+  });
+  const bytes = new TextEncoder().encode(canonical);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
 async function createLibraryOrder(db: Db, req: Request, data: z.infer<typeof actionSchema> & { action: "createLibraryOrder" }) {
   const input = data.data;
   const { data: item, error: itemError } = await db.from("library_items")
@@ -291,11 +306,29 @@ async function createLibraryOrder(db: Db, req: Request, data: z.infer<typeof act
   if (!online) return { error: "Płatność przelewem bankowym jest obecnie niedostępna." };
   const provider = await providerRow(db, input.method as ProviderId);
   if (!provider?.enabled || !configStatus(provider).configured) return { error: "Ta metoda płatności jest obecnie niedostępna." };
+  const fingerprint = await checkoutFingerprint({
+    itemId: item.id, method: input.method as ProviderId, email: input.email, name: input.name,
+    phone: input.phone || "", amount: item.price_amount, currency: item.currency || "PLN", userId: user?.id ?? null,
+  });
   const { data: order, error } = await db.from("library_orders").insert({
     item_id: item.id, user_id: user?.id ?? null, buyer_email: input.email, buyer_name: input.name, buyer_phone: input.phone || null,
-    amount: item.price_amount, currency: "PLN", status: "pending", provider: input.method, payment_method: "online",
-    environment: provider.environment, consent_text: CONSENT,
+    amount: item.price_amount, currency: item.currency || "PLN", status: "pending", provider: input.method, payment_method: "online",
+    environment: provider.environment, consent_text: CONSENT, checkout_idempotency_key: input.idempotencyKey,
+    checkout_request_fingerprint: fingerprint, checkout_state: "creating",
   }).select("id, access_token, order_number").single();
+  if (error?.code === "23505") {
+    const { data: existing } = await db.from("library_orders")
+      .select("id, access_token, order_number, checkout_request_fingerprint, checkout_state, checkout_redirect_url")
+      .eq("checkout_idempotency_key", input.idempotencyKey).maybeSingle();
+    if (!existing) throw new HttpError(409, "To zamówienie jest już przetwarzane. Odśwież status za chwilę.");
+    if (existing.checkout_request_fingerprint !== fingerprint) throw new HttpError(409, "Ten klucz zamówienia został już użyty z innymi danymi.");
+    if (existing.checkout_state === "ready" && existing.checkout_redirect_url) {
+      return { token: existing.access_token, redirectUrl: existing.checkout_redirect_url };
+    }
+    throw new HttpError(409, existing.checkout_state === "needs_review"
+      ? "Płatność wymaga sprawdzenia. Nie ponawiaj zamówienia — skontaktuj się z obsługą."
+      : "Zamówienie jest już przetwarzane. Poczekaj chwilę przed ponowieniem.");
+  }
   if (error || !order) {
     console.error("order insert failed", error?.message);
     return { error: "Nie udało się złożyć zamówienia. Spróbuj ponownie." };
@@ -315,11 +348,19 @@ async function createLibraryOrder(db: Db, req: Request, data: z.infer<typeof act
     customerIp,
   }).catch((error) => ({ ok: false as const, reason: error instanceof Error ? error.message : "error" }));
   if (!result.ok) {
-    await logOrderEvent(db, order.id, "checkout_error", "Operator nie utworzył transakcji: " + result.reason);
-    await db.from("library_orders").update({ status: "failed", failed_at: new Date().toISOString() }).eq("id", order.id).eq("status", "pending");
-    return { error: "Nie udało się połączyć z operatorem płatności. Spróbuj ponownie lub wybierz inną metodę." };
+    // Provider timeouts can be ambiguous: never create a second transaction automatically.
+    await db.from("library_orders").update({ checkout_state: "needs_review", review_reason: "checkout_provider_result_ambiguous" }).eq("id", order.id).eq("checkout_state", "creating");
+    await logOrderEvent(db, order.id, "checkout_needs_review", "Nie można jednoznacznie potwierdzić wyniku utworzenia transakcji u operatora.");
+    return { error: "Nie udało się potwierdzić wyniku u operatora. Zamówienie wymaga sprawdzenia; nie ponawiaj płatności." };
   }
-  await db.from("library_orders").update({ provider_ref: result.providerRef, checkout_session_id: result.providerRef }).eq("id", order.id);
+  const { error: saveError } = await db.from("library_orders").update({
+    provider_ref: result.providerRef, checkout_session_id: result.providerRef,
+    checkout_redirect_url: result.redirectUrl, checkout_state: "ready",
+  }).eq("id", order.id).eq("checkout_state", "creating");
+  if (saveError) {
+    console.error("checkout result persistence failed", saveError.message);
+    throw new HttpError(503, "Operator utworzył transakcję, ale zapis wyniku wymaga sprawdzenia. Nie ponawiaj płatności.");
+  }
   await logOrderEvent(db, order.id, "checkout_started", "Transakcja utworzona u operatora (" + result.providerRef + "). Przekierowanie do płatności.");
   return { token: order.access_token, redirectUrl: result.redirectUrl };
 }
