@@ -12,6 +12,7 @@ legacy_suffixes = (".functions.ts", ".server.ts")
 legacy_test_allowlist = {
     Path("lib/control-center-360.test.ts"),
     Path("lib/legal-pages.test.ts"),
+    Path("lib/library-watermark.integration.test.ts"),
 }
 # These generated TanStack middleware files are retained only as migration
 # inventory. They are not part of the Vite SPA entry graph.
