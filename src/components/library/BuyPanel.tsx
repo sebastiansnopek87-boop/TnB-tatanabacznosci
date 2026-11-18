@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { createLibraryOrder, getCheckoutOptions, recoverAccess } from "@/lib/api/orders";
@@ -26,6 +26,7 @@ export function BuyPanel({ slug, title, price }: { slug: string; title: string; 
   const [consent, setConsent] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const checkoutKey = useRef<string | null>(null);
   const opts = useQuery({ queryKey: ["checkout-options"], queryFn: () => getCheckoutOptions(), enabled: open });
   const methods = [...(opts.data?.providers ?? []).map((p) => ({ id: p.id as PaymentMethodId, label: `Płatność online — ${p.label}`, note: p.test ? "Tryb testowy operatora: nie zostaną pobrane prawdziwe środki." : "Zostaniesz przekierowany do bezpiecznej płatności u operatora.", isDefault: p.isDefault })), ...(bankConfigured() ? [{ ...BANK_METHOD, isDefault: false }] : [])];
   const noMethods = !!opts.data && methods.length === 0;
@@ -63,7 +64,8 @@ export function BuyPanel({ slug, title, price }: { slug: string; title: string; 
   async function submit() {
     setErr(null); setBusy(true);
     try {
-      const r = await createLibraryOrder({ data: { slug, name, email, phone, method: method!, consent: true } });
+      checkoutKey.current ??= crypto.randomUUID();
+      const r = await createLibraryOrder({ data: { slug, name, email, phone, method: method!, consent: true, idempotencyKey: checkoutKey.current } });
       if ("error" in r) throw new Error(r.error);
       if (r.redirectUrl) { window.location.href = r.redirectUrl; return; }
       navigate({ to: "/zakup/$token", params: { token: r.token } });
