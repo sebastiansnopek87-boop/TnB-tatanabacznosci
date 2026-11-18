@@ -166,4 +166,38 @@ describe("library SPA adapter contracts", () => {
     invoke.mockResolvedValueOnce({ data: null, error: failure });
     await expect(adminListLibrary({ data: {} })).rejects.toThrow(failure.message);
   });
+
+  it("preserves uploaded cover images byte-for-byte by storing the uploaded object directly", () => {
+    const edge = readFileSync(new URL("../../supabase/functions/tnb-library-admin/index.ts", import.meta.url), "utf8");
+    const finalize = edge.slice(edge.indexOf('if (input.action === "adminFinalizeLibraryUpload")'), edge.indexOf('if (input.action === "adminRetryWatermark")'));
+    expect(finalize).toContain('if (d.target === "cover")');
+    expect(finalize).toContain('update({ cover_url: d.path })');
+    expect(finalize).not.toContain("sharp");
+    expect(finalize).not.toContain("canvas");
+    expect(finalize).not.toContain("embedPng");
+    expect(finalize).not.toContain("watermarkPdf");
+    expect(finalize).toContain('return { path: d.path, watermark: null }');
+  });
+
+  it("retains the original PDF object and creates a separate marked derivative", () => {
+    const edge = readFileSync(new URL("../../supabase/functions/tnb-library-admin/index.ts", import.meta.url), "utf8");
+    const process = edge.slice(edge.indexOf("async function processPdf"), edge.indexOf("const Id = z.string().uuid()"));
+    expect(process).toContain("original_path: input.originalPath");
+    expect(process).toContain('download(input.originalPath)');
+    expect(process).toContain('const path = "files/" + itemId + "/"');
+    expect(process).toContain('upload(path, marked');
+    expect(process).toContain("file_path: path");
+    expect(process).not.toContain('upload(input.originalPath');
+    expect(process).toContain('input.premarked ? bytes : await watermarkPdf(bytes)');
+  });
+
+  it("keeps supported image MIME types identical between legacy upload and the Edge contract", () => {
+    const legacy = readFileSync(new URL("./library.functions.ts", import.meta.url), "utf8");
+    const edge = readFileSync(new URL("../../supabase/functions/tnb-library-admin/index.ts", import.meta.url), "utf8");
+    for (const type of ["image/jpeg", "image/png", "image/webp"]) {
+      expect(legacy).toContain('"'+type+'"');
+      expect(edge).toContain('"'+type+'"');
+    }
+  });
+
 });
