@@ -12,7 +12,26 @@ ALTER TABLE public.library_orders
   CHECK (
     (checkout_idempotency_key IS NULL AND checkout_request_fingerprint IS NULL)
     OR
-    (checkout_idempotency_key IS NOT NULL AND checkout_request_fingerprint ~ '^[0-9a-f]{64}$')
+    (checkout_idempotency_key IS NOT NULL AND checkout_request_fingerprint IS NOT NULL
+      AND checkout_request_fingerprint ~ '^[0-9a-f]{64})
+  );
+
+CREATE UNIQUE INDEX library_orders_checkout_idempotency_uidx
+  ON public.library_orders (checkout_idempotency_key)
+  WHERE checkout_idempotency_key IS NOT NULL;
+
+COMMENT ON COLUMN public.library_orders.checkout_idempotency_key IS
+  'Client-generated UUID for a single checkout intent; null for historical orders.';
+COMMENT ON COLUMN public.library_orders.checkout_request_fingerprint IS
+  'SHA-256 of canonical checkout inputs; contains no raw personal data.';
+COMMENT ON COLUMN public.library_orders.checkout_state IS
+  'creating prevents duplicate provider calls; ready permits safe replay; needs_review blocks ambiguous retries.';
+COMMENT ON COLUMN public.library_orders.checkout_redirect_url IS
+  'Provider checkout URL retained for idempotent replay; service_role only.';
+REVOKE ALL PRIVILEGES ON TABLE public.library_orders FROM PUBLIC, anon, authenticated;
+GRANT SELECT ON public.library_orders TO authenticated;
+GRANT ALL PRIVILEGES ON TABLE public.library_orders TO service_role;
+)
   );
 
 CREATE UNIQUE INDEX library_orders_checkout_idempotency_uidx
