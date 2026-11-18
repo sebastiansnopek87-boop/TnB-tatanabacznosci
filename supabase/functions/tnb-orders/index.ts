@@ -4,6 +4,7 @@ import { z } from "zod";
 import { ADAPTERS, configStatus, type ProviderId, type ProviderRow } from "./providers.ts";
 import { DEFAULT_TEMPLATES, EVENT_MAP } from "./registry.ts";
 import { render, maskSensitive, stripSensitive, type Vars } from "./render.ts";
+import { checkoutFingerprint } from "../_shared/checkout-idempotency.ts";
 
 const CORS = new Headers({
   ...sdkCorsHeaders,
@@ -278,20 +279,6 @@ async function getCheckoutOptions(db: Db) {
   const providers = (data ?? []).filter((p: any) => p.enabled && configStatus(p).configured)
     .map((p: any) => ({ id: p.id as ProviderId, label: PROVIDER_LABEL[p.id]!, isDefault: p.is_default, test: p.environment === "sandbox" }));
   return { providers };
-}
-
-async function checkoutFingerprint(input: {
-  itemId: string; method: ProviderId; email: string; name: string; phone: string;
-  amount: number; currency: string; userId: string | null;
-}) {
-  const canonical = JSON.stringify({
-    itemId: input.itemId, method: input.method, email: input.email.trim().toLowerCase(),
-    name: input.name.trim(), phone: input.phone.trim(), amount: input.amount,
-    currency: input.currency, userId: input.userId,
-  });
-  const bytes = new TextEncoder().encode(canonical);
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
-  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
 async function createLibraryOrder(db: Db, req: Request, data: z.infer<typeof actionSchema> & { action: "createLibraryOrder" }) {
