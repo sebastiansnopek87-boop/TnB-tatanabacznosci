@@ -22,7 +22,7 @@ async function mark(bytes: Uint8Array): Promise<Uint8Array> {
   if (!isPdf(bytes)) throw new WatermarkError("Plik nie jest prawidłowym dokumentem PDF.");
   let doc: PDFDocument;
   try {
-    doc = await PDFDocument.load(bytes, { updateMetadata: false });
+    doc = await PDFDocument.load(bytes);
   } catch (e) {
     const msg = e instanceof Error ? e.message : "";
     if (/encrypt/i.test(msg)) throw new WatermarkError("PDF jest zabezpieczony hasłem lub szyfrowaniem — nie można dodać znaku wodnego. Prześlij wersję bez zabezpieczeń.");
