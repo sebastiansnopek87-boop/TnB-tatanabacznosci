@@ -33,6 +33,7 @@ export default defineConfig({
       "src/lib/articles-api-contract.test.ts",
       "src/lib/brand-api-contract.test.ts",
       "src/lib/pages-api-contract.test.ts",
+      "src/lib/templates-api-contract.test.ts",
       "src/lib/rich-text.test.ts",
     ],
   },
