@@ -246,7 +246,7 @@ const actionSchema = z.discriminatedUnion("action", [
     phone: z.string().trim().max(20).regex(/^$|^\+?[0-9 ()-]{7,20}$/, "Podaj poprawny numer telefonu.").default(""),
     method: z.enum(["bank_transfer", ...PROVIDERS], { errorMap: () => ({ message: "Wybierz dostępną metodę płatności." }) }),
     consent: z.literal(true, { errorMap: () => ({ message: "Zaakceptuj wymagane zgody." }) }),
-    idempotencyKey: z.string().uuid(),
+    idempotencyKey: z.string().uuid().optional(),
   }) }),
   z.object({ action: z.literal("getPurchasedMaterial"), data: z.object({ token: z.string().uuid(), file: z.boolean().default(false) }) }),
   z.object({ action: z.literal("recoverAccess"), data: z.object({
@@ -283,6 +283,7 @@ async function getCheckoutOptions(db: Db) {
 
 async function createLibraryOrder(db: Db, req: Request, data: z.infer<typeof actionSchema> & { action: "createLibraryOrder" }) {
   const input = data.data;
+  const idempotencyKey = idempotencyKey ?? crypto.randomUUID();
   const { data: item, error: itemError } = await db.from("library_items")
     .select("id, title, access, status, purchasable, price_amount, currency").eq("slug", input.slug).maybeSingle();
   if (itemError || !item || item.status !== "published" || item.access !== "premium" || !item.purchasable || !item.price_amount || item.price_amount < 100) {
@@ -300,18 +301,18 @@ async function createLibraryOrder(db: Db, req: Request, data: z.infer<typeof act
   const { data: order, error } = await db.from("library_orders").insert({
     item_id: item.id, user_id: user?.id ?? null, buyer_email: input.email, buyer_name: input.name, buyer_phone: input.phone || null,
     amount: item.price_amount, currency: item.currency || "PLN", status: "pending", provider: input.method, payment_method: "online",
-    environment: provider.environment, consent_text: CONSENT, checkout_idempotency_key: input.idempotencyKey,
+    environment: provider.environment, consent_text: CONSENT, checkout_idempotency_key: idempotencyKey,
     checkout_request_fingerprint: fingerprint, checkout_state: "creating",
   }).select("id, access_token, order_number").single();
   if (error?.code === "23505") {
     const { data: existing } = await db.from("library_orders")
       .select("id, access_token, order_number, checkout_request_fingerprint, checkout_state")
-      .eq("checkout_idempotency_key", input.idempotencyKey).maybeSingle();
+      .eq("checkout_idempotency_key", idempotencyKey).maybeSingle();
     if (!existing) throw new HttpError(409, "To zamówienie jest już przetwarzane. Odśwież status za chwilę.");
     if (existing.checkout_request_fingerprint !== fingerprint) throw new HttpError(409, "Ten klucz zamówienia został już użyty z innymi danymi.");
     if (existing.checkout_state === "ready") {
       const { data: session } = await db.from("library_checkout_sessions")
-        .select("redirect_url").eq("idempotency_key", input.idempotencyKey).maybeSingle();
+        .select("redirect_url").eq("idempotency_key", idempotencyKey).maybeSingle();
       if (session?.redirect_url) return { token: existing.access_token, redirectUrl: session.redirect_url };
     }
     throw new HttpError(409, existing.checkout_state === "needs_review"
@@ -343,7 +344,7 @@ async function createLibraryOrder(db: Db, req: Request, data: z.infer<typeof act
     return { error: "Nie udało się potwierdzić wyniku u operatora. Zamówienie wymaga sprawdzenia; nie ponawiaj płatności." };
   }
   const { error: sessionError } = await db.from("library_checkout_sessions").insert({
-    idempotency_key: input.idempotencyKey, order_id: order.id, redirect_url: result.redirectUrl,
+    idempotency_key: idempotencyKey, order_id: order.id, redirect_url: result.redirectUrl,
   });
   if (sessionError) {
     console.error("checkout session persistence failed", sessionError.message);
