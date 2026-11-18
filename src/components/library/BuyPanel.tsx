@@ -88,7 +88,7 @@ export function BuyPanel({ slug, title, price }: { slug: string; title: string; 
         {err && <p role="alert" className="text-sm text-destructive">{err}</p>}
         <div className="flex flex-wrap gap-3">
           <button type="button" onClick={submit} disabled={busy} className={btn}>{busy ? (method === "bank_transfer" ? "Składanie zamówienia…" : "Łączenie z operatorem…") : method === "bank_transfer" ? "Zamawiam z obowiązkiem zapłaty" : "Zamawiam i przechodzę do płatności"}</button>
-          <button type="button" onClick={() => setStep("form")} disabled={busy} className={btn2}>Popraw dane</button>
+          <button type="button" onClick={() => { checkoutKey.current = null; setStep("form"); }} disabled={busy} className={btn2}>Popraw dane</button>
         </div>
       </div>
     );
