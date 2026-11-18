@@ -5,7 +5,7 @@ ALTER TABLE public.library_orders
   ADD COLUMN checkout_request_fingerprint text,
   ADD COLUMN checkout_state text NOT NULL DEFAULT 'legacy'
     CHECK (checkout_state IN ('legacy', 'creating', 'ready', 'needs_review')),
-  ADD COLUMN checkout_redirect_url text;
+;
 
 ALTER TABLE public.library_orders
   ADD CONSTRAINT library_orders_checkout_key_fingerprint_check
@@ -26,8 +26,19 @@ COMMENT ON COLUMN public.library_orders.checkout_request_fingerprint IS
   'SHA-256 of canonical checkout inputs; contains no raw personal data.';
 COMMENT ON COLUMN public.library_orders.checkout_state IS
   'creating prevents duplicate provider calls; ready permits safe replay; needs_review blocks ambiguous retries.';
-COMMENT ON COLUMN public.library_orders.checkout_redirect_url IS
-  'Provider checkout URL retained for idempotent replay; service_role only.';
+CREATE TABLE public.library_checkout_sessions (
+  idempotency_key uuid PRIMARY KEY,
+  order_id uuid NOT NULL UNIQUE REFERENCES public.library_orders(id) ON DELETE CASCADE,
+  redirect_url text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE public.library_checkout_sessions ENABLE ROW LEVEL SECURITY;
+REVOKE ALL PRIVILEGES ON TABLE public.library_checkout_sessions FROM PUBLIC, anon, authenticated;
+GRANT ALL PRIVILEGES ON TABLE public.library_checkout_sessions TO service_role;
+
+COMMENT ON TABLE public.library_checkout_sessions IS
+  'Server-only checkout replay data; provider redirect URLs are never exposed through browser-readable order rows.';
 REVOKE ALL PRIVILEGES ON TABLE public.library_orders FROM PUBLIC, anon, authenticated;
 GRANT SELECT ON public.library_orders TO authenticated;
 GRANT ALL PRIVILEGES ON TABLE public.library_orders TO service_role;
