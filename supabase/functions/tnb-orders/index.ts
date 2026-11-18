@@ -283,7 +283,7 @@ async function getCheckoutOptions(db: Db) {
 
 async function createLibraryOrder(db: Db, req: Request, data: z.infer<typeof actionSchema> & { action: "createLibraryOrder" }) {
   const input = data.data;
-  const idempotencyKey = idempotencyKey ?? crypto.randomUUID();
+  const idempotencyKey = input.idempotencyKey ?? crypto.randomUUID();
   const { data: item, error: itemError } = await db.from("library_items")
     .select("id, title, access, status, purchasable, price_amount, currency").eq("slug", input.slug).maybeSingle();
   if (itemError || !item || item.status !== "published" || item.access !== "premium" || !item.purchasable || !item.price_amount || item.price_amount < 100) {
