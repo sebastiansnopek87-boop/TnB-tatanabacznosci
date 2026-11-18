@@ -39,5 +39,5 @@ async function mark(bytes: Uint8Array): Promise<Uint8Array> {
     p.drawImage(logo, { x: x + width - WATERMARK_SPEC.rightMm * MM - s, y: y + WATERMARK_SPEC.bottomMm * MM, width: s, height: s });
   }
   doc.setProducer("TATA NA BACZNOŚCI — znak wodny TNB");
-  return await doc.save();
+  return await doc.save({ updateMetadata: false });
 }
