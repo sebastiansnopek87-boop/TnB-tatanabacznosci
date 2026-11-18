@@ -1754,6 +1754,10 @@ export type Database = {
           buyer_phone: string | null
           cancelled_at: string | null
           checkout_session_id: string | null
+          checkout_idempotency_key: string | null
+          checkout_redirect_url: string | null
+          checkout_request_fingerprint: string | null
+          checkout_state: string
           consent_text: string | null
           created_at: string
           currency: string
@@ -1791,6 +1795,10 @@ export type Database = {
           buyer_phone?: string | null
           cancelled_at?: string | null
           checkout_session_id?: string | null
+          checkout_idempotency_key?: string | null
+          checkout_redirect_url?: string | null
+          checkout_request_fingerprint?: string | null
+          checkout_state?: string
           consent_text?: string | null
           created_at?: string
           currency?: string
