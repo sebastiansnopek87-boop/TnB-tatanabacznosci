@@ -37,7 +37,7 @@ describe("PDF watermark preservation", () => {
     const sourceImageCount = countEmbeddedImages(sourceDocument);
 
     const marked = await watermarkPdf(original);
-    const markedDocument = await PDFDocument.load(marked);
+    const markedDocument = await PDFDocument.load(marked, { updateMetadata: false });
     const markedPages = markedDocument.getPages().map((page) => {
       const box = page.getCropBox();
       return { width: box.width, height: box.height };
