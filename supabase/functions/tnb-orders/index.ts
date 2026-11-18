@@ -318,12 +318,14 @@ async function createLibraryOrder(db: Db, req: Request, data: z.infer<typeof act
   }).select("id, access_token, order_number").single();
   if (error?.code === "23505") {
     const { data: existing } = await db.from("library_orders")
-      .select("id, access_token, order_number, checkout_request_fingerprint, checkout_state, checkout_redirect_url")
+      .select("id, access_token, order_number, checkout_request_fingerprint, checkout_state")
       .eq("checkout_idempotency_key", input.idempotencyKey).maybeSingle();
     if (!existing) throw new HttpError(409, "To zamówienie jest już przetwarzane. Odśwież status za chwilę.");
     if (existing.checkout_request_fingerprint !== fingerprint) throw new HttpError(409, "Ten klucz zamówienia został już użyty z innymi danymi.");
-    if (existing.checkout_state === "ready" && existing.checkout_redirect_url) {
-      return { token: existing.access_token, redirectUrl: existing.checkout_redirect_url };
+    if (existing.checkout_state === "ready") {
+      const { data: session } = await db.from("library_checkout_sessions")
+        .select("redirect_url").eq("idempotency_key", input.idempotencyKey).maybeSingle();
+      if (session?.redirect_url) return { token: existing.access_token, redirectUrl: session.redirect_url };
     }
     throw new HttpError(409, existing.checkout_state === "needs_review"
       ? "Płatność wymaga sprawdzenia. Nie ponawiaj zamówienia — skontaktuj się z obsługą."
@@ -353,12 +355,20 @@ async function createLibraryOrder(db: Db, req: Request, data: z.infer<typeof act
     await logOrderEvent(db, order.id, "checkout_needs_review", "Nie można jednoznacznie potwierdzić wyniku utworzenia transakcji u operatora.");
     return { error: "Nie udało się potwierdzić wyniku u operatora. Zamówienie wymaga sprawdzenia; nie ponawiaj płatności." };
   }
+  const { error: sessionError } = await db.from("library_checkout_sessions").insert({
+    idempotency_key: input.idempotencyKey, order_id: order.id, redirect_url: result.redirectUrl,
+  });
+  if (sessionError) {
+    console.error("checkout session persistence failed", sessionError.message);
+    await db.from("library_orders").update({ checkout_state: "needs_review", review_reason: "checkout_session_persistence_failed" }).eq("id", order.id);
+    throw new HttpError(503, "Operator utworzył transakcję, ale zapis wyniku wymaga sprawdzenia. Nie ponawiaj płatności.");
+  }
   const { error: saveError } = await db.from("library_orders").update({
-    provider_ref: result.providerRef, checkout_session_id: result.providerRef,
-    checkout_redirect_url: result.redirectUrl, checkout_state: "ready",
+    provider_ref: result.providerRef, checkout_session_id: result.providerRef, checkout_state: "ready",
   }).eq("id", order.id).eq("checkout_state", "creating");
   if (saveError) {
     console.error("checkout result persistence failed", saveError.message);
+    await db.from("library_orders").update({ checkout_state: "needs_review", review_reason: "checkout_order_persistence_failed" }).eq("id", order.id);
     throw new HttpError(503, "Operator utworzył transakcję, ale zapis wyniku wymaga sprawdzenia. Nie ponawiaj płatności.");
   }
   await logOrderEvent(db, order.id, "checkout_started", "Transakcja utworzona u operatora (" + result.providerRef + "). Przekierowanie do płatności.");
