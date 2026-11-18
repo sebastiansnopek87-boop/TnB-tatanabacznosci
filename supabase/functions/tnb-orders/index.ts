@@ -357,7 +357,7 @@ async function createLibraryOrder(db: Db, req: Request, data: z.infer<typeof act
   const customerIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     req.headers.get("x-real-ip") || "";
   const result = await ADAPTERS[input.method as ProviderId].create(provider, {
-    orderId: order.id, orderNumber: order.order_number, amount: item.price_amount, currency: "PLN",
+    orderId: order.id, orderNumber: order.order_number, amount: item.price_amount, currency: item.currency || "PLN",
     email: input.email, name: input.name, description: order.order_number + " — " + item.title,
     returnUrl: origin + "/zakup/" + order.access_token + "?powrot=1",
     notifyUrl: baseUrl + "/functions/v1/tnb-payments?provider=" + input.method,
