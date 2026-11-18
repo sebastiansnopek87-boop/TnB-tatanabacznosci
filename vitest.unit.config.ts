@@ -13,6 +13,7 @@ export default defineConfig({
       "src/lib/recommend-api.test.ts",
       "src/lib/payment-webhook-reference.test.ts",
       "src/lib/library-api.test.ts",
+      "src/lib/library-watermark.integration.test.ts",
       "src/lib/smtp-provider-contract.test.ts",
       "src/lib/notify/render.test.ts",
       "src/lib/payments/providers.test.ts",
