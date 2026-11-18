@@ -7,6 +7,8 @@ dir_slugs=()
 for dir in "${function_dirs[@]}"; do
   [[ -d "$dir" ]] || continue
   slug="${dir##*/}"
+  # Shared helper modules are not deployable Edge Functions.
+  [[ "$slug" == _* ]] && continue
   if [[ ! -f "$dir/index.ts" ]]; then
     echo "ERROR: $slug has no index.ts entrypoint in Git."
     exit 1
