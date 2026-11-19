@@ -251,6 +251,9 @@ async function processDeliveryOutbox(db: Db) {
       .select("status").eq("idempotency_key", idempotencyKey).maybeSingle();
     if (logError) {
       await db.rpc("finish_library_delivery_outbox", { p_id: job.id, p_status: "needs_review", p_error: "notification_log_lookup_failed", p_safe_to_retry: false });
+      if (event === "order_access_delivered" || event === "order_guest_access") {
+        await db.from("library_orders").update({ delivery_status: "not_sent", delivery_error: "needs_review:notification_log_lookup_failed" }).eq("id", job.order_id);
+      }
       counts.needsReview++;
       continue;
     }
@@ -264,6 +267,14 @@ async function processDeliveryOutbox(db: Db) {
         p_error: terminal ? null : "previous_notification_attempt_" + existing.status,
         p_safe_to_retry: false,
       });
+      if (event === "order_access_delivered" || event === "order_guest_access") {
+        const wasSent = existing.status === "sent" || existing.status === "delivered";
+        await db.from("library_orders").update({
+          delivery_status: wasSent ? "sent" : "not_sent",
+          delivery_error: wasSent ? null : terminal ? existing.status : "needs_review:previous_notification_attempt_" + existing.status,
+          ...(wasSent ? { delivered_at: new Date().toISOString() } : {}),
+        }).eq("id", job.order_id);
+      }
       if (terminal) {
         if (existing.status === "sent" || existing.status === "delivered") counts.sent++;
         else if (existing.status === "simulated") counts.simulated++;
@@ -281,6 +292,9 @@ async function processDeliveryOutbox(db: Db) {
     });
     if (finishError) {
       console.error("delivery outbox completion failed", job.id, finishError.message);
+      if (event === "order_access_delivered" || event === "order_guest_access") {
+        await db.from("library_orders").update({ delivery_status: "not_sent", delivery_error: "needs_review:outbox_completion_failed" }).eq("id", job.order_id);
+      }
       counts.needsReview++;
       continue;
     }
