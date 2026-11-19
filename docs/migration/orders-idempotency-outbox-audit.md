@@ -98,3 +98,12 @@ To oznacza, że katalog migracji w repo nie jest kompletnym, odtwarzalnym zapise
 - Odczyt schematu aktywnej bazy potwierdza, że `library_orders` nadal nie ma `idempotency_key` ani `payload_hash`; nie znaleziono triggerów na tej tabeli. Nadal istnieją unikalne indeksy `checkout_session_id` i `(provider, provider_ref)`.
 - Nie znaleziono workflow run dla nowego merge commit w GitHub Actions. Wynik wcześniejszego CI PASS dotyczy poprzedniego HEAD `b8a2916`, a nie nowego merge commita. Przed scaleniem wymagany jest nowy zielony przebieg.
 - Kolejny kodowy krok pozostaje zablokowany przez potrzebę dodania i przetestowania schematu idempotencji/outbox jako wersjonowanej migracji. Nie wolno stosować zmian DDL bezpośrednio do aktywnej bazy. Migracja musi być odtwarzalna na czystej bazie i dopiero potem porównana z live schema.
+
+## Aktualizacja weryfikacji — 2026-11-19 (po synchronizacji)
+
+- Wcześniejsza sekcja „Istotna rozbieżność migracji” opisuje stan z 2026-11-16. Nie jest już aktualnym opisem zawartości gałęzi: przywrócono 66 plików migracji z `main`, a gałąź PR #11 została zsynchronizowana z `main` merge commitem `e5c8518a97a019308df42c75fa66b301184dc897`.
+- Potwierdzono CI na aktualnym HEAD `6a9e11226b5ca9705f855baff54addd60114ab06`: GitHub Actions Build #628 / run `44446256055` — PASS. Wszystkie kroki zakończone sukcesem, w tym build, TypeScript, testy jednostkowe, izolacja legacy runtime i skan buildu.
+- Ponowny odczyt `supabase/functions/tnb-orders/index.ts` potwierdza, że `createLibraryOrder` nadal wykonuje zwykły INSERT do `library_orders` przed wywołaniem operatora. Nie przyjmuje klucza idempotencji, nie ma atomowego claimu checkoutu ani trwałego rozróżnienia wyniku niejednoznacznego po timeout.
+- Nie wdrożono jeszcze idempotencji ani outbox. Nie wykonano DDL ani zapisów do aktywnej bazy.
+- Następny bezpieczny krok implementacyjny wymaga utworzenia migracji przez Supabase CLI w środowisku repozytorium, wygenerowania typów i wykonania czystego replay wszystkich migracji. W tym środowisku nie ma dostępnego CLI/replay, dlatego nie należy tworzyć pozornie zweryfikowanej migracji ani podłączać kodu do nieistniejących kolumn/RPC.
+- Po dostarczeniu walidowalnej migracji kolejność pozostaje: test czystego replay → testy RPC/konkurencji → adapter Edge Function → testy operatorów sandbox → osobny przegląd i zgoda na wdrożenie.
