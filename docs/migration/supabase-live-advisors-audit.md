@@ -41,3 +41,26 @@ All 29 listed Edge Functions were ACTIVE at inspection time. JWT gateway verific
 ## Status
 
 Audit recorded; no production remediation applied. PR must remain unmerged until security findings and Edge Function drift have been triaged and tested.
+
+
+## Function-level review of advisor warnings (migration source)
+
+The warning count is not a list of nine confirmed vulnerabilities. Several RPCs are deliberately public and have row/data filters in their SQL bodies:
+
+- `community_feed` (migration `0008`) returns only published public posts to anonymous callers; authenticated callers follow the `_only_mine`/published logic. Its explicit GRANT is to anon/authenticated, but the migration does not first revoke the default PUBLIC EXECUTE privilege.
+- `community_feed_filtered`, `community_sector_counts`, and `community_search` (migration `0010`) explicitly revoke PUBLIC before granting anon/authenticated. Their query predicates restrict anonymous results to published public posts.
+- `article_is_public` and `article_stats` (migration `0032`) are used by public article interaction/read paths and intentionally have anon/authenticated grants. Their migrations do not revoke default PUBLIC EXECUTE first.
+- `library_can_read` (migration `0012`) is intentionally used by the public/member/premium content RLS policy. It checks published state, access tier, current identity, and admin/premium role. It also lacks a preceding PUBLIC revoke.
+- `has_role` is hardened in migration `0060` to bind `_user_id` to `auth.uid()`; anon is explicitly revoked later in migration `0062`. Its authenticated EXECUTE warning is expected because RLS policies use it.
+- `community_post_visible` is explicitly revoked from PUBLIC/anon in migration `0064` and granted to authenticated/service_role. Its authenticated warning is expected because authenticated RLS policies call it.
+- `ensure_my_identity` and `set_my_display_mode` are revoked from PUBLIC/anon in migration `0060`, then granted to authenticated. Authenticated EXECUTE is expected.
+- `article_poll_open` (migration `0032`) is intended for authenticated poll voting and is granted to authenticated, but unlike the other functions in that migration it has no explicit `REVOKE ALL ... FROM PUBLIC, anon`. PostgreSQL's default PUBLIC EXECUTE may therefore explain the advisor's anon warning. This is a concrete least-privilege gap to fix in a tested migration: revoke PUBLIC and anon, then explicitly grant authenticated/service_role. Do not deploy an ad-hoc SQL change.
+
+## Proposed remediation, not applied
+
+1. Add explicit PUBLIC revokes for `community_feed`, `article_is_public`, `article_stats`, and `library_can_read`, then re-grant only the intended `anon`, `authenticated`, and `service_role` roles. This preserves the intended public RPC behaviour while eliminating implicit PUBLIC grants.
+2. For `article_poll_open`, revoke PUBLIC and anon, retain authenticated/service_role only.
+3. Recheck the live advisor after a migration replay/deploy and test RPC access under anon/authenticated roles. Keep the existing query predicates and SECURITY DEFINER bodies unchanged in this grant-only remediation.
+4. Review all SECURITY DEFINER functions for fixed `search_path`, fully-qualified object references, and identity checks. This source review is not a complete substitute for inspecting live function definitions.
+
+No remediation SQL was executed. The proposed grants must be encoded in a new versioned migration generated and replay-tested through the project's Supabase CLI workflow before any production rollout.
