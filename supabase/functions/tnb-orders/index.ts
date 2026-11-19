@@ -230,7 +230,7 @@ async function requireCron(db: Db, req: Request) {
 
 async function processDeliveryOutbox(db: Db) {
   const worker = "tnb-orders-" + crypto.randomUUID();
-  const { data: jobs, error } = await db.rpc("claim_library_delivery_outbox", { p_worker: worker, p_limit: 20 });
+  const { data: jobs, error } = await db.rpc("claim_library_delivery_outbox", { p_worker: worker, p_limit: 4 });
   if (error) throw new HttpError(500, "Nie udało się pobrać kolejki dostarczania.");
   const counts = { claimed: jobs?.length ?? 0, sent: 0, simulated: 0, skipped: 0, needsReview: 0 };
   for (const job of jobs ?? []) {
