@@ -90,6 +90,35 @@ describe("articles SPA contract", () => {
     await expect(adminCheckArticleSlug({ data: { slug: "artykul-testowy", id } })).rejects.toThrow("Brak uprawnień administratora.");
   });
 
+  it("fails closed when the session cannot be read or has no access token", async () => {
+    getSession.mockResolvedValueOnce({ data: { session: null }, error: null });
+    await expect(adminListArticles()).rejects.toThrow("Sesja wygasła. Zaloguj się ponownie.");
+    expect(invoke).not.toHaveBeenCalled();
+
+    getSession.mockResolvedValueOnce({ data: { session: { access_token: "admin-token" } }, error: new Error("session read failed") });
+    await expect(adminListArticles()).rejects.toThrow("Nie udało się odczytać sesji. Zaloguj się ponownie.");
+    expect(invoke).not.toHaveBeenCalled();
+  });
+
+  it("rejects empty Edge responses instead of treating them as successful results", async () => {
+    invoke.mockResolvedValueOnce({ data: null, error: null });
+    await expect(adminListArticles()).rejects.toThrow("Usługa artykułów zwróciła pustą odpowiedź.");
+  });
+
+  it("validates article slugs and detects collisions without accepting malformed input", async () => {
+    await expect(adminCheckArticleSlug({ data: { slug: "Niepoprawny slug!", id } })).resolves.toEqual({
+      ok: false,
+      reason: "Tylko małe litery, cyfry i myślniki.",
+    });
+    expect(from).not.toHaveBeenCalled();
+
+    maybeSingle.mockResolvedValueOnce({ data: { id: "00000000-0000-4000-8000-000000000003" }, error: null });
+    await expect(adminCheckArticleSlug({ data: { slug: "zajety-adres", id } })).resolves.toEqual({
+      ok: false,
+      reason: "Ten adres jest już zajęty.",
+    });
+  });
+
   it("keeps Edge actions, admin gate, validation and destructive-operation controls explicit", () => {
     const edge = readFileSync(new URL("../../supabase/functions/tnb-articles/index.ts", import.meta.url), "utf8");
     const legacy = readFileSync(new URL("./articles.functions.ts", import.meta.url), "utf8");
