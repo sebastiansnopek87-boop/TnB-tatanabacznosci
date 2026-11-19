@@ -64,3 +64,20 @@ The warning count is not a list of nine confirmed vulnerabilities. Several RPCs 
 4. Review all SECURITY DEFINER functions for fixed `search_path`, fully-qualified object references, and identity checks. This source review is not a complete substitute for inspecting live function definitions.
 
 No remediation SQL was executed. The proposed grants must be encoded in a new versioned migration generated and replay-tested through the project's Supabase CLI workflow before any production rollout.
+
+
+## Performance advisor snapshot (2026-11-19 16:15 UTC)
+
+- 7 foreign keys are reported without covering indexes: `ai_materials.proposal_id`, `ai_proposals.analysis_id`, `article_ai_origin.material_id`, `article_saves.article_id`, `articles.category`, `library_items.category`, and `library_orders.item_id`.
+- 94 RLS policies trigger the auth-initplan warning. The suggested pattern is to wrap stable auth calls, for example `auth.uid()`, as `(select auth.uid())`. This should be handled in batches with policy-by-policy regression tests; do not mass-rewrite live policies.
+- 24 indexes are reported unused. This is not proof that they are safe to remove; several support infrequent admin, recovery, moderation, and operational paths.
+- 10 tables have multiple permissive policies for the same role/action. In several cases this is deliberate union behaviour (e.g. owner OR admin, public published content OR admin); consolidation must preserve that union exactly.
+- One duplicate-index warning: `library_orders_provider_ref` and `library_orders_provider_ref_uq`. Both were previously observed to have identical definitions. Do not drop an index until constraint ownership, dependencies, and migration history are confirmed.
+
+## Foreign-key/index triage
+
+The 7 missing FK indexes are candidates for measured review, not automatic additions. First inspect existing composite indexes and query plans: a leading-column index may already cover the FK. Add only when it improves relevant delete/update joins or application query plans. Avoid speculative schema changes.
+
+## Current next action
+
+The next safe engineering change is a dedicated, generated migration for the explicit function EXECUTE grants described above, followed by clean replay and role-context tests. RLS policy optimization and index work should be separate follow-up migrations with query-plan evidence. Production remains unchanged.
