@@ -107,3 +107,19 @@ To oznacza, że katalog migracji w repo nie jest kompletnym, odtwarzalnym zapise
 - Nie wdrożono jeszcze idempotencji ani outbox. Nie wykonano DDL ani zapisów do aktywnej bazy.
 - Następny bezpieczny krok implementacyjny wymaga utworzenia migracji przez Supabase CLI w środowisku repozytorium, wygenerowania typów i wykonania czystego replay wszystkich migracji. W tym środowisku nie ma dostępnego CLI/replay, dlatego nie należy tworzyć pozornie zweryfikowanej migracji ani podłączać kodu do nieistniejących kolumn/RPC.
 - Po dostarczeniu walidowalnej migracji kolejność pozostaje: test czystego replay → testy RPC/konkurencji → adapter Edge Function → testy operatorów sandbox → osobny przegląd i zgoda na wdrożenie.
+
+## Weryfikacja zgodności Edge Functions z produkcją — 2026-11-19
+
+Odczytano wdrożone funkcje Supabase `tnb-orders` i `tnb-payments` (obie ACTIVE, version 1) i porównano ich `index.ts` z plikami na gałęzi `chore/legacy-runtime-audit`. Porównanie jest tekstowe, nie jest testem wykonania.
+
+- `tnb-orders/index.ts`: wdrożony plik ma 31 866 znaków, repozytoryjny 34 185; pliki nie są identyczne. Pierwsza różnica dotyczy importu SMTP: repozytorium importuje `sendSmtpMail` i `smtpConfig` z `../_shared/smtp.ts`, wdrożona wersja tego importu nie ma.
+- `tnb-payments/index.ts`: wdrożony plik ma 22 109 znaków, repozytoryjny 23 396; pliki nie są identyczne. Pierwsza różnica dotyczy importu `providerReferenceMatches` z `../_shared/payment-webhook.ts`, obecnego w repozytorium, a nieobecnego w wdrożonej wersji.
+- Obie wdrożone funkcje mają `verify_jwt=false`. To ustawienie pozostaje bez zmian; przed zmianą wymaga osobnego przeglądu modelu autoryzacji i obsługi webhooków.
+- Obie funkcje są aktywne. Nie wdrożono żadnej zmiany w Supabase podczas tego audytu.
+
+Wniosek: produkcyjny kod Edge Functions jest starszy/różny względem aktualnego repozytorium. To jest osobna blokada wdrożenia, niezależna od CI React SPA. Nie wolno uznać testów CI repozytorium za dowód, że te zmiany już działają w produkcji. Przed wdrożeniem trzeba przejrzeć pełny diff funkcji i ich zależności, sprawdzić konfigurację `verify_jwt`, wykonać testy sandbox oraz zaplanować wdrożenie każdej funkcji osobno z kontrolą logów i rollbackiem.
+
+## CI po aktualizacji dokumentu
+
+- Commit `7708dc1d4d0a1d8114da28765185eb09332c8cd5` ma Build #629 / run `44461228452`: **PASS**.
+- Ten run potwierdza testy repozytorium po aktualizacji dokumentu. Nie jest dowodem zgodności ani wdrożenia Edge Functions.
