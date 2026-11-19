@@ -67,14 +67,23 @@ SECURITY DEFINER
 SET search_path = ''
 AS $$
 BEGIN
-  UPDATE public.library_delivery_outbox
-  SET status = 'needs_review',
-      locked_at = NULL,
-      locked_by = NULL,
-      last_error = COALESCE(last_error, 'worker_lease_expired_delivery_result_unknown'),
-      updated_at = now()
-  WHERE status = 'processing'
-    AND locked_at < now() - interval '5 minutes';
+  WITH expired AS (
+    UPDATE public.library_delivery_outbox
+    SET status = 'needs_review',
+        locked_at = NULL,
+        locked_by = NULL,
+        last_error = COALESCE(last_error, 'worker_lease_expired_delivery_result_unknown'),
+        updated_at = now()
+    WHERE status = 'processing'
+      AND locked_at < now() - interval '5 minutes'
+    RETURNING order_id, event_key
+  )
+  UPDATE public.library_orders o
+  SET delivery_status = 'not_sent',
+      delivery_error = 'needs_review:worker_lease_expired_delivery_result_unknown'
+  FROM expired e
+  WHERE e.order_id = o.id
+    AND e.event_key IN ('order_access_delivered','order_guest_access');
 
   RETURN QUERY
   WITH picked AS (
