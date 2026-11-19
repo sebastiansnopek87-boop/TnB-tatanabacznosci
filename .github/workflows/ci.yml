@@ -93,3 +93,11 @@ jobs:
           EVENT_BEFORE: ${{ github.event.before }}
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: bash scripts/lint-changed.sh
+
+      - name: Upload production-ready static SPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tnb-react-spa-dist-${{ github.sha }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14
