@@ -1634,6 +1634,57 @@ export type Database = {
           referencedColumns: ["id"]
         }]
       }
+      library_delivery_outbox: {
+        Row: {
+          attempts: number
+          available_at: string
+          completed_at: string | null
+          created_at: string
+          event_key: string
+          id: string
+          last_error: string | null
+          locked_at: string | null
+          locked_by: string | null
+          order_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          available_at?: string
+          completed_at?: string | null
+          created_at?: string
+          event_key: string
+          id?: string
+          last_error?: string | null
+          locked_at?: string | null
+          locked_by?: string | null
+          order_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          available_at?: string
+          completed_at?: string | null
+          created_at?: string
+          event_key?: string
+          id?: string
+          last_error?: string | null
+          locked_at?: string | null
+          locked_by?: string | null
+          order_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [{
+          foreignKeyName: "library_delivery_outbox_order_id_fkey"
+          columns: ["order_id"]
+          isOneToOne: false
+          referencedRelation: "library_orders"
+          referencedColumns: ["id"]
+        }]
+      }
       library_items: {
         Row: {
           access: string
@@ -2981,6 +3032,14 @@ export type Database = {
           display_name: string
           tnb_id: string
         }[]
+      }
+      claim_library_delivery_outbox: {
+        Args: { p_limit?: number; p_worker: string }
+        Returns: { attempts: number; event_key: string; id: string; order_id: string }[]
+      }
+      finish_library_delivery_outbox: {
+        Args: { p_error?: string | null; p_id: string; p_safe_to_retry?: boolean; p_status: string }
+        Returns: undefined
       }
       get_tnb_cron_secret: { Args: never; Returns: string }
       has_role: {
