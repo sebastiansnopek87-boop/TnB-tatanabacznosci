@@ -1,0 +1,3 @@
+ALTER TABLE public.platform_settings ADD COLUMN IF NOT EXISTS module_visibility jsonb NOT NULL DEFAULT '{}'::jsonb;
+GRANT SELECT (module_visibility) ON public.platform_settings TO anon, authenticated;
+COMMENT ON COLUMN public.platform_settings.module_visibility IS 'Public presentation flags per module: menu and page. Writes via superadmin-authorized server function only; does not change content or access entitlements.';

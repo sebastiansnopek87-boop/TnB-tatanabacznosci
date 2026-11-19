@@ -1,0 +1,56 @@
+name: Supabase migration replay
+
+on:
+  pull_request:
+    paths:
+      - "supabase/config.toml"
+      - "supabase/migrations/**"
+      - ".github/workflows/supabase-migrations.yml"
+  push:
+    branches:
+      - chore/restore-supabase-migrations-20261117
+    paths:
+      - "supabase/config.toml"
+      - "supabase/migrations/**"
+      - ".github/workflows/supabase-migrations.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-migration-replay-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  replay:
+    name: Replay migrations on isolated local Supabase
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Verify migration filenames
+        shell: bash
+        run: |
+          set -euo pipefail
+          count=$(find supabase/migrations -maxdepth 1 -type f -name '*.sql' | wc -l | tr -d ' ')
+          test "$count" = "66"
+          echo "Found $count SQL migrations."
+
+      - name: Start isolated local Supabase stack
+        run: supabase start
+
+      - name: Replay all migrations from an empty local database
+        run: supabase db reset --local
+
+      - name: Verify local migration history
+        run: |
+          set -euo pipefail
+          supabase migration list --local
