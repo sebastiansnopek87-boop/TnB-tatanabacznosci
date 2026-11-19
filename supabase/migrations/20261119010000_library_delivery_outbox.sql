@@ -138,6 +138,12 @@ BEGIN
         last_error = left(COALESCE(p_error, 'delivery_failed'), 500),
         updated_at = now()
     WHERE id = p_id;
+  ELSIF p_status = 'failed' AND p_safe_to_retry THEN
+    UPDATE public.library_delivery_outbox
+    SET status = 'dead_letter', locked_at = NULL, locked_by = NULL,
+        last_error = left(COALESCE(p_error, 'delivery_retry_limit_reached'), 500),
+        completed_at = now(), updated_at = now()
+    WHERE id = p_id;
   ELSE
     UPDATE public.library_delivery_outbox
     SET status = 'needs_review', locked_at = NULL, locked_by = NULL,
