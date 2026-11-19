@@ -89,3 +89,12 @@ To oznacza, że katalog migracji w repo nie jest kompletnym, odtwarzalnym zapise
 - PR #11 pozostaje Draft; nie wykonano merge.
 - Nie można uznać dostawy e-mail za produkcyjnie sprawdzoną — aktywne ustawienie wiadomości pozostaje w trybie testowym, a sekrety SMTP nie są skonfigurowane.
 - Nie można uznać wdrożenia CyberFolks ani pełnego E2E produkcji za zweryfikowane.
+
+
+## Aktualizacja prac — 2026-11-19
+
+- Przywrócony łańcuch 66 migracji i wygenerowane typy z `main` zostały zsynchronizowane z gałęzią migracji przez zwykły merge commit `e5c8518a97a019308df42c75fa66b301184dc897`. Gałąź nie jest już za `main`; merge-base to `454aeb3c0f3de07d7a262e1707ce3600485226ea`.
+- PR #11 pozostaje Draft i nie został scalony. Nie wykonano migracji ani zapisów w produkcyjnej bazie.
+- Odczyt schematu aktywnej bazy potwierdza, że `library_orders` nadal nie ma `idempotency_key` ani `payload_hash`; nie znaleziono triggerów na tej tabeli. Nadal istnieją unikalne indeksy `checkout_session_id` i `(provider, provider_ref)`.
+- Nie znaleziono workflow run dla nowego merge commit w GitHub Actions. Wynik wcześniejszego CI PASS dotyczy poprzedniego HEAD `b8a2916`, a nie nowego merge commita. Przed scaleniem wymagany jest nowy zielony przebieg.
+- Kolejny kodowy krok pozostaje zablokowany przez potrzebę dodania i przetestowania schematu idempotencji/outbox jako wersjonowanej migracji. Nie wolno stosować zmian DDL bezpośrednio do aktywnej bazy. Migracja musi być odtwarzalna na czystej bazie i dopiero potem porównana z live schema.
