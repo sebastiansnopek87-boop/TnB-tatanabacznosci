@@ -64,8 +64,8 @@ jobs:
         with:
           deno-version: v2.x
 
-      - name: Checkout idempotency unit tests
-        run: deno test supabase/functions/_shared/checkout-idempotency.test.ts
+      - name: Shared Edge Function unit tests
+        run: deno test supabase/functions/_shared/checkout-idempotency.test.ts supabase/functions/_shared/delivery-outbox.test.ts
 
       - name: TypeScript validation
         run: bun run typecheck
@@ -82,13 +82,6 @@ jobs:
       - name: Unit tests
         run: bun run test
 
-      - name: Set up Deno for Edge Function unit tests
-        uses: denoland/setup-deno@v2
-        with:
-          deno-version: v2.x
-
-      - name: Edge Function shared unit tests
-        run: deno test supabase/functions/_shared/checkout-idempotency.test.ts supabase/functions/_shared/delivery-outbox.test.ts
 
       - name: Scan static build for server-only code and secrets
         shell: bash
