@@ -27,7 +27,7 @@ The SECURITY DEFINER warnings need function-body review (authorization predicate
 
 ## Edge Function inventory snapshot
 
-All 29 listed Edge Functions were ACTIVE at inspection time. JWT gateway verification is enabled for 6 and disabled for 23. A disabled gateway JWT check does not by itself prove a vulnerability: handlers may validate bearer tokens, provider signatures, origin, rate limits, or public input contracts themselves. Every function with `verify_jwt=false` needs a handler-level authentication/authorization review, especially admin and webhook endpoints. Do not bulk-enable gateway verification because provider webhooks and public endpoints may intentionally be unauthenticated at the gateway.
+All 29 listed Edge Functions were ACTIVE at inspection time. JWT gateway verification is enabled for 7 and disabled for 22. A disabled gateway JWT check does not by itself prove a vulnerability: handlers may validate bearer tokens, provider signatures, origin, rate limits, or public input contracts themselves. Every function with `verify_jwt=false` needs a handler-level authentication/authorization review, especially admin and webhook endpoints. Do not bulk-enable gateway verification because provider webhooks and public endpoints may intentionally be unauthenticated at the gateway.
 
 ## Required next validation
 
