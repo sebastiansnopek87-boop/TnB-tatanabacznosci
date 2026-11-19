@@ -182,7 +182,7 @@ BEGIN
           )
         ),
         body := jsonb_build_object('action', 'processDeliveryOutbox'),
-        timeout_milliseconds := 55000
+        timeout_milliseconds := 110000
       );
     $job$
   );
