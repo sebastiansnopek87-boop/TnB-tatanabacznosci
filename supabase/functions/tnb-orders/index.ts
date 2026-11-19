@@ -261,7 +261,6 @@ async function processDeliveryOutbox(db: Db) {
     // an operator can inspect the provider/log and decide whether to resend.
     if (existing) {
       const terminal = ["sent", "delivered", "simulated", "skipped"].includes(existing.status);
-      const result = terminal ? existing.status : "needs_review";
       await db.rpc("finish_library_delivery_outbox", {
         p_id: job.id, p_status: terminal ? (existing.status === "delivered" ? "sent" : existing.status) : "needs_review",
         p_error: terminal ? null : "previous_notification_attempt_" + existing.status,
