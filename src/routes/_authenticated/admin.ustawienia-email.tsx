@@ -119,21 +119,23 @@ function ProviderSection() {
       <dl className="grid gap-2 sm:grid-cols-[12rem_1fr]">
         <dt className="text-muted-foreground">Dostawca</dt><dd>{data.provider.name}</dd>
         <dt className="text-muted-foreground">Adres nadawcy</dt><dd>{data.settings.sender_name} &lt;{data.settings.sender}&gt;</dd>
-        <dt className="text-muted-foreground">Status domeny</dt>
+        <dt className="text-muted-foreground">Status konfiguracji SMTP</dt>
         <dd>{data.provider.connected ? <span className="text-gold">Zweryfikowana</span> : <span className="text-destructive">Oczekuje na weryfikację</span>}</dd>
         <dt className="text-muted-foreground">Tryb wysyłki</dt>
         <dd>{live ? "Rzeczywista wysyłka" : "Tryb testowy — wiadomości są przechwytywane i widoczne w Historii wysyłek jako „Symulacja”, nic nie trafia do odbiorców"}</dd>
-        <dt className="text-muted-foreground">Klucz API</dt><dd>Nie jest potrzebny — wbudowana poczta używa bezpiecznego połączenia serwera. Żaden klucz nie trafia do przeglądarki.</dd>
+        <dt className="text-muted-foreground">Konfiguracja SMTP</dt><dd>Hasło i dane serwera są przechowywane wyłącznie w sekretach Supabase. Nie trafiają do przeglądarki.</dd>
       </dl>
       {!data.provider.connected && (
         <div className="border-l-2 border-gold pl-3 text-foreground/80">
-          <p className="font-semibold">Co trzeba zrobić, aby włączyć rzeczywistą wysyłkę:</p>
+          <p className="font-semibold">Konfiguracja skrzynki Cyber_Folks:</p>
           <ol className="mt-1 list-decimal space-y-1 pl-5">
-            <li>W ustawieniach projektu Lovable (Cloud → Emails) dodać domenę tatanabacznosci.pl jako domenę nadawcy.</li>
-            <li>U rejestratora domeny dodać rekordy DNS wskazane w tym kreatorze i poczekać na weryfikację (do 72 godzin).</li>
-            <li>Podłączyć wysyłkę w silniku powiadomień (jedna zmiana po stronie serwera) i przełączyć tryb na „Rzeczywista wysyłka”.</li>
+            <li>W Supabase → Edge Functions → Secrets ustaw SMTP_HOST na dokładny serwer pocztowy pokazany w panelu hostingu.</li>
+            <li>Ustaw SMTP_PORT=465 i SMTP_SECURE=true. Port 465 używa SSL/TLS; port 587 jest blokowany przez środowisko Supabase Edge Functions.</li>
+            <li>Ustaw SMTP_USERNAME jako pełny adres skrzynki oraz SMTP_PASSWORD jako jej hasło.</li>
+            <li>Ustaw SMTP_FROM na adres tej skrzynki. Nadawca w ustawieniach aplikacji musi być zgodny z kontem/domeną dopuszczoną przez hosting.</li>
+            <li>Po dodaniu sekretów wyślij wiadomość testową na adres kontrolny. Dopiero po potwierdzeniu dostarczenia włącz „Rzeczywistą wysyłkę”.</li>
           </ol>
-          <p className="mt-1 text-xs text-muted-foreground">Szablony, zdarzenia i historia nie wymagają przebudowy.</p>
+          <p className="mt-1 text-xs text-muted-foreground">Nie wpisuj hasła SMTP w formularzu aplikacji ani w GitHub. Wartości sekretów nie są odczytywane ani wyświetlane w panelu.</p>
         </div>
       )}
       {data.canEdit && <>

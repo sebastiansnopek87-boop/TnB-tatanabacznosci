@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { corsHeaders as sdkCorsHeaders } from "npm:@supabase/supabase-js@2.117.2/cors";
 import { z } from "zod";
 import { ADAPTERS, REQUIREMENTS, configStatus, type ProviderId, type ProviderRow, type Notice } from "./providers.ts";
+import { providerReferenceMatches } from "../_shared/payment-webhook.ts";
 import { DEFAULT_TEMPLATES, EVENT_MAP } from "./registry.ts";
 import { render, maskSensitive, stripSensitive, type Vars } from "./render.ts";
 
@@ -157,6 +158,18 @@ async function confirmOperatorPayment(db: Db, provider: ProviderRow, notice: Not
     await logOrderEvent(db, order.id, "webhook_rejected", "Powiadomienie ze środowiska " + provider.environment + ", zamówienie ze środowiska " + order.environment + ".");
     return { result: "env_mismatch" };
   }
+  // The local order UUID locates the order; the operator transaction reference
+  // must independently match the reference persisted during checkout creation.
+  if (!order.provider_ref) {
+    await logOrderEvent(db, order.id, "webhook_retry", "Referencja transakcji nie została jeszcze zapisana.");
+    return { result: "provider_ref_pending" };
+  }
+  if (!providerReferenceMatches(order.provider_ref, notice.providerRef)) {
+    const reason = "Referencja transakcji operatora nie zgadza się z zapisanym zamówieniem.";
+    if (["pending", "failed"].includes(order.status)) await flagReview(db, order.id, reason);
+    else await logOrderEvent(db, order.id, "webhook_rejected", reason);
+    return { result: "provider_ref_mismatch" };
+  }
   if (notice.outcome === "pending") {
     await logOrderEvent(db, order.id, "webhook_pending", "Operator: płatność w toku (" + notice.eventId + ").");
     return { result: "pending" };
@@ -197,6 +210,10 @@ async function handleWebhook(db: Db, id: ProviderId, request: Request): Promise<
   if (duplicateError) return new Response("Retry", { status: 500 });
   try {
     const result = await confirmOperatorPayment(db, provider, notice);
+    if (result.result === "provider_ref_pending") {
+      await db.from("payment_webhook_events").delete().eq("event_id", notice.eventId);
+      return new Response("Retry", { status: 500 });
+    }
     await logEvent(db, { type: "payment_webhook", objectKind: "payment", objectId: notice.orderId ?? notice.providerRef, result: ["paid", "failed", "pending", "duplicate", "ignored"].includes(result.result) ? "ok" : "failed", detail: id + ": " + result.result });
     return ADAPTERS[id].ack();
   } catch (error) {
@@ -224,13 +241,16 @@ async function listProviders(db: Db, userId: string) {
     db.rpc("has_role", { _user_id: userId, _role: "superadmin" }),
   ]);
   const baseUrl = Deno.env.get("SUPABASE_URL") || "";
-  return { canEdit: !!superRole, providers: (data ?? []).map((row: any) => {
+  const rows = (data ?? []) as ProviderRow[];
+  return { canEdit: !!superRole, providers: rows.map((row) => {
     const meta = REQUIREMENTS[row.id as ProviderId];
     return { ...row, label: meta.label, fields: meta.fields, docs: meta.docs, refunds: meta.refunds,
       webhookUrl: baseUrl + "/functions/v1/tnb-payments?provider=" + row.id, status: configStatus(row) };
   }) };
 }
-async function updateProvider(db: Db, userId: string, data: any) {
+type UpdateProviderInput = Extract<z.infer<typeof actions>, { action: "updatePaymentProvider" }>["data"];
+type SetEnvironmentInput = Extract<z.infer<typeof actions>, { action: "setPaymentEnvironment" }>["data"];
+async function updateProvider(db: Db, userId: string, data: UpdateProviderInput) {
   const { data: current } = await db.from("payment_providers").select("*").eq("id", data.id).maybeSingle();
   if (!current) throw new HttpError(404, "Nie znaleziono operatora płatności.");
   const next = { ...current, merchant_id: data.merchant_id || null, pos_id: data.pos_id || null, client_id: data.client_id || null } as ProviderRow;
@@ -253,7 +273,7 @@ async function updateProvider(db: Db, userId: string, data: any) {
   await logEvent(db, { type: "payment_config", actor: userId, objectKind: "payment", objectId: data.id, detail: (data.enabled ? "włączony" : "wyłączony") + (data.isDefault ? ", domyślny" : "") });
   return { ok: true };
 }
-async function setEnvironment(db: Db, userId: string, data: any) {
+async function setEnvironment(db: Db, userId: string, data: SetEnvironmentInput) {
   if (data.environment === "live" && data.confirm !== "URUCHAMIAM PRODUKCJĘ") throw new HttpError(400, "Aby włączyć środowisko produkcyjne, wpisz: URUCHAMIAM PRODUKCJĘ");
   if (data.environment === "live") {
     const { data: current } = await db.from("payment_providers").select("*").eq("id", data.id).maybeSingle();

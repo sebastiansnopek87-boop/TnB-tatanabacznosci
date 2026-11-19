@@ -4,6 +4,7 @@ import { z } from "zod";
 import { ADAPTERS, configStatus, type ProviderId, type ProviderRow } from "./providers.ts";
 import { DEFAULT_TEMPLATES, EVENT_MAP } from "./registry.ts";
 import { render, maskSensitive, stripSensitive, type Vars } from "./render.ts";
+import { sendSmtpMail, smtpConfig } from "../_shared/smtp.ts";
 
 const CORS = new Headers({
   ...sdkCorsHeaders,
@@ -111,6 +112,8 @@ async function dispatchOrderNotification(db: Db, orderId: string, event: string,
     const { data: order } = await db.from("library_orders").select("id, order_number, buyer_email, buyer_name, amount, access_token, user_id, library_items(title)").eq("id", orderId).maybeSingle();
     if (!order) return { status: "skipped" as const, reason: "order_not_found" };
     const { settings, platform } = await notificationContext(db);
+    const smtp = smtpConfig();
+    const mode = settings?.delivery_mode === "live" && smtp.configured ? "live" : "test";
     if (!(await notificationEnabled(db, event, settings))) return { status: "skipped" as const, reason: "notification_disabled" };
     const recipient = event === "order_admin_new" ? settings?.notification_recipient : order.buyer_email;
     if (typeof recipient !== "string" || !/^[^\s@<>"]+@[^\s@<>]+\.[a-z]{2,}$/i.test(recipient)) return { status: "skipped" as const, reason: "recipient_not_configured" };
@@ -134,19 +137,31 @@ async function dispatchOrderNotification(db: Db, orderId: string, event: string,
     const { data: inserted, error } = await db.from("email_notification_log").insert({
       kind: event, related_id: order.id, template_key: event,
       idempotency_key: event + "-" + order.id + (suffix ? "-" + suffix : ""),
-      mode: "test", recipient, payload: stripSensitive(vars), retryable: !rendered.usesSensitive, status: "sending",
+      mode, recipient, payload: stripSensitive(vars), retryable: !rendered.usesSensitive, status: "sending",
     }).select("id").single();
     if (error) {
       if (error.code === "23505") return { status: "duplicate" as const };
       console.error("order notification log insert failed", error.message);
       return { status: "failed" as const, reason: "log_insert_failed" };
     }
-    const safe = render(template, maskSensitive(vars), template.required);
-    await db.from("email_notification_log").update({
-      status: "simulated", mode: "test", attempts: 1, reason: null, updated_at: new Date().toISOString(),
-      rendered_subject: safe.ok ? safe.subject : null, rendered_html: safe.ok ? safe.html : null, rendered_text: safe.ok ? safe.text : null,
-    }).eq("id", inserted.id);
-    return { status: "simulated" as const, id: inserted.id };
+    if (mode === "test") {
+      const safe = render(template, maskSensitive(vars), template.required);
+      await db.from("email_notification_log").update({
+        status: "simulated", mode: "test", attempts: 1, reason: null, updated_at: new Date().toISOString(),
+        rendered_subject: safe.ok ? safe.subject : null, rendered_html: safe.ok ? safe.html : null, rendered_text: safe.ok ? safe.text : null,
+      }).eq("id", inserted.id);
+      return { status: "simulated" as const, id: inserted.id };
+    }
+    try {
+      const from = `${settings?.sender_name ?? "Tata Na Baczności"} <${settings?.sender_local_part ?? "kontakt"}@${settings?.sender_domain ?? "tatanabacznosci.pl"}>`;
+      const sent = await sendSmtpMail({ to: recipient, from, replyTo: settings?.reply_to ?? null, subject: rendered.subject, html: rendered.html, text: rendered.text });
+      await db.from("email_notification_log").update({ status: "sent", mode: "live", attempts: 1, reason: null, provider_message_id: sent.messageId, updated_at: new Date().toISOString() }).eq("id", inserted.id);
+      return { status: "sent" as const, id: inserted.id };
+    } catch (error) {
+      const reason = error instanceof Error ? error.message.slice(0, 300) : "smtp_delivery_failed";
+      await db.from("email_notification_log").update({ status: "failed", mode: "live", attempts: 1, reason, updated_at: new Date().toISOString() }).eq("id", inserted.id);
+      return { status: "failed" as const, id: inserted.id, reason: "smtp_delivery_failed" };
+    }
   } catch (error) {
     console.error("order notification failed", error instanceof Error ? error.message : error);
     return { status: "failed" as const, reason: "internal_error" };
@@ -274,7 +289,9 @@ const actionSchema = z.discriminatedUnion("action", [
 async function getCheckoutOptions(db: Db) {
   const { data, error } = await db.from("payment_providers").select("id, enabled, is_default, environment, merchant_id, pos_id, client_id");
   if (error) throw new HttpError(500, "Nie udało się pobrać metod płatności.");
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
   const providers = (data ?? []).filter((p: any) => p.enabled && configStatus(p).configured)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
     .map((p: any) => ({ id: p.id as ProviderId, label: PROVIDER_LABEL[p.id]!, isDefault: p.is_default, test: p.environment === "sandbox" }));
   return { providers };
 }
@@ -357,11 +374,13 @@ async function listMyPurchases(db: Db, userId: string, email: string | null) {
   query = email ? query.or("user_id.eq." + userId + ",buyer_email.eq." + email) : query.eq("user_id", userId);
   const { data, error } = await query.order("paid_at", { ascending: false });
   if (error) throw new HttpError(500, "Nie udało się pobrać zakupów.");
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
   return (data ?? []).map((order: any) => ({
     id: order.id, paid_at: order.paid_at, amount: order.amount, title: order.library_items?.title ?? "",
     slug: order.library_items?.slug ?? "", token: order.access_token,
   }));
 }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
 async function adminListOrders(db: Db, input: any) {
   let query = db.from("library_orders").select("id, order_number, created_at, paid_at, delivered_at, status, delivery_status, buyer_email, buyer_name, amount, currency, payment_method, provider, environment, is_test, access_revoked_at, library_items!inner(title)")
     .order("created_at", { ascending: false }).limit(500);
@@ -373,6 +392,7 @@ async function adminListOrders(db: Db, input: any) {
   const { data, error } = await query;
   if (error) throw new HttpError(500, "Nie udało się pobrać zamówień.");
   const search = input.q.toLowerCase();
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
   return (data as any[]).filter((row) => !search ||
     row.order_number.toLowerCase().includes(search) || row.buyer_email.toLowerCase().includes(search) ||
     (row.buyer_name ?? "").toLowerCase().includes(search) || (row.library_items?.title ?? "").toLowerCase().includes(search));
@@ -381,9 +401,11 @@ async function adminSalesSummary(db: Db) {
   const { data, error } = await db.from("library_orders")
     .select("status, amount, provider, environment, is_test, paid_at, created_at").limit(20000);
   if (error) throw new HttpError(500, "Nie udało się pobrać podsumowania sprzedaży.");
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
   const rows = (data ?? []) as any[];
   const real = rows.filter((row) => row.environment !== "sandbox" && !row.is_test);
   const paid = real.filter((row) => row.paid_at && ["paid", "refund_pending"].includes(row.status));
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
   const sum = (items: any[]) => items.reduce((total, row) => total + row.amount, 0);
   const byProvider: Record<string, { count: number; amount: number }> = {};
   for (const row of paid) {
@@ -425,6 +447,7 @@ async function adminResendDelivery(db: Db, id: string, actor: string) {
   await logEvent(db, { type: "order_resend", actor, objectKind: "order", objectId: id, result: result.ok ? "ok" : "failed", detail: result.ok ? undefined : result.reason });
   return result;
 }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
 async function adminSetOrderStatus(db: Db, userId: string, input: any) {
   if (input.action.startsWith("refund") || input.action.startsWith("review")) {
     const { data: order } = await db.from("library_orders").select("order_number").eq("id", input.id).maybeSingle();

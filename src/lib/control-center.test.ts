@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hasAccess } from './orders.server';
+import { hasAccess } from './orders-access';
 import { accountMatches, accessPresentation, readState, searchParts, requestNameFilter, historyPage, HISTORY_SIZE, type HistoryEvent } from './control-center';
 describe('Control Center read-only rules', () => {
   it('preserves the real 69.99 PLN paid order without using is_test for access', () => {

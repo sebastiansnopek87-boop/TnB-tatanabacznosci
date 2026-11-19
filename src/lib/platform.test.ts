@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { platformSchema } from "./platform.functions";
+import { platformSchema, PUBLIC_COLS } from "./platform-schema";
 
 const BASE = {
   social_youtube: "", social_spotify: "", social_tiktok: "", social_instagram: "",
@@ -39,11 +39,8 @@ describe("platformSchema", () => {
 });
 
 describe("pola publiczne", () => {
-  it("PUBLIC_COLS nie zawiera pól fakturowych", async () => {
-    const src = await import("node:fs/promises").then((fs) => fs.readFile(new URL("./platform.functions.ts", import.meta.url), "utf8"));
-    const m = src.match(/const PUBLIC_COLS = "([^"]+)"/);
-    expect(m).toBeTruthy();
-    const cols = m![1];
+  it("PUBLIC_COLS nie zawiera pól fakturowych", () => {
+    const cols = PUBLIC_COLS;
     expect(cols).not.toContain("billing_");
     expect(cols).toContain("company_legal_name");
     expect(cols).toContain("contact_phone");
@@ -51,7 +48,6 @@ describe("pola publiczne", () => {
   });
 
   it("proponowana migracja przyznaje odczyt tylko kolumnom z PUBLIC_COLS (oraz id)", async () => {
-    const { PUBLIC_COLS } = await import("./platform.functions");
     const fs = await import("node:fs/promises");
     const sql = await fs.readFile(new URL("../../db-proposals/platform_settings_least_privilege.sql", import.meta.url), "utf8");
     const m = sql.match(/GRANT SELECT \(([^)]+)\) ON public\.platform_settings TO anon, authenticated;/);

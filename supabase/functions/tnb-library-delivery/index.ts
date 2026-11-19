@@ -3,6 +3,7 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2.117.2/cors";
 import { z } from "zod";
 import { EVENT_MAP, DEFAULT_TEMPLATES } from "./registry.ts";
 import { render, maskSensitive, stripSensitive, type Vars } from "./render.ts";
+import { sendSmtpMail, smtpConfig } from "../_shared/smtp.ts";
 
 const CORS = new Headers({ ...corsHeaders, "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "authorization, apikey, x-client-info, content-type, x-supabase-api-version", "Access-Control-Max-Age": "86400", "X-Content-Type-Options": "nosniff" });
 const BUCKET = "library-files";
@@ -74,9 +75,11 @@ async function dispatchFreeMaterial(s: Db, input: { to: string; firstName: strin
   const [{ settings, platform }, { data: rule }] = await Promise.all([
     notificationContext(s), s.from("notification_rules").select("enabled").eq("event_key", key).maybeSingle()
   ]);
+  const smtp = smtpConfig();
+  const mode = settings?.delivery_mode === "live" && smtp.configured ? "live" : "test";
   const base = { kind: key, related_id: input.id, template_key: key, idempotency_key: "library-free-" + input.id };
   const insert = async (row: Record<string, unknown>) => {
-    const { data, error } = await s.from("email_notification_log").insert({ ...base, mode: "test", ...row }).select("id").single();
+    const { data, error } = await s.from("email_notification_log").insert({ ...base, mode, ...row }).select("id").single();
     if (error) { if (error.code === "23505") return null; throw error; }
     return data.id as string;
   };
@@ -103,12 +106,24 @@ async function dispatchFreeMaterial(s: Db, input: { to: string; firstName: strin
   }
   const id = await insert({ status: "sending", recipient: input.to, payload: stripSensitive(vars), retryable: !rendered.usesSensitive });
   if (!id) return { status: "duplicate" as const };
-  const safe = render(tpl, maskSensitive(vars), tpl.required);
-  await s.from("email_notification_log").update({
-    status: "simulated", reason: null, attempts: 1, mode: "test", updated_at: new Date().toISOString(),
-    rendered_subject: safe.ok ? safe.subject : null, rendered_html: safe.ok ? safe.html : null, rendered_text: safe.ok ? safe.text : null
-  }).eq("id", id);
-  return { status: "simulated" as const, id };
+  if (mode === "test") {
+    const safe = render(tpl, maskSensitive(vars), tpl.required);
+    await s.from("email_notification_log").update({
+      status: "simulated", reason: null, attempts: 1, mode: "test", updated_at: new Date().toISOString(),
+      rendered_subject: safe.ok ? safe.subject : null, rendered_html: safe.ok ? safe.html : null, rendered_text: safe.ok ? safe.text : null
+    }).eq("id", id);
+    return { status: "simulated" as const, id };
+  }
+  try {
+    const from = `${settings?.sender_name ?? "Tata Na Baczności"} <${settings?.sender_local_part ?? "kontakt"}@${settings?.sender_domain ?? "tatanabacznosci.pl"}>`;
+    const sent = await sendSmtpMail({ to: input.to, from, replyTo: settings?.reply_to ?? null, subject: rendered.subject, html: rendered.html, text: rendered.text });
+    await s.from("email_notification_log").update({ status: "sent", reason: null, attempts: 1, mode: "live", provider_message_id: sent.messageId, updated_at: new Date().toISOString() }).eq("id", id);
+    return { status: "sent" as const, id };
+  } catch (error) {
+    const reason = error instanceof Error ? error.message.slice(0, 300) : "smtp_delivery_failed";
+    await s.from("email_notification_log").update({ status: "failed", reason, attempts: 1, mode: "live", updated_at: new Date().toISOString() }).eq("id", id);
+    return { status: "failed" as const, id, reason: "smtp_delivery_failed" };
+  }
 }
 
 const Name = (message: string, max = 60) => z.string().trim().min(1, message).max(max).regex(/^[\p{L}][\p{L}\s'.-]*$/u, "Pole zawiera niedozwolone znaki.");

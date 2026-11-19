@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { corsHeaders as sdkCorsHeaders } from "npm:@supabase/supabase-js@2.117.2/cors";
+import { smtpConfig, verifySmtp } from "../_shared/smtp.ts";
 import { z } from "zod";
 
 const CORS = new Headers({
@@ -180,6 +181,7 @@ async function usersIndex(db: Db) {
 }
 
 const EVENT_COLS = "id, created_at, type, actor, object_kind, object_id, result, detail";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
 function withEmails(rows: any[], users: Array<{ id: string; email?: string }> | null) {
   const emails = new Map((users ?? []).map((user) => [user.id, user.email ?? null]));
   return rows.map((row) => ({ ...row, actor_email: row.actor ? emails.get(row.actor) ?? null : null }));
@@ -188,6 +190,7 @@ function withEmails(rows: any[], users: Array<{ id: string; email?: string }> | 
 async function getDashboard(db: Db) {
   const now = new Date().toISOString();
   const monthAgo = new Date(Date.now() - 30 * 864e5).toISOString();
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
   const count = async (query: any) => {
     const result = await query;
     return result.error ? null : (result.count ?? 0);
@@ -272,6 +275,12 @@ async function getEmailSettings(db: Db) {
 }
 
 async function updateEmailSettings(db: Db, input: z.infer<typeof emailSettingsSchema>, actor: string) {
+  const { data: current } = await db.from("email_settings").select("newsletter_double_opt_in,delivery_mode").eq("id", 1).maybeSingle();
+  if (input.newsletter_double_opt_in && !current?.newsletter_double_opt_in) {
+    if (current?.delivery_mode !== "live" || !smtpConfig().configured) throw new HttpError(409, "Najpierw skonfiguruj SMTP i włącz rzeczywistą wysyłkę.");
+    try { await verifySmtp(); }
+    catch { throw new HttpError(409, "Nie można włączyć double opt-in: połączenie SMTP nie przeszło testu."); }
+  }
   const { error, count } = await db.from("email_settings")
     .update({ ...input, updated_at: new Date().toISOString() }, { count: "exact" }).eq("id", 1);
   if (error || !count) {
@@ -304,6 +313,7 @@ async function listCommunity(db: Db, input: z.infer<typeof communityFilter>) {
 }
 
 async function moderateCommunity(db: Db, input: z.infer<typeof moderationInput>, actor: string) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
   let result: any;
   if (input.action === "delete_comment") result = await db.from("community_comments").delete().eq("id", input.id).select("id");
   else if (input.action === "delete_post") result = await db.from("community_posts").delete().eq("id", input.id).select("id");
@@ -352,6 +362,7 @@ async function listAdminEvents(db: Db, input: z.infer<typeof eventFilter>) {
   const { data: rows, error, count } = await query.range(input.page * PAGE, input.page * PAGE + PAGE - 1);
   if (error) throw new HttpError(500, "Nie udało się pobrać dziennika zdarzeń.");
   const users = await usersIndex(db);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
   const actorIds = new Set((rows ?? []).map((row: any) => row.actor).filter(Boolean));
   return {
     rows: withEmails(rows ?? [], users), total: count ?? 0, pageSize: PAGE,
@@ -436,6 +447,7 @@ async function controlCenterSearch(db: Db, query: string) {
       .order("id", { ascending: true }).limit(CC_SEARCH_LIMIT + 1)),
   ]);
   const authUsers: CCAuthUser[] = authResult.error ? [] : authResult.data?.users ?? [];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
   const matched = new Set<string>(identSearch.error ? [] : (identSearch.data ?? []).slice(0, CC_SEARCH_LIMIT).map((row: any) => row.user_id));
   const userName = (user: CCAuthUser) => {
     const meta = user.user_metadata ?? {};
@@ -445,6 +457,7 @@ async function controlCenterSearch(db: Db, query: string) {
   for (const user of authUsers) {
     if ((user.email ?? "").toLowerCase().includes(safe.toLowerCase()) || userName(user).toLowerCase().includes(safe.toLowerCase())) matched.add(user.id);
   }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
   const itemIds = materials.error ? [] : (materials.data ?? []).slice(0, CC_SEARCH_LIMIT).map((item: any) => item.id);
   const itemFilter = itemIds.length ? ",item_id.in.(" + itemIds.join(",") + ")" : "";
   const fullName = words.length > 1
@@ -484,7 +497,9 @@ async function controlCenterSearch(db: Db, query: string) {
     const user = authUsers.find((candidate) => candidate.id === id);
     return {
       id, email: user?.email ?? null, name: user ? userName(user) || null : null,
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
       tnbId: identities.error ? null : identities.data?.find((row: any) => row.user_id === id)?.tnb_id ?? null,
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
       roles: roles.error ? null : (roles.data ?? []).filter((row: any) => row.user_id === id).map((row: any) => row.role),
       confirmed: user ? !!user.email_confirmed_at : null, createdAt: user?.created_at ?? null,
     };
@@ -563,14 +578,17 @@ async function controlCenterHistory(db: Db, input: CCHistoryInput) {
   if (orderRes.error || adminRes.error || mailRes.error) {
     return { ...ccHistoryPage([], [], input.offsets), error: "Nie udało się pobrać historii. Spróbuj ponownie.", before };
   }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
   const orderRows: CCHistoryEvent[] = (orderRes.data ?? []).map((event: any) => ({
     id: event.id, at: event.created_at, source: "order", type: event.type, actor: null,
     objectKind: "order", objectId: event.order_id, detail: event.detail, result: null,
   }));
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
   const adminRows: CCHistoryEvent[] = (adminRes.data ?? []).map((event: any) => ({
     id: event.id, at: event.created_at, source: "admin", type: event.type, actor: event.actor,
     objectKind: event.object_kind ?? "—", objectId: event.object_id ?? "—", detail: event.detail, result: event.result,
   }));
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
   const mailRows: CCHistoryEvent[] = (mailRes.data ?? []).map((event: any) => ({
     id: event.id, at: event.created_at, source: "mail", type: event.template_key ?? event.kind,
     actor: null, objectKind: "order", objectId: event.related_id ?? input.id,

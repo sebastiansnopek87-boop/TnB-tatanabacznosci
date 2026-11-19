@@ -1,4 +1,7 @@
 # Roadmap
+
+- [x] Ustawienia platformy — dodano test kontraktu React SPA ↔ `tnb-platform` dla wszystkich 6 akcji, sesji Bearer, błędów 403/pustej odpowiedzi, publicznych odczytów i allowlisty danych. Test włączony do CI; bez zmian w backendzie i bazie.
+
 - [x] Panel administratora: pięć grup menu i czytelne karty; 25 linków klikniętych, 5 grup zwijanych/rozwijanych, 10 statystyk identycznych przed/po, aktywna pozycja i widoki 1280/1207/768/390/320 px PASS; 19 testów Centrum kontroli + 40 stron PASS, build OK i brak błędów JS. Gość przekierowany do logowania; innych ról nie testowano na osobnych sesjach. Bez zmian bazy/uprawnień/CMS/strony publicznej i publikacji.
 - [x] Głos TNB: poprzedni/następny i rekomendacje bez duplikatów z istniejącego katalogu/kategorii/kolejności; 8 testów nawigacji + 40 stron + 19 Centrum kontroli PASS, build OK; rzeczywiste kliknięcia trzech opublikowanych odcinków, odtwarzanie/pauza/przewijanie/reset i 1280/390/320 px PASS. Tylko 3 odcinki publiczne — brak możliwości rzeczywistego sprawdzenia 4 rekomendacji i chronionego odcinka, te przypadki sprawdzone w testach danych, nie pełnym E2E. Bez zapisów danych/migracji/publikacji.
 - [x] Przycisk społeczności w filmowym HERO: osobne cele gościa/zalogowanego, tryb stały/sesyjny i widoczność w CMS; 40 testów stron + 19 regresji PASS, build OK; trwały zapis obu adresów/etykiety po odświeżeniu i oba podglądy PASS, rzeczywiste kliknięcia gość→rejestracja oraz zalogowany→społeczność PASS, brak błędów JS. Próbne wartości przywrócone, domyślne ustawienia zapisane w szkicu; bez publikacji (home już opublikowane 19:52 przed tym zadaniem).
@@ -85,4 +88,61 @@
 - [ ] Przenieść testy logiki pozostałych modułów `*.functions.ts` do testów Supabase Edge Functions, następnie usunąć nieużywane moduły TanStack Start i samą zależność `@tanstack/react-start` z `devDependencies`. Nie usuwać modułów, dopóki ich przypadki testowe nie mają odpowiedników.
 - [ ] Zweryfikować wdrożenie `dist` na CyberFolks: fallback, odświeżanie tras, logowanie, callback Instagrama i przepływy zakupowe. Następnie wykonać autoryzowane E2E gość/użytkownik/admin/superadmin.
 - [ ] Reconcile the generated Supabase types and migration inventory with the live project; no database schema or production data changes were made in this continuation.
+- [x] Consultation calendar regression tests: Warsaw winter/summer conversion, DST transition, round-trip, date arithmetic and exact 2-hour cancellation boundary; included in Vitest CI (PR #11, all checks PASS).
+- [x] Added a CI isolation gate scanning the full `src/` tree: browser/runtime source cannot import legacy `*.functions.ts` / `*.server.ts` modules or the server-only Supabase admin client. The 41 remaining legacy source files are retained as isolated migration/rollback references; they are not yet deleted.
+- [ ] Complete the remaining 41-file legacy inventory module by module: verify each operation has a matching Supabase Edge Function/API adapter and regression coverage, then remove the obsolete source and `@tanstack/react-start` dependency. Do not remove rollback references before equivalent tests pass.
+- [x] Biblioteka — rekomendacje: dodano test kontraktu `recommendLibrary` React SPA ↔ `tnb-recommend`; sprawdza nazwę akcji i payload, zgodność limitów wejścia (10–600 znaków), brak treści premium w katalogu, propagację błędów i pustą odpowiedź. Test dołączony do `vitest.unit.config.ts`; modułu legacy nie usuwano przed wynikiem CI i pełną walidacją.
+- [x] Extracted the platform settings validation schema and public-column allowlist into `src/lib/platform-schema.ts`; its regression tests no longer import the legacy `platform.functions.ts` module. This is the first test module decoupled from TanStack Start.
+- [x] CI on commit `9b9c1c0c`: static build, deep-route fallback, TypeScript, SPA boundary, legacy-runtime isolation, 29 Edge Function source/config checks, 104 unit tests, dist secret scan and changed-file lint — PASS.
+- [x] Extracted payment signature primitives (P24, Tpay, PayU) into `src/lib/payments/provider-signatures.ts`; payment signature regression tests no longer import `providers.server.ts`. Server adapter continues to use the same verified helpers.
+- [x] CI on commit `6dd12da9`: build, route fallback, typecheck, SPA boundary, legacy import isolation, Edge Function coverage, all 104 unit tests, dist secret scan and lint — PASS.
+- [x] Payment signature verification tests now import the exact helper module used by deployed `tnb-payments` (P24 registration/notification, Tpay MD5, PayU MD5/SHA-256 and constant-time comparison); the Edge Function provider adapter no longer maintains a separate copy of these algorithms. Legacy server helper remains only as rollback reference until the wider Start cleanup.
+- [x] Extracted the paid-order entitlement rule into `src/lib/orders-access.ts`; its regression tests no longer load `orders.server.ts` or any TanStack Start code.
+- [x] Removed the last dynamic legacy import from the platform schema tests. Runtime isolation gate now scans production source separately from test-only rollback fixtures; current production UI has no imports of the legacy server modules.
+- [x] CI on commit `10079ee9`: build, SPA route smoke test, TypeScript, SPA boundary, legacy isolation, Edge Function coverage, unit tests, static secret scan and lint — PASS.
 
+- [x] Added an explicit legacy-runtime test allowlist: only the two existing mocked integration suites may still load Start handlers; all other test/source files are scanned for static, multiline, dynamic and `require()` imports. Removed the platform test's dynamic import of `platform.functions.ts`.
+- [x] Added consultation SPA adapter contract tests for all 11 actions. Tests verify each action is still represented by the legacy contract and `tnb-consult` Edge Function, every SPA operation invokes the intended Edge Function with its action/payload, and invocation errors are propagated. CI on commit `ce322fd8`: build, route fallback, TypeScript, SPA boundary, legacy isolation, Edge Function coverage, unit tests, static secret scan and lint — PASS.
+
+- [x] Biblioteka: dodano test kontraktu React SPA ↔ Supabase dla 11 akcji administracyjnych i 4 akcji dostarczania materiałów; testy obejmują wywołania adapterów, obecność akcji w legacy i Edge, granice admin auth, kontrolę `library_can_read` przed signed URL, hashowanie tokenu i powiązanie z materiałem oraz zgodność parametrów watermark. Wynik CI dla aktualnego commitu jest jeszcze oczekiwany; pełne E2E i wizualna inspekcja PDF pozostają osobne.
+
+- [x] Przygotowano wspólny transport SMTP dla powiadomień, newslettera, zamówień, konsultacji, kontaktu i bezpłatnych materiałów. Dodano double opt-in z wysyłką i stroną potwierdzenia. Tryb produkcyjny wymaga kompletnych sekretów oraz udanego testu połączenia. Instrukcja obejmuje Cyber_Folks i osobną konfigurację Supabase Auth. CI PASS: run `43918013467` dla `09877e4a3347ed9c75b08dc2fd6fd24573309021`. Sekrety nie są jeszcze ustawione, więc produkcyjna wysyłka pozostaje wyłączona.
+
+- [ ] Zamówienia/płatności — audyt pierwszej inspekcji zapisany w `docs/migration/legacy-runtime-inventory.md` (2026-11-16). Przed usunięciem legacy: potwierdzić powiązanie `providerRef` z rekordem zamówienia dla P24/Tpay/PayU; zaprojektować retry/outbox dla skutków ubocznych webhooka; dodać idempotencję tworzenia zamówień; pokryć kontrakt SPA ↔ Edge ↔ legacy i przejścia statusów testami. Nie zmieniać live operatorów ani DB bez testów.
+
+- [x] Płatności — potwierdzono kontrakty referencji P24 (`sessionId`), Tpay (`title` ↔ `tr_id`, `hiddenDescription` ↔ `tr_crc`) i PayU (`orderId` ↔ zapisany identyfikator PayU); Edge Function porównuje niezależnie zapisaną referencję operatora. Naprawiono P24: brak udanej weryfikacji `transaction/verify` nie otrzymuje ACK i może być ponowiony. Dodano testy referencji, bramki P24 i adapterów SPA. Testy CI dla najnowszego commitu są w toku.
+- [ ] Płatności — dodać idempotency key przy tworzeniu zamówienia oraz trwały outbox/retry dla skutków ubocznych po zmianie statusu na `paid`; wymaga migracji schematu i planu bezpiecznej obsługi istniejących zamówień.
+
+
+- [x] Zamówienia/płatności — audyt idempotencji i dostaw wykonany read-only 2026-11-16; potwierdzono brak idempotency key zamówienia, brak outbox/worker, nieatomowe `afterPaid` i blokadę automatycznego retry przez stały unikalny klucz wiadomości. Schemat live ma 40+ migracji w historii, repo zawiera obecnie tylko jeden plik migracji — przed nową migracją wymagane uzgodnienie pełnej historii. Raport: `docs/migration/orders-idempotency-outbox-audit.md`. Brak zmian w DB i danych.
+- [ ] Zamówienia/płatności — uzgodnić kompletny łańcuch migracji repo ↔ Supabase, następnie wdrożyć idempotency key i atomowy outbox z workerem retry. Nie stosować zmian live przed uzgodnieniem schematu i testami współbieżności.
+
+- [x] React SPA boundary — potwierdzono statyczny entrypoint Vite/React/TanStack Router oraz brak importów legacy w UI. Pozostaje 41 plików `.functions.ts`/`.server.ts` i 2 middleware TanStack Start (43 łącznie); `@tanstack/react-start` pozostaje w devDependencies do czasu bezpiecznego usunięcia tych modułów.
+- [x] Supabase migration drift — odczytano 66 wersji migracji w aktywnym projekcie; repo zawiera 1 plik SQL, którego timestamp nie zgadza się z wpisem historii. Lista i plan uzgodnienia: `docs/migration/supabase-migration-reconciliation.md`. Nie wykonano zmian w DB.
+- [ ] Supabase migration recovery — odzyskać oryginalne pliki migracji z wiarygodnego źródła lub zatwierdzić pełny baseline/snapshot; bez tego nie wdrażać nowych zmian schematu.
+- [ ] React SPA completion — migracja wszystkich 43 pozostałych modułów legacy, usunięcie `@tanstack/react-start` z manifestu i lockfile, testy regresji oraz czysta instalacja.
+
+- [x] Powiadomienia — dodano test kontraktu dla 11 akcji `tnb-notifications`: payloady, token Bearer, brak sesji, propagacja 403 i pustej odpowiedzi oraz kontrola uprawnień admin/superadmin. Weryfikacja SMTP `live` pozostaje wymagana; produkcyjne sekrety SMTP nie są ustawione.
+- [x] Biblioteka — adapter odrzuca pustą odpowiedź Edge Function; test dodano do istniejącego `library-api.test.ts`, bez duplikowania wcześniej pokrytych 11 akcji administracyjnych i 4 akcji dostarczania materiałów.
+
+- [x] Kontakt i newsletter — dodano testy kontraktu adapterów `tnb-contact` i `tnb-newsletter`; obejmują payloady, walidację, błędy, ochronę antyspamową, allowlistę originów, zgodę i double opt-in. Testy Edge nie uruchamiają rzeczywistej wysyłki; produkcyjny SMTP pozostaje nieaktywny.
+
+- [x] Newsletter artykułów — dodano test kontraktu 6 akcji `tnb-article-newsletter`, w tym role admin/superadmin, potwierdzenie liczby odbiorców przed wysyłką, claim statusu, tryb testowy i klucze idempotencji na odbiorcę. Wysłanie produkcyjne nie jest uruchamiane przez testy.
+
+- [x] Multimedia — dodano test kontraktu 5 akcji `tnb-media-admin`: token Bearer, brak sesji, błędy 403, walidacja typu/rozmiaru uploadu, finalna weryfikacja metadanych pliku oraz fail-closed przy usuwaniu obiektów używanych przez inne moduły. Publiczne serwowanie okładek i avatarów pozostaje osobną Edge Function.
+
+- [x] Materiały redakcyjne AI — dodano test kontraktu 15 akcji `tnb-editor-materials`; potwierdzono zgodność allowlisty, dispatch do współdzielonej logiki i wymóg superadministratora w Edge oraz w legacy. Test nie wywołuje zewnętrznego dostawcy AI ani nie publikuje artykułów.
+
+- [x] Komentarze gościnne — dodano test kontraktu 3 akcji `tnb-guest-comments`; objęto zgodę, antyspam, limity IP/e-mail, hashowanie tokenów, 48-godzinny TTL, jednokrotne potwierdzenie i limity ponownej wysyłki.
+
+- [x] Asystent redakcyjny AI — dodano test kontraktu 15 akcji `tnb-editor-ai`; sprawdza zgodność SPA/legacy/Edge, bramkę superadmin, schematy wejścia i filtrowanie danych osobowych. Nie uruchamiano zewnętrznego dostawcy AI ani rzeczywistych analiz.
+
+- [x] Spotkania — dodano test kontraktu 16 akcji `tnb-meetings`; obejmuje publiczne odczyty, operacje zalogowanego użytkownika, panel admina, zgody, antyspam i limity uploadu. Test nie tworzy rezerwacji ani nie uruchamia powiadomień.
+
+- [x] Podcast — dodano test kontraktu 11 akcji `tnb-podcast`; obejmuje anonimowe odczyty publiczne, wymóg sesji dla panelu, błędy Edge, dostęp premium/admin do audio i signed URL. Test nie publikuje odcinków ani nie przesyła plików.
+
+- [x] Artykuły — dodano test kontraktu 15 akcji Edge `tnb-articles` oraz testy bezpośrednich odczytów admina przez RLS po kontroli roli. Zakres obejmuje trash/restore/purge, upload, ankiety i moderację komentarzy.
+
+- [x] Marka — dodano test kontraktu 4 akcji `tnb-brand`; obejmuje płaskie payloady, Bearer, odmowę bez sesji, admin read/superadmin writes, MIME i limity 2 MB oraz weryfikację metadanych przesłanego pliku.
+
+- [x] Strony CMS — dodano test kontraktu 13 akcji `tnb-pages`; obejmuje public anonymous read, 12 akcji admina, sesję Bearer, walidację, draft/version, kontrolę legalConfirmed i digest przed publikacją.

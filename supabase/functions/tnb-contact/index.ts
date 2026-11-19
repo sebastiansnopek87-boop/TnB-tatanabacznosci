@@ -2,6 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { corsHeaders as supabaseCorsHeaders } from "npm:@supabase/supabase-js@2.117.2/cors";
+import { sendSmtpMail, smtpConfig } from "../_shared/smtp.ts";
 
 const allowedOrigins = new Set([
   "https://tatanabacznosci.pl",
@@ -132,8 +133,10 @@ async function recordContactNotification(db: ReturnType<typeof createAdminClient
   id: string; name: string; email: string; subject: string;
 }) {
   const { data: settings } = await db.from("email_settings")
-    .select("notification_recipient, contact_notifications_enabled, admin_inbox_url")
+    .select("notification_recipient, contact_notifications_enabled, admin_inbox_url, sender_name, sender_local_part, sender_domain, reply_to, delivery_mode")
     .eq("id", 1).maybeSingle();
+  const smtp = smtpConfig();
+  const mode = settings?.delivery_mode === "live" && smtp.configured ? "live" : "test";
   const { data: platformSettings } = await db.from("platform_settings")
     .select("platform_name").eq("id", 1).maybeSingle();
   const platform = platformSettings?.platform_name || "Tata Na Baczności";
@@ -150,7 +153,7 @@ async function recordContactNotification(db: ReturnType<typeof createAdminClient
     related_id: message.id,
     template_key: "contact_message",
     idempotency_key: `contact_message-${message.id}`,
-    mode: "test",
+    mode,
   };
   let recipient: string | null = null;
   let status: "skipped" | "sending" | "failed" = "skipped";
@@ -202,19 +205,27 @@ async function recordContactNotification(db: ReturnType<typeof createAdminClient
   }
   if (status !== "sending" || !log?.id || !rendered) return;
 
-  // The existing provider adapter is intentionally disconnected, so the established
-  // behaviour is test-mode capture: keep the rendered notification in the log only.
-  const { error: updateError } = await db.from("email_notification_log").update({
-    status: "simulated",
-    reason: null,
-    attempts: 1,
-    mode: "test",
-    rendered_subject: rendered.subject,
-    rendered_html: rendered.html,
-    rendered_text: rendered.text,
-    updated_at: new Date().toISOString(),
-  }).eq("id", log.id);
-  if (updateError) throw updateError;
+  if (mode === "test") {
+    const { error: updateError } = await db.from("email_notification_log").update({
+      status: "simulated", reason: null, attempts: 1, mode: "test",
+      rendered_subject: rendered.subject, rendered_html: rendered.html, rendered_text: rendered.text,
+      updated_at: new Date().toISOString(),
+    }).eq("id", log.id);
+    if (updateError) throw updateError;
+    return;
+  }
+  const from = `${settings?.sender_name ?? "Tata Na Baczności"} <${settings?.sender_local_part ?? "kontakt"}@${settings?.sender_domain ?? "tatanabacznosci.pl"}>`;
+  try {
+    const sent = await sendSmtpMail({ to: recipient!, from, replyTo: settings?.reply_to ?? null, subject: rendered.subject, html: rendered.html, text: rendered.text });
+    const { error: updateError } = await db.from("email_notification_log").update({
+      status: "sent", reason: null, attempts: 1, mode: "live", provider_message_id: sent.messageId, updated_at: new Date().toISOString(),
+    }).eq("id", log.id);
+    if (updateError) throw updateError;
+  } catch (error) {
+    const reason = error instanceof Error ? error.message.slice(0, 300) : "smtp_delivery_failed";
+    await db.from("email_notification_log").update({ status: "failed", reason, attempts: 1, mode: "live", updated_at: new Date().toISOString() }).eq("id", log.id);
+    throw error;
+  }
 }
 
 async function handleSubmit(data: ContactInput) {

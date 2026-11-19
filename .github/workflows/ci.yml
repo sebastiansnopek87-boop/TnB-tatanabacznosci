@@ -51,7 +51,7 @@ jobs:
             echo "::error::Vite preview did not start."
             exit 1
           fi
-          for route in / /auth /reset-password /artykuly /artykuly/przykladowy /biblioteka /biblioteka/przykladowy /podcast /podcast/przykladowy /spotkania /spotkania/przykladowe /spolecznosc /admin /admin/spotkania /newsletter/wypisz; do
+          for route in / /auth /reset-password /artykuly /artykuly/przykladowy /biblioteka /biblioteka/przykladowy /podcast /podcast/przykladowy /spotkania /spotkania/przykladowe /spolecznosc /admin /admin/spotkania /newsletter/wypisz /newsletter/potwierdz; do
             CODE=$(curl -sS -o /tmp/tnb-route.html -w '%{http_code}' "http://127.0.0.1:4173$route")
             if [[ "$CODE" != "200" ]] || ! grep -q 'id="root"' /tmp/tnb-route.html; then
               echo "::error::SPA route fallback failed for $route (HTTP $CODE)."
@@ -64,6 +64,9 @@ jobs:
 
       - name: Verify SPA source boundary
         run: bash scripts/check-spa-boundary.sh
+
+      - name: Verify legacy runtime isolation
+        run: bash scripts/check-legacy-runtime-isolation.sh
 
       - name: Verify Supabase Edge Function source/config coverage
         run: bash scripts/check-edge-function-sync.sh
@@ -90,3 +93,11 @@ jobs:
           EVENT_BEFORE: ${{ github.event.before }}
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: bash scripts/lint-changed.sh
+
+      - name: Upload production-ready static SPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tnb-react-spa-dist-${{ github.sha }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14

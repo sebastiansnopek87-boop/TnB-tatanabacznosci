@@ -3,6 +3,7 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2.117.2/cors";
 import { z } from "zod";
 import { EVENT_MAP, DEFAULT_TEMPLATES } from "./registry.ts";
 import { render, maskSensitive, stripSensitive, type Vars } from "./render.ts";
+import { sendSmtpMail, smtpConfig } from "../_shared/smtp.ts";
 
 const CORS = new Headers({ ...corsHeaders, "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "authorization, apikey, x-client-info, content-type, x-supabase-api-version", "Access-Control-Max-Age": "86400", "X-Content-Type-Options": "nosniff" });
 const SITE = "https://tatanabacznosci.pl";
@@ -161,7 +162,7 @@ async function dispatchNewsletter(s: Db, input: { to: string | null; vars: Vars;
   const key = "newsletter_article";
   const base = { kind: key, related_id: input.relatedId, template_key: key, idempotency_key: input.idempotencyKey };
   const insert = async (row: Record<string, unknown>) => {
-    const { data, error } = await s.from("email_notification_log").insert({ ...base, mode: "test", ...row }).select("id").single();
+    const { data, error } = await s.from("email_notification_log").insert({ ...base, mode, ...row }).select("id").single();
     if (error) { if (error.code === "23505") return null; throw error; }
     return data.id as string;
   };
@@ -186,12 +187,24 @@ async function dispatchNewsletter(s: Db, input: { to: string | null; vars: Vars;
   }
   const id = await insert({ status: "sending", recipient: to, payload: stripSensitive(input.vars), retryable: !rendered.usesSensitive });
   if (!id) return { status: "duplicate" as const };
-  const safe = render(tpl, maskSensitive(vars), tpl.required);
-  await s.from("email_notification_log").update({
-    status: "simulated", reason: null, attempts: 1, mode: "test", updated_at: new Date().toISOString(),
-    rendered_subject: safe.ok ? safe.subject : null, rendered_html: safe.ok ? safe.html : null, rendered_text: safe.ok ? safe.text : null
-  }).eq("id", id);
-  return { status: "simulated" as const, id };
+  if (mode === "test") {
+    const safe = render(tpl, maskSensitive(vars), tpl.required);
+    await s.from("email_notification_log").update({
+      status: "simulated", reason: null, attempts: 1, mode: "test", updated_at: new Date().toISOString(),
+      rendered_subject: safe.ok ? safe.subject : null, rendered_html: safe.ok ? safe.html : null, rendered_text: safe.ok ? safe.text : null
+    }).eq("id", id);
+    return { status: "simulated" as const, id };
+  }
+  try {
+    const from = `${settings?.sender_name ?? "Tata Na Baczności"} <${settings?.sender_local_part ?? "kontakt"}@${settings?.sender_domain ?? "tatanabacznosci.pl"}>`;
+    const sent = await sendSmtpMail({ to, from, replyTo: settings?.reply_to ?? null, subject: rendered.subject, html: rendered.html, text: rendered.text });
+    await s.from("email_notification_log").update({ status: "sent", reason: null, attempts: 1, mode: "live", provider_message_id: sent.messageId, updated_at: new Date().toISOString() }).eq("id", id);
+    return { status: "sent" as const, id };
+  } catch (error) {
+    const reason = error instanceof Error ? error.message.slice(0, 300) : "smtp_delivery_failed";
+    await s.from("email_notification_log").update({ status: "failed", reason, attempts: 1, mode: "live", updated_at: new Date().toISOString() }).eq("id", id);
+    return { status: "failed" as const, id, reason: "smtp_delivery_failed" };
+  }
 }
 function newsletterVars(article: ArticleRow, newsletter: NewsletterRow, unsubscribe: string): Vars {
   return {
@@ -204,6 +217,8 @@ async function handle(s: Db, req: Request, raw: unknown) {
   const parsed = RequestSchema.parse(raw);
   if (parsed.action === "sendArticleNewsletter") {
     const actor = await requireAdmin(s, req, true);
+    const { data: mailSettings } = await s.from("email_settings").select("delivery_mode").eq("id", 1).maybeSingle();
+    const deliveryMode = mailSettings?.delivery_mode === "live" && smtpConfig().configured ? "live" : "test";
     const article = await getArticle(s, parsed.data.articleId);
     if (!isLive(article)) throw new HttpError(409, "Artykuł nie jest opublikowany.");
     const expected = parsed.data.expectedRecipients;
@@ -219,12 +234,12 @@ async function handle(s: Db, req: Request, raw: unknown) {
     if (!newsletter) throw new HttpError(404, "Najpierw przygotuj newsletter.");
     const now = new Date().toISOString();
     const { data: claimed, error: claimError } = await s.from("article_newsletters").update({
-      status: "sending", approved_by: actor.id, mode: "test", recipients: list.length, updated_at: now
+      status: "sending", approved_by: actor.id, mode: deliveryMode, recipients: list.length, updated_at: now
     }).eq("article_id", article.id).in("status", [...EDITABLE]).select("*");
     const nl = (claimed?.[0] ?? null) as unknown as NewsletterRow | null;
     if (claimError || !nl) throw new HttpError(409, "Newsletter nie jest gotowy do wysyłki albo wysyłka już trwa / została zakończona.");
     const round = (nl.round ?? 0) + 1;
-    await logEvent(s, { type: "article_newsletter_send", actor: actor.id, objectKind: "article", objectId: article.id, detail: "start test, odbiorcy=" + list.length });
+    await logEvent(s, { type: "article_newsletter_send", actor: actor.id, objectKind: "article", objectId: article.id, detail: "start " + deliveryMode + ", odbiorcy=" + list.length });
     let sent = 0, simulated = 0, failed = 0;
     for (const subscriber of list) {
       const { data: fresh } = await s.from("newsletter_subscribers").select("email,status").eq("id", subscriber.id).maybeSingle();
@@ -239,14 +254,16 @@ async function handle(s: Db, req: Request, raw: unknown) {
       else if (result.status === "simulated") simulated++;
       else if (result.status === "failed") failed++;
     }
-    const status = failed ? "failed" : "approved";
-    const note = "WYSYŁKA TESTOWA: " + simulated + " wiadomości zapisano w historii powiadomień, żadna nie została dostarczona." + (failed ? " Błędy: " + failed + "." : "");
+    const status = failed ? "failed" : deliveryMode === "live" ? "sent" : "approved";
+    const note = deliveryMode === "live"
+      ? "Wysyłka SMTP zakończona. Serwer przyjął: " + sent + " wiadomości." + (failed ? " Błędy: " + failed + "." : "")
+      : "WYSYŁKA TESTOWA: " + simulated + " wiadomości zapisano w historii powiadomień, żadna nie została dostarczona." + (failed ? " Błędy: " + failed + "." : "");
     await s.from("article_newsletters").update({
       status, round, sent_count: sent, simulated_count: simulated, failed_count: failed, last_note: note,
-      sent_at: null, updated_at: new Date().toISOString()
+      sent_at: deliveryMode === "live" && !failed ? new Date().toISOString() : null, updated_at: new Date().toISOString()
     }).eq("article_id", article.id);
     await logEvent(s, { type: "article_newsletter_send", actor: actor.id, objectKind: "article", objectId: article.id, result: failed ? "failed" : "ok", detail: note });
-    return { status, mode: "test" as const, sent, simulated, failed, note };
+    return { status, mode: deliveryMode, sent, simulated, failed, note };
   }
 
   const actor = await requireAdmin(s, req);
@@ -255,7 +272,9 @@ async function handle(s: Db, req: Request, raw: unknown) {
     const [article, newsletter, activeSubscribers, origin] = await Promise.all([
       getArticle(s, id), getDraft(s, id), activeSubscriberCount(s), getOrigin(s, id)
     ]);
-    return { published: isLive(article), newsletter, activeSubscribers, mode: "test" as const, origin, testEmail: actor.email ?? null };
+    const { data: mailSettings } = await s.from("email_settings").select("delivery_mode").eq("id", 1).maybeSingle();
+    const mode = mailSettings?.delivery_mode === "live" && smtpConfig().configured ? "live" as const : "test" as const;
+    return { published: isLive(article), newsletter, activeSubscribers, mode, origin, testEmail: actor.email ?? null };
   }
   if (parsed.action === "prepareArticleNewsletter") {
     const article = await getArticle(s, id, parsed.data.useAi);

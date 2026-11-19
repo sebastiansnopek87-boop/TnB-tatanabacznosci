@@ -3,6 +3,7 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2.117.2/cors";
 import { z } from "zod";
 import { EVENT_MAP, DEFAULT_TEMPLATES } from "./registry.ts";
 import { render, maskSensitive, stripSensitive, type Vars } from "./render.ts";
+import { sendSmtpMail, smtpConfig } from "../_shared/smtp.ts";
 
 const CORS = new Headers({ ...corsHeaders, "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "authorization, apikey, x-client-info, content-type, x-supabase-api-version", "Access-Control-Max-Age": "86400", "X-Content-Type-Options": "nosniff" });
 const TZ = "Europe/Warsaw";
@@ -125,9 +126,11 @@ async function dispatch(s: Db, input: { event: string; to?: string | null; vars:
     const event = EVENT_MAP[input.event];
     if (!event) return { status: "failed" as const, reason: "unknown_event" };
     const { settings, platform } = await notificationContext(s);
+    const smtp = smtpConfig();
+    const mode = settings?.delivery_mode === "live" && smtp.configured ? "live" : "test";
     const base = { kind: input.event, related_id: input.relatedId ?? null, template_key: input.event, idempotency_key: input.idempotencyKey };
     const put = async (row: Record<string, unknown>) => {
-      const { data, error } = await s.from("email_notification_log").insert({ ...base, mode: "test", ...row }).select("id").single();
+      const { data, error } = await s.from("email_notification_log").insert({ ...base, mode, ...row }).select("id").single();
       if (error) { if (error.code === "23505") return null; throw error; }
       return data.id as string;
     };
@@ -153,9 +156,21 @@ async function dispatch(s: Db, input: { event: string; to?: string | null; vars:
     }
     const id = await put({ status: "sending", recipient, payload: stripSensitive(input.vars), retryable: !r.usesSensitive });
     if (!id) return { status: "duplicate" as const };
-    const safe = render(tpl, maskSensitive(vars), tpl.required);
-    await s.from("email_notification_log").update({ status: "simulated", reason: null, attempts: 1, mode: "test", updated_at: new Date().toISOString(), rendered_subject: safe.ok ? safe.subject : null, rendered_html: safe.ok ? safe.html : null, rendered_text: safe.ok ? safe.text : null }).eq("id", id);
-    return { status: "simulated" as const, id };
+    if (mode === "test") {
+      const safe = render(tpl, maskSensitive(vars), tpl.required);
+      await s.from("email_notification_log").update({ status: "simulated", reason: null, attempts: 1, mode: "test", updated_at: new Date().toISOString(), rendered_subject: safe.ok ? safe.subject : null, rendered_html: safe.ok ? safe.html : null, rendered_text: safe.ok ? safe.text : null }).eq("id", id);
+      return { status: "simulated" as const, id };
+    }
+    try {
+      const from = `${settings?.sender_name ?? "Tata Na Baczności"} <${settings?.sender_local_part ?? "kontakt"}@${settings?.sender_domain ?? "tatanabacznosci.pl"}>`;
+      const sent = await sendSmtpMail({ to: recipient, from, replyTo: settings?.reply_to ?? null, subject: r.subject, html: r.html, text: r.text });
+      await s.from("email_notification_log").update({ status: "sent", reason: null, attempts: 1, mode: "live", provider_message_id: sent.messageId, updated_at: new Date().toISOString() }).eq("id", id);
+      return { status: "sent" as const, id };
+    } catch (error) {
+      const reason = error instanceof Error ? error.message.slice(0, 300) : "smtp_delivery_failed";
+      await s.from("email_notification_log").update({ status: "failed", reason, attempts: 1, mode: "live", updated_at: new Date().toISOString() }).eq("id", id);
+      return { status: "failed" as const, id, reason: "smtp_delivery_failed" };
+    }
   } catch (e) { console.error("consult notification failed", e instanceof Error ? e.message : e); return { status: "failed" as const, reason: "internal_error" }; }
 }
 type BookingMail = "confirmation" | "reminder" | "cancelled_user" | "cancelled_admin" | "admin_new" | "admin_cancelled";
@@ -203,6 +218,7 @@ async function requireCron(s: Db, req: Request) {
   const token = (req.headers.get("authorization") ?? "").match(/^Bearer ([^\\s,]+)$/)?.[1] ?? "";
   if (!token) throw new HttpError(401, "Unauthorized");
   // Primary secret is stored in Supabase Vault; environment secrets remain valid during rotation.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
   const { data: vaultSecret, error: vaultError } = await (s as any).rpc("get_tnb_cron_secret");
   const secrets = [
     ...(typeof vaultSecret === "string" && vaultSecret ? [vaultSecret] : []),
