@@ -123,3 +123,33 @@ Wniosek: produkcyjny kod Edge Functions jest starszy/różny względem aktualneg
 
 - Commit `7708dc1d4d0a1d8114da28765185eb09332c8cd5` ma Build #629 / run `44461228452`: **PASS**.
 - Ten run potwierdza testy repozytorium po aktualizacji dokumentu. Nie jest dowodem zgodności ani wdrożenia Edge Functions.
+
+## Szczegółowy przegląd różnic Edge Functions — 2026-11-19
+
+Porównanie bloków kodu (nie tylko nazw plików) wykazało następujące różnice:
+
+### `tnb-orders`
+- Repozytorium dodaje tryb wysyłki `live` tylko wtedy, gdy `email_settings.delivery_mode = live` i `smtpConfig().configured`; w przeciwnym razie pozostaje tryb testowy `simulated`.
+- W trybie live wywołuje `sendSmtpMail` i aktualizuje log powiadomień wynikiem wysyłki. Wdrożony kod zawsze ustawia `mode: test` i `status: simulated`; nie ma ścieżki rzeczywistej wysyłki.
+- Shared SMTP sprawdza, czy nadawca wyliczony z `email_settings` jest równy `SMTP_FROM`. Niezgodność kończy się błędem `smtp_sender_mismatch`. Konfiguracja SMTP musi więc obejmować zgodny adres nadawcy w zmiennej serwerowej i ustawieniach aplikacji.
+- Zmiana dotyka realnej wysyłki wiadomości transakcyjnych. Nie można jej wdrożyć bez testu SMTP na środowisku kontrolowanym, weryfikacji ustawień nadawcy i potwierdzenia rzeczywistego dostarczenia.
+
+### `tnb-payments`
+- Repozytorium dodaje niezależne sprawdzenie, czy referencja operatora otrzymana w webhooku jest identyczna z referencją zapisaną przy utworzeniu transakcji. UUID zamówienia służy do znalezienia rekordu i sam nie zastępuje referencji operatora.
+- Gdy referencja nie została jeszcze zapisana, nowy kod zwraca `provider_ref_pending`, usuwa wcześniej zapisany identyfikator eventu webhooka i odpowiada HTTP 500, aby operator ponowił powiadomienie.
+- Adapter P24 w repozytorium wymaga też pozytywnego wyniku serwerowego `/transaction/verify` przed uznaniem notyfikacji za opłaconą.
+- Te zmiany są zabezpieczeniami płatności. Wdrożenie starszej wersji oznacza, że nie należy zakładać, iż produkcja już egzekwuje te kontrole.
+
+### Zakres testów, który istnieje w repozytorium
+- `src/lib/payment-webhook-reference.test.ts` testuje helper porównujący referencje (wartość dokładna, brak, pusty ciąg, różna wielkość liter) i czystą funkcję warunku pozytywnej weryfikacji P24.
+- `src/lib/smtp-provider-contract.test.ts` sprawdza kontrakt źródłowy wspólnego transportu SMTP, blokowane porty, wymagane sekrety, integrację w wybranych Edge Functions i bramkę trybu live.
+- `src/lib/orders-payments-api.test.ts` sprawdza adaptery SPA i zachowanie payloadów/akcji.
+- Są to testy helperów i kontraktów źródłowych. Nie zastępują testów uruchomionej Edge Function, testów webhooków od operatorów, testu SMTP z rzeczywistym serwerem ani end-to-end na CyberFolks.
+
+### Brakujący etap walidacji
+1. Uruchomić każdą funkcję z repozytorium na osobnym środowisku Supabase/testowym, z kompletem zależności `_shared` i `deno.json`.
+2. Przetestować webhooki P24, Tpay i PayU: poprawny podpis, zła referencja, brak zapisanej referencji, kwota/waluta niezgodna, duplikat eventu, ponowienie po HTTP 500 i powiadomienie spóźnione.
+3. Zweryfikować zachowanie SMTP dla trybu test/live, brak konfiguracji, zablokowany port, niezgodny nadawca, błąd transportu i poprawne dostarczenie.
+4. Dopiero po wynikach testów przygotować osobny, kontrolowany rollout funkcji. Każda funkcja ma być wdrażana osobno, z kontrolą logów i planem przywrócenia poprzedniej wersji.
+
+Nie uruchomiono testowych płatności, nie wysłano wiadomości, nie wdrożono funkcji i nie zmieniono produkcyjnej bazy.
