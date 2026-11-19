@@ -5,6 +5,7 @@ import { ADAPTERS, configStatus, type ProviderId, type ProviderRow } from "./pro
 import { DEFAULT_TEMPLATES, EVENT_MAP } from "./registry.ts";
 import { render, maskSensitive, stripSensitive, type Vars } from "./render.ts";
 import { checkoutFingerprint } from "../_shared/checkout-idempotency.ts";
+import { isSafeDeliveryRetry } from "../_shared/delivery-outbox.ts";
 import { sendSmtpMail, smtpConfig } from "../_shared/smtp.ts";
 
 const CORS = new Headers({
@@ -235,6 +236,17 @@ async function processDeliveryOutbox(db: Db) {
   for (const job of jobs ?? []) {
     const event = String(job.event_key);
     const idempotencyKey = event + "-" + String(job.order_id);
+    if (event === "order_access_delivered" || event === "order_guest_access") {
+      const { data: orderState } = await db.from("library_orders")
+        .select("delivery_status, delivered_at").eq("id", job.order_id).maybeSingle();
+      if (orderState?.delivery_status === "sent" || orderState?.delivered_at) {
+        await db.rpc("finish_library_delivery_outbox", {
+          p_id: job.id, p_status: "skipped", p_error: "delivery_already_marked_complete", p_safe_to_retry: false,
+        });
+        counts.skipped++;
+        continue;
+      }
+    }
     const { data: existing, error: logError } = await db.from("email_notification_log")
       .select("status").eq("idempotency_key", idempotencyKey).maybeSingle();
     if (logError) {
@@ -261,12 +273,11 @@ async function processDeliveryOutbox(db: Db) {
     }
     const result = await dispatchOrderNotification(db, String(job.order_id), event);
     const terminal = result.status === "sent" || result.status === "simulated" || result.status === "skipped";
-    const finishStatus = terminal ? result.status : "needs_review";
     const reason = "reason" in result ? result.reason : result.status;
+    const finishStatus = terminal ? result.status : result.status === "failed" ? "failed" : "needs_review";
     const { error: finishError } = await db.rpc("finish_library_delivery_outbox", {
       p_id: job.id, p_status: finishStatus, p_error: terminal ? null : reason,
-      // SMTP failures can happen after remote acceptance; automatic resend is unsafe.
-      p_safe_to_retry: false,
+      p_safe_to_retry: result.status === "failed" && isSafeDeliveryRetry(reason),
     });
     if (finishError) {
       console.error("delivery outbox completion failed", job.id, finishError.message);
