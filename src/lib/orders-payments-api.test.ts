@@ -125,6 +125,38 @@ describe("orders and payments SPA adapter contracts", () => {
     expect(invoke).not.toHaveBeenCalled();
   });
 
+  it("fails closed for account and admin order actions without a valid session", async () => {
+    const protectedActions = [
+      () => listMyPurchases(),
+      () => adminListOrders({ data: { q: "", status: "all", provider: "all", from: "", to: "", kind: "all" } }),
+      () => adminSalesSummary(),
+      () => adminGetOrder({ data: { id } }),
+      () => adminResendDelivery({ data: { id } }),
+      () => adminSetOrderStatus({ data: { id, action: "cancelled" } }),
+    ];
+    getSession.mockResolvedValue({ data: { session: null }, error: null });
+    for (const action of protectedActions) {
+      await expect(action()).rejects.toThrow("Sesja wygasła. Zaloguj się ponownie.");
+    }
+    expect(invoke).not.toHaveBeenCalled();
+
+    getSession.mockResolvedValueOnce({ data: { session: null }, error: new Error("session unavailable") });
+    await expect(adminSalesSummary()).rejects.toThrow("Sesja wygasła. Zaloguj się ponownie.");
+    expect(invoke).not.toHaveBeenCalled();
+  });
+
+  it("keeps anonymous checkout discovery and recovery available", async () => {
+    getSession.mockResolvedValue({ data: { session: null }, error: null });
+    await getCheckoutOptions();
+    await recoverAccess({ data: { email: "jan@example.com", number: "TNB-2026-12" } });
+    expect(invoke).toHaveBeenCalledTimes(2);
+    expect(invoke).toHaveBeenNthCalledWith(1, "tnb-orders", { body: { action: "getCheckoutOptions" }, headers: {} });
+    expect(invoke).toHaveBeenNthCalledWith(2, "tnb-orders", {
+      body: { action: "recoverAccess", data: { email: "jan@example.com", number: "TNB-2026-12" } },
+      headers: {},
+    });
+  });
+
   it("preserves server error messages and rejects empty responses", async () => {
     invoke.mockResolvedValueOnce({
       data: null,
