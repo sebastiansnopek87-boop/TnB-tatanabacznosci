@@ -287,7 +287,7 @@ const actionSchema = z.discriminatedUnion("action", [
     phone: z.string().trim().max(20).regex(/^$|^\+?[0-9 ()-]{7,20}$/, "Podaj poprawny numer telefonu.").default(""),
     method: z.enum(["bank_transfer", ...PROVIDERS], { errorMap: () => ({ message: "Wybierz dostępną metodę płatności." }) }),
     consent: z.literal(true, { errorMap: () => ({ message: "Zaakceptuj wymagane zgody." }) }),
-    idempotencyKey: z.string().uuid().optional(),
+    idempotencyKey: z.string().uuid(),
   }) }),
   z.object({ action: z.literal("getPurchasedMaterial"), data: z.object({ token: z.string().uuid(), file: z.boolean().default(false) }) }),
   z.object({ action: z.literal("recoverAccess"), data: z.object({
@@ -324,7 +324,7 @@ async function getCheckoutOptions(db: Db) {
 
 async function createLibraryOrder(db: Db, req: Request, data: z.infer<typeof actionSchema> & { action: "createLibraryOrder" }) {
   const input = data.data;
-  const idempotencyKey = input.idempotencyKey ?? crypto.randomUUID();
+  const idempotencyKey = input.idempotencyKey;
   const { data: item, error: itemError } = await db.from("library_items")
     .select("id, title, access, status, purchasable, price_amount, currency").eq("slug", input.slug).maybeSingle();
   if (itemError || !item || item.status !== "published" || item.access !== "premium" || !item.purchasable || !item.price_amount || item.price_amount < 100) {
