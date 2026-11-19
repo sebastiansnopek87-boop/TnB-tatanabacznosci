@@ -2,16 +2,17 @@
 
 ## Scope
 
-This change set is intentionally isolated from the React SPA migration PR. It must not be deployed until the database migration, browser caller, Edge Function, provider adapters, and retry worker are released as one compatible unit.
+This change set is intentionally isolated from the React SPA migration PR. The checkout idempotency and transactional delivery-outbox implementation is being developed together on `feat/delivery-outbox-worker`; it must not be deployed until CI, migration replay, and the production configuration checks pass as one compatible unit.
 
 ## Current verified behavior
 
-- `createLibraryOrder` inserts a new `library_orders` row for every request.
-- The browser API currently sends only `slug`, buyer details, payment method, and consent. It has no stable checkout-intent identifier.
-- The Edge Function calls the payment provider after inserting the order, then stores `provider_ref` and `checkout_session_id`.
-- A failed provider call marks the order failed. A retry from the browser can create another order.
-- Post-payment notification/delivery is invoked inline by `afterPaid`. Its result is recorded on the order, but there is no durable retry queue for failed delivery.
-- Notification dispatch currently records messages as `mode: "test"` / `status: "simulated"`; do not treat that path as live customer delivery.
+- The checkout branch now generates and sends a stable UUID idempotency key, binds it to a SHA-256 fingerprint, and replays the stored redirect URL for a matching completed request.
+- A unique partial index prevents two orders from claiming the same checkout key. A mismatched fingerprint conflicts; an in-progress or ambiguous provider result is not retried automatically.
+- The `library_orders` paid-transition trigger inserts `order_paid` and the appropriate access-delivery event into `library_delivery_outbox` in the same database transaction as the paid transition. This covers both the payment webhook and administrator confirmation paths.
+- `tnb-orders` is the worker entry point. It claims rows using `FOR UPDATE SKIP LOCKED`, a bounded batch, a five-minute lease, and a maximum of eight attempts.
+- A stale lease or ambiguous SMTP result moves to `needs_review`. Automatic retries are limited to failures known to happen before SMTP hand-off; these use exponential backoff and end in `dead_letter` after the attempt limit.
+- A unique `(order_id, event_key)` constraint and the existing `email_notification_log.idempotency_key` prevent duplicate logical jobs and normal duplicate sends. If a worker crashes after creating a `sending` log or SMTP acceptance is uncertain, the system deliberately stops for manual review instead of sending again.
+- Notification dispatch in test mode still records `mode: "test"` / `status: "simulated"`; this is not a real customer email.
 
 ## Required design
 
@@ -53,8 +54,8 @@ After payment is confirmed, atomically persist a unique outbox event keyed by or
 4. Missing/malformed key: rejected before order insertion.
 5. Provider timeout after remote creation: reconciliation path; no duplicate charge.
 6. Webhook replay: one paid transition and one logical outbox event.
-7. Delivery worker crash before send, during send, and after send-before-ack: bounded retry and deduplication behavior documented and tested.
-8. SMTP unavailable: payment remains paid; outbox remains retryable; admin can see delivery state.
+7. Worker crash before send: stale lease is recovered to manual review. Crash during/after SMTP hand-off: the existing `sending` log prevents automatic resend; operator review is required to avoid duplicate mail.
+8. SMTP unavailable or SMTP result ambiguous: payment remains paid and the outbox enters `needs_review`; the admin order detail already exposes the delivery error and notification log.
 9. Historic orders without an idempotency key remain readable and administrable.
 10. Build, TypeScript, lint, unit tests, Edge Function tests, migration replay, and SPA route smoke all pass.
 
@@ -63,7 +64,7 @@ After payment is confirmed, atomically persist a unique outbox event keyed by or
 1. Implement and test migration locally against a clean database and a snapshot with existing orders.
 2. Implement Edge Function idempotency claim/replay and provider reconciliation.
 3. Implement stable browser checkout key lifecycle and conflict/in-progress UI.
-4. Implement transactional outbox and retry worker with bounded backoff.
+4. Implemented in the delivery branch: transactional outbox, authenticated worker, safe pre-SMTP retries, and manual review for ambiguous SMTP outcomes.
 5. Run CI and security review; inspect generated Supabase types and migration replay.
 6. Deploy compatible schema first, then Edge Functions, then frontend; verify sandbox end-to-end before enabling live delivery.
 7. Keep rollback compatible with existing orders and never auto-retry an ambiguous provider create call.
