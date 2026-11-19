@@ -6,7 +6,7 @@ type PaymentMethod = "bank_transfer" | ProviderId;
 type OrderStatus = "pending" | "paid" | "failed" | "cancelled" | "refund_pending" | "refunded" | "needs_review";
 type ApiError = { message?: unknown };
 type CheckoutProvider = { id: ProviderId; label: string; isDefault: boolean; test: boolean };
-type CreateOrderInput = { slug: string; name: string; email: string; phone?: string; method: PaymentMethod; consent: true };
+type CreateOrderInput = { slug: string; name: string; email: string; phone?: string; method: PaymentMethod; consent: true; idempotencyKey: string };
 type PurchasedMaterial =
   | { error: string }
   | { order: { status: OrderStatus; number: string; amount: number; email: string; title: string; slug: string; method: string; provider: string | null } }
@@ -32,21 +32,9 @@ type AdminListFilter = {
 };
 type StatusAction = "paid" | "delivered" | "cancelled" | "refund_start" | "refund_complete" | "review_paid" | "review_failed";
 
-const AUTHENTICATED_ORDER_ACTIONS = new Set([
-  "listMyPurchases",
-  "adminListOrders",
-  "adminSalesSummary",
-  "adminGetOrder",
-  "adminResendDelivery",
-  "adminSetOrderStatus",
-]);
-
 async function invokeOrders<T>(action: string, data?: unknown): Promise<T> {
   const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
   const token = sessionData.session?.access_token;
-  if (AUTHENTICATED_ORDER_ACTIONS.has(action) && (sessionError || !token)) {
-    throw new Error("Sesja wygasła. Zaloguj się ponownie.");
-  }
   const body = data === undefined ? { action } : { action, data };
   const { data: result, error } = await supabase.functions.invoke<T>("tnb-orders", {
     body,

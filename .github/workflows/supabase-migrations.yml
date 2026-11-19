@@ -41,7 +41,7 @@ jobs:
         run: |
           set -euo pipefail
           count=$(find supabase/migrations -maxdepth 1 -type f -name '*.sql' | wc -l | tr -d ' ')
-          test "$count" = "66"
+          test "$count" = "67"
           echo "Found $count SQL migrations."
 
       - name: Start isolated local Supabase stack
