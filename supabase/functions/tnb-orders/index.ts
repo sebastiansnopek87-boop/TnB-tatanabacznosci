@@ -206,7 +206,7 @@ async function afterPaid(db: Db, orderId: string) {
 }
 
 async function requireCron(db: Db, req: Request) {
-  const token = (req.headers.get("authorization") ?? "").match(/^Bearer ([^\\s,]+)$/)?.[1] ?? "";
+  const token = parseBearerToken(req.headers.get("authorization")) ?? "";
   if (!token) throw new HttpError(401, "Unauthorized");
   const { data: vaultSecret, error: vaultError } = await db.rpc("get_tnb_cron_secret");
   const secrets = [
