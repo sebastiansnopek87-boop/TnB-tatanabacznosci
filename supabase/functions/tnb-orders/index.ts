@@ -5,7 +5,7 @@ import { ADAPTERS, configStatus, type ProviderId, type ProviderRow } from "./pro
 import { DEFAULT_TEMPLATES, EVENT_MAP } from "./registry.ts";
 import { render, maskSensitive, stripSensitive, type Vars } from "./render.ts";
 import { checkoutFingerprint } from "../_shared/checkout-idempotency.ts";
-import { isSafeDeliveryRetry } from "../_shared/delivery-outbox.ts";
+import { getOutboxFinishDecision } from "../_shared/delivery-outbox.ts";
 import { parseBearerToken } from "../_shared/cron-auth.ts";
 import { sendSmtpMail, smtpConfig } from "../_shared/smtp.ts";
 
@@ -283,12 +283,12 @@ async function processDeliveryOutbox(db: Db) {
       continue;
     }
     const result = await dispatchOrderNotification(db, String(job.order_id), event);
-    const terminal = result.status === "sent" || result.status === "simulated" || result.status === "skipped";
     const reason = "reason" in result ? result.reason : result.status;
-    const finishStatus = terminal ? result.status : result.status === "failed" ? "failed" : "needs_review";
+    const decision = getOutboxFinishDecision(result.status, reason);
+    const terminal = decision.status === "sent" || decision.status === "simulated" || decision.status === "skipped";
     const { error: finishError } = await db.rpc("finish_library_delivery_outbox", {
-      p_id: job.id, p_status: finishStatus, p_error: terminal ? null : reason,
-      p_safe_to_retry: result.status === "failed" && isSafeDeliveryRetry(reason),
+      p_id: job.id, p_status: decision.status, p_error: terminal ? null : reason,
+      p_safe_to_retry: decision.safeToRetry,
     });
     if (finishError) {
       console.error("delivery outbox completion failed", job.id, finishError.message);
