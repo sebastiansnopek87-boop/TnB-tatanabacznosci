@@ -10,6 +10,7 @@ export default defineConfig({
       "src/lib/consult.test.ts",
       "src/lib/consult-api.test.ts",
       "src/lib/orders-payments-api.test.ts",
+      "src/lib/checkout-idempotency.test.ts",
       "src/lib/recommend-api.test.ts",
       "src/lib/payment-webhook-reference.test.ts",
       "src/lib/library-api.test.ts",
