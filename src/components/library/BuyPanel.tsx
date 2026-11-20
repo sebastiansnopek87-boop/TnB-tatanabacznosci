@@ -5,6 +5,7 @@ import { createLibraryOrder, getCheckoutOptions, recoverAccess } from "@/lib/api
 import { fmtPrice } from "@/lib/library";
 import { BANK_METHOD, bankConfigured, type PaymentMethodId } from "@/config/payments";
 import { useAuth } from "@/hooks/use-auth";
+import { clearCheckoutKey, getOrCreateCheckoutKey } from "@/lib/checkout-idempotency";
 
 const input = "w-full border border-border/60 bg-background px-3 py-2.5 text-sm text-foreground focus:border-gold focus:outline-none";
 const btn = "bg-gold px-6 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-primary-foreground hover:bg-gold-bright disabled:opacity-60";
@@ -27,6 +28,27 @@ export function BuyPanel({ slug, title, price }: { slug: string; title: string; 
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const checkoutKey = useRef<string | null>(null);
+  const checkoutStorageKey = `tnb:checkout:${slug}`;
+
+  function getCheckoutKey() {
+    if (checkoutKey.current) return checkoutKey.current;
+    try {
+      checkoutKey.current = getOrCreateCheckoutKey(window.sessionStorage, checkoutStorageKey, () => crypto.randomUUID());
+    } catch {
+      // Storage can be unavailable in privacy-restricted contexts; retain the key for this mounted attempt.
+      checkoutKey.current = crypto.randomUUID();
+    }
+    return checkoutKey.current;
+  }
+
+  function completeCheckout() {
+    checkoutKey.current = null;
+    try {
+      clearCheckoutKey(window.sessionStorage, checkoutStorageKey);
+    } catch {
+      // The completed server-side checkout remains authoritative if browser storage is unavailable.
+    }
+  }
   const opts = useQuery({ queryKey: ["checkout-options"], queryFn: () => getCheckoutOptions(), enabled: open });
   const methods = [...(opts.data?.providers ?? []).map((p) => ({ id: p.id as PaymentMethodId, label: `Płatność online — ${p.label}`, note: p.test ? "Tryb testowy operatora: nie zostaną pobrane prawdziwe środki." : "Zostaniesz przekierowany do bezpiecznej płatności u operatora.", isDefault: p.isDefault })), ...(bankConfigured() ? [{ ...BANK_METHOD, isDefault: false }] : [])];
   const noMethods = !!opts.data && methods.length === 0;
@@ -64,9 +86,10 @@ export function BuyPanel({ slug, title, price }: { slug: string; title: string; 
   async function submit() {
     setErr(null); setBusy(true);
     try {
-      checkoutKey.current ??= crypto.randomUUID();
-      const r = await createLibraryOrder({ data: { slug, name, email, phone, method: method!, consent: true, idempotencyKey: checkoutKey.current } });
+      const idempotencyKey = getCheckoutKey();
+      const r = await createLibraryOrder({ data: { slug, name, email, phone, method: method!, consent: true, idempotencyKey } });
       if ("error" in r) throw new Error(r.error);
+      completeCheckout();
       if (r.redirectUrl) { window.location.href = r.redirectUrl; return; }
       navigate({ to: "/zakup/$token", params: { token: r.token } });
     } catch (x) { setErr(x instanceof Error ? x.message : "Nie udało się złożyć zamówienia."); setBusy(false); }
@@ -88,7 +111,7 @@ export function BuyPanel({ slug, title, price }: { slug: string; title: string; 
         {err && <p role="alert" className="text-sm text-destructive">{err}</p>}
         <div className="flex flex-wrap gap-3">
           <button type="button" onClick={submit} disabled={busy} className={btn}>{busy ? (method === "bank_transfer" ? "Składanie zamówienia…" : "Łączenie z operatorem…") : method === "bank_transfer" ? "Zamawiam z obowiązkiem zapłaty" : "Zamawiam i przechodzę do płatności"}</button>
-          <button type="button" onClick={() => { checkoutKey.current = null; setStep("form"); }} disabled={busy} className={btn2}>Popraw dane</button>
+          <button type="button" onClick={() => setStep("form")} disabled={busy} className={btn2}>Popraw dane</button>
         </div>
       </div>
     );
