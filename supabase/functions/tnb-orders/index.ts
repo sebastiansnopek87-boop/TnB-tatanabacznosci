@@ -6,6 +6,7 @@ import { DEFAULT_TEMPLATES, EVENT_MAP } from "./registry.ts";
 import { render, maskSensitive, stripSensitive, type Vars } from "./render.ts";
 import { checkoutFingerprint } from "../_shared/checkout-idempotency.ts";
 import { isSafeDeliveryRetry } from "../_shared/delivery-outbox.ts";
+import { parseBearerToken } from "../_shared/cron-auth.ts";
 import { sendSmtpMail, smtpConfig } from "../_shared/smtp.ts";
 
 const CORS = new Headers({
@@ -95,7 +96,7 @@ async function logOrderEvent(db: Db, orderId: string, type: string, detail?: str
   await db.from("library_order_events").insert({ order_id: orderId, type, detail: detail?.slice(0, 500) ?? null });
 }
 async function getUser(db: Db, req: Request) {
-  const token = (req.headers.get("authorization") ?? "").match(/^Bearer\s+(.+)$/i)?.[1];
+  const token = parseBearerToken(req.headers.get("authorization")) ?? "";
   if (!token) return null;
   const { data, error } = await db.auth.getUser(token);
   return !error && data.user ? data.user : null;
