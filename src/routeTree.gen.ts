@@ -29,6 +29,7 @@ import { Route as BibliotekaIndexRouteImport } from './routes/biblioteka.index'
 import { Route as BibliotekaSlugRouteImport } from './routes/biblioteka.$slug'
 import { Route as BibliotekaPobierzRouteImport } from './routes/biblioteka.pobierz'
 import { Route as KomentarzPotwierdzRouteImport } from './routes/komentarz.potwierdz'
+import { Route as NewsletterPotwierdzRouteImport } from './routes/newsletter.potwierdz'
 import { Route as NewsletterWypiszRouteImport } from './routes/newsletter.wypisz'
 import { Route as PodcastIndexRouteImport } from './routes/podcast.index'
 import { Route as PodcastSlugRouteImport } from './routes/podcast.$slug'
@@ -67,19 +68,6 @@ import { Route as AuthenticatedAdminZdarzeniaRouteImport } from './routes/_authe
 import { Route as AuthenticatedAdminZgloszeniaGlosRouteImport } from './routes/_authenticated/admin.zgloszenia-glos'
 import { Route as SpotkaniaRezerwacjaTokenRouteImport } from './routes/spotkania.rezerwacja.$token'
 import { Route as SpotkaniaZgloszenieTokenRouteImport } from './routes/spotkania.zgloszenie.$token'
-import { Route as ApiPublicBrandFileRouteImport } from './routes/api/public/brand.$file'
-import { Route as ApiPublicCronConsultRemindersRouteImport } from './routes/api/public/cron/consult-reminders'
-import { Route as ApiPublicCronInstagramSyncRouteImport } from './routes/api/public/cron/instagram-sync'
-import { Route as ApiPublicInstagramCallbackRouteImport } from './routes/api/public/instagram/callback'
-import { Route as ApiPublicLibraryCoverIdRouteImport } from './routes/api/public/library-cover.$id'
-import { Route as ApiPublicMeetingImageIdRouteImport } from './routes/api/public/meeting-image.$id'
-import { Route as ApiPublicPaymentsP24RouteImport } from './routes/api/public/payments/p24'
-import { Route as ApiPublicPaymentsPayuRouteImport } from './routes/api/public/payments/payu'
-import { Route as ApiPublicPaymentsTpayRouteImport } from './routes/api/public/payments/tpay'
-import { Route as ApiPublicPodcastCoverIdRouteImport } from './routes/api/public/podcast-cover.$id'
-import { Route as ApiPublicArticleImageIdNameRouteImport } from './routes/api/public/article-image.$id.$name'
-import { Route as ApiPublicAvatarKindIdRouteImport } from './routes/api/public/avatar.$kind.$id'
-import { Route as ApiPublicPageImageIdNameRouteImport } from './routes/api/public/page-image.$id.$name'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -179,6 +167,11 @@ const BibliotekaPobierzRoute = BibliotekaPobierzRouteImport.update({
 const KomentarzPotwierdzRoute = KomentarzPotwierdzRouteImport.update({
   id: '/komentarz/potwierdz',
   path: '/komentarz/potwierdz',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NewsletterPotwierdzRoute = NewsletterPotwierdzRouteImport.update({
+  id: '/newsletter/potwierdz',
+  path: '/newsletter/potwierdz',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NewsletterWypiszRoute = NewsletterWypiszRouteImport.update({
@@ -398,76 +391,6 @@ const SpotkaniaZgloszenieTokenRoute =
     path: '/spotkania/zgloszenie/$token',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicBrandFileRoute = ApiPublicBrandFileRouteImport.update({
-  id: '/api/public/brand/$file',
-  path: '/api/public/brand/$file',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicCronConsultRemindersRoute =
-  ApiPublicCronConsultRemindersRouteImport.update({
-    id: '/api/public/cron/consult-reminders',
-    path: '/api/public/cron/consult-reminders',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicCronInstagramSyncRoute =
-  ApiPublicCronInstagramSyncRouteImport.update({
-    id: '/api/public/cron/instagram-sync',
-    path: '/api/public/cron/instagram-sync',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicInstagramCallbackRoute =
-  ApiPublicInstagramCallbackRouteImport.update({
-    id: '/api/public/instagram/callback',
-    path: '/api/public/instagram/callback',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicLibraryCoverIdRoute = ApiPublicLibraryCoverIdRouteImport.update({
-  id: '/api/public/library-cover/$id',
-  path: '/api/public/library-cover/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicMeetingImageIdRoute = ApiPublicMeetingImageIdRouteImport.update({
-  id: '/api/public/meeting-image/$id',
-  path: '/api/public/meeting-image/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicPaymentsP24Route = ApiPublicPaymentsP24RouteImport.update({
-  id: '/api/public/payments/p24',
-  path: '/api/public/payments/p24',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicPaymentsPayuRoute = ApiPublicPaymentsPayuRouteImport.update({
-  id: '/api/public/payments/payu',
-  path: '/api/public/payments/payu',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicPaymentsTpayRoute = ApiPublicPaymentsTpayRouteImport.update({
-  id: '/api/public/payments/tpay',
-  path: '/api/public/payments/tpay',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicPodcastCoverIdRoute = ApiPublicPodcastCoverIdRouteImport.update({
-  id: '/api/public/podcast-cover/$id',
-  path: '/api/public/podcast-cover/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicArticleImageIdNameRoute =
-  ApiPublicArticleImageIdNameRouteImport.update({
-    id: '/api/public/article-image/$id/$name',
-    path: '/api/public/article-image/$id/$name',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicAvatarKindIdRoute = ApiPublicAvatarKindIdRouteImport.update({
-  id: '/api/public/avatar/$kind/$id',
-  path: '/api/public/avatar/$kind/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicPageImageIdNameRoute =
-  ApiPublicPageImageIdNameRouteImport.update({
-    id: '/api/public/page-image/$id/$name',
-    path: '/api/public/page-image/$id/$name',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -487,6 +410,7 @@ export interface FileRoutesByFullPath {
   '/biblioteka/$slug': typeof BibliotekaSlugRoute
   '/biblioteka/pobierz': typeof BibliotekaPobierzRoute
   '/komentarz/potwierdz': typeof KomentarzPotwierdzRoute
+  '/newsletter/potwierdz': typeof NewsletterPotwierdzRoute
   '/newsletter/wypisz': typeof NewsletterWypiszRoute
   '/podcast/$slug': typeof PodcastSlugRoute
   '/spolecznosc/$postId': typeof SpolecznoscPostIdRoute
@@ -527,19 +451,6 @@ export interface FileRoutesByFullPath {
   '/spotkania/rezerwacja/$token': typeof SpotkaniaRezerwacjaTokenRoute
   '/spotkania/zgloszenie/$token': typeof SpotkaniaZgloszenieTokenRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
-  '/api/public/brand/$file': typeof ApiPublicBrandFileRoute
-  '/api/public/cron/consult-reminders': typeof ApiPublicCronConsultRemindersRoute
-  '/api/public/cron/instagram-sync': typeof ApiPublicCronInstagramSyncRoute
-  '/api/public/instagram/callback': typeof ApiPublicInstagramCallbackRoute
-  '/api/public/library-cover/$id': typeof ApiPublicLibraryCoverIdRoute
-  '/api/public/meeting-image/$id': typeof ApiPublicMeetingImageIdRoute
-  '/api/public/payments/p24': typeof ApiPublicPaymentsP24Route
-  '/api/public/payments/payu': typeof ApiPublicPaymentsPayuRoute
-  '/api/public/payments/tpay': typeof ApiPublicPaymentsTpayRoute
-  '/api/public/podcast-cover/$id': typeof ApiPublicPodcastCoverIdRoute
-  '/api/public/article-image/$id/$name': typeof ApiPublicArticleImageIdNameRoute
-  '/api/public/avatar/$kind/$id': typeof ApiPublicAvatarKindIdRoute
-  '/api/public/page-image/$id/$name': typeof ApiPublicPageImageIdNameRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -558,6 +469,7 @@ export interface FileRoutesByTo {
   '/biblioteka/$slug': typeof BibliotekaSlugRoute
   '/biblioteka/pobierz': typeof BibliotekaPobierzRoute
   '/komentarz/potwierdz': typeof KomentarzPotwierdzRoute
+  '/newsletter/potwierdz': typeof NewsletterPotwierdzRoute
   '/newsletter/wypisz': typeof NewsletterWypiszRoute
   '/podcast/$slug': typeof PodcastSlugRoute
   '/spolecznosc/$postId': typeof SpolecznoscPostIdRoute
@@ -598,19 +510,6 @@ export interface FileRoutesByTo {
   '/spotkania/rezerwacja/$token': typeof SpotkaniaRezerwacjaTokenRoute
   '/spotkania/zgloszenie/$token': typeof SpotkaniaZgloszenieTokenRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
-  '/api/public/brand/$file': typeof ApiPublicBrandFileRoute
-  '/api/public/cron/consult-reminders': typeof ApiPublicCronConsultRemindersRoute
-  '/api/public/cron/instagram-sync': typeof ApiPublicCronInstagramSyncRoute
-  '/api/public/instagram/callback': typeof ApiPublicInstagramCallbackRoute
-  '/api/public/library-cover/$id': typeof ApiPublicLibraryCoverIdRoute
-  '/api/public/meeting-image/$id': typeof ApiPublicMeetingImageIdRoute
-  '/api/public/payments/p24': typeof ApiPublicPaymentsP24Route
-  '/api/public/payments/payu': typeof ApiPublicPaymentsPayuRoute
-  '/api/public/payments/tpay': typeof ApiPublicPaymentsTpayRoute
-  '/api/public/podcast-cover/$id': typeof ApiPublicPodcastCoverIdRoute
-  '/api/public/article-image/$id/$name': typeof ApiPublicArticleImageIdNameRoute
-  '/api/public/avatar/$kind/$id': typeof ApiPublicAvatarKindIdRoute
-  '/api/public/page-image/$id/$name': typeof ApiPublicPageImageIdNameRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -632,6 +531,7 @@ export interface FileRoutesById {
   '/biblioteka/$slug': typeof BibliotekaSlugRoute
   '/biblioteka/pobierz': typeof BibliotekaPobierzRoute
   '/komentarz/potwierdz': typeof KomentarzPotwierdzRoute
+  '/newsletter/potwierdz': typeof NewsletterPotwierdzRoute
   '/newsletter/wypisz': typeof NewsletterWypiszRoute
   '/podcast/$slug': typeof PodcastSlugRoute
   '/spolecznosc/$postId': typeof SpolecznoscPostIdRoute
@@ -672,19 +572,6 @@ export interface FileRoutesById {
   '/spotkania/rezerwacja/$token': typeof SpotkaniaRezerwacjaTokenRoute
   '/spotkania/zgloszenie/$token': typeof SpotkaniaZgloszenieTokenRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
-  '/api/public/brand/$file': typeof ApiPublicBrandFileRoute
-  '/api/public/cron/consult-reminders': typeof ApiPublicCronConsultRemindersRoute
-  '/api/public/cron/instagram-sync': typeof ApiPublicCronInstagramSyncRoute
-  '/api/public/instagram/callback': typeof ApiPublicInstagramCallbackRoute
-  '/api/public/library-cover/$id': typeof ApiPublicLibraryCoverIdRoute
-  '/api/public/meeting-image/$id': typeof ApiPublicMeetingImageIdRoute
-  '/api/public/payments/p24': typeof ApiPublicPaymentsP24Route
-  '/api/public/payments/payu': typeof ApiPublicPaymentsPayuRoute
-  '/api/public/payments/tpay': typeof ApiPublicPaymentsTpayRoute
-  '/api/public/podcast-cover/$id': typeof ApiPublicPodcastCoverIdRoute
-  '/api/public/article-image/$id/$name': typeof ApiPublicArticleImageIdNameRoute
-  '/api/public/avatar/$kind/$id': typeof ApiPublicAvatarKindIdRoute
-  '/api/public/page-image/$id/$name': typeof ApiPublicPageImageIdNameRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -706,6 +593,7 @@ export interface FileRouteTypes {
     | '/biblioteka/$slug'
     | '/biblioteka/pobierz'
     | '/komentarz/potwierdz'
+    | '/newsletter/potwierdz'
     | '/newsletter/wypisz'
     | '/podcast/$slug'
     | '/spolecznosc/$postId'
@@ -746,19 +634,6 @@ export interface FileRouteTypes {
     | '/spotkania/rezerwacja/$token'
     | '/spotkania/zgloszenie/$token'
     | '/admin/'
-    | '/api/public/brand/$file'
-    | '/api/public/cron/consult-reminders'
-    | '/api/public/cron/instagram-sync'
-    | '/api/public/instagram/callback'
-    | '/api/public/library-cover/$id'
-    | '/api/public/meeting-image/$id'
-    | '/api/public/payments/p24'
-    | '/api/public/payments/payu'
-    | '/api/public/payments/tpay'
-    | '/api/public/podcast-cover/$id'
-    | '/api/public/article-image/$id/$name'
-    | '/api/public/avatar/$kind/$id'
-    | '/api/public/page-image/$id/$name'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -777,6 +652,7 @@ export interface FileRouteTypes {
     | '/biblioteka/$slug'
     | '/biblioteka/pobierz'
     | '/komentarz/potwierdz'
+    | '/newsletter/potwierdz'
     | '/newsletter/wypisz'
     | '/podcast/$slug'
     | '/spolecznosc/$postId'
@@ -817,19 +693,6 @@ export interface FileRouteTypes {
     | '/spotkania/rezerwacja/$token'
     | '/spotkania/zgloszenie/$token'
     | '/admin'
-    | '/api/public/brand/$file'
-    | '/api/public/cron/consult-reminders'
-    | '/api/public/cron/instagram-sync'
-    | '/api/public/instagram/callback'
-    | '/api/public/library-cover/$id'
-    | '/api/public/meeting-image/$id'
-    | '/api/public/payments/p24'
-    | '/api/public/payments/payu'
-    | '/api/public/payments/tpay'
-    | '/api/public/podcast-cover/$id'
-    | '/api/public/article-image/$id/$name'
-    | '/api/public/avatar/$kind/$id'
-    | '/api/public/page-image/$id/$name'
   id:
     | '__root__'
     | '/'
@@ -850,6 +713,7 @@ export interface FileRouteTypes {
     | '/biblioteka/$slug'
     | '/biblioteka/pobierz'
     | '/komentarz/potwierdz'
+    | '/newsletter/potwierdz'
     | '/newsletter/wypisz'
     | '/podcast/$slug'
     | '/spolecznosc/$postId'
@@ -890,19 +754,6 @@ export interface FileRouteTypes {
     | '/spotkania/rezerwacja/$token'
     | '/spotkania/zgloszenie/$token'
     | '/_authenticated/admin/'
-    | '/api/public/brand/$file'
-    | '/api/public/cron/consult-reminders'
-    | '/api/public/cron/instagram-sync'
-    | '/api/public/instagram/callback'
-    | '/api/public/library-cover/$id'
-    | '/api/public/meeting-image/$id'
-    | '/api/public/payments/p24'
-    | '/api/public/payments/payu'
-    | '/api/public/payments/tpay'
-    | '/api/public/podcast-cover/$id'
-    | '/api/public/article-image/$id/$name'
-    | '/api/public/avatar/$kind/$id'
-    | '/api/public/page-image/$id/$name'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -921,6 +772,7 @@ export interface RootRouteChildren {
   BibliotekaSlugRoute: typeof BibliotekaSlugRoute
   BibliotekaPobierzRoute: typeof BibliotekaPobierzRoute
   KomentarzPotwierdzRoute: typeof KomentarzPotwierdzRoute
+  NewsletterPotwierdzRoute: typeof NewsletterPotwierdzRoute
   NewsletterWypiszRoute: typeof NewsletterWypiszRoute
   PodcastSlugRoute: typeof PodcastSlugRoute
   SpolecznoscPostIdRoute: typeof SpolecznoscPostIdRoute
@@ -935,19 +787,6 @@ export interface RootRouteChildren {
   SpotkaniaIndexRoute: typeof SpotkaniaIndexRoute
   SpotkaniaRezerwacjaTokenRoute: typeof SpotkaniaRezerwacjaTokenRoute
   SpotkaniaZgloszenieTokenRoute: typeof SpotkaniaZgloszenieTokenRoute
-  ApiPublicBrandFileRoute: typeof ApiPublicBrandFileRoute
-  ApiPublicCronConsultRemindersRoute: typeof ApiPublicCronConsultRemindersRoute
-  ApiPublicCronInstagramSyncRoute: typeof ApiPublicCronInstagramSyncRoute
-  ApiPublicInstagramCallbackRoute: typeof ApiPublicInstagramCallbackRoute
-  ApiPublicLibraryCoverIdRoute: typeof ApiPublicLibraryCoverIdRoute
-  ApiPublicMeetingImageIdRoute: typeof ApiPublicMeetingImageIdRoute
-  ApiPublicPaymentsP24Route: typeof ApiPublicPaymentsP24Route
-  ApiPublicPaymentsPayuRoute: typeof ApiPublicPaymentsPayuRoute
-  ApiPublicPaymentsTpayRoute: typeof ApiPublicPaymentsTpayRoute
-  ApiPublicPodcastCoverIdRoute: typeof ApiPublicPodcastCoverIdRoute
-  ApiPublicArticleImageIdNameRoute: typeof ApiPublicArticleImageIdNameRoute
-  ApiPublicAvatarKindIdRoute: typeof ApiPublicAvatarKindIdRoute
-  ApiPublicPageImageIdNameRoute: typeof ApiPublicPageImageIdNameRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1090,6 +929,13 @@ declare module '@tanstack/react-router' {
       path: '/komentarz/potwierdz'
       fullPath: '/komentarz/potwierdz'
       preLoaderRoute: typeof KomentarzPotwierdzRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/newsletter/potwierdz': {
+      id: '/newsletter/potwierdz'
+      path: '/newsletter/potwierdz'
+      fullPath: '/newsletter/potwierdz'
+      preLoaderRoute: typeof NewsletterPotwierdzRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/newsletter/wypisz': {
@@ -1358,97 +1204,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SpotkaniaZgloszenieTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/brand/$file': {
-      id: '/api/public/brand/$file'
-      path: '/api/public/brand/$file'
-      fullPath: '/api/public/brand/$file'
-      preLoaderRoute: typeof ApiPublicBrandFileRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/cron/consult-reminders': {
-      id: '/api/public/cron/consult-reminders'
-      path: '/api/public/cron/consult-reminders'
-      fullPath: '/api/public/cron/consult-reminders'
-      preLoaderRoute: typeof ApiPublicCronConsultRemindersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/cron/instagram-sync': {
-      id: '/api/public/cron/instagram-sync'
-      path: '/api/public/cron/instagram-sync'
-      fullPath: '/api/public/cron/instagram-sync'
-      preLoaderRoute: typeof ApiPublicCronInstagramSyncRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/instagram/callback': {
-      id: '/api/public/instagram/callback'
-      path: '/api/public/instagram/callback'
-      fullPath: '/api/public/instagram/callback'
-      preLoaderRoute: typeof ApiPublicInstagramCallbackRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/library-cover/$id': {
-      id: '/api/public/library-cover/$id'
-      path: '/api/public/library-cover/$id'
-      fullPath: '/api/public/library-cover/$id'
-      preLoaderRoute: typeof ApiPublicLibraryCoverIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/meeting-image/$id': {
-      id: '/api/public/meeting-image/$id'
-      path: '/api/public/meeting-image/$id'
-      fullPath: '/api/public/meeting-image/$id'
-      preLoaderRoute: typeof ApiPublicMeetingImageIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/payments/p24': {
-      id: '/api/public/payments/p24'
-      path: '/api/public/payments/p24'
-      fullPath: '/api/public/payments/p24'
-      preLoaderRoute: typeof ApiPublicPaymentsP24RouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/payments/payu': {
-      id: '/api/public/payments/payu'
-      path: '/api/public/payments/payu'
-      fullPath: '/api/public/payments/payu'
-      preLoaderRoute: typeof ApiPublicPaymentsPayuRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/payments/tpay': {
-      id: '/api/public/payments/tpay'
-      path: '/api/public/payments/tpay'
-      fullPath: '/api/public/payments/tpay'
-      preLoaderRoute: typeof ApiPublicPaymentsTpayRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/podcast-cover/$id': {
-      id: '/api/public/podcast-cover/$id'
-      path: '/api/public/podcast-cover/$id'
-      fullPath: '/api/public/podcast-cover/$id'
-      preLoaderRoute: typeof ApiPublicPodcastCoverIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/article-image/$id/$name': {
-      id: '/api/public/article-image/$id/$name'
-      path: '/api/public/article-image/$id/$name'
-      fullPath: '/api/public/article-image/$id/$name'
-      preLoaderRoute: typeof ApiPublicArticleImageIdNameRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/avatar/$kind/$id': {
-      id: '/api/public/avatar/$kind/$id'
-      path: '/api/public/avatar/$kind/$id'
-      fullPath: '/api/public/avatar/$kind/$id'
-      preLoaderRoute: typeof ApiPublicAvatarKindIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/page-image/$id/$name': {
-      id: '/api/public/page-image/$id/$name'
-      path: '/api/public/page-image/$id/$name'
-      fullPath: '/api/public/page-image/$id/$name'
-      preLoaderRoute: typeof ApiPublicPageImageIdNameRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -1546,6 +1301,7 @@ const rootRouteChildren: RootRouteChildren = {
   BibliotekaSlugRoute: BibliotekaSlugRoute,
   BibliotekaPobierzRoute: BibliotekaPobierzRoute,
   KomentarzPotwierdzRoute: KomentarzPotwierdzRoute,
+  NewsletterPotwierdzRoute: NewsletterPotwierdzRoute,
   NewsletterWypiszRoute: NewsletterWypiszRoute,
   PodcastSlugRoute: PodcastSlugRoute,
   SpolecznoscPostIdRoute: SpolecznoscPostIdRoute,
@@ -1560,30 +1316,7 @@ const rootRouteChildren: RootRouteChildren = {
   SpotkaniaIndexRoute: SpotkaniaIndexRoute,
   SpotkaniaRezerwacjaTokenRoute: SpotkaniaRezerwacjaTokenRoute,
   SpotkaniaZgloszenieTokenRoute: SpotkaniaZgloszenieTokenRoute,
-  ApiPublicBrandFileRoute: ApiPublicBrandFileRoute,
-  ApiPublicCronConsultRemindersRoute: ApiPublicCronConsultRemindersRoute,
-  ApiPublicCronInstagramSyncRoute: ApiPublicCronInstagramSyncRoute,
-  ApiPublicInstagramCallbackRoute: ApiPublicInstagramCallbackRoute,
-  ApiPublicLibraryCoverIdRoute: ApiPublicLibraryCoverIdRoute,
-  ApiPublicMeetingImageIdRoute: ApiPublicMeetingImageIdRoute,
-  ApiPublicPaymentsP24Route: ApiPublicPaymentsP24Route,
-  ApiPublicPaymentsPayuRoute: ApiPublicPaymentsPayuRoute,
-  ApiPublicPaymentsTpayRoute: ApiPublicPaymentsTpayRoute,
-  ApiPublicPodcastCoverIdRoute: ApiPublicPodcastCoverIdRoute,
-  ApiPublicArticleImageIdNameRoute: ApiPublicArticleImageIdNameRoute,
-  ApiPublicAvatarKindIdRoute: ApiPublicAvatarKindIdRoute,
-  ApiPublicPageImageIdNameRoute: ApiPublicPageImageIdNameRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
