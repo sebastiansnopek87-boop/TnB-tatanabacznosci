@@ -4,6 +4,9 @@ import { z } from "zod";
 import { ADAPTERS, configStatus, type ProviderId, type ProviderRow } from "./providers.ts";
 import { DEFAULT_TEMPLATES, EVENT_MAP } from "./registry.ts";
 import { render, maskSensitive, stripSensitive, type Vars } from "./render.ts";
+import { checkoutFingerprint } from "../_shared/checkout-idempotency.ts";
+import { getOutboxFinishDecision } from "../_shared/delivery-outbox.ts";
+import { parseBearerToken } from "../_shared/cron-auth.ts";
 import { sendSmtpMail, smtpConfig } from "../_shared/smtp.ts";
 
 const CORS = new Headers({
@@ -49,6 +52,32 @@ function adminClient() {
   return createClient(url, key, { global: { fetch: createSupabaseFetch(key) }, auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
 }
 type Db = ReturnType<typeof adminClient>;
+type CheckoutProviderRow = {
+  id: string; enabled: boolean; is_default: boolean; environment: string;
+  merchant_id: string | null; pos_id: string | null; client_id: string | null;
+};
+type PurchaseRow = {
+  id: string; paid_at: string | null; amount: number; access_token: string;
+  library_items: { title: string; slug: string } | null;
+};
+type AdminOrderRow = {
+  order_number: string; buyer_email: string; buyer_name: string | null;
+  library_items: { title: string } | null;
+};
+type SalesRow = {
+  environment: string; is_test: boolean; paid_at: string | null; status: string;
+  amount: number; provider: string | null; created_at: string;
+};
+type AdminOrderFilters = {
+  status: typeof STATUSES[number] | "all";
+  provider: "all" | "manual" | typeof PROVIDERS[number];
+  kind: "all" | "real" | "test"; from: string; to: string; q: string;
+};
+type AdminOrderAction = {
+  id: string;
+  action: "paid" | "delivered" | "cancelled" | "refund_start" | "refund_complete" | "review_paid" | "review_failed";
+  reason: string; revokeAccess: boolean; confirmNumber: string;
+};
 class HttpError extends Error { constructor(public status: number, message: string) { super(message); } }
 function json(body: unknown, status = 200) { return Response.json(body, { status, headers: CORS }); }
 function siteOrigin() { return (Deno.env.get("PUBLIC_SITE_URL") || "https://tatanabacznosci.pl").replace(/\/+$/, ""); }
@@ -67,7 +96,7 @@ async function logOrderEvent(db: Db, orderId: string, type: string, detail?: str
   await db.from("library_order_events").insert({ order_id: orderId, type, detail: detail?.slice(0, 500) ?? null });
 }
 async function getUser(db: Db, req: Request) {
-  const token = (req.headers.get("authorization") ?? "").match(/^Bearer\s+(.+)$/i)?.[1];
+  const token = parseBearerToken(req.headers.get("authorization")) ?? "";
   if (!token) return null;
   const { data, error } = await db.auth.getUser(token);
   return !error && data.user ? data.user : null;
@@ -171,14 +200,120 @@ async function notifyOrder(db: Db, orderId: string, event: string, key?: string)
   return dispatchOrderNotification(db, orderId, event, key);
 }
 async function afterPaid(db: Db, orderId: string) {
-  const { data: order } = await db.from("library_orders").select("user_id").eq("id", orderId).maybeSingle();
-  await notifyOrder(db, orderId, "order_paid");
-  const delivered = await notifyOrder(db, orderId, order?.user_id ? "order_access_delivered" : "order_guest_access");
-  await db.from("library_orders").update({
-    delivery_status: delivered.status === "sent" ? "sent" : "not_sent",
-    delivery_error: delivered.status === "sent" ? null : delivered.status === "simulated" ? "simulated" : delivered.reason ?? delivered.status,
-  }).eq("id", orderId);
-  await logOrderEvent(db, orderId, "access_granted", "Dostęp do materiału przyznany automatycznie po potwierdzeniu płatności.");
+  // The database trigger enqueues both notifications in the same transaction
+  // as the paid_at transition. Never send synchronously from webhook/admin paths.
+  await logOrderEvent(db, orderId, "delivery_queued", "Powiadomienia i dostarczenie materiału przekazano do trwałej kolejki.");
+}
+
+async function requireCron(db: Db, req: Request) {
+  const token = parseBearerToken(req.headers.get("authorization")) ?? "";
+  if (!token) throw new HttpError(401, "Unauthorized");
+  const { data: vaultSecret, error: vaultError } = await db.rpc("get_tnb_cron_secret");
+  const secrets = [
+    ...(typeof vaultSecret === "string" && vaultSecret ? [vaultSecret] : []),
+    ...["TNB_CRON_SECRET", "TNB_CRON_SECRET_PREVIOUS"].map((name) => envKey(name)).filter((value): value is string => !!value),
+  ];
+  if (!secrets.length) {
+    if (vaultError) console.error("Delivery cron secret lookup failed:", vaultError.code ?? "unknown");
+    throw new HttpError(503, "Zadanie cykliczne nie jest skonfigurowane.");
+  }
+  const digest = async (value: string) => new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value)));
+  const provided = await digest(token);
+  let matched = false;
+  for (const secret of secrets) {
+    const expected = await digest(secret);
+    let diff = token.length ^ secret.length;
+    for (let i = 0; i < expected.length; i++) diff |= provided[i]! ^ expected[i]!;
+    matched = matched || diff === 0;
+  }
+  if (!matched) throw new HttpError(401, "Unauthorized");
+}
+
+async function processDeliveryOutbox(db: Db) {
+  const worker = "tnb-orders-" + crypto.randomUUID();
+  const { data: jobs, error } = await db.rpc("claim_library_delivery_outbox", { p_worker: worker, p_limit: 3 });
+  if (error) throw new HttpError(500, "Nie udało się pobrać kolejki dostarczania.");
+  const counts = { claimed: jobs?.length ?? 0, sent: 0, simulated: 0, skipped: 0, needsReview: 0 };
+  for (const job of jobs ?? []) {
+    const event = String(job.event_key);
+    const idempotencyKey = event + "-" + String(job.order_id);
+    if (event === "order_access_delivered" || event === "order_guest_access") {
+      const { data: orderState } = await db.from("library_orders")
+        .select("delivery_status, delivered_at").eq("id", job.order_id).maybeSingle();
+      if (orderState?.delivery_status === "sent" || orderState?.delivered_at) {
+        await db.rpc("finish_library_delivery_outbox", {
+          p_id: job.id, p_status: "skipped", p_error: "delivery_already_marked_complete", p_safe_to_retry: false,
+        });
+        counts.skipped++;
+        continue;
+      }
+    }
+    const { data: existing, error: logError } = await db.from("email_notification_log")
+      .select("status").eq("idempotency_key", idempotencyKey).maybeSingle();
+    if (logError) {
+      await db.rpc("finish_library_delivery_outbox", { p_id: job.id, p_status: "needs_review", p_error: "notification_log_lookup_failed", p_safe_to_retry: false });
+      if (event === "order_access_delivered" || event === "order_guest_access") {
+        await db.from("library_orders").update({ delivery_status: "not_sent", delivery_error: "needs_review:notification_log_lookup_failed" }).eq("id", job.order_id);
+      }
+      counts.needsReview++;
+      continue;
+    }
+    // An interrupted SMTP send is ambiguous. Never resend it automatically:
+    // an operator can inspect the provider/log and decide whether to resend.
+    if (existing) {
+      const terminal = ["sent", "delivered", "simulated", "skipped"].includes(existing.status);
+      await db.rpc("finish_library_delivery_outbox", {
+        p_id: job.id, p_status: terminal ? (existing.status === "delivered" ? "sent" : existing.status) : "needs_review",
+        p_error: terminal ? null : "previous_notification_attempt_" + existing.status,
+        p_safe_to_retry: false,
+      });
+      if (event === "order_access_delivered" || event === "order_guest_access") {
+        const wasSent = existing.status === "sent" || existing.status === "delivered";
+        await db.from("library_orders").update({
+          delivery_status: wasSent ? "sent" : "not_sent",
+          delivery_error: wasSent ? null : terminal ? existing.status : "needs_review:previous_notification_attempt_" + existing.status,
+          ...(wasSent ? { delivered_at: new Date().toISOString() } : {}),
+        }).eq("id", job.order_id);
+      }
+      if (terminal) {
+        if (existing.status === "sent" || existing.status === "delivered") counts.sent++;
+        else if (existing.status === "simulated") counts.simulated++;
+        else counts.skipped++;
+      } else counts.needsReview++;
+      continue;
+    }
+    const result = await dispatchOrderNotification(db, String(job.order_id), event);
+    const reason = "reason" in result ? result.reason : result.status;
+    const decision = getOutboxFinishDecision(result.status, reason);
+    const terminal = decision.status === "sent" || decision.status === "simulated" || decision.status === "skipped";
+    const { error: finishError } = await db.rpc("finish_library_delivery_outbox", {
+      p_id: job.id, p_status: decision.status, p_error: terminal ? null : reason,
+      p_safe_to_retry: decision.safeToRetry,
+    });
+    if (finishError) {
+      console.error("delivery outbox completion failed", job.id, finishError.message);
+      if (event === "order_access_delivered" || event === "order_guest_access") {
+        await db.from("library_orders").update({ delivery_status: "not_sent", delivery_error: "needs_review:outbox_completion_failed" }).eq("id", job.order_id);
+      }
+      counts.needsReview++;
+      continue;
+    }
+    if (result.status === "sent") counts.sent++;
+    else if (result.status === "simulated") counts.simulated++;
+    else if (result.status === "skipped") counts.skipped++;
+    else counts.needsReview++;
+    if (event === "order_access_delivered" || event === "order_guest_access") {
+      await db.from("library_orders").update({
+        delivery_status: result.status === "sent" ? "sent" : "not_sent",
+        delivery_error: result.status === "sent" ? null : result.status === "simulated" ? "simulated" : reason ?? result.status,
+        ...(result.status === "sent" ? { delivered_at: new Date().toISOString() } : {}),
+      }).eq("id", job.order_id);
+      if (result.status === "sent") {
+        await logOrderEvent(db, String(job.order_id), "access_granted", "Link do materiału wysłano po potwierdzeniu płatności.");
+      }
+    }
+  }
+  return counts;
 }
 
 async function markPaid(db: Db, orderId: string, actor: string) {
@@ -252,6 +387,7 @@ async function resendAccess(db: Db, orderId: string, key: string) {
 }
 
 const actionSchema = z.discriminatedUnion("action", [
+  z.object({ action: z.literal("processDeliveryOutbox") }),
   z.object({ action: z.literal("getCheckoutOptions") }),
   z.object({ action: z.literal("createLibraryOrder"), data: z.object({
     slug: z.string().regex(/^[a-z0-9-]{1,120}$/),
@@ -260,6 +396,7 @@ const actionSchema = z.discriminatedUnion("action", [
     phone: z.string().trim().max(20).regex(/^$|^\+?[0-9 ()-]{7,20}$/, "Podaj poprawny numer telefonu.").default(""),
     method: z.enum(["bank_transfer", ...PROVIDERS], { errorMap: () => ({ message: "Wybierz dostępną metodę płatności." }) }),
     consent: z.literal(true, { errorMap: () => ({ message: "Zaakceptuj wymagane zgody." }) }),
+    idempotencyKey: z.string().uuid(),
   }) }),
   z.object({ action: z.literal("getPurchasedMaterial"), data: z.object({ token: z.string().uuid(), file: z.boolean().default(false) }) }),
   z.object({ action: z.literal("recoverAccess"), data: z.object({
@@ -289,15 +426,14 @@ const actionSchema = z.discriminatedUnion("action", [
 async function getCheckoutOptions(db: Db) {
   const { data, error } = await db.from("payment_providers").select("id, enabled, is_default, environment, merchant_id, pos_id, client_id");
   if (error) throw new HttpError(500, "Nie udało się pobrać metod płatności.");
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
-  const providers = (data ?? []).filter((p: any) => p.enabled && configStatus(p).configured)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
-    .map((p: any) => ({ id: p.id as ProviderId, label: PROVIDER_LABEL[p.id]!, isDefault: p.is_default, test: p.environment === "sandbox" }));
+  const providers = (data ?? []).filter((p) => (p as CheckoutProviderRow).enabled && configStatus(p as ProviderRow).configured)
+    .map((p) => ({ id: p.id as ProviderId, label: PROVIDER_LABEL[p.id]!, isDefault: p.is_default, test: p.environment === "sandbox" }));
   return { providers };
 }
 
 async function createLibraryOrder(db: Db, req: Request, data: z.infer<typeof actionSchema> & { action: "createLibraryOrder" }) {
   const input = data.data;
+  const idempotencyKey = input.idempotencyKey;
   const { data: item, error: itemError } = await db.from("library_items")
     .select("id, title, access, status, purchasable, price_amount, currency").eq("slug", input.slug).maybeSingle();
   if (itemError || !item || item.status !== "published" || item.access !== "premium" || !item.purchasable || !item.price_amount || item.price_amount < 100) {
@@ -308,11 +444,31 @@ async function createLibraryOrder(db: Db, req: Request, data: z.infer<typeof act
   if (!online) return { error: "Płatność przelewem bankowym jest obecnie niedostępna." };
   const provider = await providerRow(db, input.method as ProviderId);
   if (!provider?.enabled || !configStatus(provider).configured) return { error: "Ta metoda płatności jest obecnie niedostępna." };
+  const fingerprint = await checkoutFingerprint({
+    itemId: item.id, method: input.method as ProviderId, email: input.email, name: input.name,
+    phone: input.phone || "", amount: item.price_amount, currency: item.currency || "PLN", userId: user?.id ?? null,
+  });
   const { data: order, error } = await db.from("library_orders").insert({
     item_id: item.id, user_id: user?.id ?? null, buyer_email: input.email, buyer_name: input.name, buyer_phone: input.phone || null,
-    amount: item.price_amount, currency: "PLN", status: "pending", provider: input.method, payment_method: "online",
-    environment: provider.environment, consent_text: CONSENT,
+    amount: item.price_amount, currency: item.currency || "PLN", status: "pending", provider: input.method, payment_method: "online",
+    environment: provider.environment, consent_text: CONSENT, checkout_idempotency_key: idempotencyKey,
+    checkout_request_fingerprint: fingerprint, checkout_state: "creating",
   }).select("id, access_token, order_number").single();
+  if (error?.code === "23505") {
+    const { data: existing } = await db.from("library_orders")
+      .select("id, access_token, order_number, checkout_request_fingerprint, checkout_state")
+      .eq("checkout_idempotency_key", idempotencyKey).maybeSingle();
+    if (!existing) throw new HttpError(409, "To zamówienie jest już przetwarzane. Odśwież status za chwilę.");
+    if (existing.checkout_request_fingerprint !== fingerprint) throw new HttpError(409, "Ten klucz zamówienia został już użyty z innymi danymi.");
+    if (existing.checkout_state === "ready") {
+      const { data: session } = await db.from("library_checkout_sessions")
+        .select("redirect_url").eq("idempotency_key", idempotencyKey).maybeSingle();
+      if (session?.redirect_url) return { token: existing.access_token, redirectUrl: session.redirect_url };
+    }
+    throw new HttpError(409, existing.checkout_state === "needs_review"
+      ? "Płatność wymaga sprawdzenia. Nie ponawiaj zamówienia — skontaktuj się z obsługą."
+      : "Zamówienie jest już przetwarzane. Poczekaj chwilę przed ponowieniem.");
+  }
   if (error || !order) {
     console.error("order insert failed", error?.message);
     return { error: "Nie udało się złożyć zamówienia. Spróbuj ponownie." };
@@ -325,18 +481,34 @@ async function createLibraryOrder(db: Db, req: Request, data: z.infer<typeof act
   const customerIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     req.headers.get("x-real-ip") || "";
   const result = await ADAPTERS[input.method as ProviderId].create(provider, {
-    orderId: order.id, orderNumber: order.order_number, amount: item.price_amount, currency: "PLN",
+    orderId: order.id, orderNumber: order.order_number, amount: item.price_amount, currency: item.currency || "PLN",
     email: input.email, name: input.name, description: order.order_number + " — " + item.title,
     returnUrl: origin + "/zakup/" + order.access_token + "?powrot=1",
     notifyUrl: baseUrl + "/functions/v1/tnb-payments?provider=" + input.method,
     customerIp,
   }).catch((error) => ({ ok: false as const, reason: error instanceof Error ? error.message : "error" }));
   if (!result.ok) {
-    await logOrderEvent(db, order.id, "checkout_error", "Operator nie utworzył transakcji: " + result.reason);
-    await db.from("library_orders").update({ status: "failed", failed_at: new Date().toISOString() }).eq("id", order.id).eq("status", "pending");
-    return { error: "Nie udało się połączyć z operatorem płatności. Spróbuj ponownie lub wybierz inną metodę." };
+    // Provider timeouts can be ambiguous: never create a second transaction automatically.
+    await db.from("library_orders").update({ checkout_state: "needs_review", review_reason: "checkout_provider_result_ambiguous" }).eq("id", order.id).eq("checkout_state", "creating");
+    await logOrderEvent(db, order.id, "checkout_needs_review", "Nie można jednoznacznie potwierdzić wyniku utworzenia transakcji u operatora.");
+    return { error: "Nie udało się potwierdzić wyniku u operatora. Zamówienie wymaga sprawdzenia; nie ponawiaj płatności." };
   }
-  await db.from("library_orders").update({ provider_ref: result.providerRef, checkout_session_id: result.providerRef }).eq("id", order.id);
+  const { error: sessionError } = await db.from("library_checkout_sessions").insert({
+    idempotency_key: idempotencyKey, order_id: order.id, redirect_url: result.redirectUrl,
+  });
+  if (sessionError) {
+    console.error("checkout session persistence failed", sessionError.message);
+    await db.from("library_orders").update({ checkout_state: "needs_review", review_reason: "checkout_session_persistence_failed" }).eq("id", order.id);
+    throw new HttpError(503, "Operator utworzył transakcję, ale zapis wyniku wymaga sprawdzenia. Nie ponawiaj płatności.");
+  }
+  const { error: saveError } = await db.from("library_orders").update({
+    provider_ref: result.providerRef, checkout_session_id: result.providerRef, checkout_state: "ready",
+  }).eq("id", order.id).eq("checkout_state", "creating");
+  if (saveError) {
+    console.error("checkout result persistence failed", saveError.message);
+    await db.from("library_orders").update({ checkout_state: "needs_review", review_reason: "checkout_order_persistence_failed" }).eq("id", order.id);
+    throw new HttpError(503, "Operator utworzył transakcję, ale zapis wyniku wymaga sprawdzenia. Nie ponawiaj płatności.");
+  }
   await logOrderEvent(db, order.id, "checkout_started", "Transakcja utworzona u operatora (" + result.providerRef + "). Przekierowanie do płatności.");
   return { token: order.access_token, redirectUrl: result.redirectUrl };
 }
@@ -374,14 +546,12 @@ async function listMyPurchases(db: Db, userId: string, email: string | null) {
   query = email ? query.or("user_id.eq." + userId + ",buyer_email.eq." + email) : query.eq("user_id", userId);
   const { data, error } = await query.order("paid_at", { ascending: false });
   if (error) throw new HttpError(500, "Nie udało się pobrać zakupów.");
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
-  return (data ?? []).map((order: any) => ({
+  return (data ?? []).map((order) => ({
     id: order.id, paid_at: order.paid_at, amount: order.amount, title: order.library_items?.title ?? "",
     slug: order.library_items?.slug ?? "", token: order.access_token,
   }));
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
-async function adminListOrders(db: Db, input: any) {
+async function adminListOrders(db: Db, input: AdminOrderFilters) {
   let query = db.from("library_orders").select("id, order_number, created_at, paid_at, delivered_at, status, delivery_status, buyer_email, buyer_name, amount, currency, payment_method, provider, environment, is_test, access_revoked_at, library_items!inner(title)")
     .order("created_at", { ascending: false }).limit(500);
   if (input.status !== "all") query = query.eq("status", input.status);
@@ -392,8 +562,7 @@ async function adminListOrders(db: Db, input: any) {
   const { data, error } = await query;
   if (error) throw new HttpError(500, "Nie udało się pobrać zamówień.");
   const search = input.q.toLowerCase();
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
-  return (data as any[]).filter((row) => !search ||
+  return (data as AdminOrderRow[]).filter((row) => !search ||
     row.order_number.toLowerCase().includes(search) || row.buyer_email.toLowerCase().includes(search) ||
     (row.buyer_name ?? "").toLowerCase().includes(search) || (row.library_items?.title ?? "").toLowerCase().includes(search));
 }
@@ -401,12 +570,10 @@ async function adminSalesSummary(db: Db) {
   const { data, error } = await db.from("library_orders")
     .select("status, amount, provider, environment, is_test, paid_at, created_at").limit(20000);
   if (error) throw new HttpError(500, "Nie udało się pobrać podsumowania sprzedaży.");
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
-  const rows = (data ?? []) as any[];
+  const rows = (data ?? []) as SalesRow[];
   const real = rows.filter((row) => row.environment !== "sandbox" && !row.is_test);
   const paid = real.filter((row) => row.paid_at && ["paid", "refund_pending"].includes(row.status));
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
-  const sum = (items: any[]) => items.reduce((total, row) => total + row.amount, 0);
+  const sum = (items: SalesRow[]) => items.reduce((total, row) => total + row.amount, 0);
   const byProvider: Record<string, { count: number; amount: number }> = {};
   for (const row of paid) {
     const key = row.provider ?? "manual";
@@ -447,8 +614,7 @@ async function adminResendDelivery(db: Db, id: string, actor: string) {
   await logEvent(db, { type: "order_resend", actor, objectKind: "order", objectId: id, result: result.ok ? "ok" : "failed", detail: result.ok ? undefined : result.reason });
   return result;
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
-async function adminSetOrderStatus(db: Db, userId: string, input: any) {
+async function adminSetOrderStatus(db: Db, userId: string, input: AdminOrderAction) {
   if (input.action.startsWith("refund") || input.action.startsWith("review")) {
     const { data: order } = await db.from("library_orders").select("order_number").eq("id", input.id).maybeSingle();
     if (!order || order.order_number !== input.confirmNumber.toUpperCase()) throw new HttpError(400, "Wpisz dokładny numer zamówienia, aby potwierdzić.");
@@ -476,6 +642,10 @@ Deno.serve(async (req: Request) => {
     const parsed = actionSchema.safeParse(await req.json().catch(() => null));
     if (!parsed.success) return json({ message: "Nieprawidłowe żądanie." }, 400);
     const input = parsed.data;
+    if (input.action === "processDeliveryOutbox") {
+      await requireCron(db, req);
+      return json(await processDeliveryOutbox(db));
+    }
     switch (input.action) {
       case "getCheckoutOptions": return json(await getCheckoutOptions(db));
       case "createLibraryOrder": return json(await createLibraryOrder(db, req, input));
