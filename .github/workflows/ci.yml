@@ -33,6 +33,14 @@ jobs:
       - name: Build application
         run: bun run build
 
+      - name: Export TanStack-generated route tree for preview recovery
+        uses: actions/upload-artifact@v4
+        with:
+          name: tnb-generated-route-tree-${{ github.sha }}
+          path: src/routeTree.gen.ts
+          if-no-files-found: error
+          retention-days: 3
+
       - name: Static SPA route fallback smoke test
         shell: bash
         run: |
