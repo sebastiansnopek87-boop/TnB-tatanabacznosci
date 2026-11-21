@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: build-${{ github.ref }}
@@ -40,6 +40,21 @@ jobs:
           path: src/routeTree.gen.ts
           if-no-files-found: error
           retention-days: 3
+
+      - name: Commit TanStack-generated route tree
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          BRANCH_NAME: ${{ github.head_ref }}
+        run: |
+          if git diff --quiet -- src/routeTree.gen.ts; then
+            echo "Generated route tree is already current."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/routeTree.gen.ts
+          git commit -m "chore: regenerate TanStack route tree"
+          git push origin "HEAD:${BRANCH_NAME}"
 
       - name: Static SPA route fallback smoke test
         shell: bash
