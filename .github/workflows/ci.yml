@@ -33,6 +33,14 @@ jobs:
       - name: Build application
         run: bun run build
 
+      - name: Verify committed TanStack route tree is up to date
+        run: |
+          if ! git diff --quiet -- src/routeTree.gen.ts; then
+            echo "::error::TanStack regenerated src/routeTree.gen.ts during build. Commit the generated route tree with the route source changes."
+            git diff --stat -- src/routeTree.gen.ts
+            exit 1
+          fi
+
       - name: Static SPA route fallback smoke test
         shell: bash
         run: |
