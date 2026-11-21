@@ -5,6 +5,7 @@ on:
     paths:
       - "supabase/config.toml"
       - "supabase/migrations/**"
+      - "supabase/tests/**"
       - ".github/workflows/supabase-migrations.yml"
   push:
     branches:
@@ -12,6 +13,7 @@ on:
     paths:
       - "supabase/config.toml"
       - "supabase/migrations/**"
+      - "supabase/tests/**"
       - ".github/workflows/supabase-migrations.yml"
   workflow_dispatch:
 
@@ -49,6 +51,9 @@ jobs:
 
       - name: Replay all migrations from an empty local database
         run: supabase db reset --local
+
+      - name: Run database tests
+        run: supabase test db --local
 
       - name: Verify local migration history
         run: |
