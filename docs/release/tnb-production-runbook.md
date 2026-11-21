@@ -39,26 +39,34 @@ Do not publish until every gate below has an explicit PASS:
    - Verify custom cron authentication, provider webhook signature validation, P24 server-side verification, provider-reference matching, amount/currency/environment checks, and admin role checks.
    - Confirm that no service-role key, provider secret, checkout redirect URL, or private delivery payload reaches browser-readable data.
 
-4. **Email and delivery**
+4. **Authentication and OAuth**
+   - The React SPA uses Supabase Auth directly for email/password and Google/Apple OAuth; no Lovable OAuth broker is required by the login flow.
+   - Configure Google and Apple providers in the TNB Supabase Auth settings with their production credentials.
+   - Set the Supabase Auth Site URL to `https://tatanabacznosci.pl` and add only the required application redirect URLs to the allow list (production and approved local/staging origins).
+   - Register the Supabase callback URL `https://pmdfiipontreuclfumdh.supabase.co/auth/v1/callback` in the Google and Apple provider consoles.
+   - Test sign-in, first-time account creation, returning-user sign-in, cancellation, sign-out, password recovery, and redirect back to the originally requested library/article route.
+   - Do not enable Google/Apple buttons for production until both providers and redirect allow lists have been verified in the TNB project.
+
+5. **Email and delivery**
    - Configure a dedicated live SMTP transport and separately configure Supabase Auth SMTP.
    - Verify sender-domain authentication (SPF, DKIM, DMARC), recipient delivery, bounce handling, and provider message IDs.
    - Test outbox success, safe retry, dead-letter, stale lease, and ambiguous SMTP hand-off behavior.
    - Confirm that simulated/test mode cannot be mistaken for a real customer delivery.
 
-5. **Payments**
+6. **Payments**
    - Configure each payment operator only in sandbox first.
    - Run end-to-end tests for checkout creation, repeated requests, concurrent requests, mismatched idempotency fingerprints, provider timeouts, webhook replay, wrong references, wrong amount/currency, and failed/cancelled payments.
    - Confirm that an ambiguous provider create result never triggers an automatic second charge.
    - Enable live credentials only after operator-side verification and an explicit release approval.
 
-6. **Frontend and hosting**
+7. **Frontend and hosting**
    - Build the static Vite SPA artifact from the exact approved commit.
    - Verify direct navigation and refresh on all required SPA routes on staging.
    - Verify that the hosting rewrite serves `index.html` for application routes without exposing source maps, server-only code, or secrets.
    - Confirm backup and rollback procedures for the static artifact.
    - Keep CyberFolks auto-deploy disabled until the exact artifact and target path are approved.
 
-7. **Operational acceptance**
+8. **Operational acceptance**
    - Run E2E tests with separate user, moderator, admin, and superadmin accounts.
    - Verify profile writes, access control, premium material purchase, paid transition, access delivery, account recovery, and admin order handling.
    - Confirm monitoring and manual procedures for `needs_review` and `dead_letter` outbox rows.
