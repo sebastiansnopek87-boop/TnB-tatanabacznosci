@@ -5,7 +5,7 @@ import { createLibraryOrder, getCheckoutOptions, recoverAccess } from "@/lib/api
 import { fmtPrice } from "@/lib/library";
 import { BANK_METHOD, bankConfigured, type PaymentMethodId } from "@/config/payments";
 import { useAuth } from "@/hooks/use-auth";
-import { clearCheckoutKey, getOrCreateCheckoutKey } from "@/lib/checkout-idempotency";
+import { getOrCreateCheckoutKey } from "@/lib/checkout-idempotency";
 
 const input = "w-full border border-border/60 bg-background px-3 py-2.5 text-sm text-foreground focus:border-gold focus:outline-none";
 const btn = "bg-gold px-6 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-primary-foreground hover:bg-gold-bright disabled:opacity-60";
@@ -41,14 +41,6 @@ export function BuyPanel({ slug, title, price }: { slug: string; title: string; 
     return checkoutKey.current;
   }
 
-  function completeCheckout() {
-    checkoutKey.current = null;
-    try {
-      clearCheckoutKey(window.sessionStorage, checkoutStorageKey);
-    } catch {
-      // The completed server-side checkout remains authoritative if browser storage is unavailable.
-    }
-  }
   const opts = useQuery({ queryKey: ["checkout-options"], queryFn: () => getCheckoutOptions(), enabled: open });
   const methods = [...(opts.data?.providers ?? []).map((p) => ({ id: p.id as PaymentMethodId, label: `Płatność online — ${p.label}`, note: p.test ? "Tryb testowy operatora: nie zostaną pobrane prawdziwe środki." : "Zostaniesz przekierowany do bezpiecznej płatności u operatora.", isDefault: p.isDefault })), ...(bankConfigured() ? [{ ...BANK_METHOD, isDefault: false }] : [])];
   const noMethods = !!opts.data && methods.length === 0;
@@ -89,7 +81,9 @@ export function BuyPanel({ slug, title, price }: { slug: string; title: string; 
       const idempotencyKey = getCheckoutKey();
       const r = await createLibraryOrder({ data: { slug, name, email, phone, method: method!, consent: true, idempotencyKey } });
       if ("error" in r) throw new Error(r.error);
-      completeCheckout();
+      // Keep the key for this tab until it closes. If the buyer returns from the
+      // payment provider or reloads the page, the server replays the same order
+      // instead of creating a second payment attempt.
       if (r.redirectUrl) { window.location.href = r.redirectUrl; return; }
       navigate({ to: "/zakup/$token", params: { token: r.token } });
     } catch (x) { setErr(x instanceof Error ? x.message : "Nie udało się złożyć zamówienia."); setBusy(false); }
