@@ -31,6 +31,9 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Build application
+        env:
+          VITE_SUPABASE_URL: https://pmdfiipontreuclfumdh.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_D5uXWeutbm81D3KRn4NPNA_fH-WZVGG
         run: bun run build
 
       - name: Verify committed TanStack route tree is up to date
