@@ -6,7 +6,7 @@ type PaymentMethod = "bank_transfer" | ProviderId;
 type OrderStatus = "pending" | "paid" | "failed" | "cancelled" | "refund_pending" | "refunded" | "needs_review";
 type ApiError = { message?: unknown };
 type CheckoutProvider = { id: ProviderId; label: string; isDefault: boolean; test: boolean };
-type CreateOrderInput = { slug: string; name: string; email: string; phone?: string; method: PaymentMethod; consent: true };
+type CreateOrderInput = { slug: string; name: string; email: string; phone?: string; method: PaymentMethod; consent: true; idempotencyKey: string };
 type PurchasedMaterial =
   | { error: string }
   | { order: { status: OrderStatus; number: string; amount: number; email: string; title: string; slug: string; method: string; provider: string | null } }

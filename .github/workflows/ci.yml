@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: build-${{ github.ref }}
@@ -32,6 +32,29 @@ jobs:
 
       - name: Build application
         run: bun run build
+
+      - name: Export TanStack-generated route tree for preview recovery
+        uses: actions/upload-artifact@v4
+        with:
+          name: tnb-generated-route-tree-${{ github.sha }}
+          path: src/routeTree.gen.ts
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Commit TanStack-generated route tree
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          BRANCH_NAME: ${{ github.head_ref }}
+        run: |
+          if git diff --quiet -- src/routeTree.gen.ts; then
+            echo "Generated route tree is already current."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/routeTree.gen.ts
+          git commit -m "chore: regenerate TanStack route tree"
+          git push origin "HEAD:${BRANCH_NAME}"
 
       - name: Static SPA route fallback smoke test
         shell: bash
@@ -59,6 +82,14 @@ jobs:
             fi
           done
 
+      - name: Set up Deno for Edge Function unit tests
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Shared Edge Function unit tests
+        run: deno test supabase/functions/_shared/checkout-idempotency.test.ts supabase/functions/_shared/delivery-outbox.test.ts supabase/functions/_shared/cron-auth.test.ts supabase/functions/_shared/payment-webhook.test.ts
+
       - name: TypeScript validation
         run: bun run typecheck
 
@@ -73,6 +104,7 @@ jobs:
 
       - name: Unit tests
         run: bun run test
+
 
       - name: Scan static build for server-only code and secrets
         shell: bash

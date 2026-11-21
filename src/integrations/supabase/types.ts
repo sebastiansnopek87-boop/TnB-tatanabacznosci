@@ -1622,6 +1622,69 @@ export type Database = {
           },
         ]
       }
+      library_checkout_sessions: {
+        Row: { created_at: string; idempotency_key: string; order_id: string; redirect_url: string | null; updated_at: string }
+        Insert: { created_at?: string; idempotency_key: string; order_id: string; redirect_url?: string | null; updated_at?: string }
+        Update: { created_at?: string; idempotency_key?: string; order_id?: string; redirect_url?: string | null; updated_at?: string }
+        Relationships: [{
+          foreignKeyName: "library_checkout_sessions_order_id_fkey"
+          columns: ["order_id"]
+          isOneToOne: true
+          referencedRelation: "library_orders"
+          referencedColumns: ["id"]
+        }]
+      }
+      library_delivery_outbox: {
+        Row: {
+          attempts: number
+          available_at: string
+          completed_at: string | null
+          created_at: string
+          event_key: string
+          id: string
+          last_error: string | null
+          locked_at: string | null
+          locked_by: string | null
+          order_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          available_at?: string
+          completed_at?: string | null
+          created_at?: string
+          event_key: string
+          id?: string
+          last_error?: string | null
+          locked_at?: string | null
+          locked_by?: string | null
+          order_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          available_at?: string
+          completed_at?: string | null
+          created_at?: string
+          event_key?: string
+          id?: string
+          last_error?: string | null
+          locked_at?: string | null
+          locked_by?: string | null
+          order_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [{
+          foreignKeyName: "library_delivery_outbox_order_id_fkey"
+          columns: ["order_id"]
+          isOneToOne: false
+          referencedRelation: "library_orders"
+          referencedColumns: ["id"]
+        }]
+      }
       library_items: {
         Row: {
           access: string
@@ -1754,6 +1817,9 @@ export type Database = {
           buyer_phone: string | null
           cancelled_at: string | null
           checkout_session_id: string | null
+          checkout_idempotency_key: string | null
+          checkout_request_fingerprint: string | null
+          checkout_state: string
           consent_text: string | null
           created_at: string
           currency: string
@@ -1791,6 +1857,9 @@ export type Database = {
           buyer_phone?: string | null
           cancelled_at?: string | null
           checkout_session_id?: string | null
+          checkout_idempotency_key?: string | null
+          checkout_request_fingerprint?: string | null
+          checkout_state?: string
           consent_text?: string | null
           created_at?: string
           currency?: string
@@ -2963,6 +3032,14 @@ export type Database = {
           display_name: string
           tnb_id: string
         }[]
+      }
+      claim_library_delivery_outbox: {
+        Args: { p_limit?: number; p_worker: string }
+        Returns: { attempts: number; event_key: string; id: string; order_id: string }[]
+      }
+      finish_library_delivery_outbox: {
+        Args: { p_error?: string | null; p_id: string; p_safe_to_retry?: boolean; p_status: string }
+        Returns: undefined
       }
       get_tnb_cron_secret: { Args: never; Returns: string }
       has_role: {
