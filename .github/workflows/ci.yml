@@ -27,6 +27,11 @@ jobs:
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
 
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
       - name: Install locked dependencies
         run: bun install --frozen-lockfile
 
@@ -51,7 +56,7 @@ jobs:
             echo "::error::Vite preview did not start."
             exit 1
           fi
-          for route in / /auth /reset-password /artykuly /artykuly/przykladowy /biblioteka /biblioteka/przykladowy /podcast /podcast/przykladowy /spotkania /spotkania/przykladowe /spolecznosc /admin /admin/spotkania /newsletter/wypisz /newsletter/potwierdz; do
+          for route in / /auth /reset-password /artykuly /artykuly/przykladowy /biblioteka /biblioteka/przykladowy /podcast /podcast/przykladowy /spotkania /spotkania/przykladowe /spolecznosc /admin /admin/spotkania /newsletter/wypisz /newsletter/potwierdz /przedpremiera/wypisz /admin/przedpremiera; do
             CODE=$(curl -sS -o /tmp/tnb-route.html -w '%{http_code}' "http://127.0.0.1:4173$route")
             if [[ "$CODE" != "200" ]] || ! grep -q 'id="root"' /tmp/tnb-route.html; then
               echo "::error::SPA route fallback failed for $route (HTTP $CODE)."
@@ -70,6 +75,11 @@ jobs:
 
       - name: Verify Supabase Edge Function source/config coverage
         run: bash scripts/check-edge-function-sync.sh
+
+      - name: Type-check newsletter and prelaunch Edge Function
+        run: |
+          deno cache --config supabase/functions/tnb-newsletter/deno.json supabase/functions/tnb-newsletter/index.ts
+          deno check --config supabase/functions/tnb-newsletter/deno.json supabase/functions/tnb-newsletter/index.ts
 
       - name: Unit tests
         run: bun run test
