@@ -238,7 +238,6 @@ function PlatformSettings() {
         <Link to="/admin/ustawienia-email" className="text-sm text-gold underline">Przejdź do ustawień powiadomień</Link>
       </Section>
 
-ction>
 
       {err && <p className="text-sm text-destructive">{err}</p>}
       <div className="flex flex-wrap items-center gap-4">
