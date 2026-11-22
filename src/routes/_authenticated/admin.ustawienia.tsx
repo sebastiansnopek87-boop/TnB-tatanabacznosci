@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
-import { getPlatformSettings, updatePlatformSettings } from "@/lib/api/platform";
+import { getPlatformSettings, updatePlatformSettings, setPrelaunchSettings } from "@/lib/api/platform";
 import { fmtDate, errMsg } from "@/components/admin/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +35,55 @@ function Section({ title, hint, children }: { title: string; hint?: string; chil
       <div><h2 className="font-display text-xl font-semibold uppercase">{title}</h2>{hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}</div>
       {children}
     </section>
+  );
+}
+
+function PrelaunchSettings({ initialEnabled, initialMessage }: { initialEnabled: boolean; initialMessage: string }) {
+  const qc = useQueryClient();
+  const [enabled, setEnabled] = useState(initialEnabled);
+  const [message, setMessage] = useState(initialMessage);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    setEnabled(initialEnabled);
+    setMessage(initialMessage);
+  }, [initialEnabled, initialMessage]);
+
+  async function save() {
+    if (!message.trim()) {
+      toast.error("Wpisz tekst, który zobaczą odwiedzający.");
+      return;
+    }
+    if (enabled && !initialEnabled && !window.confirm("Włączyć stronę przedpremierową? Goście zobaczą zapowiedź zamiast platformy. Administratorzy zachowają dostęp do pełnej strony.")) return;
+    setBusy(true);
+    try {
+      await setPrelaunchSettings({ data: { enabled, message } });
+      toast.success(enabled ? "Strona przedpremierowa została włączona." : "Strona przedpremierowa została wyłączona.");
+      await qc.invalidateQueries({ queryKey: ["admin-platform-settings"] });
+      await qc.invalidateQueries({ queryKey: ["platform-settings-public"] });
+    } catch (error) {
+      toast.error(errMsg(error));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Section title="Tryb przedpremierowy" hint="Każdy administrator może zmienić te ustawienia. Goście zobaczą stronę zapowiedzi, a administratorzy po zalogowaniu zachowają dostęp do pełnej platformy.">
+      <div className="flex items-center justify-between gap-4">
+        <div className="space-y-1">
+          <Label htmlFor="prelaunch-enabled">Pokaż stronę przedpremierową odwiedzającym</Label>
+          <p className="text-xs text-muted-foreground">{enabled ? "Włączona — publiczna część platformy jest ukryta." : "Wyłączona — publiczna część platformy jest dostępna."}</p>
+        </div>
+        <Switch id="prelaunch-enabled" checked={enabled} onCheckedChange={setEnabled} />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="prelaunch-message">Opis widoczny na stronie zapowiedzi</Label>
+        <Textarea id="prelaunch-message" rows={4} maxLength={500} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Napisz krótko, co powstaje i dlaczego warto tu wrócić." />
+        <p className="text-xs text-muted-foreground">{message.length}/500 znaków</p>
+      </div>
+      <Button type="button" disabled={busy} onClick={save}>{busy ? "Zapisywanie…" : "Zapisz i zastosuj ustawienia"}</Button>
+    </Section>
   );
 }
 
@@ -90,6 +139,8 @@ function PlatformSettings() {
       <h1 className="font-display text-3xl font-semibold uppercase">Ustawienia platformy</h1>
       {ro && <p className="border border-gold/50 p-3 text-sm">Tryb podglądu. Zmieniać ustawienia może tylko superadministrator.</p>}
       <BrandSettings canEdit={!ro} />
+
+      <PrelaunchSettings initialEnabled={data.settings.maintenance_enabled} initialMessage={data.settings.maintenance_message} />
 
       <ModuleVisibilitySettings value={data.settings.module_visibility} canEdit={!ro} />
 
@@ -180,17 +231,7 @@ function PlatformSettings() {
         <Link to="/admin/ustawienia-email" className="text-sm text-gold underline">Przejdź do ustawień powiadomień</Link>
       </Section>
 
-      <Section title="Tryb przedpremierowy" hint="Po włączeniu goście zobaczą publiczną stronę zapowiedzi z formularzem zapisu. Administratorzy po zalogowaniu nadal pracują na pełnej platformie.">
-        <div className="space-y-2"><Label htmlFor="mm">Tekst zapowiedzi widoczny na stronie przedpremierowej</Label>
-          <Textarea id="mm" disabled={ro} rows={3} maxLength={500} value={f.maintenance_message} onChange={(e) => set("maintenance_message", e.target.value)} placeholder="Opowiedz krótko, co powstaje i dlaczego warto tu wrócić." /></div>
-        <div className="flex items-center justify-between gap-4">
-          <Label htmlFor="ne">Pokaż komunikat jako pasek nad stroną</Label>
-          <Switch id="ne" disabled={ro} checked={f.notice_enabled} onCheckedChange={(v) => set("notice_enabled", v)} /></div>
-        <div className="flex items-center justify-between gap-4">
-          <Label htmlFor="me">Włącz stronę przedpremierową dla odwiedzających</Label>
-          <Switch id="me" disabled={ro} checked={f.maintenance_enabled} onCheckedChange={(v) => set("maintenance_enabled", v)} /></div>
-        <p className="text-xs text-muted-foreground">Włącznik natychmiast przełącza publiczny widok na stronę przedpremierową. Po wyłączeniu goście zobaczą właściwą platformę. Zapisz zmiany, aby zastosować przełączenie.</p>
-      </Section>
+ction>
 
       {err && <p className="text-sm text-destructive">{err}</p>}
       <div className="flex flex-wrap items-center gap-4">
