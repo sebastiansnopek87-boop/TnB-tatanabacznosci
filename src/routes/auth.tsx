@@ -135,7 +135,13 @@ function AuthPage() {
     setBusy(false);
     if (error) return setMsg({ tone: "error", text: loginError(error.code) });
     if (adminOnly) {
-      const { data: allowed, error: roleError } = await supabase.rpc("has_role", { _user_id: (await supabase.auth.getUser()).data.user?.id, _role: "admin" });
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      if (userError || !userId) {
+        await supabase.auth.signOut();
+        return setMsg({ tone: "error", text: "Nie udało się potwierdzić tożsamości administratora." });
+      }
+      const { data: allowed, error: roleError } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
       if (roleError || !allowed) {
         await supabase.auth.signOut();
         return setMsg({ tone: "error", text: "To konto nie ma uprawnień administratora." });
@@ -222,7 +228,7 @@ function AuthPage() {
   );
 
   if (settingsLoading && !search.admin) {
-    return <AuthShell step="Sprawdzanie dostępu" title="Chwileczkę" lead="Sprawdzamy dostęp do platformy." />;
+    return <AuthShell step="Sprawdzanie dostępu" title="Chwileczkę" lead="Sprawdzamy dostęp do platformy.">{null}</AuthShell>;
   }
 
   if (mode === "register-sent" && !adminOnly) {
