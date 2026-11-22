@@ -77,7 +77,9 @@ jobs:
         run: bash scripts/check-edge-function-sync.sh
 
       - name: Type-check newsletter and prelaunch Edge Function
-        run: deno check supabase/functions/tnb-newsletter/index.ts
+        run: |
+          deno cache --config supabase/functions/tnb-newsletter/deno.json supabase/functions/tnb-newsletter/index.ts
+          deno check --config supabase/functions/tnb-newsletter/deno.json supabase/functions/tnb-newsletter/index.ts
 
       - name: Unit tests
         run: bun run test
