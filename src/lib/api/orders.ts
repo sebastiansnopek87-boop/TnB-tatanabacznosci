@@ -6,7 +6,7 @@ type PaymentMethod = "bank_transfer" | ProviderId;
 type OrderStatus = "pending" | "paid" | "failed" | "cancelled" | "refund_pending" | "refunded" | "needs_review";
 type ApiError = { message?: unknown };
 type CheckoutProvider = { id: ProviderId; label: string; isDefault: boolean; test: boolean };
-type CreateOrderInput = { slug: string; name: string; email: string; phone?: string; method: PaymentMethod; consent: true };
+type CreateOrderInput = { slug: string; idempotencyKey: string; name: string; email: string; phone?: string; method: PaymentMethod; consent: true };
 type PurchasedMaterial =
   | { error: string }
   | { order: { status: OrderStatus; number: string; amount: number; email: string; title: string; slug: string; method: string; provider: string | null } }
@@ -67,7 +67,7 @@ async function invokeOrders<T>(action: string, data?: unknown): Promise<T> {
 export function getCheckoutOptions(): Promise<{ providers: CheckoutProvider[] }> {
   return invokeOrders("getCheckoutOptions");
 }
-export function createLibraryOrder({ data }: { data: CreateOrderInput }): Promise<{ token: string; redirectUrl?: string } | { error: string }> {
+export function createLibraryOrder({ data }: { data: CreateOrderInput }): Promise<{ token: string; redirectUrl?: string; processing?: boolean; replayed?: boolean } | { error: string }> {
   return invokeOrders("createLibraryOrder", data);
 }
 export function getPurchasedMaterial({ data }: { data: { token: string; file?: boolean } }): Promise<PurchasedMaterial> {
