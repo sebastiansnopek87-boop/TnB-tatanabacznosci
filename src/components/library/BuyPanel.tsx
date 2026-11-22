@@ -26,6 +26,7 @@ export function BuyPanel({ slug, title, price }: { slug: string; title: string; 
   const [consent, setConsent] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
   const opts = useQuery({ queryKey: ["checkout-options"], queryFn: () => getCheckoutOptions(), enabled: open });
   const methods = [...(opts.data?.providers ?? []).map((p) => ({ id: p.id as PaymentMethodId, label: `Płatność online — ${p.label}`, note: p.test ? "Tryb testowy operatora: nie zostaną pobrane prawdziwe środki." : "Zostaniesz przekierowany do bezpiecznej płatności u operatora.", isDefault: p.isDefault })), ...(bankConfigured() ? [{ ...BANK_METHOD, isDefault: false }] : [])];
   const noMethods = !!opts.data && methods.length === 0;
@@ -63,7 +64,7 @@ export function BuyPanel({ slug, title, price }: { slug: string; title: string; 
   async function submit() {
     setErr(null); setBusy(true);
     try {
-      const r = await createLibraryOrder({ data: { slug, name, email, phone, method: method!, consent: true } });
+      const r = await createLibraryOrder({ data: { slug, idempotencyKey, name, email, phone, method: method!, consent: true } });
       if ("error" in r) throw new Error(r.error);
       if (r.redirectUrl) { window.location.href = r.redirectUrl; return; }
       navigate({ to: "/zakup/$token", params: { token: r.token } });
@@ -97,20 +98,20 @@ export function BuyPanel({ slug, title, price }: { slug: string; title: string; 
       <p className="eyebrow text-gold">Zamówienie</p>
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="block text-sm text-foreground/85">Imię *
-          <input className={`${input} mt-1`} value={first} onChange={(e) => setFirst(e.target.value)} maxLength={60} autoComplete="given-name" />
+          <input className={`${input} mt-1`} value={first} onChange={(e) => { setFirst(e.target.value); setIdempotencyKey(crypto.randomUUID()); }} maxLength={60} autoComplete="given-name" />
         </label>
         <label className="block text-sm text-foreground/85">Nazwisko *
-          <input className={`${input} mt-1`} value={last} onChange={(e) => setLast(e.target.value)} maxLength={60} autoComplete="family-name" />
+          <input className={`${input} mt-1`} value={last} onChange={(e) => { setLast(e.target.value); setIdempotencyKey(crypto.randomUUID()); }} maxLength={60} autoComplete="family-name" />
         </label>
       </div>
       <label className="block text-sm text-foreground/85">Adres e-mail, na który wyślemy dostęp *
-        <input className={`${input} mt-1`} type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={254} autoComplete="email" />
+        <input className={`${input} mt-1`} type="email" value={email} onChange={(e) => { setEmail(e.target.value); setIdempotencyKey(crypto.randomUUID()); }} maxLength={254} autoComplete="email" />
       </label>
       <label className="block text-sm text-foreground/85">Powtórz adres e-mail *
-        <input className={`${input} mt-1`} type="email" value={email2} onChange={(e) => setEmail2(e.target.value)} maxLength={254} autoComplete="off" onPaste={(e) => e.preventDefault()} />
+        <input className={`${input} mt-1`} type="email" value={email2} onChange={(e) => { setEmail2(e.target.value); setIdempotencyKey(crypto.randomUUID()); }} maxLength={254} autoComplete="off" onPaste={(e) => e.preventDefault()} />
       </label>
       <label className="block text-sm text-foreground/85">Numer telefonu (opcjonalnie)
-        <input className={`${input} mt-1`} type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} maxLength={20} autoComplete="tel" />
+        <input className={`${input} mt-1`} type="tel" value={phone} onChange={(e) => { setPhone(e.target.value); setIdempotencyKey(crypto.randomUUID()); }} maxLength={20} autoComplete="tel" />
       </label>
       <div className="border border-border/60 bg-card p-4 text-sm">
         <div className="flex items-start justify-between gap-4"><span className="break-words text-foreground">{title}</span><span className="shrink-0 text-gold">{fmtPrice(price)}</span></div>
@@ -121,7 +122,7 @@ export function BuyPanel({ slug, title, price }: { slug: string; title: string; 
           <div className="mt-2 space-y-2">
             {methods.map((m) => (
               <label key={m.id} className={`flex cursor-pointer items-start gap-3 border p-3 ${method === m.id ? "border-gold" : "border-border/60"}`}>
-                <input type="radio" name="method" value={m.id} checked={method === m.id} onChange={() => setMethod(m.id)} className="mt-1 h-4 w-4 accent-[var(--color-gold)]" />
+                <input type="radio" name="method" value={m.id} checked={method === m.id} onChange={() => { setMethod(m.id); setIdempotencyKey(crypto.randomUUID()); }} className="mt-1 h-4 w-4 accent-[var(--color-gold)]" />
                 <span><span className="block text-[0.95rem] font-medium text-foreground">{m.label}</span><span className="block text-xs text-muted-foreground">{m.note}</span></span>
               </label>
             ))}
