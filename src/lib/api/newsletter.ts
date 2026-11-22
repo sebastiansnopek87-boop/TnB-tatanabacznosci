@@ -6,6 +6,7 @@ export const NEWSLETTER_CONSENT_TEXT =
   "Wyrażam zgodę na otrzymywanie newslettera Tata Na Baczności na podany adres e-mail. Zgodę mogę wycofać w każdej chwili.";
 
 export const newsletterSchema = z.object({
+  first_name: z.string().trim().max(100, "Imię jest za długie").optional(),
   email: z.string().trim().toLowerCase().email("Podaj poprawny adres e-mail").max(255, "Adres jest za długi"),
   consent: z.boolean().refine((value) => value, "Zaznacz zgodę na otrzymywanie newslettera"),
 });
@@ -45,7 +46,7 @@ async function invokeNewsletter<T>(
 export function subscribeNewsletter({
   data,
 }: {
-  data: z.infer<typeof newsletterSchema> & {
+  data: z.input<typeof newsletterSchema> & {
     website?: string;
     elapsedMs: number;
   };

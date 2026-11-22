@@ -99,6 +99,10 @@ export function updatePlatformSettings({ data }: { data: unknown }): Promise<{ o
   return invokePlatform({ action: "updatePlatformSettings", settings: data });
 }
 
+export function setPrelaunchSettings({ data }: { data: { enabled: boolean; message: string } }): Promise<{ ok: true }> {
+  return invokePlatform({ action: "setPrelaunchSettings", enabled: data.enabled, message: data.message });
+}
+
 export function setVisualEffects({ data }: { data: { effects: VisualEffects } }): Promise<{ ok: true }> {
   return invokePlatform({ action: "setVisualEffects", effects: data.effects });
 }
