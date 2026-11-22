@@ -5,6 +5,7 @@ on:
     paths:
       - "supabase/config.toml"
       - "supabase/migrations/**"
+      - "supabase/tests/**"
       - ".github/workflows/supabase-migrations.yml"
   push:
     branches:
@@ -12,6 +13,7 @@ on:
     paths:
       - "supabase/config.toml"
       - "supabase/migrations/**"
+      - "supabase/tests/**"
       - ".github/workflows/supabase-migrations.yml"
   workflow_dispatch:
 
@@ -32,16 +34,16 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Supabase CLI
-        uses: supabase/setup-cli@v1
+        uses: supabase/setup-cli@v3
         with:
-          version: latest
+          version: v2.stable
 
       - name: Verify migration filenames
         shell: bash
         run: |
           set -euo pipefail
           count=$(find supabase/migrations -maxdepth 1 -type f -name '*.sql' | wc -l | tr -d ' ')
-          test "$count" = "66"
+          test "$count" = "68"
           echo "Found $count SQL migrations."
 
       - name: Start isolated local Supabase stack
@@ -49,6 +51,9 @@ jobs:
 
       - name: Replay all migrations from an empty local database
         run: supabase db reset --local
+
+      - name: Run database tests
+        run: supabase test db --local
 
       - name: Verify local migration history
         run: |

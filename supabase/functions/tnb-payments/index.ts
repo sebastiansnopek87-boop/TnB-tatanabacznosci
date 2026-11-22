@@ -135,14 +135,9 @@ async function dispatchOrderNotification(db: Db, orderId: string, event: string,
   }
 }
 async function afterPaid(db: Db, orderId: string) {
-  const { data: order } = await db.from("library_orders").select("user_id").eq("id", orderId).maybeSingle();
-  await dispatchOrderNotification(db, orderId, "order_paid");
-  const sent = await dispatchOrderNotification(db, orderId, order?.user_id ? "order_access_delivered" : "order_guest_access");
-  await db.from("library_orders").update({
-    delivery_status: sent.status === "sent" ? "sent" : "not_sent",
-    delivery_error: sent.status === "sent" ? null : sent.status === "simulated" ? "simulated" : sent.reason ?? sent.status,
-  }).eq("id", orderId);
-  await logOrderEvent(db, orderId, "access_granted", "Dostęp do materiału przyznany automatycznie po potwierdzeniu płatności.");
+  // The library_orders trigger enqueues both messages atomically with paid_at.
+  // Webhooks acknowledge the payment independently from asynchronous delivery.
+  await logOrderEvent(db, orderId, "delivery_queued", "Powiadomienia i dostarczenie materiału przekazano do trwałej kolejki.");
 }
 async function flagReview(db: Db, orderId: string, reason: string) {
   await db.from("library_orders").update({ status: "needs_review", review_reason: reason, status_changed_at: new Date().toISOString() }).eq("id", orderId).in("status", ["pending", "failed"]);

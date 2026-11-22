@@ -31,7 +31,18 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Build application
+        env:
+          VITE_SUPABASE_URL: https://pmdfiipontreuclfumdh.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_D5uXWeutbm81D3KRn4NPNA_fH-WZVGG
         run: bun run build
+
+      - name: Verify committed TanStack route tree is up to date
+        run: |
+          if ! git diff --quiet -- src/routeTree.gen.ts; then
+            echo "::error::TanStack regenerated src/routeTree.gen.ts during build. Commit the generated route tree with the route source changes."
+            git diff --stat -- src/routeTree.gen.ts
+            exit 1
+          fi
 
       - name: Static SPA route fallback smoke test
         shell: bash
@@ -59,6 +70,14 @@ jobs:
             fi
           done
 
+      - name: Set up Deno for Edge Function unit tests
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Shared Edge Function unit tests
+        run: deno test supabase/functions/_shared/checkout-idempotency.test.ts supabase/functions/_shared/delivery-outbox.test.ts supabase/functions/_shared/cron-auth.test.ts supabase/functions/_shared/payment-webhook.test.ts
+
       - name: TypeScript validation
         run: bun run typecheck
 
@@ -73,6 +92,7 @@ jobs:
 
       - name: Unit tests
         run: bun run test
+
 
       - name: Scan static build for server-only code and secrets
         shell: bash
@@ -100,4 +120,5 @@ jobs:
           name: tnb-react-spa-dist-${{ github.sha }}
           path: dist/
           if-no-files-found: error
+          include-hidden-files: true
           retention-days: 14
