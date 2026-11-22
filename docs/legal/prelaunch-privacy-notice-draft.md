@@ -14,7 +14,7 @@ W aktualnym rekordzie `platform_settings` pola nazwy prawnej, adresu i kontaktow
 
 ## Cel i podstawa
 
-Dane są zbierane wyłącznie po to, aby wysłać jednorazową wiadomość e-mail z informacją o uruchomieniu platformy Tata Na Baczności. Podstawą przetwarzania jest zgoda osoby, której dane dotyczą (art. 6 ust. 1 lit. a RODO). Zapis nie oznacza subskrypcji newslettera ani zgody na inne wiadomości marketingowe.
+Dane są zbierane wyłącznie po to, aby wysłać jednorazową wiadomość e-mail z informacją o uruchomieniu platformy Tata Na Baczności. Podstawą przetwarzania imienia i adresu e-mail w celu wysłania jednorazowej informacji jest zgoda osoby, której dane dotyczą (art. 6 ust. 1 lit. a RODO). Ograniczanie nadużyć z użyciem skrótu IP i user-agenta powinno być opisane jako odrębny cel oparty na prawnie uzasadnionym interesie administratora (art. 6 ust. 1 lit. f RODO), po przeprowadzeniu oceny równowagi interesów. Zapis nie oznacza subskrypcji newslettera ani zgody na inne wiadomości marketingowe.
 
 ## Zakres danych
 
@@ -24,7 +24,7 @@ Dane są zbierane wyłącznie po to, aby wysłać jednorazową wiadomość e-mai
 - techniczny skrót IP używany do ograniczania nadużyć;
 - user-agent przeglądarki.
 
-Nie zapisujemy pełnego adresu IP w tabeli listy przedpremierowej.
+Nie zapisujemy pełnego adresu IP w tabeli listy przedpremierowej. Skrót IP jest liczony z użyciem HMAC z kluczem serwerowym i służy wyłącznie do ograniczania nadużyć. User-agent jest przechowywany w skróconej postaci technicznej.
 
 ## Odbiorcy i miejsce przechowywania
 
