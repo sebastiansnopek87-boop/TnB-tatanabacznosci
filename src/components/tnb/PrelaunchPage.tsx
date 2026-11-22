@@ -113,7 +113,7 @@ export function PrelaunchPage({ message, platformName }: { message: string; plat
           <p className="mt-6 text-[11px] leading-5 text-[#82796d]">Twój adres wykorzystamy zgodnie z udzieloną zgodą. W każdej chwili możesz z niej zrezygnować.</p>
         </section>
       </div>
-      <Link to="/auth" className="absolute bottom-5 right-5 text-[10px] uppercase tracking-[0.16em] text-[#82796d] transition-colors hover:text-[#c49a61]">Panel administratora</Link>
+      <Link to="/auth" search={{ admin: true }} className="absolute bottom-5 right-5 text-[10px] uppercase tracking-[0.16em] text-[#82796d] transition-colors hover:text-[#c49a61]">Logowanie</Link>
     </main>
   );
 }

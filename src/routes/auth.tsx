@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AuthNotice, AuthShell, readAuthUrlParams } from "@/components/auth/AuthShell";
 import { lovable } from "@/integrations/lovable/index";
+import { usePlatformSettings } from "@/hooks/use-platform-settings";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -21,9 +22,10 @@ export const Route = createFileRoute("/auth")({
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
-  validateSearch: (s: Record<string, unknown>): { tryb?: "rejestracja"; powrot?: string } => ({
+  validateSearch: (s: Record<string, unknown>): { tryb?: "rejestracja"; powrot?: string; admin?: boolean } => ({
     ...(s["tryb"] === "rejestracja" ? { tryb: "rejestracja" as const } : {}),
     ...(typeof s["powrot"] === "string" && safeReturn(s["powrot"]) ? { powrot: s["powrot"] } : {}),
+    ...(s["admin"] === true || s["admin"] === "1" ? { admin: true } : {}),
   }),
   component: AuthPage,
 });
@@ -54,7 +56,11 @@ function linkError(code: string): string {
 function AuthPage() {
   const navigate = useNavigate();
   const search = Route.useSearch();
-  const [mode, setMode] = useState<Mode>(search.tryb === "rejestracja" ? "register" : "login");
+  const { data: publicSettings, isLoading: settingsLoading, isError: settingsError } = usePlatformSettings();
+  // While prelaunch is active, only an account with the admin role may use this entry point.
+  // Fail closed if public platform settings cannot be loaded.
+  const adminOnly = search.admin === true || publicSettings?.maintenance_enabled === true || settingsError;
+  const [mode, setMode] = useState<Mode>(adminOnly ? "login" : search.tryb === "rejestracja" ? "register" : "login");
   const [password2, setPassword2] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -65,14 +71,30 @@ function AuthPage() {
   const goAfter = () => {
     const r = typeof window !== "undefined" ? sessionStorage.getItem(RETURN_KEY) : null;
     if (r) sessionStorage.removeItem(RETURN_KEY);
+    if (adminOnly) return navigate({ to: "/admin", replace: true });
     if (r && safeReturn(r)) return navigate({ href: r, replace: true });
     return navigate({ to: "/moje-tnb", replace: true });
   };
 
   // Already signed in (also the return point after Google/Apple) → profile.
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => { if (data.user) goAfter(); });
-  }, [navigate]);
+    if (settingsLoading && !search.admin) return;
+    let active = true;
+    supabase.auth.getUser().then(async ({ data }) => {
+      if (!active || !data.user) return;
+      if (adminOnly) {
+        const { data: allowed, error } = await supabase.rpc("has_role", { _user_id: data.user.id, _role: "admin" });
+        if (!active) return;
+        if (error || !allowed) {
+          await supabase.auth.signOut();
+          if (active) setMsg({ tone: "error", text: "To konto nie ma uprawnień administratora." });
+          return;
+        }
+      }
+      goAfter();
+    });
+    return () => { active = false; };
+  }, [navigate, adminOnly, settingsLoading, search.admin]);
   useEffect(() => { setMode(search.tryb === "rejestracja" ? "register" : "login"); setMsg(null); }, [search.tryb]);
 
   // Handle landing from e-mail links (confirmation, expired links).
@@ -112,6 +134,19 @@ function AuthPage() {
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     setBusy(false);
     if (error) return setMsg({ tone: "error", text: loginError(error.code) });
+    if (adminOnly) {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      if (userError || !userId) {
+        await supabase.auth.signOut();
+        return setMsg({ tone: "error", text: "Nie udało się potwierdzić tożsamości administratora." });
+      }
+      const { data: allowed, error: roleError } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
+      if (roleError || !allowed) {
+        await supabase.auth.signOut();
+        return setMsg({ tone: "error", text: "To konto nie ma uprawnień administratora." });
+      }
+    }
     toast.success("Zalogowano pomyślnie.");
     goAfter();
   }
@@ -192,7 +227,11 @@ function AuthPage() {
     <button type="button" onClick={() => go(m)} className="text-sm text-gold underline-offset-4 hover:underline">{label}</button>
   );
 
-  if (mode === "register-sent") {
+  if (settingsLoading && !search.admin) {
+    return <AuthShell step="Sprawdzanie dostępu" title="Chwileczkę" lead="Sprawdzamy dostęp do platformy.">{null}</AuthShell>;
+  }
+
+  if (mode === "register-sent" && !adminOnly) {
     return (
       <AuthShell step="Rejestracja · krok 2 z 2" title="Potwierdź adres"
         lead={<>Jeśli adres <span className="text-foreground">{email.trim()}</span> nie ma jeszcze konta, wysłaliśmy na niego link aktywacyjny. Kliknij go, aby aktywować konto.</>}>
@@ -205,7 +244,7 @@ function AuthPage() {
     );
   }
 
-  if (mode === "register") {
+  if (mode === "register" && !adminOnly) {
     return (
       <AuthShell step="Rejestracja · krok 1 z 2" title="Załóż konto" lead="Dołącz do społeczności Tata Na Baczności."
         footer={<>Masz już konto? {helper("Zaloguj się", "login")}</>}>
@@ -259,9 +298,9 @@ function AuthPage() {
   }
 
   return (
-    <AuthShell step="Logowanie" title="Zaloguj się" lead="Zaloguj się do Moje TNB."
-      footer={<>Nie masz konta? {helper("Rejestracja", "register")}</>}>
-      {social}
+    <AuthShell step={adminOnly ? "Dostęp administracyjny" : "Logowanie"} title="Zaloguj się" lead={adminOnly ? "Logowanie do panelu administratora." : "Zaloguj się do Moje TNB."}
+      footer={adminOnly ? undefined : <>Nie masz konta? {helper("Rejestracja", "register")}</>}>
+      {!adminOnly && social}
       <form onSubmit={onLogin} noValidate className="mt-4 space-y-5">
         {emailField}
         <div className="space-y-2">
