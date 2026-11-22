@@ -6,9 +6,9 @@ import { useBrand, brandSrc } from "@/hooks/use-brand-settings";
 import { NEWSLETTER_CONSENT_TEXT, newsletterSchema, subscribeNewsletter } from "@/lib/api/newsletter";
 
 const MESSAGES = {
-  subscribed: "Dziękujemy. Damy Ci znać, gdy TNB wystartuje.",
-  resubscribed: "Twój zapis został wznowiony. Powiadomimy Cię o starcie.",
-  already: "Ten adres jest już zapisany. Otrzymasz informację o starcie.",
+  subscribed: "Dziękujemy. Jesteś na liście osób oczekujących na start TNB.",
+  resubscribed: "Twój zapis został wznowiony. Jesteś na liście oczekujących.",
+  already: "Ten adres jest już na liście oczekujących.",
   pending: "Sprawdź pocztę i potwierdź zapis, aby otrzymać informację o starcie.",
 } as const;
 
@@ -86,7 +86,7 @@ export function PrelaunchPage({ message, platformName }: { message: string; plat
             <p className="text-xs font-semibold uppercase tracking-[0.2em]">Bądź wśród pierwszych</p>
           </div>
           <h2 className="mt-5 font-display text-3xl font-semibold uppercase leading-tight sm:text-4xl">Daj znać, że czekasz.</h2>
-          <p className="mt-4 text-sm leading-7 text-[#c5bdae]">Zostaw imię i adres e-mail. Wyślemy Ci wiadomość, gdy platforma będzie gotowa.</p>
+          <p className="mt-4 text-sm leading-7 text-[#c5bdae]">Zostaw imię i adres e-mail. Dodamy Cię do listy osób, które chcą otrzymać informację o uruchomieniu TNB.</p>
           <form onSubmit={submit} noValidate className="mt-8 space-y-4">
             <div className="absolute -left-[9999px] h-0 w-0 overflow-hidden" aria-hidden="true">
               <label htmlFor="prelaunch-website">Strona internetowa</label>
@@ -105,7 +105,7 @@ export function PrelaunchPage({ message, platformName }: { message: string; plat
               <span>{NEWSLETTER_CONSENT_TEXT} <Link to="/polityka-prywatnosci" className="text-[#c49a61] underline underline-offset-2">Polityka prywatności</Link>.</span>
             </label>
             <button type="submit" disabled={busy} className="flex w-full items-center justify-between bg-[#b58a52] px-5 py-4 text-xs font-semibold uppercase tracking-[0.16em] text-[#171613] transition-colors hover:bg-[#d0a66e] disabled:cursor-wait disabled:opacity-60">
-              {busy ? "Zapisywanie…" : "Powiadom mnie o starcie"}
+              {busy ? "Zapisywanie…" : "Dołącz do listy oczekujących"}
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
             </button>
             {result && <p role={result.ok ? "status" : "alert"} className={result.ok ? "flex items-start gap-2 text-sm text-[#d6b47e]" : "text-sm text-red-300"}>{result.ok && <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />}{result.text}</p>}
