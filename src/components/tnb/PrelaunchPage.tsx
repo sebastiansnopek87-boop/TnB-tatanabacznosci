@@ -103,7 +103,7 @@ export function PrelaunchPage({ message, platformName }: { message: string; plat
             </label>
             <label className="block space-y-2">
               <span className="text-xs uppercase tracking-[0.12em] text-[#c5bdae]">Adres e-mail</span>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" maxLength={255} required placeholder="twoj@email.pl" className="w-full border border-[#6e6556] bg-[#171613] px-4 py-3.5 text-sm text-white outline-none transition-colors placeholder:text-[#81796d] focus:border-[#c49a61]" />
+              <input type="email" value={email} onChange={(e) => { setEmail(e.target.value); setResult(null); setUnsubscribeToken(null); }} autoComplete="email" maxLength={255} required placeholder="twoj@email.pl" className="w-full border border-[#6e6556] bg-[#171613] px-4 py-3.5 text-sm text-white outline-none transition-colors placeholder:text-[#81796d] focus:border-[#c49a61]" />
             </label>
             <label className="flex cursor-pointer items-start gap-3 text-xs leading-5 text-[#bdb4a6]">
               <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-1 accent-[#c49a61]" />
