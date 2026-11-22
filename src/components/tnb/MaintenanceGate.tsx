@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { useRouterState, Link } from "@tanstack/react-router";
+import { useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { usePlatformSettings } from "@/hooks/use-platform-settings";
+import { PrelaunchPage } from "./PrelaunchPage";
 
 // Paths that always stay reachable so administrators can sign in and switch maintenance off.
 const EXEMPT = [/^\/admin(\/|$)/, /^\/auth(\/|$)/, /^\/reset-password/, /^\/api\//];
@@ -31,19 +32,10 @@ export function MaintenanceGate({ children }: { children: ReactNode }) {
 
   if (!s || exempt) return <>{children}</>;
   if (s.maintenance_enabled && !isAdmin) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background px-5">
-        <div className="max-w-lg space-y-4 text-center">
-          <p className="eyebrow text-gold">{s.platform_name}</p>
-          <h1 className="font-display text-3xl font-semibold uppercase text-foreground">Przerwa techniczna</h1>
-          <p className="whitespace-pre-line text-muted-foreground">{s.maintenance_message}</p>
-          <Link to="/auth" className="inline-block text-xs text-muted-foreground underline hover:text-gold">Logowanie administratora</Link>
-        </div>
-      </div>
-    );
+    return <PrelaunchPage message={s.maintenance_message} platformName={s.platform_name} />;
   }
   const banner = s.maintenance_enabled
-    ? "Tryb konserwacji jest włączony — odwiedzający widzą ekran przerwy technicznej. Ty widzisz stronę jako administrator."
+    ? "Tryb przedpremierowy jest włączony — goście widzą stronę zapowiedzi. Ty widzisz pełną platformę jako administrator."
     : s.notice_enabled ? s.maintenance_message : null;
   return (
     <>
