@@ -305,7 +305,7 @@ async function adminListPrelaunch(db: Db, req: Request, status: z.infer<typeof p
   const user = await requirePrelaunchAdmin(db, req);
   let query = db.from("prelaunch_signups")
     .select("id,first_name,email,status,consent_version,consent_given_at,created_at,withdrawn_at,notified_at", { count: "exact" })
-    .order("created_at", { ascending: false }).limit(1000);
+    .order("consent_given_at", { ascending: false }).limit(1000);
   if (status !== "all") query = query.eq("status", status);
   const [{ data: rows, error, count }, active, withdrawn, notified] = await Promise.all([
     query,
