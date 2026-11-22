@@ -37,7 +37,7 @@ function WithdrawPrelaunch() {
       <PageHeading eyebrow="Lista przedpremierowa" title="Wycofaj zgodę" intro="Możesz w każdej chwili zrezygnować z jednorazowej informacji o uruchomieniu TNB." />
       <div className="max-w-xl px-5 py-14 lg:px-14">
         {state === "busy" && <p className="text-muted-foreground">Usuwanie zapisu…</p>}
-        {state === "done" && <p role="status" className="border border-gold/60 bg-surface p-6 text-foreground">Zapis został wycofany. Adres nie będzie użyty do wysłania informacji o starcie TNB.</p>}
+        {state === "done" && <p role="status" className="border border-gold/60 bg-surface p-6 text-foreground">Jeśli link był prawidłowy, zapis został wycofany. Adres nie będzie użyty do wysłania informacji o starcie TNB.</p>}
         {state === "error" && <p role="alert" className="border border-border bg-surface p-6 text-foreground">Nie udało się potwierdzić linku. Jeśli chcesz usunąć swój zapis, skontaktuj się z nami przez <Link to="/kontakt" className="text-gold underline">formularz kontaktowy</Link>.</p>}
         <Link to="/" className="mt-6 inline-block text-sm text-gold underline underline-offset-4">Wróć na stronę główną</Link>
       </div>
