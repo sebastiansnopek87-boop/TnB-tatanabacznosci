@@ -275,7 +275,7 @@ async function prelaunchUnsubscribe(db: Db, token: string) {
 }
 
 async function requirePrelaunchAdmin(db: Db, req: Request) {
-  const match = (req.headers.get("authorization") ?? "").match(/^Bearer\\s+(.+)$/i);
+  const match = (req.headers.get("authorization") ?? "").match(/^Bearer\s+(.+)$/i);
   if (!match) throw new HttpError(401, "Sesja wygasła. Zaloguj się ponownie.");
   const { data, error } = await db.auth.getUser(match[1]);
   if (error || !data.user) throw new HttpError(401, "Sesja wygasła. Zaloguj się ponownie.");
