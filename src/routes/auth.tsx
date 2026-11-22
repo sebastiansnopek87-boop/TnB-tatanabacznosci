@@ -78,6 +78,7 @@ function AuthPage() {
 
   // Already signed in (also the return point after Google/Apple) → profile.
   useEffect(() => {
+    if (settingsLoading && !search.admin) return;
     let active = true;
     supabase.auth.getUser().then(async ({ data }) => {
       if (!active || !data.user) return;
@@ -93,7 +94,7 @@ function AuthPage() {
       goAfter();
     });
     return () => { active = false; };
-  }, [navigate, adminOnly]);
+  }, [navigate, adminOnly, settingsLoading, search.admin]);
   useEffect(() => { setMode(search.tryb === "rejestracja" ? "register" : "login"); setMsg(null); }, [search.tryb]);
 
   // Handle landing from e-mail links (confirmation, expired links).
