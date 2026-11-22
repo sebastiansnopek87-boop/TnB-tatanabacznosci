@@ -33,7 +33,7 @@ function Subscribers() {
 
   function exportCsv() {
     if (!data?.length) return;
-    const cols = ["email", "status", "source", "opt_in_method", "consent_version", "consent_given_at", "confirmed_at", "unsubscribed_at", "subscribe_count", "created_at"] as const;
+    const cols = ["first_name", "email", "status", "source", "opt_in_method", "consent_version", "consent_given_at", "confirmed_at", "unsubscribed_at", "subscribe_count", "created_at"] as const;
     const lines = [cols.join(","), ...data.map((r) => cols.map((c) => csvCell(c === "status" ? SUB_STATUS[r.status] : r[c])).join(","))];
     const blob = new Blob(["\uFEFF" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
     const a = document.createElement("a");
@@ -73,13 +73,14 @@ function Subscribers() {
       <div className="mt-6 overflow-x-auto border border-border/60">
         <table className="w-full text-sm">
           <thead className="text-left text-muted-foreground"><tr className="border-b border-border/60">
-            <th className="p-3">E-mail</th><th className="p-3">Status</th><th className="p-3">Zapis</th><th className="p-3">Potwierdzenie</th><th className="p-3"></th>
+            <th className="p-3">Imię</th><th className="p-3">E-mail</th><th className="p-3">Status</th><th className="p-3">Zapis</th><th className="p-3">Potwierdzenie</th><th className="p-3"></th>
           </tr></thead>
           <tbody>
             {isLoading && <tr><td className="p-3 text-muted-foreground" colSpan={5}>Ładowanie…</td></tr>}
             {data?.length === 0 && <tr><td className="p-3 text-muted-foreground" colSpan={5}>Brak subskrybentów dla wybranych filtrów.</td></tr>}
             {data?.map((r) => (
               <tr key={r.id} className="border-b border-border/40">
+                <td className="p-3">{r.first_name || "—"}</td>
                 <td className="p-3">{r.email}</td>
                 <td className="p-3"><Badge variant={r.status === "active" ? "default" : "outline"}>{SUB_STATUS[r.status]}</Badge></td>
                 <td className="p-3">{fmtDate(r.created_at)}</td>
@@ -95,6 +96,7 @@ function Subscribers() {
           <DialogHeader><DialogTitle>{open?.email}</DialogTitle></DialogHeader>
           {open && (
             <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
+              <dt className="text-muted-foreground">Imię</dt><dd>{open.first_name || "—"}</dd>
               <dt className="text-muted-foreground">Status</dt><dd>{SUB_STATUS[open.status]}</dd>
               <dt className="text-muted-foreground">Źródło</dt><dd>{open.source}</dd>
               <dt className="text-muted-foreground">Metoda zapisu</dt><dd>{open.opt_in_method === "double" ? "Z potwierdzeniem e-mail" : "Jednoetapowa"}</dd>
