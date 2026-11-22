@@ -29,10 +29,23 @@ const unsubscribeSchema = z.union([
     website: z.string().max(0).optional().default(""),
   }),
 ]);
+const prelaunchSignupSchema = z.object({
+  first_name: z.string().trim().min(2).max(100),
+  email: z.string().trim().toLowerCase().email().max(255),
+  consent: z.boolean().refine((value) => value),
+  website: z.string().max(0).optional().default(""),
+  elapsedMs: z.number().int().min(1500),
+});
+const prelaunchAdminFilter = z.object({
+  status: z.enum(["all", "active", "withdrawn", "notified"]).default("all"),
+});
 const actionSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("subscribe"), data: subscribeSchema }),
   z.object({ action: z.literal("unsubscribe"), data: unsubscribeSchema }),
   z.object({ action: z.literal("confirm"), data: z.object({ token: z.string().uuid() }) }),
+  z.object({ action: z.literal("prelaunchSignup"), data: prelaunchSignupSchema }),
+  z.object({ action: z.literal("prelaunchUnsubscribe"), data: z.object({ token: z.string().uuid() }) }),
+  z.object({ action: z.literal("adminListPrelaunch"), data: prelaunchAdminFilter }),
 ]);
 
 function secret(...names: string[]): string | null {
@@ -192,6 +205,106 @@ async function unsubscribe(db: Db, data: z.infer<typeof unsubscribeSchema>) {
   if (error) { console.error("unsubscribe", error.message); throw new Error("Nie udało się wypisać adresu."); }
   return { ok: true as const };
 }
+class HttpError extends Error {
+  constructor(public status: number, message: string) { super(message); }
+}
+
+const PRELAUNCH_CONSENT_VERSION = "2026-11-22";
+const PRELAUNCH_CONSENT_TEXT = "Wyrażam zgodę na przetwarzanie mojego imienia i adresu e-mail w celu otrzymania jednorazowej informacji o uruchomieniu platformy Tata Na Baczności. Zapis nie oznacza subskrypcji newslettera. Zgodę mogę wycofać w każdej chwili.";
+
+async function prelaunchSignup(db: Db, req: Request, data: z.infer<typeof prelaunchSignupSchema>) {
+  if (data.website || data.elapsedMs < 1500) throw new HttpError(400, "Zapis odrzucony przez filtr antyspamowy.");
+  const ip = req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  const ipHash = await hashIp(ip ? "prelaunch:" + ip : null);
+  const ua = (req.headers.get("user-agent") ?? "").slice(0, 300);
+  if (ipHash) {
+    const since = new Date(Date.now() - 3600000).toISOString();
+    const { count, error } = await db.from("prelaunch_signups").select("id", { count: "exact", head: true }).eq("ip_hash", ipHash).gte("created_at", since);
+    if (error) throw new HttpError(503, "Nie udało się sprawdzić limitu zapisów.");
+    if ((count ?? 0) >= 5) throw new HttpError(429, "Zbyt wiele prób. Spróbuj ponownie później.");
+  }
+
+  const now = new Date().toISOString();
+  const { data: existing, error: lookupError } = await db.from("prelaunch_signups")
+    .select("id,status").eq("email", data.email).maybeSingle();
+  if (lookupError) throw new HttpError(503, "Nie udało się sprawdzić wcześniejszego zapisu.");
+
+  if (existing && (existing.status === "active" || existing.status === "notified")) {
+    return { status: "already" as const };
+  }
+
+  const unsubscribeToken = crypto.randomUUID();
+  const record = {
+    first_name: data.first_name,
+    email: data.email,
+    status: "active",
+    consent_text: PRELAUNCH_CONSENT_TEXT,
+    consent_version: PRELAUNCH_CONSENT_VERSION,
+    consent_given_at: now,
+    ip_hash: ipHash,
+    user_agent: ua,
+    source: "prelaunch",
+    withdraw_token: unsubscribeToken,
+    withdrawn_at: null,
+    notified_at: null,
+    updated_at: now,
+  };
+
+  if (existing) {
+    const { error } = await db.from("prelaunch_signups").update(record).eq("id", existing.id);
+    if (error) throw new HttpError(503, "Nie udało się wznowić zapisu.");
+    return { status: "reactivated" as const, unsubscribeToken };
+  }
+
+  const { error } = await db.from("prelaunch_signups").insert(record);
+  if (error) {
+    if (error.code === "23505") return { status: "already" as const };
+    console.error("prelaunch signup", error.message);
+    throw new HttpError(503, "Nie udało się zapisać adresu.");
+  }
+  return { status: "subscribed" as const, unsubscribeToken };
+}
+
+async function prelaunchUnsubscribe(db: Db, token: string) {
+  const now = new Date().toISOString();
+  const { error } = await db.from("prelaunch_signups")
+    .update({ status: "withdrawn", withdrawn_at: now, withdraw_token: null, updated_at: now })
+    .eq("withdraw_token", token).eq("status", "active");
+  if (error) throw new HttpError(503, "Nie udało się wycofać zgody.");
+  return { ok: true as const };
+}
+
+async function requirePrelaunchAdmin(db: Db, req: Request) {
+  const match = (req.headers.get("authorization") ?? "").match(/^Bearer\\s+(.+)$/i);
+  if (!match) throw new HttpError(401, "Sesja wygasła. Zaloguj się ponownie.");
+  const { data, error } = await db.auth.getUser(match[1]);
+  if (error || !data.user) throw new HttpError(401, "Sesja wygasła. Zaloguj się ponownie.");
+  const { data: role, error: roleError } = await db.from("user_roles")
+    .select("id").eq("user_id", data.user.id).eq("role", "admin").maybeSingle();
+  if (roleError || !role) throw new HttpError(403, "Brak uprawnień administratora.");
+  return data.user;
+}
+
+async function adminListPrelaunch(db: Db, req: Request, status: z.infer<typeof prelaunchAdminFilter>["status"]) {
+  const user = await requirePrelaunchAdmin(db, req);
+  let query = db.from("prelaunch_signups")
+    .select("id,first_name,email,status,consent_version,consent_given_at,created_at,withdrawn_at,notified_at", { count: "exact" })
+    .order("created_at", { ascending: false }).limit(1000);
+  if (status !== "all") query = query.eq("status", status);
+  const [{ data: rows, error, count }, active, withdrawn, notified] = await Promise.all([
+    query,
+    db.from("prelaunch_signups").select("id", { count: "exact", head: true }).eq("status", "active"),
+    db.from("prelaunch_signups").select("id", { count: "exact", head: true }).eq("status", "withdrawn"),
+    db.from("prelaunch_signups").select("id", { count: "exact", head: true }).eq("status", "notified"),
+  ]);
+  if (error || active.error || withdrawn.error || notified.error) throw new HttpError(503, "Nie udało się pobrać listy przedpremierowej.");
+  await db.from("admin_events").insert({
+    type: "prelaunch_list_viewed", actor: user.id, object_kind: "prelaunch", result: "ok",
+    detail: "Odczyt listy osób oczekujących",
+  });
+  return { rows: rows ?? [], total: count ?? 0, counts: { active: active.count ?? 0, withdrawn: withdrawn.count ?? 0, notified: notified.count ?? 0 } };
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
   if (req.method !== "POST") return json({ message: "Niedozwolona metoda." }, 405);
@@ -201,9 +314,12 @@ Deno.serve(async (req: Request) => {
     const db = supabaseClient();
     if (parsed.data.action === "subscribe") return json(await subscribe(db, req, parsed.data.data));
     if (parsed.data.action === "confirm") return json(await confirm(db, parsed.data.data.token));
+    if (parsed.data.action === "prelaunchSignup") return json(await prelaunchSignup(db, req, parsed.data.data));
+    if (parsed.data.action === "prelaunchUnsubscribe") return json(await prelaunchUnsubscribe(db, parsed.data.data.token));
+    if (parsed.data.action === "adminListPrelaunch") return json(await adminListPrelaunch(db, req, parsed.data.data.status));
     return json(await unsubscribe(db, parsed.data.data));
   } catch (error) {
-    const status = error instanceof Error && error.message === "Zapis odrzucony przez filtr antyspamowy." ? 400 : 400;
+    const status = error instanceof HttpError ? error.status : 400;
     const message = error instanceof Error ? error.message : "Wystąpił błąd serwera.";
     return json({ message }, status);
   }
