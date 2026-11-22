@@ -1,7 +1,7 @@
 -- pgTAP guardrails for the paid-order delivery outbox.
 -- These tests are read-only against schema metadata and run after a clean migration replay.
 BEGIN;
-SELECT plan(18);
+SELECT plan(23);
 
 SELECT has_table('public', 'library_delivery_outbox', 'delivery outbox table exists');
 SELECT has_column('public', 'library_delivery_outbox', 'event_key', 'outbox event key exists');
@@ -123,6 +123,77 @@ SELECT is(
   2,
   'expired leases move both events to manual review'
 );
+
+-- A second order exercises safe retry and retry exhaustion independently.
+INSERT INTO public.library_orders (id, item_id, buyer_email, amount, status)
+VALUES (
+  'f2000000-0000-4000-8000-000000000002',
+  'f1000000-0000-4000-8000-000000000001',
+  'pgtap-outbox-retry@example.invalid',
+  100,
+  'pending'
+);
+
+UPDATE public.library_orders
+SET status = 'paid', paid_at = now()
+WHERE id = 'f2000000-0000-4000-8000-000000000002';
+
+SET LOCAL ROLE service_role;
+
+SELECT is(
+  (SELECT count(*)::integer FROM public.claim_library_delivery_outbox('pgtap-retry-worker', 10)),
+  2,
+  'worker claims the second order events for retry checks'
+);
+
+SELECT public.finish_library_delivery_outbox(
+  (SELECT id FROM public.library_delivery_outbox
+   WHERE order_id = 'f2000000-0000-4000-8000-000000000002'
+     AND event_key = 'order_paid'),
+  'failed',
+  'template_not_found',
+  true
+);
+
+SELECT is(
+  (SELECT status FROM public.library_delivery_outbox
+   WHERE order_id = 'f2000000-0000-4000-8000-000000000002'
+     AND event_key = 'order_paid'),
+  'retry',
+  'known pre-SMTP failure enters bounded retry'
+);
+
+SELECT ok(
+  (SELECT available_at > now() AND attempts = 1 AND locked_at IS NULL
+   FROM public.library_delivery_outbox
+   WHERE order_id = 'f2000000-0000-4000-8000-000000000002'
+     AND event_key = 'order_paid'),
+  'retry receives a future backoff time and releases its lease'
+);
+
+UPDATE public.library_delivery_outbox
+SET attempts = 8
+WHERE order_id = 'f2000000-0000-4000-8000-000000000002'
+  AND event_key = 'order_guest_access';
+
+SELECT public.finish_library_delivery_outbox(
+  (SELECT id FROM public.library_delivery_outbox
+   WHERE order_id = 'f2000000-0000-4000-8000-000000000002'
+     AND event_key = 'order_guest_access'),
+  'failed',
+  'template_not_found',
+  true
+);
+
+SELECT is(
+  (SELECT status FROM public.library_delivery_outbox
+   WHERE order_id = 'f2000000-0000-4000-8000-000000000002'
+     AND event_key = 'order_guest_access'),
+  'dead_letter',
+  'retry exhaustion moves the event to dead letter'
+);
+
+RESET ROLE;
 
 SELECT * FROM finish();
 ROLLBACK;
