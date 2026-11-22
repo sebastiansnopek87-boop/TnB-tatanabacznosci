@@ -86,3 +86,6 @@ verify_jwt = false
 
 [functions.tnb-voice]
 verify_jwt = false
+
+[functions.tnb-launch-waitlist]
+verify_jwt = false
