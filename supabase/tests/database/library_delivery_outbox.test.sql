@@ -50,7 +50,7 @@ VALUES (
   'f1000000-0000-4000-8000-000000000001',
   'pgtap-outbox-fixture',
   'Materiał testowy kolejki',
-  'test',
+  'ojcostwo',
   'published',
   'public'
 );
