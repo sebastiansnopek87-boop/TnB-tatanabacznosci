@@ -1,7 +1,7 @@
 -- pgTAP guardrails for the paid-order delivery outbox.
 -- These tests are read-only against schema metadata and run after a clean migration replay.
 BEGIN;
-SELECT plan(23);
+SELECT plan(22);
 
 SELECT has_table('public', 'library_delivery_outbox', 'delivery outbox table exists');
 SELECT has_column('public', 'library_delivery_outbox', 'event_key', 'outbox event key exists');
