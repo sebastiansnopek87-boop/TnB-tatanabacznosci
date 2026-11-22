@@ -78,7 +78,7 @@ describe("orders and payments SPA adapter contracts", () => {
   it("sends all order operations to tnb-orders with the established action and payload", async () => {
     await Promise.all([
       getCheckoutOptions(),
-      createLibraryOrder({ data: { slug: "material-premium", name: "Jan Kowalski", email: "jan@example.com", method: "p24", consent: true } }),
+      createLibraryOrder({ data: { slug: "material-premium", idempotencyKey: id, name: "Jan Kowalski", email: "jan@example.com", method: "p24", consent: true } }),
       getPurchasedMaterial({ data: { token: id, file: true } }),
       recoverAccess({ data: { email: "jan@example.com", number: "TNB-2026-12" } }),
       listMyPurchases(),
