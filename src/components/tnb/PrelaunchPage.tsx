@@ -20,7 +20,8 @@ export function PrelaunchPage({ message, platformName }: { message: string; plat
   const [consent, setConsent] = useState(false);
   const [honeypot, setHoneypot] = useState("");
   const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);\n  const [unsubscribeToken, setUnsubscribeToken] = useState<string | null>(null);
+  const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
+  const [unsubscribeToken, setUnsubscribeToken] = useState<string | null>(null);
   const startedAt = useRef(Date.now());
   const logoSrc = (brand?.logo && brandSrc(brand.logo)) || logo.url;
 
