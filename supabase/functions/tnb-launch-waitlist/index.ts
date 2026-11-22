@@ -1,5 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2.117.2";
-import { z } from "npm:zod@4.3.6";
+import { z } from "npm:zod@3.25.76";
 
 const ALLOWED_ORIGINS = new Set([
   "https://tatanabacznosci.pl",
