@@ -212,10 +212,24 @@ class HttpError extends Error {
 const PRELAUNCH_CONSENT_VERSION = "2026-11-22";
 const PRELAUNCH_CONSENT_TEXT = "Wyrażam zgodę na przetwarzanie mojego imienia i adresu e-mail w celu otrzymania jednorazowej informacji o uruchomieniu platformy Tata Na Baczności. Zapis nie oznacza subskrypcji newslettera. Zgodę mogę wycofać w każdej chwili.";
 
+async function hashPrelaunchIp(ip: string | null): Promise<string | null> {
+  if (!ip) return null;
+  const secret = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_SECRET_KEY") ?? "";
+  if (!secret) throw new HttpError(503, "Usługa zapisu jest chwilowo niedostępna.");
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode("tnb-prelaunch-ip:" + ip));
+  return Array.from(new Uint8Array(signature), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+async function hashPrelaunchToken(token: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(token));
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
 async function prelaunchSignup(db: Db, req: Request, data: z.infer<typeof prelaunchSignupSchema>) {
   if (data.website || data.elapsedMs < 1500) throw new HttpError(400, "Zapis odrzucony przez filtr antyspamowy.");
   const ip = req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  const ipHash = await hashIp(ip ? "prelaunch:" + ip : null);
+  const ipHash = await hashPrelaunchIp(ip ?? null);
   const ua = (req.headers.get("user-agent") ?? "").slice(0, 300);
   if (ipHash) {
     const since = new Date(Date.now() - 3600000).toISOString();
@@ -234,6 +248,7 @@ async function prelaunchSignup(db: Db, req: Request, data: z.infer<typeof prelau
   }
 
   const unsubscribeToken = crypto.randomUUID();
+  const unsubscribeTokenHash = await hashPrelaunchToken(unsubscribeToken);
   const record = {
     first_name: data.first_name,
     email: data.email,
@@ -244,7 +259,7 @@ async function prelaunchSignup(db: Db, req: Request, data: z.infer<typeof prelau
     ip_hash: ipHash,
     user_agent: ua,
     source: "prelaunch",
-    withdraw_token: unsubscribeToken,
+    withdraw_token_hash: unsubscribeTokenHash,
     withdrawn_at: null,
     notified_at: null,
     updated_at: now,
@@ -267,9 +282,10 @@ async function prelaunchSignup(db: Db, req: Request, data: z.infer<typeof prelau
 
 async function prelaunchUnsubscribe(db: Db, token: string) {
   const now = new Date().toISOString();
+  const tokenHash = await hashPrelaunchToken(token);
   const { error } = await db.from("prelaunch_signups")
-    .update({ status: "withdrawn", withdrawn_at: now, withdraw_token: null, updated_at: now })
-    .eq("withdraw_token", token).eq("status", "active");
+    .update({ status: "withdrawn", withdrawn_at: now, withdraw_token_hash: null, updated_at: now })
+    .eq("withdraw_token_hash", tokenHash).eq("status", "active");
   if (error) throw new HttpError(503, "Nie udało się wycofać zgody.");
   return { ok: true as const };
 }
