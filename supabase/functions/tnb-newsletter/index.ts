@@ -233,7 +233,7 @@ async function prelaunchSignup(db: Db, req: Request, data: z.infer<typeof prelau
   const ua = (req.headers.get("user-agent") ?? "").slice(0, 300);
   if (ipHash) {
     const since = new Date(Date.now() - 3600000).toISOString();
-    const { count, error } = await db.from("prelaunch_signups").select("id", { count: "exact", head: true }).eq("ip_hash", ipHash).gte("created_at", since);
+    const { count, error } = await db.from("prelaunch_signups").select("id", { count: "exact", head: true }).eq("ip_hash", ipHash).gte("consent_given_at", since);
     if (error) throw new HttpError(503, "Nie udało się sprawdzić limitu zapisów.");
     if ((count ?? 0) >= 5) throw new HttpError(429, "Zbyt wiele prób. Spróbuj ponownie później.");
   }
