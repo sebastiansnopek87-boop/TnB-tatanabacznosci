@@ -40,7 +40,7 @@ async function invoke<T>(body: Record<string, unknown>, admin = false): Promise<
   if (admin) {
     const { data, error } = await supabase.auth.getSession();
     if (error || !data.session?.access_token) throw new Error("Sesja wygasła. Zaloguj się ponownie.");
-    headers.Authorization = `Bearer ${data.session.access_token}`;
+    headers["Authorization"] = `Bearer ${data.session.access_token}`;
   }
   const { data, error } = await supabase.functions.invoke<T>("tnb-newsletter", { body, headers });
   if (error) {
