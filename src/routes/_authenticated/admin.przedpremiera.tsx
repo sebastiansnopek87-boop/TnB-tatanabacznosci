@@ -32,8 +32,7 @@ function PrelaunchAdmin() {
     if (!data?.rows.length) return;
     const columns = ["first_name", "email", "status", "consent_version", "consent_given_at", "created_at", "withdrawn_at", "notified_at"] as const;
     const lines = [columns.join(","), ...data.rows.map((row) => columns.map((column) => csvCell(column === "status" ? STATUS_LABEL[row.status] : row[column])).join(","))];
-    const blob = new Blob(["\uFEFF" + lines.join("\r
-")], { type: "text/csv;charset=utf-8" });
+    const blob = new Blob(["\uFEFF" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
     const anchor = document.createElement("a");
     anchor.href = URL.createObjectURL(blob);
     anchor.download = `lista-przedpremierowa-${new Date().toISOString().slice(0, 10)}.csv`;
