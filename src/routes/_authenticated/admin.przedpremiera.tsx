@@ -32,7 +32,8 @@ function PrelaunchAdmin() {
     if (!data?.rows.length) return;
     const columns = ["first_name", "email", "status", "consent_version", "consent_given_at", "created_at", "withdrawn_at", "notified_at"] as const;
     const lines = [columns.join(","), ...data.rows.map((row) => columns.map((column) => csvCell(column === "status" ? STATUS_LABEL[row.status] : row[column])).join(","))];
-    const blob = new Blob(["\uFEFF" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+    const blob = new Blob(["\uFEFF" + lines.join("\r
+")], { type: "text/csv;charset=utf-8" });
     const anchor = document.createElement("a");
     anchor.href = URL.createObjectURL(blob);
     anchor.download = `lista-przedpremierowa-${new Date().toISOString().slice(0, 10)}.csv`;
@@ -69,6 +70,7 @@ function PrelaunchAdmin() {
         </div>
         <Button type="button" onClick={exportCsv} disabled={!data?.rows.length}>Eksportuj CSV ({data?.rows.length ?? 0})</Button>
       </div>
+      {data && data.total > data.rows.length && <p className="mt-4 text-sm text-amber-600">Wyświetlono {data.rows.length} z {data.total} zapisów. Eksport CSV obejmuje tylko widoczne rekordy.</p>}
       <p className="mt-4 border border-border/60 bg-card p-4 text-sm text-muted-foreground">
         Wysyłka informacji o uruchomieniu nie jest jeszcze aktywna. Najpierw trzeba skonfigurować i przetestować pocztę. Lista nie uruchamia automatycznej wysyłki.
       </p>
