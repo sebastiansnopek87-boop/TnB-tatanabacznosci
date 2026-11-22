@@ -4,7 +4,6 @@ import { z } from "zod";
 import { PageHeading, PageShell } from "@/components/tnb/PageShell";
 import { unsubscribePrelaunch } from "@/lib/api/prelaunch";
 
-const WITHDRAW_STORAGE_KEY = "tnb.prelaunch.withdraw-token";
 const TITLE = "Wycofaj zgodę — Tata Na Baczności";
 const DESC = "Wycofaj zgodę na otrzymanie jednorazowej informacji o uruchomieniu TNB.";
 
@@ -25,10 +24,7 @@ function WithdrawPrelaunch() {
     if (!token || ran.current) return;
     ran.current = true;
     unsubscribePrelaunch({ data: { token } })
-      .then(() => {
-        setState("done");
-        try { window.localStorage.removeItem(WITHDRAW_STORAGE_KEY); } catch { /* storage may be unavailable */ }
-      })
+      .then(() => setState("done"))
       .catch(() => setState("error"));
   }, [token]);
 
