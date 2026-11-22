@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { p24VerificationSucceeded, providerReferenceMatches } from "../../supabase/functions/_shared/payment-webhook";
+import { p24VerificationSucceeded, providerReferenceMatches, tpayTransactionReference } from "../../supabase/functions/_shared/payment-webhook";
 
 describe("payment webhook provider reference guard", () => {
   it("accepts the exact transaction reference saved at checkout", () => {
@@ -24,5 +24,21 @@ describe("P24 verification gate", () => {
     expect(p24VerificationSucceeded(false, "success")).toBe(false);
     expect(p24VerificationSucceeded(true, "pending")).toBe(false);
     expect(p24VerificationSucceeded(true, undefined)).toBe(false);
+  });
+});
+
+
+describe("Tpay transaction reference", () => {
+  it("uses the Tpay transaction title that is echoed as tr_id", () => {
+    expect(tpayTransactionReference("TR-BRA-KGZK0X")).toBe("TR-BRA-KGZK0X");
+    expect(tpayTransactionReference(" TR-BRA-KGZK0X ")).toBe("TR-BRA-KGZK0X");
+  });
+
+  it("fails closed when the transaction title is missing instead of falling back to unrelated IDs", () => {
+    expect(tpayTransactionReference(undefined)).toBeNull();
+    expect(tpayTransactionReference(null)).toBeNull();
+    expect(tpayTransactionReference("")).toBeNull();
+    expect(tpayTransactionReference("   ")).toBeNull();
+    expect(tpayTransactionReference(12345)).toBeNull();
   });
 });

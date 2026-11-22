@@ -2,7 +2,7 @@
 // Each adapter only talks to its own operator; the shared order logic lives in core.server.ts.
 // Secrets come from server env only; non-secret identifiers from payment_providers.
 import { Buffer } from "node:buffer";
-import { p24VerificationSucceeded } from "../_shared/payment-webhook.ts";
+import { p24VerificationSucceeded, tpayTransactionReference } from "../_shared/payment-webhook.ts";
 import { md5, p24NotifySign, p24RegisterSign, payuCheckSignature, safeEq, sha256, sha384, tpayMd5 } from "./signatures.ts";
 export { p24NotifySign, p24RegisterSign, payuCheckSignature, tpayMd5 } from "./signatures.ts";
 
@@ -111,9 +111,10 @@ async function tpayCreate(p: ProviderRow, i: CreateInput): Promise<CreateResult>
     method: "POST", headers: { Authorization: `Bearer ${t}`, "Content-Type": "application/json" },
     body: JSON.stringify({ amount: i.amount / 100, description: i.description.slice(0, 128), hiddenDescription: i.orderId, lang: "pl", payer: { email: i.email, name: i.name }, callbacks: { payerUrls: { success: i.returnUrl, error: i.returnUrl }, notification: { url: i.notifyUrl } } }),
   });
-  const j = await r.json().catch(() => null) as { transactionPaymentUrl?: string; title?: string; transactionId?: string } | null;
-  if (!r.ok || !j?.transactionPaymentUrl) return { ok: false, reason: `tpay_create_${r.status}` };
-  return { ok: true, redirectUrl: j.transactionPaymentUrl, providerRef: j.title ?? j.transactionId ?? i.orderId };
+  const j = await r.json().catch(() => null) as { transactionPaymentUrl?: string; title?: unknown } | null;
+  const providerRef = tpayTransactionReference(j?.title);
+  if (!r.ok || !j?.transactionPaymentUrl || !providerRef) return { ok: false, reason: `tpay_create_${r.status}_invalid_reference` };
+  return { ok: true, redirectUrl: j.transactionPaymentUrl, providerRef };
 }
 
 async function tpayNotice(p: ProviderRow, raw: string): Promise<Notice | null> {
