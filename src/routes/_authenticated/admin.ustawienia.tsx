@@ -142,6 +142,13 @@ function PlatformSettings() {
 
       <PrelaunchSettings initialEnabled={data.settings.maintenance_enabled} initialMessage={data.settings.maintenance_message} />
 
+      <Section title="Pasek informacyjny" hint="Opcjonalny komunikat wyświetlany nad właściwą stroną, gdy tryb przedpremierowy jest wyłączony.">
+        <div className="flex items-center justify-between gap-4">
+          <Label htmlFor="notice-enabled">Pokaż pasek informacyjny</Label>
+          <Switch id="notice-enabled" disabled={ro} checked={f.notice_enabled} onCheckedChange={(v) => set("notice_enabled", v)} />
+        </div>
+      </Section>
+
       <ModuleVisibilitySettings value={data.settings.module_visibility} canEdit={!ro} />
 
       <VisualEffectsSettings value={(data.settings as any).visual_effects} canEdit={!ro} />
