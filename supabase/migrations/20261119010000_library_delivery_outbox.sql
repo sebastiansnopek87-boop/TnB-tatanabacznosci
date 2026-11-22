@@ -68,7 +68,7 @@ SET search_path = ''
 AS $$
 BEGIN
   WITH expired AS (
-    UPDATE public.library_delivery_outbox
+    UPDATE public.library_delivery_outbox AS outbox
     SET status = 'needs_review',
         locked_at = NULL,
         locked_by = NULL,
@@ -76,7 +76,7 @@ BEGIN
         updated_at = now()
     WHERE status = 'processing'
       AND locked_at < now() - interval '5 minutes'
-    RETURNING order_id, event_key
+    RETURNING outbox.order_id, outbox.event_key
   )
   UPDATE public.library_orders o
   SET delivery_status = 'not_sent',
