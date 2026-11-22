@@ -120,4 +120,5 @@ jobs:
           name: tnb-react-spa-dist-${{ github.sha }}
           path: dist/
           if-no-files-found: error
+          include-hidden-files: true
           retention-days: 14
