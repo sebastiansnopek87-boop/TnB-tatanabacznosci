@@ -23,6 +23,9 @@ CREATE INDEX IF NOT EXISTS library_items_category_idx
 CREATE INDEX IF NOT EXISTS library_orders_item_id_idx
   ON public.library_orders (item_id);
 
+-- Keep the equivalent provider_ref_uq index; this duplicate has no constraint dependency.
+DROP INDEX IF EXISTS public.library_orders_provider_ref;
+
 DO $$
 BEGIN
   IF to_regclass('public.ai_materials_proposal_id_idx') IS NULL
