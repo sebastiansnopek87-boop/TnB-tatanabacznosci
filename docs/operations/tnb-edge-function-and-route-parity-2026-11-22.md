@@ -85,3 +85,35 @@ W live jest 7 funkcji z `verify_jwt=true` i 22 z `verify_jwt=false`. Wszystkie 2
 ## 5. Brak zmian produkcyjnych w tym audycie źródeł
 
 Porównanie 29 entrypointów było odczytowe. Nie wdrożono żadnej Edge Function, nie zmieniono sekretów ani konfiguracji operatorów, SMTP, OAuth czy harmonogramów.
+
+
+## Aktualizacja szczegółowego porównania tras API — 2026-11-22
+
+Przeprowadzono dodatkowe porównanie kodu 13 dawnych handlerów z aktualnymi handlerami Edge i adapterami SPA. Statusy poniżej oznaczają przegląd statyczny kodu, nie test produkcyjny E2E.
+
+| Dawny endpoint | Nowy odpowiednik | Wynik przeglądu kodu | Co pozostaje |
+|---|---|---|---|
+| `article-image.$id.$name` | `tnb-assets?kind=article` | Reguły publikacji, daty i użycia obrazu są zachowane w nowym handlerze | E2E: 404 dla nieopublikowanego/nieużywanego pliku, poprawny MIME i CORS |
+| `avatar.$kind.$id` | `tnb-assets?kind=avatar` | Zachowano scope own/post/comment, weryfikację Bearer, autora i admina, prywatność szkiców i bucket path | E2E dla gościa, właściciela, autora, admina, komentarza i szkicu |
+| `brand.$file` | `tnb-brand` GET | Funkcja ma publiczny handler plików marki; nie wymaga osobnej trasy API | E2E: tylko pliki wskazane przez ustawienia marki, MIME i nieznany plik |
+| `cron/consult-reminders` | `tnb-consult` action `processReminders` | Handler Edge ma osobną kontrolę sekretu cron | Sprawdzić aktywne zadanie, body/URL, sekret, retry i rzeczywistą wysyłkę kontrolowaną |
+| `cron/instagram-sync` | `tnb-voice` action `cronInstagramSync` | Handler Edge ma osobną kontrolę sekretu cron i `syncIfStale` | Potwierdzić konfigurację zadania cron, sekret i wynik synchronizacji |
+| `instagram/callback` | `tnb-voice` action `finishInstagramOAuth` + nowa trasa SPA pod starym URL | Stara trasa serwerowa została usunięta; PR #26 przywraca ten sam URL jako trasę SPA. Edge sprawdza jednorazowy, wygasający state | PR #26 Draft/CI; po merge i deploy frontendu wykonać Meta OAuth na koncie testowym |
+| `library-cover.$id` | `tnb-assets?kind=library` | Zachowano warunek opublikowanego materiału i prywatny bucket | E2E: draft/archived 404, published 200 |
+| `meeting-image.$id` | `tnb-assets?kind=meeting` | Zachowano ukrycie szkiców i prywatny bucket | E2E: draft 404, opublikowany/pozostały status zgodny ze starym zachowaniem |
+| `page-image.$id.$name` | `tnb-pages?image=...` | Zachowano publikację strony, sprawdzenie czy obraz jest użyty i prywatny bucket | E2E: draft, nieużywany plik, błędna nazwa, poprawny obraz |
+| `payments/p24` | `tnb-payments` webhook | Logika została przeniesiona do Edge; wykryto drift live i osobny brak pełnej zgodności pakietu providerów | P1: sandbox P24, podpis, order/reference, amount/currency, replay i ACK |
+| `payments/payu` | `tnb-payments` webhook | Logika została przeniesiona do Edge; wykryto drift live i osobny brak pełnej zgodności pakietu providerów | P1: sandbox PayU, podpis surowego body, order/reference, amount/currency, replay i ACK |
+| `payments/tpay` | `tnb-payments` webhook | Źródło ma poprawkę referencji Tpay z PR #21; pakiet live nadal różni się od repo | P1: sandbox Tpay, `tr_id` = zapisany tytuł transakcji, podpis, kwota/waluta, replay i ACK |
+
+### Dodatkowe ustalenia
+
+- Instagram nie jest obsługiwany przez `tnb-media`. Operacje Instagram (start OAuth, callback completion, sync, disconnect, settings i cron) znajdują się w `tnb-voice`. Poprzednia ogólna tabela wskazująca `tnb-media` dla OAuth była zbyt szeroka; powyższa tabela ją precyzuje.
+- Nowy callback nie zmienia adresu w Meta. W PR #26 route SPA używa dotychczasowej ścieżki `/api/public/instagram/callback`, a Edge nadal generuje ten sam Redirect URI. To ogranicza zakres zmiany i nie wymaga deployu `tnb-voice`.
+- PR #26 jest roboczy. Nie jest scalony ani wdrożony; do tego czasu nie deklarujemy, że OAuth jest naprawiony w produkcji.
+- `tnb-assets` łączy publiczne obrazy artykułów, biblioteki, spotkań, podcastu i avatary. Brand image jest osobnym GET w `tnb-brand`; obrazy stron są obsługiwane przez GET w `tnb-pages`.
+- Żaden z powyższych testów E2E nie został wykonany na rzeczywistych rekordach produkcyjnych w tej aktualizacji.
+
+### Wniosek etapu 1
+
+Statyczne mapowanie endpointów zostało uzupełnione. Etap 1 nie jest jeszcze zamknięty: nadal brakuje wykonania kontrolowanych testów endpointów na izolowanym środowisku oraz pełnej mapy wszystkich pozostałych plików legacy. Nie zmieniono produkcyjnych Edge Functions, sekretów, płatności, danych ani ustawień poczty.
