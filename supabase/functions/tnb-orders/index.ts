@@ -315,6 +315,7 @@ async function createLibraryOrder(db: Db, req: Request, data: z.infer<typeof act
   const provider = await providerRow(db, input.method as ProviderId);
   if (!provider?.enabled || !configStatus(provider).configured) return { error: "Ta metoda płatności jest obecnie niedostępna." };
 
+  // The hash binds one client key to exactly one normalized purchase intent.
   const payloadHash = await sha256Hex(JSON.stringify({
     itemId: item.id, userId: user?.id ?? null, email: input.email, name: input.name,
     phone: input.phone || "", amount: item.price_amount, currency: "PLN",
