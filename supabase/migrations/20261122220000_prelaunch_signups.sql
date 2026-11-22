@@ -19,8 +19,8 @@ CREATE TABLE public.prelaunch_signups (
 
 CREATE INDEX prelaunch_signups_status_created_idx
   ON public.prelaunch_signups (status, created_at DESC);
-CREATE INDEX prelaunch_signups_ip_created_idx
-  ON public.prelaunch_signups (ip_hash, created_at DESC)
+CREATE INDEX prelaunch_signups_ip_consent_idx
+  ON public.prelaunch_signups (ip_hash, consent_given_at DESC)
   WHERE ip_hash IS NOT NULL;
 
 ALTER TABLE public.prelaunch_signups ENABLE ROW LEVEL SECURITY;
