@@ -27,6 +27,11 @@ jobs:
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
 
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
       - name: Install locked dependencies
         run: bun install --frozen-lockfile
 
@@ -70,6 +75,9 @@ jobs:
 
       - name: Verify Supabase Edge Function source/config coverage
         run: bash scripts/check-edge-function-sync.sh
+
+      - name: Type-check newsletter and prelaunch Edge Function
+        run: deno check supabase/functions/tnb-newsletter/index.ts
 
       - name: Unit tests
         run: bun run test
