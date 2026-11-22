@@ -46,7 +46,7 @@ async function invokeNewsletter<T>(
 export function subscribeNewsletter({
   data,
 }: {
-  data: z.infer<typeof newsletterSchema> & {
+  data: z.input<typeof newsletterSchema> & {
     website?: string;
     elapsedMs: number;
   };
