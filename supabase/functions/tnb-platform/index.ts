@@ -1,8 +1,9 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { corsHeaders as supabaseCorsHeaders } from "npm:@supabase/supabase-js@2.117.2/cors";
 
-type Context = { supabase: any; supabaseAdmin: any; userId: string };
+type Context = { supabase: SupabaseClient; supabaseAdmin: SupabaseClient; userId: string };
+type SecurityEventRow = { id: string; created_at: string; type: string; actor: string | null; object_kind: string | null; object_id: string | null; result: string; detail: string | null };
 
 class ApiError extends Error {
   constructor(message: string, readonly status: number, readonly code: string) {
@@ -329,7 +330,7 @@ async function getSecurityStatus(ctx: Context) {
   }
   return {
     checks,
-    events: (events ?? []).map((event: any) => ({ ...event, actor_email: event.actor ? emails.get(event.actor) ?? null : null })),
+    events: (events ?? []).map((event: SecurityEventRow) => ({ ...event, actor_email: event.actor ? emails.get(event.actor) ?? null : null })),
   };
 }
 
