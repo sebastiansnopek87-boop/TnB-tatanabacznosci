@@ -255,6 +255,7 @@ const actionSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("getCheckoutOptions") }),
   z.object({ action: z.literal("createLibraryOrder"), data: z.object({
     slug: z.string().regex(/^[a-z0-9-]{1,120}$/),
+    idempotencyKey: z.string().uuid(),
     name: z.string().trim().min(3, "Podaj imię i nazwisko.").max(120),
     email: z.string().trim().toLowerCase().email("Podaj poprawny adres e-mail.").max(254),
     phone: z.string().trim().max(20).regex(/^$|^\+?[0-9 ()-]{7,20}$/, "Podaj poprawny numer telefonu.").default(""),
@@ -296,6 +297,11 @@ async function getCheckoutOptions(db: Db) {
   return { providers };
 }
 
+async function sha256Hex(value: string) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
 async function createLibraryOrder(db: Db, req: Request, data: z.infer<typeof actionSchema> & { action: "createLibraryOrder" }) {
   const input = data.data;
   const { data: item, error: itemError } = await db.from("library_items")
@@ -308,37 +314,84 @@ async function createLibraryOrder(db: Db, req: Request, data: z.infer<typeof act
   if (!online) return { error: "Płatność przelewem bankowym jest obecnie niedostępna." };
   const provider = await providerRow(db, input.method as ProviderId);
   if (!provider?.enabled || !configStatus(provider).configured) return { error: "Ta metoda płatności jest obecnie niedostępna." };
-  const { data: order, error } = await db.from("library_orders").insert({
-    item_id: item.id, user_id: user?.id ?? null, buyer_email: input.email, buyer_name: input.name, buyer_phone: input.phone || null,
-    amount: item.price_amount, currency: "PLN", status: "pending", provider: input.method, payment_method: "online",
-    environment: provider.environment, consent_text: CONSENT,
-  }).select("id, access_token, order_number").single();
-  if (error || !order) {
-    console.error("order insert failed", error?.message);
-    return { error: "Nie udało się złożyć zamówienia. Spróbuj ponownie." };
+
+  const payloadHash = await sha256Hex(JSON.stringify({
+    itemId: item.id, userId: user?.id ?? null, email: input.email, name: input.name,
+    phone: input.phone || "", amount: item.price_amount, currency: "PLN",
+    provider: input.method, environment: provider.environment,
+  }));
+  const { data: reserved, error: reserveError } = await db.rpc("reserve_library_checkout", {
+    _idempotency_key: input.idempotencyKey, _payload_hash: payloadHash,
+    _item_id: item.id, _user_id: user?.id ?? null, _buyer_email: input.email,
+    _buyer_name: input.name, _buyer_phone: input.phone || "", _amount: item.price_amount,
+    _currency: "PLN", _provider: input.method, _environment: provider.environment, _consent_text: CONSENT,
+  });
+  if (reserveError || !reserved || typeof reserved !== "object") {
+    console.error("checkout reservation failed", reserveError?.message);
+    return { error: "Nie udało się bezpiecznie zarezerwować zamówienia. Spróbuj ponownie." };
   }
-  await logOrderEvent(db, order.id, "created", "Zamówienie złożone " + (user ? "na koncie" : "bez konta") + ", metoda: " + PROVIDER_LABEL[input.method] + (provider.environment === "sandbox" ? " (test)" : "") + ".");
-  await notifyOrder(db, order.id, "order_created");
-  await notifyOrder(db, order.id, "order_admin_new");
-  const baseUrl = (Deno.env.get("SUPABASE_URL") || "").replace(/\/+$/, "");
+
+  const reservation = reserved as {
+    state: string; order_id: string; access_token: string; order_number: string;
+    redirect_url?: string | null; provider_ref?: string | null; is_new?: boolean;
+  };
+  if (reservation.state === "conflict") {
+    return { error: "Ta próba zakupu została już użyta z innymi danymi. Odśwież formularz i rozpocznij nową próbę." };
+  }
+  if (reservation.state === "ready" && reservation.redirect_url) {
+    return { token: reservation.access_token, redirectUrl: reservation.redirect_url, replayed: true };
+  }
+  if (reservation.state === "submitting" || reservation.state === "unknown" || reservation.state === "failed") {
+    return { token: reservation.access_token, processing: true, replayed: true };
+  }
+
+  if (reservation.is_new) {
+    await logOrderEvent(db, reservation.order_id, "created", "Zamówienie złożone " + (user ? "na koncie" : "bez konta") + ", metoda: " + PROVIDER_LABEL[input.method] + (provider.environment === "sandbox" ? " (test)" : "") + ".");
+    await notifyOrder(db, reservation.order_id, "order_created");
+    await notifyOrder(db, reservation.order_id, "order_admin_new");
+  }
+
+  const { data: claimed, error: claimError } = await db.rpc("claim_library_checkout", {
+    _idempotency_key: input.idempotencyKey,
+  });
+  if (claimError || !claimed) {
+    return { token: reservation.access_token, processing: true, replayed: true };
+  }
+
+  const baseUrl = (Deno.env.get("SUPABASE_URL") || "").replace(/\\/+$/, "");
   const origin = siteOrigin();
   const customerIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     req.headers.get("x-real-ip") || "";
   const result = await ADAPTERS[input.method as ProviderId].create(provider, {
-    orderId: order.id, orderNumber: order.order_number, amount: item.price_amount, currency: "PLN",
-    email: input.email, name: input.name, description: order.order_number + " — " + item.title,
-    returnUrl: origin + "/zakup/" + order.access_token + "?powrot=1",
+    orderId: reservation.order_id, orderNumber: reservation.order_number, amount: item.price_amount, currency: "PLN",
+    email: input.email, name: input.name, description: reservation.order_number + " — " + item.title,
+    returnUrl: origin + "/zakup/" + reservation.access_token + "?powrot=1",
     notifyUrl: baseUrl + "/functions/v1/tnb-payments?provider=" + input.method,
     customerIp,
   }).catch((error) => ({ ok: false as const, reason: error instanceof Error ? error.message : "error" }));
+
   if (!result.ok) {
-    await logOrderEvent(db, order.id, "checkout_error", "Operator nie utworzył transakcji: " + result.reason);
-    await db.from("library_orders").update({ status: "failed", failed_at: new Date().toISOString() }).eq("id", order.id).eq("status", "pending");
-    return { error: "Nie udało się połączyć z operatorem płatności. Spróbuj ponownie lub wybierz inną metodę." };
+    // A timeout or lost response may mean the operator created the transaction.
+    // Keep the order pending and block automatic resubmission for this key.
+    await db.rpc("finish_library_checkout", {
+      _idempotency_key: input.idempotencyKey, _state: "unknown",
+      _error: String(result.reason || "provider_result_unknown").slice(0, 300),
+    });
+    await logOrderEvent(db, reservation.order_id, "checkout_review", "Nie można jednoznacznie potwierdzić wyniku żądania do operatora. Ponowienie automatyczne zostało zablokowane; wymagana weryfikacja.");
+    return { token: reservation.access_token, processing: true };
   }
-  await db.from("library_orders").update({ provider_ref: result.providerRef, checkout_session_id: result.providerRef }).eq("id", order.id);
-  await logOrderEvent(db, order.id, "checkout_started", "Transakcja utworzona u operatora (" + result.providerRef + "). Przekierowanie do płatności.");
-  return { token: order.access_token, redirectUrl: result.redirectUrl };
+
+  const { data: finished, error: finishError } = await db.rpc("finish_library_checkout", {
+    _idempotency_key: input.idempotencyKey, _state: "ready",
+    _provider_ref: result.providerRef, _redirect_url: result.redirectUrl,
+  });
+  if (finishError || !finished) {
+    console.error("checkout response persistence failed", finishError?.message);
+    await logOrderEvent(db, reservation.order_id, "checkout_review", "Operator zwrócił dane transakcji, ale nie udało się ich trwale zapisać. Wymagana weryfikacja.");
+    return { token: reservation.access_token, processing: true };
+  }
+  await logOrderEvent(db, reservation.order_id, "checkout_started", "Transakcja utworzona u operatora (" + result.providerRef + "). Przekierowanie do płatności.");
+  return { token: reservation.access_token, redirectUrl: result.redirectUrl };
 }
 
 async function getPurchasedMaterial(db: Db, data: { token: string; file: boolean }) {
