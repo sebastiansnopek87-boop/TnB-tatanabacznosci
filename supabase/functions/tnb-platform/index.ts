@@ -78,6 +78,7 @@ const moduleVisibilitySchema = z.record(
 const RequestSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("getPlatformSettings") }),
   z.object({ action: z.literal("updatePlatformSettings"), settings: platformSchema }),
+  z.object({ action: z.literal("setPrelaunchSettings"), enabled: z.boolean(), message: z.string().trim().min(1, "Wpisz tekst zapowiedzi.").max(500, "Tekst może mieć najwyżej 500 znaków") }),
   z.object({ action: z.literal("setVisualEffects"), effects: VisualEffectsSchema }),
   z.object({ action: z.literal("setModuleVisibility"), visibility: moduleVisibilitySchema }),
   z.object({ action: z.literal("setPodcastLayout"), layout: z.enum(["list", "grid"]) }),
@@ -206,6 +207,26 @@ async function updatePlatformSettings(ctx: Context, settings: z.infer<typeof pla
   if (previous.maintenance_enabled !== settings.maintenance_enabled) {
     await logEvent(ctx, { type: settings.maintenance_enabled ? "maintenance_on" : "maintenance_off", objectKind: "settings", objectId: "maintenance" });
   }
+  return { ok: true as const };
+}
+
+async function setPrelaunchSettings(ctx: Context, enabled: boolean, message: string) {
+  await requireAdmin(ctx);
+  const { error } = await ctx.supabaseAdmin.from("platform_settings")
+    .update({
+      maintenance_enabled: enabled,
+      maintenance_message: message.trim(),
+      updated_at: new Date().toISOString(),
+      updated_by: ctx.userId,
+    }).eq("id", 1);
+  await logEvent(ctx, {
+    type: enabled ? "prelaunch_on" : "prelaunch_off",
+    objectKind: "settings",
+    objectId: "prelaunch",
+    result: error ? "failed" : "ok",
+    detail: enabled ? "Włączono stronę przedpremierową." : "Wyłączono stronę przedpremierową.",
+  });
+  if (error) throw new ApiError("Nie udało się zapisać ustawień strony przedpremierowej.", 500, "prelaunch_update_failed");
   return { ok: true as const };
 }
 
@@ -359,6 +380,7 @@ Deno.serve(async (req: Request) => {
     switch (parsed.data.action) {
       case "getPlatformSettings": result = await getPlatformSettings(ctx); break;
       case "updatePlatformSettings": result = await updatePlatformSettings(ctx, parsed.data.settings); break;
+      case "setPrelaunchSettings": result = await setPrelaunchSettings(ctx, parsed.data.enabled, parsed.data.message); break;
       case "setVisualEffects": result = await setVisualEffects(ctx, parsed.data.effects); break;
       case "setModuleVisibility": result = await setModuleVisibility(ctx, parsed.data.visibility); break;
       case "setPodcastLayout": result = await setPodcastLayout(ctx, parsed.data.layout); break;
