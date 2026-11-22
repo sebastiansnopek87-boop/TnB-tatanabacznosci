@@ -44,7 +44,8 @@ const GROUPS: Array<{ title: string; items: NavItem[] }> = [
   ] },
   { title: "Komunikacja i sprzedaż", items: [
     { to: "/admin/wiadomosci", label: "Wiadomości kontaktowe" },
-    { to: "/admin/subskrybenci", label: "Newsletter" },\n    { to: "/admin/przedpremiera", label: "Lista przedpremierowa" },
+    { to: "/admin/subskrybenci", label: "Newsletter" },
+    { to: "/admin/przedpremiera", label: "Lista przedpremierowa" },
     { to: "/admin/ustawienia-email", label: "Powiadomienia" },
     { to: "/admin/szablony", label: "Szablony wiadomości" },
     { to: "/admin/zdarzenia", label: "Zdarzenia i reguły" },
