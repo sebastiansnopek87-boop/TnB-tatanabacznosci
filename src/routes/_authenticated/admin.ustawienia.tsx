@@ -65,7 +65,7 @@ function PlatformSettings() {
     e.preventDefault();
     if (!f) return;
     if (f.maintenance_enabled && !data?.settings.maintenance_enabled &&
-      !window.confirm("Włączyć tryb konserwacji? Odwiedzający zobaczą ekran przerwy technicznej. Panel i logowanie pozostaną dostępne.")) return;
+      !window.confirm("Włączyć tryb przedpremierowy? Wszyscy odwiedzający zobaczą stronę zapowiedzi zamiast platformy. Panel administratora i logowanie pozostaną dostępne.")) return;
     setBusy(true); setErr(null);
     try {
       await save({ data: f });
@@ -180,16 +180,16 @@ function PlatformSettings() {
         <Link to="/admin/ustawienia-email" className="text-sm text-gold underline">Przejdź do ustawień powiadomień</Link>
       </Section>
 
-      <Section title="Przerwa techniczna" hint="Panel administratora i logowanie zawsze pozostają dostępne.">
-        <div className="space-y-2"><Label htmlFor="mm">Komunikat o przerwie technicznej</Label>
-          <Textarea id="mm" disabled={ro} rows={3} maxLength={500} value={f.maintenance_message} onChange={(e) => set("maintenance_message", e.target.value)} placeholder="np. Trwają prace techniczne. Wracamy około 22:00." /></div>
+      <Section title="Tryb przedpremierowy" hint="Po włączeniu goście zobaczą publiczną stronę zapowiedzi z formularzem zapisu. Administratorzy po zalogowaniu nadal pracują na pełnej platformie.">
+        <div className="space-y-2"><Label htmlFor="mm">Tekst zapowiedzi widoczny na stronie przedpremierowej</Label>
+          <Textarea id="mm" disabled={ro} rows={3} maxLength={500} value={f.maintenance_message} onChange={(e) => set("maintenance_message", e.target.value)} placeholder="Opowiedz krótko, co powstaje i dlaczego warto tu wrócić." /></div>
         <div className="flex items-center justify-between gap-4">
           <Label htmlFor="ne">Pokaż komunikat jako pasek nad stroną</Label>
           <Switch id="ne" disabled={ro} checked={f.notice_enabled} onCheckedChange={(v) => set("notice_enabled", v)} /></div>
         <div className="flex items-center justify-between gap-4">
-          <Label htmlFor="me">Tryb konserwacji (odwiedzający widzą tylko komunikat)</Label>
+          <Label htmlFor="me">Włącz stronę przedpremierową dla odwiedzających</Label>
           <Switch id="me" disabled={ro} checked={f.maintenance_enabled} onCheckedChange={(v) => set("maintenance_enabled", v)} /></div>
-        <p className="text-xs text-muted-foreground">Tryb konserwacji zasłania strony w przeglądarce. Administratorzy widzą stronę normalnie, z paskiem informacyjnym.</p>
+        <p className="text-xs text-muted-foreground">Włącznik natychmiast przełącza publiczny widok na stronę przedpremierową. Po wyłączeniu goście zobaczą właściwą platformę. Zapisz zmiany, aby zastosować przełączenie.</p>
       </Section>
 
       {err && <p className="text-sm text-destructive">{err}</p>}
