@@ -285,7 +285,7 @@ async function prelaunchUnsubscribe(db: Db, token: string) {
   const tokenHash = await hashPrelaunchToken(token);
   const { error } = await db.from("prelaunch_signups")
     .update({ status: "withdrawn", withdrawn_at: now, withdraw_token_hash: null, updated_at: now })
-    .eq("withdraw_token_hash", tokenHash).eq("status", "active");
+    .eq("withdraw_token_hash", tokenHash).in("status", ["active", "notified"]);
   if (error) throw new HttpError(503, "Nie udało się wycofać zgody.");
   return { ok: true as const };
 }
