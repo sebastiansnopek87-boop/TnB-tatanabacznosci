@@ -7,7 +7,7 @@ import { usePlatformSettings } from "@/hooks/use-platform-settings";
 import { PrelaunchPage } from "./PrelaunchPage";
 
 // Paths that always stay reachable so administrators can sign in and switch maintenance off.
-const EXEMPT = [/^\\/admin(\\/|$)/, /^\\/auth(\\/|$)/, /^\\/reset-password/, /^\\/api\\//, /^\\/polityka-prywatnosci$/, /^\\/polityka-cookies$/, /^\\/regulamin$/, /^\\/newsletter\\//];
+const EXEMPT = [/^\/admin(\/|$)/, /^\/auth(\/|$)/, /^\/reset-password/, /^\/api\//, /^\/polityka-prywatnosci$/, /^\/polityka-cookies$/, /^\/regulamin$/, /^\/newsletter\//];
 
 function useIsAdmin() {
   const auth = useAuth();
