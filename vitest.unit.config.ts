@@ -36,6 +36,7 @@ export default defineConfig({
       "src/lib/pages-api-contract.test.ts",
       "src/lib/templates-api-contract.test.ts",
       "src/lib/rich-text.test.ts",
+      "src/lib/instagram-callback.test.ts",
     ],
   },
 });
