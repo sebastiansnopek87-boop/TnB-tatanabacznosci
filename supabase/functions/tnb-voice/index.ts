@@ -5,7 +5,7 @@ import { EVENT_MAP, DEFAULT_TEMPLATES } from "./registry.ts";
 import { render, maskSensitive, stripSensitive, type Vars } from "./render.ts";
 
 const CORS = new Headers({ ...corsHeaders, "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "authorization, apikey, x-client-info, content-type, x-supabase-api-version", "Access-Control-Max-Age": "86400", "X-Content-Type-Options": "nosniff" });
-const CALLBACK_PATH = "/instagram/callback";
+const CALLBACK_PATH = "/api/public/instagram/callback";
 const GRAPH = "https://graph.instagram.com";
 const STALE_MS = 30 * 60 * 1000;
 const EMAIL = /^[^\s@<>"]+@[^\s@<>]+\.[a-z]{2,}$/i;
