@@ -69,10 +69,10 @@ export function PrelaunchPage({ message, platformName }: { message: string; plat
           </div>
           <p className="mt-16 text-xs font-semibold uppercase tracking-[0.28em] text-[#c49a61]">Przedpremiera · Tata Na Baczności</p>
           <h1 className="mt-5 max-w-xl font-display text-5xl font-semibold uppercase leading-[0.98] tracking-[0.015em] sm:text-7xl">
-            Tu powstaje <span className="text-[#c49a61]">coś ważnego.</span>
+            {brand?.public_title || <>Tu powstaje <span className="text-[#c49a61]">coś ważnego.</span></>}
           </h1>
           <p className="mt-8 max-w-xl whitespace-pre-line text-base leading-8 text-[#d1c9bb] sm:text-lg">
-            {message || "Pracujemy nad miejscem, w którym będzie można znaleźć prawdziwe rozmowy o ojcostwie, rodzinie, odpowiedzialności i życiu. Jeszcze chwila cierpliwości."}
+            {message || brand?.public_description || "Pracujemy nad miejscem, w którym będzie można znaleźć prawdziwe rozmowy o ojcostwie, rodzinie, odpowiedzialności i życiu. Jeszcze chwila cierpliwości."}
           </p>
           <div className="mt-10 flex items-center gap-3 text-sm text-[#c49a61]">
             <span className="h-px w-12 bg-[#a77d49]" />
