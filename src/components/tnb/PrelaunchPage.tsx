@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, CheckCircle2, Loader2, Mail } from "lucide-react";
 import logo from "@/assets/logo-384.webp.asset.json";
@@ -11,7 +11,6 @@ const MESSAGES = {
   already: "Ten adres jest już na liście osób oczekujących.",
 } as const;
 
-const WITHDRAW_STORAGE_KEY = "tnb.prelaunch.withdraw-token";
 
 export function PrelaunchPage({ message, platformName }: { message: string; platformName: string }) {
   const brand = useBrand();
@@ -25,9 +24,6 @@ export function PrelaunchPage({ message, platformName }: { message: string; plat
   const startedAt = useRef(Date.now());
   const logoSrc = (brand?.logo && brandSrc(brand.logo)) || logo.url;
 
-  useEffect(() => {
-    try { setUnsubscribeToken(window.localStorage.getItem(WITHDRAW_STORAGE_KEY)); } catch { /* storage may be unavailable */ }
-  }, []);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -48,7 +44,6 @@ export function PrelaunchPage({ message, platformName }: { message: string; plat
       });
       if (response.unsubscribeToken) {
         setUnsubscribeToken(response.unsubscribeToken);
-        try { window.localStorage.setItem(WITHDRAW_STORAGE_KEY, response.unsubscribeToken); } catch { /* storage may be unavailable */ }
       }
       setResult({ ok: true, text: MESSAGES[response.status] });
       setFirstName("");
