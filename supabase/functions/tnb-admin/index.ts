@@ -257,7 +257,7 @@ async function setMessageStatus(db: Db, input: { id: string; status: "new" | "re
 
 async function listSubscribers(db: Db, input: z.infer<typeof subFilter>) {
   let query = db.from("newsletter_subscribers")
-    .select("id,email,status,source,consent_text,consent_version,consent_given_at,opt_in_method,confirmed_at,unsubscribed_at,subscribe_count,created_at,updated_at")
+    .select("id,first_name,email,status,source,consent_text,consent_version,consent_given_at,opt_in_method,confirmed_at,unsubscribed_at,subscribe_count,created_at,updated_at")
     .order("created_at", { ascending: false }).limit(5000);
   if (input.status !== "all") query = query.eq("status", input.status);
   if (input.q) query = query.ilike("email", "%" + input.q.replace(/[%,]/g, "") + "%");
