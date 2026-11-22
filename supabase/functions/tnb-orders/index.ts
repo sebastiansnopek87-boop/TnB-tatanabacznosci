@@ -358,7 +358,7 @@ async function createLibraryOrder(db: Db, req: Request, data: z.infer<typeof act
     return { token: reservation.access_token, processing: true, replayed: true };
   }
 
-  const baseUrl = (Deno.env.get("SUPABASE_URL") || "").replace(/\\/+$/, "");
+  const baseUrl = (Deno.env.get("SUPABASE_URL") || "").replace(/\/+$/, "");
   const origin = siteOrigin();
   const customerIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     req.headers.get("x-real-ip") || "";
