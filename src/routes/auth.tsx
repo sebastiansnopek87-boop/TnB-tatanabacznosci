@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AuthNotice, AuthShell, readAuthUrlParams } from "@/components/auth/AuthShell";
 import { lovable } from "@/integrations/lovable/index";
+import { usePlatformSettings } from "@/hooks/use-platform-settings";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -55,7 +56,10 @@ function linkError(code: string): string {
 function AuthPage() {
   const navigate = useNavigate();
   const search = Route.useSearch();
-  const adminOnly = search.admin === true;
+  const { data: publicSettings, isLoading: settingsLoading, isError: settingsError } = usePlatformSettings();
+  // While prelaunch is active, only an account with the admin role may use this entry point.
+  // Fail closed if public platform settings cannot be loaded.
+  const adminOnly = search.admin === true || publicSettings?.maintenance_enabled === true || settingsError;
   const [mode, setMode] = useState<Mode>(adminOnly ? "login" : search.tryb === "rejestracja" ? "register" : "login");
   const [password2, setPassword2] = useState("");
   const [email, setEmail] = useState("");
@@ -216,7 +220,11 @@ function AuthPage() {
     <button type="button" onClick={() => go(m)} className="text-sm text-gold underline-offset-4 hover:underline">{label}</button>
   );
 
-  if (mode === "register-sent") {
+  if (settingsLoading && !search.admin) {
+    return <AuthShell step="Sprawdzanie dostępu" title="Chwileczkę" lead="Sprawdzamy dostęp do platformy." />;
+  }
+
+  if (mode === "register-sent" && !adminOnly) {
     return (
       <AuthShell step="Rejestracja · krok 2 z 2" title="Potwierdź adres"
         lead={<>Jeśli adres <span className="text-foreground">{email.trim()}</span> nie ma jeszcze konta, wysłaliśmy na niego link aktywacyjny. Kliknij go, aby aktywować konto.</>}>
