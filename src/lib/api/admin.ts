@@ -26,7 +26,7 @@ type Dashboard = {
 };
 type MessageRow = { id: string; name: string; email: string; subject: string; message: string; status: string; created_at: string; read_at: string | null; archived_at: string | null };
 type SubscriberRow = {
-  id: string; email: string; status: string; source: string; consent_text: string; consent_version: string;
+  id: string; first_name: string | null; email: string; status: string; source: string; consent_text: string; consent_version: string;
   consent_given_at: string; opt_in_method: string; confirmed_at: string | null; unsubscribed_at: string | null;
   subscribe_count: number; created_at: string; updated_at: string;
 };
