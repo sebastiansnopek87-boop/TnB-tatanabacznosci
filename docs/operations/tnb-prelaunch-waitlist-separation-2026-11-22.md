@@ -11,7 +11,7 @@ Formularz przedpremierowy używał `subscribeNewsletter`, `NEWSLETTER_CONSENT_TE
 - Dedykowana tabela `prelaunch_signups`; dane listy przedpremierowej nie trafiają do newslettera.
 - Osobna, wersjonowana zgoda na jednorazową informację o starcie.
 - Zapis imienia, znormalizowanego e-maila, czasu zgody, wersji tekstu zgody, skrótu IP i user-agenta.
-- Unikalny adres e-mail i token umożliwiający wycofanie zgody.
+- Unikalny adres e-mail i jednorazowy token wycofania zgody; w bazie przechowywany jest wyłącznie SHA-256 tokenu, nie jego wartość jawna.
 - Tabela ma RLS bez polityk; bezpośredni dostęp anon/authenticated jest odebrany. Dostęp ma wyłącznie service_role.
 - Formularz ma osobną akcję Edge Function, honeypot i limit prób.
 - Dodano stronę wycofania zgody.
