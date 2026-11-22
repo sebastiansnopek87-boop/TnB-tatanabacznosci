@@ -16,6 +16,7 @@ const CORS = new Headers({
 const CONSENT_VERSION = "2026-09-28";
 const CONSENT_TEXT = "Wyrażam zgodę na otrzymywanie newslettera Tata Na Baczności na podany adres e-mail. Zgodę mogę wycofać w każdej chwili.";
 const subscribeSchema = z.object({
+  first_name: z.string().trim().max(100, "Imię jest za długie").optional().default(""),
   email: z.string().trim().toLowerCase().email("Podaj poprawny adres e-mail").max(255, "Adres jest za długi"),
   consent: z.boolean().refine((value) => value, "Zaznacz zgodę na otrzymywanie newslettera"),
   website: z.string().max(0).optional().default(""),
@@ -135,14 +136,14 @@ async function subscribe(db: Db, req: Request, data: z.infer<typeof subscribeSch
   const confirmToken = crypto.randomUUID();
   if (existing) {
     const { error } = await db.from("newsletter_subscribers").update({
-      ...consent, status, unsubscribed_at: null, confirmed_at: double ? null : now,
+      ...consent, first_name: data.first_name || null, status, unsubscribed_at: null, confirmed_at: double ? null : now,
       confirm_token: confirmToken, subscribe_count: existing.subscribe_count + 1,
     }).eq("id", existing.id);
     if (error) { console.error("newsletter update", error.message); throw new Error("Nie udało się zapisać adresu."); }
     id = existing.id;
   } else {
     const { data: row, error } = await db.from("newsletter_subscribers").insert({
-      ...consent, email: data.email, status, source: "homepage", confirmed_at: double ? null : now,
+      ...consent, first_name: data.first_name || null, email: data.email, status, source: "homepage", confirmed_at: double ? null : now,
       confirm_token: confirmToken,
     }).select("id").single();
     if (error || !row) { console.error("newsletter insert", error?.message); throw new Error("Nie udało się zapisać adresu."); }
