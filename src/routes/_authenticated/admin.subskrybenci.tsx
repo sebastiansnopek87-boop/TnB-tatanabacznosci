@@ -76,7 +76,7 @@ function Subscribers() {
             <th className="p-3">Imię</th><th className="p-3">E-mail</th><th className="p-3">Status</th><th className="p-3">Zapis</th><th className="p-3">Potwierdzenie</th><th className="p-3"></th>
           </tr></thead>
           <tbody>
-            {isLoading && <tr><td className="p-3 text-muted-foreground" colSpan={5}>Ładowanie…</td></tr>}
+            {isLoading && <tr><td className="p-3 text-muted-foreground" colSpan={6}>Ładowanie…</td></tr>}
             {data?.length === 0 && <tr><td className="p-3 text-muted-foreground" colSpan={5}>Brak subskrybentów dla wybranych filtrów.</td></tr>}
             {data?.map((r) => (
               <tr key={r.id} className="border-b border-border/40">
