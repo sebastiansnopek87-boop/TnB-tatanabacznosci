@@ -3,14 +3,14 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight, CheckCircle2, Loader2, Mail } from "lucide-react";
 import logo from "@/assets/logo-384.webp.asset.json";
 import { useBrand, brandSrc } from "@/hooks/use-brand-settings";
-import { NEWSLETTER_CONSENT_TEXT, newsletterSchema, subscribeNewsletter } from "@/lib/api/newsletter";
+import { PRELAUNCH_CONSENT_TEXT, prelaunchSignupSchema, signupPrelaunch } from "@/lib/api/prelaunch";
 
 const MESSAGES = {
-  subscribed: "Dziękujemy. Jesteś na liście osób oczekujących na start TNB.",
-  resubscribed: "Twój zapis został wznowiony. Jesteś na liście oczekujących.",
-  already: "Ten adres jest już na liście oczekujących.",
-  pending: "Sprawdź pocztę i potwierdź zapis, aby otrzymać informację o starcie.",
+  subscribed: "Zapisano. Otrzymasz jednorazową informację o uruchomieniu TNB.",
+  reactivated: "Twój zapis został wznowiony. Otrzymasz jednorazową informację o starcie.",
+  already: "Ten adres jest już na liście osób oczekujących.",
 } as const;
+
 
 export function PrelaunchPage({ message, platformName }: { message: string; platformName: string }) {
   const brand = useBrand();
@@ -20,8 +20,10 @@ export function PrelaunchPage({ message, platformName }: { message: string; plat
   const [honeypot, setHoneypot] = useState("");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
+  const [unsubscribeToken, setUnsubscribeToken] = useState<string | null>(null);
   const startedAt = useRef(Date.now());
   const logoSrc = (brand?.logo && brandSrc(brand.logo)) || logo.url;
+
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -29,7 +31,7 @@ export function PrelaunchPage({ message, platformName }: { message: string; plat
       setResult({ ok: false, text: "Wpisz swoje imię." });
       return;
     }
-    const parsed = newsletterSchema.safeParse({ first_name: firstName, email, consent });
+    const parsed = prelaunchSignupSchema.safeParse({ first_name: firstName, email, consent });
     if (!parsed.success) {
       setResult({ ok: false, text: parsed.error.issues[0]?.message ?? "Sprawdź wpisane dane." });
       return;
@@ -37,9 +39,12 @@ export function PrelaunchPage({ message, platformName }: { message: string; plat
     setBusy(true);
     setResult(null);
     try {
-      const response = await subscribeNewsletter({
+      const response = await signupPrelaunch({
         data: { ...parsed.data, website: honeypot, elapsedMs: Date.now() - startedAt.current },
       });
+      if (response.unsubscribeToken) {
+        setUnsubscribeToken(response.unsubscribeToken);
+      }
       setResult({ ok: true, text: MESSAGES[response.status] });
       setFirstName("");
       setEmail("");
@@ -98,19 +103,20 @@ export function PrelaunchPage({ message, platformName }: { message: string; plat
             </label>
             <label className="block space-y-2">
               <span className="text-xs uppercase tracking-[0.12em] text-[#c5bdae]">Adres e-mail</span>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" maxLength={255} required placeholder="twoj@email.pl" className="w-full border border-[#6e6556] bg-[#171613] px-4 py-3.5 text-sm text-white outline-none transition-colors placeholder:text-[#81796d] focus:border-[#c49a61]" />
+              <input type="email" value={email} onChange={(e) => { setEmail(e.target.value); setResult(null); setUnsubscribeToken(null); }} autoComplete="email" maxLength={255} required placeholder="twoj@email.pl" className="w-full border border-[#6e6556] bg-[#171613] px-4 py-3.5 text-sm text-white outline-none transition-colors placeholder:text-[#81796d] focus:border-[#c49a61]" />
             </label>
             <label className="flex cursor-pointer items-start gap-3 text-xs leading-5 text-[#bdb4a6]">
               <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-1 accent-[#c49a61]" />
-              <span>{NEWSLETTER_CONSENT_TEXT} <Link to="/polityka-prywatnosci" className="text-[#c49a61] underline underline-offset-2">Polityka prywatności</Link>.</span>
+              <span>{PRELAUNCH_CONSENT_TEXT} <Link to="/polityka-prywatnosci" className="text-[#c49a61] underline underline-offset-2">Polityka prywatności</Link>.</span>
             </label>
             <button type="submit" disabled={busy} className="flex w-full items-center justify-between bg-[#b58a52] px-5 py-4 text-xs font-semibold uppercase tracking-[0.16em] text-[#171613] transition-colors hover:bg-[#d0a66e] disabled:cursor-wait disabled:opacity-60">
               {busy ? "Zapisywanie…" : "Dołącz do listy oczekujących"}
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
             </button>
             {result && <p role={result.ok ? "status" : "alert"} className={result.ok ? "flex items-start gap-2 text-sm text-[#d6b47e]" : "text-sm text-red-300"}>{result.ok && <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />}{result.text}</p>}
+            {result?.ok && unsubscribeToken && <Link to="/przedpremiera/wypisz" search={{ token: unsubscribeToken }} className="inline-block text-xs text-[#c49a61] underline underline-offset-4">Wycofaj zgodę i usuń mój zapis</Link>}
           </form>
-          <p className="mt-6 text-[11px] leading-5 text-[#82796d]">Twój adres wykorzystamy zgodnie z udzieloną zgodą. W każdej chwili możesz z niej zrezygnować.</p>
+          <p className="mt-6 text-[11px] leading-5 text-[#82796d]">Adres wykorzystamy wyłącznie do jednorazowej informacji o uruchomieniu TNB. Zapis nie oznacza subskrypcji newslettera. Link do wycofania zgody pojawi się po zapisie; jeśli go utracisz, skontaktuj się z nami przez formularz kontaktowy.</p>
         </section>
       </div>
       <Link to="/auth" className="absolute bottom-5 right-5 text-[10px] uppercase tracking-[0.16em] text-[#82796d] transition-colors hover:text-[#c49a61]">Panel administratora</Link>
