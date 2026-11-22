@@ -51,7 +51,7 @@ After payment is confirmed, atomically persist a unique outbox event keyed by or
 1. Same key + same payload, sequential requests: exactly one order and one provider transaction; same safe response.
 2. Same key + same payload, concurrent requests: exactly one order and one provider transaction.
 3. Same key + different payload: conflict, no mutation, no second transaction.
-4. Missing/malformed key: rejected before order insertion.
+4. Missing key: accepted only for legacy clients and replaced server-side with a one-request UUID; because that key is not retained by the client, retries from legacy clients are not idempotent. A malformed supplied key is rejected by request validation before order insertion. New SPA clients must send and retain a stable UUID across retries.
 5. Provider timeout after remote creation: reconciliation path; no duplicate charge.
 6. Webhook replay: one paid transition and one logical outbox event.
 7. Worker crash before send: stale lease is recovered to manual review. Crash during/after SMTP hand-off: the existing `sending` log prevents automatic resend; operator review is required to avoid duplicate mail.
