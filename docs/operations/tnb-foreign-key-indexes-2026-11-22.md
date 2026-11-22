@@ -26,3 +26,12 @@ W chwili odczytu całkowity rozmiar wskazanych tabel mieścił się w przedziale
 Migracja `add_foreign_key_support_indexes` tworzy siedem zwykłych indeksów btree, bez zmiany danych, constraintów, RLS i zachowania aplikacji. Zawiera asercję istnienia wszystkich indeksów. Najpierw wymagany jest replay na czystym lokalnym Supabase w CI; produkcję zmieniamy dopiero po PASS.
 
 Nie usuwamy duplikatu `library_orders_provider_ref` / `library_orders_provider_ref_uq` w tej migracji. Wymaga on osobnego sprawdzenia zależności constraintów i statystyk użycia.
+
+## Dodatkowy duplikat indeksu
+
+Live odczyt `pg_index`, `pg_constraint` i `pg_stat_user_indexes` potwierdził, że:
+- `library_orders_provider_ref` i `library_orders_provider_ref_uq` mają identyczną definicję UNIQUE na `(provider, provider_ref)` z warunkiem `provider_ref IS NOT NULL`;
+- żaden z nich nie jest indeksem podpierającym constraint;
+- oba miały `idx_scan = 0` w chwili odczytu.
+
+Migracja usuwa tylko `library_orders_provider_ref`; pozostawia `library_orders_provider_ref_uq`, który nadal wymusza tę samą unikalność. Nie zmienia to danych ani reguły unikalności.
