@@ -128,3 +128,52 @@ Zapisy na listę oczekujących nie oznaczają, że automatyczna wiadomość o ur
 ## 7. Zasada zamknięcia
 
 Nie uznajemy migracji za zakończoną, dopóki każdy element starej aplikacji ma przypisany status: przeniesiony i przetestowany, świadomie usunięty, albo jawnie odłożony z uzasadnieniem. CI PASS i udany deployment nie zastępują testów funkcjonalnych ani audytu uprawnień.
+
+
+## Aktualizacja audytu i inwentaryzacji — 2026-11-22 21:xx CET
+
+Poniższy stan został ponownie odczytany z GitHub po commicie bazowym opisanym wyżej. Jest to uzupełnienie wcześniejszego snapshotu, nie jego nadpisanie.
+
+### Aktualny snapshot repozytorium
+
+Porównanie pełnych drzew Git (liczone wyłącznie pliki typu blob):
+
+| Wskaźnik | Kopia sprzed SPA | Aktualne main |
+|---|---:|---:|
+| Pliki w repozytorium | 500 | 718 |
+| Pliki tras w `src/routes` | 72 | 60 |
+| Pliki `.functions.ts` / `.server.ts` w `src` | 42 | 41 |
+| Middleware TanStack Start | 2 | 2 |
+| Usunięte pliki tras API | — | 13 |
+
+Wynik: 72 dawne pliki tras obejmowały 13 endpointów API i pozostałe strony. Wszystkie dawne trasy stron mają odpowiednik w aktualnym repo; 13 tras API zostało usuniętych z routera Start i wymaga testów równoważności w nowych Edge Functions. Nie wolno utożsamiać tego z potwierdzonym testem E2E.
+
+W repo pozostały dwa wygenerowane middleware TanStack Start: `auth-middleware.ts` i `auth-attacher.ts`. Skrypt `scripts/check-legacy-runtime-isolation.sh` jawnie wyłącza je z grafu aplikacji i CI sprawdza, że kod tras/komponentów nie importuje plików legacy. Nie są one obecnie importowane przez wejście Vite według kontrolowanego skryptu izolacji. Pakiet `@tanstack/react-start` pozostaje w `devDependencies`; nie usuwam go automatycznie, dopóki nie zostanie wykonana czysta instalacja i kontrola lockfile na środowisku z Bun.
+
+### Ważne aktualizacje względem poprzedniego snapshotu
+
+- Bieżący HEAD `main` podczas ponownego odczytu: `0c7e8c71359c7f964a100fed8f4f45160a68f6b0`.
+- PR #21 „Zabezpiecz powiązanie referencji transakcji Tpay” został scalony. Dodaje fail-closed dla braku tytułu Tpay oraz testy czystej funkcji normalizującej referencję. To poprawka źródłowa; nie oznacza wdrożenia nowej Edge Function ani testu płatności sandbox.
+- Ostatni potwierdzony build GitHub Actions w odczycie audytu dotyczy commita `0b9dc6d88929225b99e55271583611d29acc5357`. Dla nowszego HEAD `0c7e8c7` nie uzyskano jeszcze potwierdzonego zielonego przebiegu w tym audycie.
+- CodeMindAI ma aktywną dwukierunkową synchronizację z `main`; ostatni odczyt wykazał zero oczekujących pushy i udany auto-pull. Ostatni deployment miał status completed, 190/190 plików, a cel został zweryfikowany.
+- Tryb przedpremierowy pozostaje aktywny. Nie zmieniano ustawień publikacji w trakcie tej kontroli.
+
+### Granice potwierdzenia
+
+- 22 pliki Edge miały zgodne entrypointy `index.ts`, a 7 wykazywało rozbieżności live/repo w snapshotcie z 22.11. Zgodność entrypointu nie potwierdza zgodności importowanych helperów ani runtime.
+- Pakiet `tnb-payments` ma dodatkową rozbieżność pliku `providers.ts`; nie wdrażać go bez sandboxowych testów P24/Tpay/PayU.
+- Produkcyjna poczta pozostaje w trybie testowym; nie potwierdzono dostarczania realnych wiadomości.
+- Brak potwierdzonego pełnego E2E dla wszystkich ról i wszystkich starych tras.
+
+### Zaktualizowana kolejność wykonania
+
+1. Zamknąć mapę wszystkich 13 dawnych tras API → Edge Function, wraz z metodami HTTP, auth, walidacją, CORS, limitami, kodami błędów i testem.
+2. Zamknąć mapę 41 pozostałych plików legacy → adapter SPA / Edge / świadomie zachowany moduł izolowany. Dla każdego pliku zapisać: konsumentów, równoważność, test i decyzję.
+3. Najpierw zakończyć testy płatności w sandboxie i projekt trwałego outbox/idempotencji. Nie wdrażać rozbieżnego pakietu płatności.
+4. Następnie przeprowadzić E2E głównych funkcji użytkownika i panelu admina w izolowanym środowisku.
+5. Dopiero po potwierdzeniu braku użycia usunąć pozostałości TanStack Start i odświeżyć lockfile w środowisku z Bun.
+6. Utrzymać prelaunch aż do osobnej decyzji właściciela o publikacji.
+
+### Zmiany wykonane w ramach tej aktualizacji
+
+Wyłącznie aktualizacja dokumentacji audytu na gałęzi roboczej. Nie zmieniono kodu aplikacji, schematu bazy, danych, RLS, sekretów, funkcji Edge, płatności, poczty ani ustawień deploymentu.
