@@ -22,7 +22,7 @@ function Purchased() {
   const q = useQuery({ queryKey: ["purchased", token], enabled: ok, queryFn: () => getPurchasedMaterial({ data: { token, file: false } }),
     // Unknown checkout results also land here without the provider return query.
     // Poll only online pending orders; never retry or recreate the provider transaction.
-    refetchInterval: (qq) => { const d: any = qq.state.data; return d?.order?.status === "pending" && d?.order?.method === "online" && qq.state.dataUpdateCount < 40 ? 3000 : false; } });
+    refetchInterval: (qq) => { const d = qq.state.data; return d && "order" in d && d.order.status === "pending" && d.order.method === "online" && qq.state.dataUpdateCount < 40 ? 3000 : false; } });
   const [busy, setBusy] = useState(false);
   const [fileErr, setFileErr] = useState<string | null>(null);
   async function openFile() {
