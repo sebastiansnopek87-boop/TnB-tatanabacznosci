@@ -20,7 +20,9 @@ function Purchased() {
   const ok = /^[0-9a-f-]{36}$/.test(token);
   const back = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("powrot");
   const q = useQuery({ queryKey: ["purchased", token], enabled: ok, queryFn: () => getPurchasedMaterial({ data: { token, file: false } }),
-    refetchInterval: (qq) => { const d: any = qq.state.data; return back && d?.order?.status === "pending" && qq.state.dataUpdateCount < 40 ? 3000 : false; } });
+    // Unknown checkout results also land here without the provider return query.
+    // Poll only online pending orders; never retry or recreate the provider transaction.
+    refetchInterval: (qq) => { const d: any = qq.state.data; return d?.order?.status === "pending" && d?.order?.method === "online" && qq.state.dataUpdateCount < 40 ? 3000 : false; } });
   const [busy, setBusy] = useState(false);
   const [fileErr, setFileErr] = useState<string | null>(null);
   async function openFile() {
