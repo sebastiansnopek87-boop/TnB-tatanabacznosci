@@ -10,6 +10,23 @@ const input = "w-full border border-border/60 bg-background px-3 py-2.5 text-sm 
 const btn = "bg-gold px-6 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-primary-foreground hover:bg-gold-bright disabled:opacity-60";
 const btn2 = "border border-border/60 px-5 py-3 text-[0.72rem] uppercase tracking-[0.14em] text-foreground/80";
 
+function checkoutStorageKey(slug: string) { return `tnb:checkout:${slug}`; }
+function getCheckoutIdempotencyKey(slug: string) {
+  const storageKey = checkoutStorageKey(slug);
+  try {
+    const existing = sessionStorage.getItem(storageKey);
+    if (existing && /^[0-9a-f-]{36}$/i.test(existing)) return existing;
+  } catch { /* Storage may be unavailable; this tab can still use an in-memory key. */ }
+  const key = crypto.randomUUID();
+  try { sessionStorage.setItem(storageKey, key); } catch { /* Keep the key in component state. */ }
+  return key;
+}
+function rotateCheckoutIdempotencyKey(slug: string) {
+  const key = crypto.randomUUID();
+  try { sessionStorage.setItem(checkoutStorageKey(slug), key); } catch { /* Keep the key in component state. */ }
+  return key;
+}
+
 export function BuyPanel({ slug, title, price }: { slug: string; title: string; price: number }) {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -26,7 +43,7 @@ export function BuyPanel({ slug, title, price }: { slug: string; title: string; 
   const [consent, setConsent] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
+  const [idempotencyKey, setIdempotencyKey] = useState(() => getCheckoutIdempotencyKey(slug));
   const opts = useQuery({ queryKey: ["checkout-options"], queryFn: () => getCheckoutOptions(), enabled: open });
   const methods = [...(opts.data?.providers ?? []).map((p) => ({ id: p.id as PaymentMethodId, label: `Płatność online — ${p.label}`, note: p.test ? "Tryb testowy operatora: nie zostaną pobrane prawdziwe środki." : "Zostaniesz przekierowany do bezpiecznej płatności u operatora.", isDefault: p.isDefault })), ...(bankConfigured() ? [{ ...BANK_METHOD, isDefault: false }] : [])];
   const noMethods = !!opts.data && methods.length === 0;
@@ -98,7 +115,7 @@ export function BuyPanel({ slug, title, price }: { slug: string; title: string; 
       <p className="eyebrow text-gold">Zamówienie</p>
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="block text-sm text-foreground/85">Imię *
-          <input className={`${input} mt-1`} value={first} onChange={(e) => { setFirst(e.target.value); setIdempotencyKey(crypto.randomUUID()); }} maxLength={60} autoComplete="given-name" />
+          <input className={`${input} mt-1`} value={first} onChange={(e) => { setFirst(e.target.value); setIdempotencyKey(rotateCheckoutIdempotencyKey(slug)); }} maxLength={60} autoComplete="given-name" />
         </label>
         <label className="block text-sm text-foreground/85">Nazwisko *
           <input className={`${input} mt-1`} value={last} onChange={(e) => { setLast(e.target.value); setIdempotencyKey(crypto.randomUUID()); }} maxLength={60} autoComplete="family-name" />
