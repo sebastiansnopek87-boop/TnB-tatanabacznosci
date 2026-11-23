@@ -11,7 +11,7 @@ async function walk(dir) {
   for (const entry of entries) {
     const full = join(dir, entry.name);
     if (entry.isDirectory()) files.push(...await walk(full));
-    else if (/\\.tsx?$/.test(entry.name) && !entry.name.endsWith(".test.ts") && !entry.name.endsWith(".test.tsx")) files.push(full);
+    else if (/\.tsx?$/.test(entry.name) && !entry.name.endsWith(".test.ts") && !entry.name.endsWith(".test.tsx")) files.push(full);
   }
   return files;
 }
@@ -19,7 +19,7 @@ async function walk(dir) {
 const files = await walk(routesRoot);
 const missing = files.filter((file) => {
   const rel = relative("src", file).split(sep).join("/");
-  return !tree.includes(rel.replace(/\\.tsx?$/, ""));
+  return !tree.includes(rel.replace(/\.tsx?$/, ""));
 });
 
 if (missing.length) {
@@ -34,6 +34,10 @@ for (const text of ["Nie znaleziono strony", "Nie udało się wczytać strony", 
     console.error("Global router fallback is not localized: " + text);
     process.exit(1);
   }
+}
+if (root.includes("Go home")) {
+  console.error("Global router fallback contains untranslated English text: Go home");
+  process.exit(1);
 }
 
 console.log("OK: " + files.length + " route files are represented in the generated route tree; global fallback is Polish.");
