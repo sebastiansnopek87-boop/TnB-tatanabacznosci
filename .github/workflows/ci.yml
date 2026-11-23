@@ -59,6 +59,9 @@ jobs:
             fi
           done
 
+      - name: Verify React SPA route coverage and Polish fallbacks
+        run: node scripts/check-route-coverage.mjs
+
       - name: TypeScript validation
         run: bun run typecheck
 
