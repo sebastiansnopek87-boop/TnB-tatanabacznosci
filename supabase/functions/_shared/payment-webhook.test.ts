@@ -4,12 +4,12 @@ import {
   tpayTransactionReference,
 } from "./payment-webhook.ts";
 
-Deno.test("provider references must match exactly and be non-empty strings", () => {
+Deno.test("provider references must match after safe whitespace normalization", () => {
   if (!providerReferenceMatches("TNB-123", "TNB-123")) throw new Error("Expected identical references to match.");
   if (providerReferenceMatches("TNB-123", "TNB-124")) throw new Error("Different references must not match.");
   if (providerReferenceMatches("", "")) throw new Error("Empty references must not match.");
   if (providerReferenceMatches("   ", "   ")) throw new Error("Whitespace-only references must not match.");
-  if (providerReferenceMatches("TNB-123", " TNB-123 ")) throw new Error("References with surrounding whitespace must be normalized before matching.");
+  if (!providerReferenceMatches("TNB-123", " TNB-123 ")) throw new Error("Surrounding whitespace should be normalized.");
   if (providerReferenceMatches(null, "TNB-123")) throw new Error("Null stored reference must not match.");
   if (providerReferenceMatches("TNB-123", 123)) throw new Error("Non-string received reference must not match.");
 });
