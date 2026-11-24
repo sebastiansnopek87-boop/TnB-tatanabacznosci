@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clearCheckoutKey, getOrCreateCheckoutKey, type CheckoutKeyStorage } from "./checkout-idempotency";
+import { clearCheckoutKey, getOrCreateCheckoutKey, shouldClearCheckoutKey, type CheckoutKeyStorage } from "./checkout-idempotency";
 
 function createMemoryStorage(): CheckoutKeyStorage {
   const values = new Map<string, string>();
