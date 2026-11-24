@@ -524,7 +524,7 @@ async function getPurchasedMaterial(db: Db, data: { token: string; file: boolean
     return { order: { status: order.status, number: order.order_number, amount: order.amount, email: order.buyer_email, title: item?.title ?? "", slug: item?.slug ?? "", method: order.payment_method, provider: PROVIDER_LABEL[order.provider ?? ""] ?? null } };
   }
   if (order.access_expires_at && new Date(order.access_expires_at) < new Date()) return { error: "Link wygasł. Poproś o nowy na stronie materiału." };
-  const { data: item } = await db.from("library_items").select("title, summary, kind").eq("id", order.item_id).maybeSingle();
+  const { data: item } = await db.from("library_items").select("title, slug, summary, kind").eq("id", order.item_id).maybeSingle();
   const { data: content } = await db.from("library_item_content").select("body, file_path, file_name, external_url").eq("item_id", order.item_id).maybeSingle();
   if (data.file) {
     if (!content?.file_path) return { error: "Ten materiał nie ma pliku." };
