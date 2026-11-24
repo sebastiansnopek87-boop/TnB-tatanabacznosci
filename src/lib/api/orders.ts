@@ -10,7 +10,7 @@ type CreateOrderInput = { slug: string; name: string; email: string; phone?: str
 type PurchasedMaterial =
   | { error: string }
   | { order: { status: OrderStatus; number: string; amount: number; email: string; title: string; slug: string; method: string; provider: string | null } }
-  | { item: { title: string; summary: string | null; kind: string } | null; body: string; hasFile: boolean; fileName: string | null; externalUrl: string | null; expiresAt: string | null }
+  | { item: { title: string; slug: string; summary: string | null; kind: string } | null; body: string; hasFile: boolean; fileName: string | null; externalUrl: string | null; expiresAt: string | null }
   | { url: string };
 type MyPurchase = { id: string; paid_at: string; amount: number; title: string; slug: string; token: string };
 type AdminOrderRow = {
