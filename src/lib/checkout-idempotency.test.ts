@@ -42,3 +42,15 @@ describe("checkout idempotency key persistence", () => {
     expect(storage.getItem("checkout")).toBeNull();
   });
 });
+
+
+describe("checkout key lifecycle", () => {
+  it("clears a persisted key after a terminal unsuccessful order", () => {
+    expect(["failed", "cancelled", "refunded"].every(shouldClearCheckoutKey)).toBe(true);
+  });
+
+  it("keeps a key while payment is pending or needs manual review", () => {
+    expect(shouldClearCheckoutKey("pending")).toBe(false);
+    expect(shouldClearCheckoutKey("needs_review")).toBe(false);
+  });
+});
