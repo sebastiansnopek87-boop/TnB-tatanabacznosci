@@ -19,3 +19,7 @@ export function getOrCreateCheckoutKey(
 export function clearCheckoutKey(storage: CheckoutKeyStorage, storageKey: string): void {
   storage.removeItem(storageKey);
 }
+
+export function shouldClearCheckoutKey(status: string): boolean {
+  return status === "failed" || status === "cancelled" || status === "refunded";
+}
