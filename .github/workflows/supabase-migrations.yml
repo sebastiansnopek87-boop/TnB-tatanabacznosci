@@ -52,7 +52,7 @@ jobs:
           echo "Found $count SQL migrations with valid unique timestamps."
 
       - name: Start isolated local Supabase stack
-        run: supabase start
+        run: supabase start --exclude inbucket
 
       - name: Replay all migrations from an empty local database
         run: supabase db reset --local
