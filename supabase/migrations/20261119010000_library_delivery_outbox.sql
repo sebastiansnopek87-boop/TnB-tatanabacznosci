@@ -169,9 +169,22 @@ GRANT EXECUTE ON FUNCTION public.claim_library_delivery_outbox(text, integer) TO
 GRANT EXECUTE ON FUNCTION public.finish_library_delivery_outbox(uuid, text, text, boolean) TO service_role;
 
 -- Reuse the existing Vault-managed cron credential and tnb-orders authentication.
-DO $$
-DECLARE existing_job record;
+DO $
+DECLARE
+  existing_job record;
+  cron_secret text;
 BEGIN
+  -- Do not install a cron job that can never authenticate. Configure the
+  -- Vault secret before applying this migration; never embed credentials here.
+  SELECT decrypted_secret INTO cron_secret
+  FROM vault.decrypted_secrets
+  WHERE name = 'TNB_CRON_SECRET'
+  LIMIT 1;
+
+  IF COALESCE(cron_secret, '') = '' THEN
+    RAISE EXCEPTION 'Missing Vault secret TNB_CRON_SECRET; configure it before enabling the library delivery outbox cron job';
+  END IF;
+
   FOR existing_job IN SELECT jobid FROM cron.job WHERE jobname = 'tnb-library-delivery-outbox'
   LOOP
     PERFORM cron.unschedule(existing_job.jobid);
