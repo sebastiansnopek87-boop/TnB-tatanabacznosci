@@ -1809,9 +1809,6 @@ export type Database = {
           checkout_idempotency_key?: string | null
           checkout_request_fingerprint?: string | null
           checkout_state?: string
-          checkout_idempotency_key?: string | null
-          checkout_request_fingerprint?: string | null
-          checkout_state?: string
           consent_text?: string | null
           created_at?: string
           currency?: string
