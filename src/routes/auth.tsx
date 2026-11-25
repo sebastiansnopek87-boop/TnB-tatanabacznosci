@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AuthNotice, AuthShell, readAuthUrlParams } from "@/components/auth/AuthShell";
-import { lovable } from "@/integrations/lovable/index";
 import { usePlatformSettings } from "@/hooks/use-platform-settings";
 
 export const Route = createFileRoute("/auth")({
@@ -174,15 +173,22 @@ function AuthPage() {
 
   async function oauth(provider: "google" | "apple") {
     if (busy) return;
-    setMsg(null); setBusy(true);
-    const res = await lovable.auth.signInWithOAuth(provider, { redirect_uri: `${window.location.origin}/auth` }).catch((e) => ({ error: e, redirected: false }));
-    setBusy(false);
-    if (res.error) {
-      const cancelled = /cancel|closed|denied/i.test(String((res.error as Error).message ?? res.error));
-      return setMsg({ tone: cancelled ? "info" : "error", text: cancelled ? "Logowanie zostało anulowane." : "Nie udało się zalogować. Spróbuj ponownie." });
+    setMsg(null);
+    setBusy(true);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: `${window.location.origin}/auth` },
+    });
+    if (error) {
+      setBusy(false);
+      const cancelled = /cancel|closed|denied/i.test(error.message);
+      return setMsg({
+        tone: cancelled ? "info" : "error",
+        text: cancelled ? "Logowanie zostało anulowane." : "Nie udało się zalogować. Spróbuj ponownie.",
+      });
     }
-    if (res.redirected) return;
-    goAfter();
+    // Supabase redirects the browser to the selected identity provider.
+    // Keep the form busy while the full-page OAuth redirect is in progress.
   }
 
   const social = (
