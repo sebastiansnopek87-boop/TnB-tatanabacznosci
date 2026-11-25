@@ -43,12 +43,12 @@ describe("guest comments SPA contract", () => {
     await expect(confirmGuestComment({ data: { token } })).rejects.toThrow("pustą odpowiedź");
   });
 
-  it("keeps consent, anti-spam, IP/email rate limits and hashed expiring one-use tokens in Edge and legacy", () => {
+  it("keeps validation, anti-spam, rate limits and one-use confirmation in the Edge Function", () => {
     const edge = readFileSync(new URL("../../supabase/functions/tnb-guest-comments/index.ts", import.meta.url), "utf8");
-    const legacy = readFileSync(new URL("./guest-comments.functions.ts", import.meta.url), "utf8");
+    const api = readFileSync(new URL("./api/guest-comments.ts", import.meta.url), "utf8");
     for (const action of ["submitGuestComment", "confirmGuestComment", "resendGuestComment"]) {
       expect(edge).toContain('z.literal("' + action + '")');
-      expect(legacy).toContain("export const " + action + " =");
+      expect(api).toContain('action: "' + action + '"');
     }
     expect(edge).toContain('rules: z.literal(true');
     expect(edge).toContain("data.elapsedMs < 3000");
@@ -58,7 +58,9 @@ describe("guest comments SPA contract", () => {
     expect(edge).toContain("TTL_HOURS = 48, MAX_SENDS = 3");
     expect(edge).toContain("10 * 60_000");
     expect(edge).toContain('.is("token_used_at", null)');
-    expect(legacy).toContain("await sha256(data.token)");
-    expect(legacy).toContain("await sha256(token)");
+    expect(edge).not.toContain("@tanstack/react-start");
+    expect(edge).not.toContain("client.server");
+    expect(api).not.toContain("@tanstack/react-start");
+    expect(api).toContain('supabase.functions.invoke<T>("tnb-guest-comments"');
   });
 });
