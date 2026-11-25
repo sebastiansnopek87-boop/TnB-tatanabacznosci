@@ -198,120 +198,14 @@ async function notifyOrder(db: Db, orderId: string, event: string, key?: string)
   return dispatchOrderNotification(db, orderId, event, key);
 }
 async function afterPaid(db: Db, orderId: string) {
-  // The database trigger enqueues both notifications in the same transaction
-  // as the paid_at transition. Never send synchronously from webhook/admin paths.
-  await logOrderEvent(db, orderId, "delivery_queued", "Powiadomienia i dostarczenie materiału przekazano do trwałej kolejki.");
-}
-
-async function requireCron(db: Db, req: Request) {
-  const token = parseBearerToken(req.headers.get("authorization")) ?? "";
-  if (!token) throw new HttpError(401, "Unauthorized");
-  const { data: vaultSecret, error: vaultError } = await db.rpc("get_tnb_cron_secret");
-  const secrets = [
-    ...(typeof vaultSecret === "string" && vaultSecret ? [vaultSecret] : []),
-    ...["TNB_CRON_SECRET", "TNB_CRON_SECRET_PREVIOUS"].map((name) => envKey(name)).filter((value): value is string => !!value),
-  ];
-  if (!secrets.length) {
-    if (vaultError) console.error("Delivery cron secret lookup failed:", vaultError.code ?? "unknown");
-    throw new HttpError(503, "Zadanie cykliczne nie jest skonfigurowane.");
-  }
-  const digest = async (value: string) => new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value)));
-  const provided = await digest(token);
-  let matched = false;
-  for (const secret of secrets) {
-    const expected = await digest(secret);
-    let diff = token.length ^ secret.length;
-    for (let i = 0; i < expected.length; i++) diff |= provided[i]! ^ expected[i]!;
-    matched = matched || diff === 0;
-  }
-  if (!matched) throw new HttpError(401, "Unauthorized");
-}
-
-async function processDeliveryOutbox(db: Db) {
-  const worker = "tnb-orders-" + crypto.randomUUID();
-  const { data: jobs, error } = await db.rpc("claim_library_delivery_outbox", { p_worker: worker, p_limit: 3 });
-  if (error) throw new HttpError(500, "Nie udało się pobrać kolejki dostarczania.");
-  const counts = { claimed: jobs?.length ?? 0, sent: 0, simulated: 0, skipped: 0, needsReview: 0 };
-  for (const job of jobs ?? []) {
-    const event = String(job.event_key);
-    const idempotencyKey = event + "-" + String(job.order_id);
-    if (event === "order_access_delivered" || event === "order_guest_access") {
-      const { data: orderState } = await db.from("library_orders")
-        .select("delivery_status, delivered_at").eq("id", job.order_id).maybeSingle();
-      if (orderState?.delivery_status === "sent" || orderState?.delivered_at) {
-        await db.rpc("finish_library_delivery_outbox", {
-          p_id: job.id, p_status: "skipped", p_error: "delivery_already_marked_complete", p_safe_to_retry: false,
-        });
-        counts.skipped++;
-        continue;
-      }
-    }
-    const { data: existing, error: logError } = await db.from("email_notification_log")
-      .select("status").eq("idempotency_key", idempotencyKey).maybeSingle();
-    if (logError) {
-      await db.rpc("finish_library_delivery_outbox", { p_id: job.id, p_status: "needs_review", p_error: "notification_log_lookup_failed", p_safe_to_retry: false });
-      if (event === "order_access_delivered" || event === "order_guest_access") {
-        await db.from("library_orders").update({ delivery_status: "not_sent", delivery_error: "needs_review:notification_log_lookup_failed" }).eq("id", job.order_id);
-      }
-      counts.needsReview++;
-      continue;
-    }
-    // An interrupted SMTP send is ambiguous. Never resend it automatically:
-    // an operator can inspect the provider/log and decide whether to resend.
-    if (existing) {
-      const terminal = ["sent", "delivered", "simulated", "skipped"].includes(existing.status);
-      await db.rpc("finish_library_delivery_outbox", {
-        p_id: job.id, p_status: terminal ? (existing.status === "delivered" ? "sent" : existing.status) : "needs_review",
-        p_error: terminal ? null : "previous_notification_attempt_" + existing.status,
-        p_safe_to_retry: false,
-      });
-      if (event === "order_access_delivered" || event === "order_guest_access") {
-        const wasSent = existing.status === "sent" || existing.status === "delivered";
-        await db.from("library_orders").update({
-          delivery_status: wasSent ? "sent" : "not_sent",
-          delivery_error: wasSent ? null : terminal ? existing.status : "needs_review:previous_notification_attempt_" + existing.status,
-          ...(wasSent ? { delivered_at: new Date().toISOString() } : {}),
-        }).eq("id", job.order_id);
-      }
-      if (terminal) {
-        if (existing.status === "sent" || existing.status === "delivered") counts.sent++;
-        else if (existing.status === "simulated") counts.simulated++;
-        else counts.skipped++;
-      } else counts.needsReview++;
-      continue;
-    }
-    const result = await dispatchOrderNotification(db, String(job.order_id), event);
-    const reason = "reason" in result ? result.reason : result.status;
-    const decision = getOutboxFinishDecision(result.status, reason);
-    const terminal = decision.status === "sent" || decision.status === "simulated" || decision.status === "skipped";
-    const { error: finishError } = await db.rpc("finish_library_delivery_outbox", {
-      p_id: job.id, p_status: decision.status, p_error: terminal ? null : reason,
-      p_safe_to_retry: decision.safeToRetry,
-    });
-    if (finishError) {
-      console.error("delivery outbox completion failed", job.id, finishError.message);
-      if (event === "order_access_delivered" || event === "order_guest_access") {
-        await db.from("library_orders").update({ delivery_status: "not_sent", delivery_error: "needs_review:outbox_completion_failed" }).eq("id", job.order_id);
-      }
-      counts.needsReview++;
-      continue;
-    }
-    if (result.status === "sent") counts.sent++;
-    else if (result.status === "simulated") counts.simulated++;
-    else if (result.status === "skipped") counts.skipped++;
-    else counts.needsReview++;
-    if (event === "order_access_delivered" || event === "order_guest_access") {
-      await db.from("library_orders").update({
-        delivery_status: result.status === "sent" ? "sent" : "not_sent",
-        delivery_error: result.status === "sent" ? null : result.status === "simulated" ? "simulated" : reason ?? result.status,
-        ...(result.status === "sent" ? { delivered_at: new Date().toISOString() } : {}),
-      }).eq("id", job.order_id);
-      if (result.status === "sent") {
-        await logOrderEvent(db, String(job.order_id), "access_granted", "Link do materiału wysłano po potwierdzeniu płatności.");
-      }
-    }
-  }
-  return counts;
+  const { data: order } = await db.from("library_orders").select("user_id").eq("id", orderId).maybeSingle();
+  await notifyOrder(db, orderId, "order_paid");
+  const delivered = await notifyOrder(db, orderId, order?.user_id ? "order_access_delivered" : "order_guest_access");
+  await db.from("library_orders").update({
+    delivery_status: delivered.status === "sent" ? "sent" : "not_sent",
+    delivery_error: delivered.status === "sent" ? null : delivered.status === "simulated" ? "simulated" : delivered.reason ?? delivered.status,
+  }).eq("id", orderId);
+  await logOrderEvent(db, orderId, "access_granted", "Dostęp do materiału przyznany automatycznie po potwierdzeniu płatności.");
 }
 
 async function markPaid(db: Db, orderId: string, actor: string) {
@@ -385,7 +279,6 @@ async function resendAccess(db: Db, orderId: string, key: string) {
 }
 
 const actionSchema = z.discriminatedUnion("action", [
-  z.object({ action: z.literal("processDeliveryOutbox") }),
   z.object({ action: z.literal("getCheckoutOptions") }),
   z.object({ action: z.literal("createLibraryOrder"), data: z.object({
     slug: z.string().regex(/^[a-z0-9-]{1,120}$/),
@@ -641,10 +534,6 @@ Deno.serve(async (req: Request) => {
     const parsed = actionSchema.safeParse(await req.json().catch(() => null));
     if (!parsed.success) return json({ message: "Nieprawidłowe żądanie." }, 400);
     const input = parsed.data;
-    if (input.action === "processDeliveryOutbox") {
-      await requireCron(db, req);
-      return json(await processDeliveryOutbox(db));
-    }
     switch (input.action) {
       case "getCheckoutOptions": return json(await getCheckoutOptions(db));
       case "createLibraryOrder": return json(await createLibraryOrder(db, req, input));
