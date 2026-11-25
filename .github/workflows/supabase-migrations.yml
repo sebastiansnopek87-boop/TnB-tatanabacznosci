@@ -9,6 +9,7 @@ on:
   push:
     branches:
       - chore/restore-supabase-migrations-20261117
+      - feat/checkout-idempotency-mainline-2026-11-25
     paths:
       - "supabase/config.toml"
       - "supabase/migrations/**"
