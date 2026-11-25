@@ -21,7 +21,7 @@ function Purchased() {
   const ok = /^[0-9a-f-]{36}$/.test(token);
   const back = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("powrot");
   const q = useQuery({ queryKey: ["purchased", token], enabled: ok, queryFn: () => getPurchasedMaterial({ data: { token, file: false } }),
-    refetchInterval: (qq) => { const d: any = qq.state.data; return back && d?.order?.status === "pending" && qq.state.dataUpdateCount < 40 ? 3000 : false; } });
+    refetchInterval: (qq) => { const d = qq.state.data; const status = d && "order" in d ? d.order?.status : undefined; return back && status === "pending" && qq.state.dataUpdateCount < 40 ? 3000 : false; } });
   const [busy, setBusy] = useState(false);
   const [fileErr, setFileErr] = useState<string | null>(null);
   async function openFile() {
