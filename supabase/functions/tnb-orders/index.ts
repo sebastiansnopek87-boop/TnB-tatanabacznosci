@@ -5,7 +5,6 @@ import { ADAPTERS, configStatus, type ProviderId, type ProviderRow } from "./pro
 import { DEFAULT_TEMPLATES, EVENT_MAP } from "./registry.ts";
 import { render, maskSensitive, stripSensitive, type Vars } from "./render.ts";
 import { checkoutFingerprint } from "../_shared/checkout-idempotency.ts";
-import { getOutboxFinishDecision } from "../_shared/delivery-outbox.ts";
 import { sendSmtpMail, smtpConfig } from "../_shared/smtp.ts";
 
 const CORS = new Headers({
