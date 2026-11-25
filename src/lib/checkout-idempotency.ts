@@ -21,5 +21,5 @@ export function clearCheckoutKey(storage: CheckoutKeyStorage, storageKey: string
 }
 
 export function shouldClearCheckoutKey(status: string): boolean {
-  return status === "failed" || status === "cancelled" || status === "refunded";
+  return status === "paid" || status === "failed" || status === "cancelled" || status === "refunded";
 }

@@ -74,6 +74,14 @@ jobs:
       - name: Verify Supabase Edge Function source/config coverage
         run: bash scripts/check-edge-function-sync.sh
 
+      - name: Deno checkout fingerprint tests
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Run checkout fingerprint tests
+        run: deno test supabase/functions/_shared/checkout-idempotency.test.ts
+
       - name: Unit tests
         run: bun run test
 

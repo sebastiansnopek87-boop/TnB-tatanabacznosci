@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PageShell } from "@/components/tnb/PageShell";
 import { getPurchasedMaterial } from "@/lib/api/orders";
+import { clearCheckoutKey, shouldClearCheckoutKey } from "@/lib/checkout-idempotency";
 import { fmtDay, fmtPrice } from "@/lib/library";
 import { BANK_TRANSFER, bankConfigured } from "@/config/payments";
 
@@ -20,7 +21,7 @@ function Purchased() {
   const ok = /^[0-9a-f-]{36}$/.test(token);
   const back = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("powrot");
   const q = useQuery({ queryKey: ["purchased", token], enabled: ok, queryFn: () => getPurchasedMaterial({ data: { token, file: false } }),
-    refetchInterval: (qq) => { const d: any = qq.state.data; return back && d?.order?.status === "pending" && qq.state.dataUpdateCount < 40 ? 3000 : false; } });
+    refetchInterval: (qq) => { const d = qq.state.data; const status = d && "order" in d ? d.order?.status : undefined; return back && status === "pending" && qq.state.dataUpdateCount < 40 ? 3000 : false; } });
   const [busy, setBusy] = useState(false);
   const [fileErr, setFileErr] = useState<string | null>(null);
   async function openFile() {
@@ -30,6 +31,12 @@ function Purchased() {
     if ("url" in r && r.url) window.open(r.url, "_blank", "noopener"); else setFileErr("error" in r ? r.error : "Błąd");
   }
   const d = q.data;
+  useEffect(() => {
+    if (!d || typeof window === "undefined") return;
+    const slug = "item" in d ? d.item?.slug : "order" in d && shouldClearCheckoutKey(d.order.status) ? d.order.slug : null;
+    if (!slug) return;
+    try { clearCheckoutKey(window.sessionStorage, `tnb:checkout:${slug}`); } catch { /* Storage may be disabled by the browser. */ }
+  }, [d]);
   return (
     <PageShell>
       <div className="mx-auto max-w-3xl px-5 py-12">

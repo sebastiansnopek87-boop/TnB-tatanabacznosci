@@ -4,6 +4,7 @@ import { z } from "zod";
 import { ADAPTERS, configStatus, type ProviderId, type ProviderRow } from "./providers.ts";
 import { DEFAULT_TEMPLATES, EVENT_MAP } from "./registry.ts";
 import { render, maskSensitive, stripSensitive, type Vars } from "./render.ts";
+import { checkoutFingerprint } from "../_shared/checkout-idempotency.ts";
 import { sendSmtpMail, smtpConfig } from "../_shared/smtp.ts";
 
 const CORS = new Headers({
@@ -49,6 +50,32 @@ function adminClient() {
   return createClient(url, key, { global: { fetch: createSupabaseFetch(key) }, auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
 }
 type Db = ReturnType<typeof adminClient>;
+type CheckoutProviderRow = {
+  id: string; enabled: boolean; is_default: boolean; environment: string;
+  merchant_id: string | null; pos_id: string | null; client_id: string | null;
+};
+type PurchaseRow = {
+  id: string; paid_at: string | null; amount: number; access_token: string;
+  library_items: { title: string; slug: string } | null;
+};
+type AdminOrderRow = {
+  order_number: string; buyer_email: string; buyer_name: string | null;
+  library_items: { title: string } | null;
+};
+type SalesRow = {
+  environment: string; is_test: boolean; paid_at: string | null; status: string;
+  amount: number; provider: string | null; created_at: string;
+};
+type AdminOrderFilters = {
+  status: typeof STATUSES[number] | "all";
+  provider: "all" | "manual" | typeof PROVIDERS[number];
+  kind: "all" | "real" | "test"; from: string; to: string; q: string;
+};
+type AdminOrderAction = {
+  id: string;
+  action: "paid" | "delivered" | "cancelled" | "refund_start" | "refund_complete" | "review_paid" | "review_failed";
+  reason: string; revokeAccess: boolean; confirmNumber: string;
+};
 class HttpError extends Error { constructor(public status: number, message: string) { super(message); } }
 function json(body: unknown, status = 200) { return Response.json(body, { status, headers: CORS }); }
 function siteOrigin() { return (Deno.env.get("PUBLIC_SITE_URL") || "https://tatanabacznosci.pl").replace(/\/+$/, ""); }
@@ -260,6 +287,7 @@ const actionSchema = z.discriminatedUnion("action", [
     phone: z.string().trim().max(20).regex(/^$|^\+?[0-9 ()-]{7,20}$/, "Podaj poprawny numer telefonu.").default(""),
     method: z.enum(["bank_transfer", ...PROVIDERS], { errorMap: () => ({ message: "Wybierz dostępną metodę płatności." }) }),
     consent: z.literal(true, { errorMap: () => ({ message: "Zaakceptuj wymagane zgody." }) }),
+    idempotencyKey: z.string().uuid().optional(),
   }) }),
   z.object({ action: z.literal("getPurchasedMaterial"), data: z.object({ token: z.string().uuid(), file: z.boolean().default(false) }) }),
   z.object({ action: z.literal("recoverAccess"), data: z.object({
@@ -289,15 +317,15 @@ const actionSchema = z.discriminatedUnion("action", [
 async function getCheckoutOptions(db: Db) {
   const { data, error } = await db.from("payment_providers").select("id, enabled, is_default, environment, merchant_id, pos_id, client_id");
   if (error) throw new HttpError(500, "Nie udało się pobrać metod płatności.");
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
-  const providers = (data ?? []).filter((p: any) => p.enabled && configStatus(p).configured)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
-    .map((p: any) => ({ id: p.id as ProviderId, label: PROVIDER_LABEL[p.id]!, isDefault: p.is_default, test: p.environment === "sandbox" }));
+  const providers = (data ?? []).filter((p) => (p as CheckoutProviderRow).enabled && configStatus(p as ProviderRow).configured)
+    .map((p) => ({ id: p.id as ProviderId, label: PROVIDER_LABEL[p.id]!, isDefault: p.is_default, test: p.environment === "sandbox" }));
   return { providers };
 }
 
 async function createLibraryOrder(db: Db, req: Request, data: z.infer<typeof actionSchema> & { action: "createLibraryOrder" }) {
   const input = data.data;
+  // Keep the endpoint backward-compatible during the SPA/Edge rollout. New SPA clients persist the key; legacy clients receive a one-request key.
+  const idempotencyKey = input.idempotencyKey ?? crypto.randomUUID();
   const { data: item, error: itemError } = await db.from("library_items")
     .select("id, title, access, status, purchasable, price_amount, currency").eq("slug", input.slug).maybeSingle();
   if (itemError || !item || item.status !== "published" || item.access !== "premium" || !item.purchasable || !item.price_amount || item.price_amount < 100) {
@@ -308,11 +336,31 @@ async function createLibraryOrder(db: Db, req: Request, data: z.infer<typeof act
   if (!online) return { error: "Płatność przelewem bankowym jest obecnie niedostępna." };
   const provider = await providerRow(db, input.method as ProviderId);
   if (!provider?.enabled || !configStatus(provider).configured) return { error: "Ta metoda płatności jest obecnie niedostępna." };
+  const fingerprint = await checkoutFingerprint({
+    itemId: item.id, method: input.method as ProviderId, email: input.email, name: input.name,
+    phone: input.phone || "", amount: item.price_amount, currency: item.currency || "PLN", userId: user?.id ?? null,
+  });
   const { data: order, error } = await db.from("library_orders").insert({
     item_id: item.id, user_id: user?.id ?? null, buyer_email: input.email, buyer_name: input.name, buyer_phone: input.phone || null,
-    amount: item.price_amount, currency: "PLN", status: "pending", provider: input.method, payment_method: "online",
-    environment: provider.environment, consent_text: CONSENT,
+    amount: item.price_amount, currency: item.currency || "PLN", status: "pending", provider: input.method, payment_method: "online",
+    environment: provider.environment, consent_text: CONSENT, checkout_idempotency_key: idempotencyKey,
+    checkout_request_fingerprint: fingerprint, checkout_state: "creating",
   }).select("id, access_token, order_number").single();
+  if (error?.code === "23505") {
+    const { data: existing } = await db.from("library_orders")
+      .select("id, access_token, order_number, checkout_request_fingerprint, checkout_state")
+      .eq("checkout_idempotency_key", idempotencyKey).maybeSingle();
+    if (!existing) throw new HttpError(409, "To zamówienie jest już przetwarzane. Odśwież status za chwilę.");
+    if (existing.checkout_request_fingerprint !== fingerprint) throw new HttpError(409, "Ten klucz zamówienia został już użyty z innymi danymi.");
+    if (existing.checkout_state === "ready") {
+      const { data: session } = await db.from("library_checkout_sessions")
+        .select("redirect_url").eq("idempotency_key", idempotencyKey).maybeSingle();
+      if (session?.redirect_url) return { token: existing.access_token, redirectUrl: session.redirect_url };
+    }
+    throw new HttpError(409, existing.checkout_state === "needs_review"
+      ? "Płatność wymaga sprawdzenia. Nie ponawiaj zamówienia — skontaktuj się z obsługą."
+      : "Zamówienie jest już przetwarzane. Poczekaj chwilę przed ponowieniem.");
+  }
   if (error || !order) {
     console.error("order insert failed", error?.message);
     return { error: "Nie udało się złożyć zamówienia. Spróbuj ponownie." };
@@ -325,18 +373,39 @@ async function createLibraryOrder(db: Db, req: Request, data: z.infer<typeof act
   const customerIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     req.headers.get("x-real-ip") || "";
   const result = await ADAPTERS[input.method as ProviderId].create(provider, {
-    orderId: order.id, orderNumber: order.order_number, amount: item.price_amount, currency: "PLN",
+    orderId: order.id, orderNumber: order.order_number, amount: item.price_amount, currency: item.currency || "PLN",
     email: input.email, name: input.name, description: order.order_number + " — " + item.title,
     returnUrl: origin + "/zakup/" + order.access_token + "?powrot=1",
     notifyUrl: baseUrl + "/functions/v1/tnb-payments?provider=" + input.method,
     customerIp,
   }).catch((error) => ({ ok: false as const, reason: error instanceof Error ? error.message : "error" }));
   if (!result.ok) {
-    await logOrderEvent(db, order.id, "checkout_error", "Operator nie utworzył transakcji: " + result.reason);
-    await db.from("library_orders").update({ status: "failed", failed_at: new Date().toISOString() }).eq("id", order.id).eq("status", "pending");
-    return { error: "Nie udało się połączyć z operatorem płatności. Spróbuj ponownie lub wybierz inną metodę." };
+    // Provider timeouts can be ambiguous: never create a second transaction automatically.
+    const { data: reviewOrder, error: reviewError } = await db.from("library_orders")
+      .update({ checkout_state: "needs_review", review_reason: "checkout_provider_result_ambiguous" })
+      .eq("id", order.id).eq("checkout_state", "creating").select("id").maybeSingle();
+    if (reviewError || !reviewOrder) {
+      console.error("checkout review state persistence failed", reviewError?.message ?? "order state was not creating");
+    }
+    await logOrderEvent(db, order.id, "checkout_needs_review", "Nie można jednoznacznie potwierdzić wyniku utworzenia transakcji u operatora.");
+    return { error: "Nie udało się potwierdzić wyniku u operatora. Zamówienie wymaga sprawdzenia; nie ponawiaj płatności." };
   }
-  await db.from("library_orders").update({ provider_ref: result.providerRef, checkout_session_id: result.providerRef }).eq("id", order.id);
+  const { error: sessionError } = await db.from("library_checkout_sessions").insert({
+    idempotency_key: idempotencyKey, order_id: order.id, redirect_url: result.redirectUrl,
+  });
+  if (sessionError) {
+    console.error("checkout session persistence failed", sessionError.message);
+    await db.from("library_orders").update({ checkout_state: "needs_review", review_reason: "checkout_session_persistence_failed" }).eq("id", order.id);
+    throw new HttpError(503, "Operator utworzył transakcję, ale zapis wyniku wymaga sprawdzenia. Nie ponawiaj płatności.");
+  }
+  const { data: savedOrder, error: saveError } = await db.from("library_orders").update({
+    provider_ref: result.providerRef, checkout_session_id: result.providerRef, checkout_state: "ready",
+  }).eq("id", order.id).eq("checkout_state", "creating").select("id").maybeSingle();
+  if (saveError || !savedOrder) {
+    console.error("checkout result persistence failed", saveError?.message ?? "order state was not creating");
+    await db.from("library_orders").update({ checkout_state: "needs_review", review_reason: "checkout_order_persistence_failed" }).eq("id", order.id);
+    throw new HttpError(503, "Operator utworzył transakcję, ale zapis wyniku wymaga sprawdzenia. Nie ponawiaj płatności.");
+  }
   await logOrderEvent(db, order.id, "checkout_started", "Transakcja utworzona u operatora (" + result.providerRef + "). Przekierowanie do płatności.");
   return { token: order.access_token, redirectUrl: result.redirectUrl };
 }
@@ -351,7 +420,7 @@ async function getPurchasedMaterial(db: Db, data: { token: string; file: boolean
     return { order: { status: order.status, number: order.order_number, amount: order.amount, email: order.buyer_email, title: item?.title ?? "", slug: item?.slug ?? "", method: order.payment_method, provider: PROVIDER_LABEL[order.provider ?? ""] ?? null } };
   }
   if (order.access_expires_at && new Date(order.access_expires_at) < new Date()) return { error: "Link wygasł. Poproś o nowy na stronie materiału." };
-  const { data: item } = await db.from("library_items").select("title, summary, kind").eq("id", order.item_id).maybeSingle();
+  const { data: item } = await db.from("library_items").select("title, slug, summary, kind").eq("id", order.item_id).maybeSingle();
   const { data: content } = await db.from("library_item_content").select("body, file_path, file_name, external_url").eq("item_id", order.item_id).maybeSingle();
   if (data.file) {
     if (!content?.file_path) return { error: "Ten materiał nie ma pliku." };
@@ -374,14 +443,12 @@ async function listMyPurchases(db: Db, userId: string, email: string | null) {
   query = email ? query.or("user_id.eq." + userId + ",buyer_email.eq." + email) : query.eq("user_id", userId);
   const { data, error } = await query.order("paid_at", { ascending: false });
   if (error) throw new HttpError(500, "Nie udało się pobrać zakupów.");
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
-  return (data ?? []).map((order: any) => ({
+  return (data ?? []).map((order) => ({
     id: order.id, paid_at: order.paid_at, amount: order.amount, title: order.library_items?.title ?? "",
     slug: order.library_items?.slug ?? "", token: order.access_token,
   }));
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
-async function adminListOrders(db: Db, input: any) {
+async function adminListOrders(db: Db, input: AdminOrderFilters) {
   let query = db.from("library_orders").select("id, order_number, created_at, paid_at, delivered_at, status, delivery_status, buyer_email, buyer_name, amount, currency, payment_method, provider, environment, is_test, access_revoked_at, library_items!inner(title)")
     .order("created_at", { ascending: false }).limit(500);
   if (input.status !== "all") query = query.eq("status", input.status);
@@ -392,8 +459,7 @@ async function adminListOrders(db: Db, input: any) {
   const { data, error } = await query;
   if (error) throw new HttpError(500, "Nie udało się pobrać zamówień.");
   const search = input.q.toLowerCase();
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
-  return (data as any[]).filter((row) => !search ||
+  return (data as AdminOrderRow[]).filter((row) => !search ||
     row.order_number.toLowerCase().includes(search) || row.buyer_email.toLowerCase().includes(search) ||
     (row.buyer_name ?? "").toLowerCase().includes(search) || (row.library_items?.title ?? "").toLowerCase().includes(search));
 }
@@ -401,12 +467,10 @@ async function adminSalesSummary(db: Db) {
   const { data, error } = await db.from("library_orders")
     .select("status, amount, provider, environment, is_test, paid_at, created_at").limit(20000);
   if (error) throw new HttpError(500, "Nie udało się pobrać podsumowania sprzedaży.");
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
-  const rows = (data ?? []) as any[];
+  const rows = (data ?? []) as SalesRow[];
   const real = rows.filter((row) => row.environment !== "sandbox" && !row.is_test);
   const paid = real.filter((row) => row.paid_at && ["paid", "refund_pending"].includes(row.status));
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
-  const sum = (items: any[]) => items.reduce((total, row) => total + row.amount, 0);
+  const sum = (items: SalesRow[]) => items.reduce((total, row) => total + row.amount, 0);
   const byProvider: Record<string, { count: number; amount: number }> = {};
   for (const row of paid) {
     const key = row.provider ?? "manual";
@@ -447,8 +511,7 @@ async function adminResendDelivery(db: Db, id: string, actor: string) {
   await logEvent(db, { type: "order_resend", actor, objectKind: "order", objectId: id, result: result.ok ? "ok" : "failed", detail: result.ok ? undefined : result.reason });
   return result;
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy Supabase result typing; replace with generated database types.
-async function adminSetOrderStatus(db: Db, userId: string, input: any) {
+async function adminSetOrderStatus(db: Db, userId: string, input: AdminOrderAction) {
   if (input.action.startsWith("refund") || input.action.startsWith("review")) {
     const { data: order } = await db.from("library_orders").select("order_number").eq("id", input.id).maybeSingle();
     if (!order || order.order_number !== input.confirmNumber.toUpperCase()) throw new HttpError(400, "Wpisz dokładny numer zamówienia, aby potwierdzić.");

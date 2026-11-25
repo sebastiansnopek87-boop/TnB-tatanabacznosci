@@ -9,6 +9,7 @@ on:
   push:
     branches:
       - chore/restore-supabase-migrations-20261117
+      - feat/checkout-idempotency-mainline-2026-11-25
     paths:
       - "supabase/config.toml"
       - "supabase/migrations/**"
@@ -52,7 +53,7 @@ jobs:
           echo "Found $count SQL migrations with valid unique timestamps."
 
       - name: Start isolated local Supabase stack
-        run: supabase start
+        run: supabase start --exclude inbucket
 
       - name: Replay all migrations from an empty local database
         run: supabase db reset --local
