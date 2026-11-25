@@ -381,7 +381,12 @@ async function createLibraryOrder(db: Db, req: Request, data: z.infer<typeof act
   }).catch((error) => ({ ok: false as const, reason: error instanceof Error ? error.message : "error" }));
   if (!result.ok) {
     // Provider timeouts can be ambiguous: never create a second transaction automatically.
-    await db.from("library_orders").update({ checkout_state: "needs_review", review_reason: "checkout_provider_result_ambiguous" }).eq("id", order.id).eq("checkout_state", "creating");
+    const { data: reviewOrder, error: reviewError } = await db.from("library_orders")
+      .update({ checkout_state: "needs_review", review_reason: "checkout_provider_result_ambiguous" })
+      .eq("id", order.id).eq("checkout_state", "creating").select("id").maybeSingle();
+    if (reviewError || !reviewOrder) {
+      console.error("checkout review state persistence failed", reviewError?.message ?? "order state was not creating");
+    }
     await logOrderEvent(db, order.id, "checkout_needs_review", "Nie można jednoznacznie potwierdzić wyniku utworzenia transakcji u operatora.");
     return { error: "Nie udało się potwierdzić wyniku u operatora. Zamówienie wymaga sprawdzenia; nie ponawiaj płatności." };
   }
@@ -393,11 +398,11 @@ async function createLibraryOrder(db: Db, req: Request, data: z.infer<typeof act
     await db.from("library_orders").update({ checkout_state: "needs_review", review_reason: "checkout_session_persistence_failed" }).eq("id", order.id);
     throw new HttpError(503, "Operator utworzył transakcję, ale zapis wyniku wymaga sprawdzenia. Nie ponawiaj płatności.");
   }
-  const { error: saveError } = await db.from("library_orders").update({
+  const { data: savedOrder, error: saveError } = await db.from("library_orders").update({
     provider_ref: result.providerRef, checkout_session_id: result.providerRef, checkout_state: "ready",
-  }).eq("id", order.id).eq("checkout_state", "creating");
-  if (saveError) {
-    console.error("checkout result persistence failed", saveError.message);
+  }).eq("id", order.id).eq("checkout_state", "creating").select("id").maybeSingle();
+  if (saveError || !savedOrder) {
+    console.error("checkout result persistence failed", saveError?.message ?? "order state was not creating");
     await db.from("library_orders").update({ checkout_state: "needs_review", review_reason: "checkout_order_persistence_failed" }).eq("id", order.id);
     throw new HttpError(503, "Operator utworzył transakcję, ale zapis wyniku wymaga sprawdzenia. Nie ponawiaj płatności.");
   }
