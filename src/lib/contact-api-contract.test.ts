@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { invoke } = vi.hoisted(() => ({ invoke: vi.fn() }));
@@ -38,7 +38,9 @@ describe("contact SPA contract", () => {
   });
 
   it("keeps strict Edge validation, origin allowlist, anti-spam and safe email rendering explicit", () => {
+    expect(existsSync(new URL("./contact.functions.ts", import.meta.url))).toBe(false);
     const edge = readFileSync(new URL("../../supabase/functions/tnb-contact/index.ts", import.meta.url), "utf8");
+    expect(edge).not.toContain("@tanstack/react-start");
     expect(edge).toContain("}).strict()");
     expect(edge).toContain('"https://tatanabacznosci.pl"');
     expect(edge).toContain('"https://www.tatanabacznosci.pl"');
