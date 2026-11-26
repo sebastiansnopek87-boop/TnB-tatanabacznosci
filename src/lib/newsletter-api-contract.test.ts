@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { invoke } = vi.hoisted(() => ({ invoke: vi.fn() }));
@@ -14,6 +14,10 @@ import {
 beforeEach(() => invoke.mockReset().mockResolvedValue({ data: { ok: true }, error: null }));
 
 describe("newsletter SPA contract", () => {
+  it("has no TanStack Start newsletter handler left in the application source", () => {
+    expect(existsSync(new URL("./newsletter.functions.ts", import.meta.url))).toBe(false);
+  });
+
   it("keeps consent validation and routes subscribe, unsubscribe and confirmation actions", async () => {
     expect(newsletterSchema.safeParse({ email: "bad", consent: true }).success).toBe(false);
     expect(newsletterSchema.safeParse({ email: "a@example.com", consent: false }).success).toBe(false);
