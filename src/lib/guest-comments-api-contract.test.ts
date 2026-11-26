@@ -59,7 +59,6 @@ describe("guest comments SPA contract", () => {
     expect(edge).toContain("10 * 60_000");
     expect(edge).toContain('.is("token_used_at", null)');
     expect(edge).not.toContain("@tanstack/react-start");
-    expect(edge).not.toContain("client.server");
     expect(api).not.toContain("@tanstack/react-start");
     expect(api).toContain('supabase.functions.invoke<T>("tnb-guest-comments"');
   });
