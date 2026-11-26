@@ -48,7 +48,7 @@ describe("guest comments SPA contract", () => {
     const api = readFileSync(new URL("./api/guest-comments.ts", import.meta.url), "utf8");
     for (const action of ["submitGuestComment", "confirmGuestComment", "resendGuestComment"]) {
       expect(edge).toContain('z.literal("' + action + '")');
-      expect(api).toContain('action: "' + action + '"');
+      expect(api).toContain('invokeGuestComments("' + action + '"');
     }
     expect(edge).toContain('rules: z.literal(true');
     expect(edge).toContain("data.elapsedMs < 3000");
