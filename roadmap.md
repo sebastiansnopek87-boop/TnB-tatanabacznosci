@@ -171,3 +171,11 @@
 - [x] Test kontraktu obejmuje wszystkie 4 akcje, dokładne payloady, Bearer, błędy uprawnień, limity uploadu i granicę storage.
 - [x] Usunięto `src/lib/brand.functions.ts` z gałęzi migracyjnej. Pozostaje 29 plików `*.functions.ts` / `*.server.ts` oraz 2 middleware Start.
 - [ ] CI i regresja uploadu logo, favicon, obrazu OG oraz nagłówka strony na środowisku testowym.
+
+
+## React SPA migration — continuation 2026-11-27 (user administration)
+- [x] Potwierdzono produkcyjną Edge Function `tnb-users` v4 ACTIVE; `index.ts` jest identyczny z `main`.
+- [x] Potwierdzono, że ekran zarządzania użytkownikami korzysta z `src/lib/api/users.ts` i `tnb-users` dla listy, szczegółów oraz zmian ról.
+- [x] Test kontraktu zachowuje kontrolę Bearer, admin/superadmin, RPC `admin_set_user_role` i ochronę ostatniego superadministratora; usunięto zależność testu od pliku legacy.
+- [x] Usunięto `src/lib/users.functions.ts` z gałęzi migracyjnej. Pozostaje 28 plików `*.functions.ts` / `*.server.ts` oraz 2 middleware Start.
+- [ ] Regresja panelu użytkowników na środowisku testowym: wyszukiwanie, szczegóły konta, nadawanie i odbieranie ról z próbą ochrony ostatniego superadministratora.

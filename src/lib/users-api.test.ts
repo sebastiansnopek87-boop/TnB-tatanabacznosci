@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { invoke, getSession } = vi.hoisted(() => ({ invoke: vi.fn(), getSession: vi.fn() }));
@@ -51,18 +51,17 @@ describe("users SPA contract", () => {
 
   it("keeps the Edge action schema, role gates and role invariants explicit", () => {
     const edge = readFileSync(new URL("../../supabase/functions/tnb-users/index.ts", import.meta.url), "utf8");
-    const legacy = readFileSync(new URL("./users.functions.ts", import.meta.url), "utf8");
     for (const action of ["listUsers", "getUserDetail", "setUserRole"]) {
       expect(edge).toContain('z.literal("' + action + '")');
       expect(edge).toContain("case \"" + action + "\"");
-      expect(legacy).toContain("export const " + action + " =");
     }
     expect(edge).toContain("await requireAdmin(ctx, actorId)");
     expect(edge).toContain("await requireSuperadmin(ctx, actorId)");
     expect(edge).toContain("admin_set_user_role");
     expect(edge).toContain("roleErrorMessages");
-    expect(legacy).toContain("Nie można odebrać roli ostatniemu superadministratorowi.");
-    expect(legacy).toContain("Najpierw nadaj rolę Administrator.");
-    expect(legacy).toContain("Najpierw odbierz rolę Superadministrator.");
+    expect(edge).toContain("Nie można odebrać roli ostatniemu superadministratorowi.");
+    expect(edge).toContain("Najpierw nadaj rolę Administrator.");
+    expect(edge).toContain("Najpierw odbierz rolę Superadministrator.");
+    expect(existsSync(new URL("./users.functions.ts", import.meta.url))).toBe(false);
   });
 });
