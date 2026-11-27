@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { invoke, getSession, from, rpc } = vi.hoisted(() => ({
@@ -18,6 +18,7 @@ vi.mock("@/integrations/supabase/client", () => ({
 
 import {
   getPlatformSettings,
+  setPrelaunchSettings,
   getSecurityStatus,
   setModuleVisibility,
   setPodcastLayout,
@@ -39,13 +40,14 @@ describe("platform settings SPA contract", () => {
     await Promise.all([
       getPlatformSettings(),
       updatePlatformSettings({ data: { platform_name: "TNB" } }),
+      setPrelaunchSettings({ data: { enabled: true, message: "Startujemy wkrótce." } }),
       setVisualEffects({ data: { effects: { enabled: true, intensity: "subtle", speed: "standard", reveal: true, interactive: true, panels: true } } }),
       setModuleVisibility({ data: { visibility: { library: { menu: true, page: true } } } }),
       setPodcastLayout({ data: { layout: "grid" } }),
       getSecurityStatus(),
     ]);
 
-    const actions = ["getPlatformSettings", "updatePlatformSettings", "setVisualEffects", "setModuleVisibility", "setPodcastLayout", "getSecurityStatus"];
+    const actions = ["getPlatformSettings", "updatePlatformSettings", "setPrelaunchSettings", "setVisualEffects", "setModuleVisibility", "setPodcastLayout", "getSecurityStatus"];
     expect(invoke).toHaveBeenCalledTimes(actions.length);
     for (const action of actions) {
       expect(invoke).toHaveBeenCalledWith("tnb-platform", {
@@ -94,13 +96,11 @@ describe("platform settings SPA contract", () => {
 
   it("matches the Edge action allowlist, server-side role gates and public column boundary", () => {
     const edge = readFileSync(new URL("../../supabase/functions/tnb-platform/index.ts", import.meta.url), "utf8");
-    const legacy = readFileSync(new URL("./platform.functions.ts", import.meta.url), "utf8");
     const actions = ["getPlatformSettings", "updatePlatformSettings", "setVisualEffects", "setModuleVisibility", "setPodcastLayout", "getSecurityStatus"];
 
     for (const action of actions) {
       expect(edge).toContain('z.literal("' + action + '")');
       expect(edge).toContain('case "' + action + '"');
-      expect(legacy).toContain("export const " + action + " =");
     }
     expect(edge).toContain('await requireAdmin(ctx)');
     expect(edge).toContain('await requireSuperadmin(ctx, "platform_settings")');
@@ -109,5 +109,6 @@ describe("platform settings SPA contract", () => {
     expect(edge).toContain('const PUBLIC_COLS =');
     expect(edge).not.toMatch(/const PUBLIC_COLS = [^;]*billing_/);
     expect(edge).toContain('await requireAdmin(ctx);');
+    expect(existsSync(new URL('./platform.functions.ts', import.meta.url))).toBe(false);
   });
 });

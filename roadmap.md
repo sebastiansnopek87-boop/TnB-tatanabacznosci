@@ -155,3 +155,11 @@
 - [x] Dodano testy kontraktowe 11 akcji przeglądarkowych Głosu TNB oraz 12 akcji YouTube; sprawdzają dispatch, payloady, sesję, walidację zgłoszenia, bramki admin/cron i zgodność z Edge.
 - [x] Usunięto `src/lib/voice.functions.ts` i `src/lib/youtube.server.ts` z gałęzi migracyjnej. Po tym etapie pozostają 31 plików `*.functions.ts` / `*.server.ts` i 2 middleware Start; usunięcie zależności Start nastąpi dopiero po migracji wszystkich pozostałych modułów.
 - [ ] Potwierdzić CI dla PR i przeprowadzić regresję Głos TNB: zgłoszenie historii, status/notatka administratora, lista filmów publicznych, synchronizacja YouTube, edycja i publikacja filmu oraz OAuth Instagram.
+
+
+## React SPA migration — continuation 2026-11-27 (platform settings)
+- [x] Potwierdzono produkcyjną Edge Function `tnb-platform` v5 ACTIVE; `index.ts` jest identyczny z `main`.
+- [x] Potwierdzono, że ekran ustawień, efekty wizualne i widoczność modułów korzystają z adaptera `src/lib/api/platform.ts`; publiczne ustawienia i układ podcastu korzystają z bezpośredniego odczytu anon z allowlistą kolumn.
+- [x] Rozszerzono test kontraktu o brakującą akcję `setPrelaunchSettings`, wszystkie 7 akcji Edge, role admin/superadmin oraz brak publicznego dostępu do pól billing.
+- [x] Usunięto `src/lib/platform.functions.ts` z gałęzi migracyjnej. Pozostaje 30 plików `*.functions.ts` / `*.server.ts` oraz 2 middleware Start.
+- [ ] CI i regresja panelu ustawień: zapis platformy, prelaunch, efekty wizualne, widoczność modułów, layout podcastu i odczyt bezpieczeństwa.
