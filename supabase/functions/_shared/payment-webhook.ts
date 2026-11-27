@@ -3,11 +3,10 @@
  * was created. Order UUIDs identify the local order; they do not replace this check.
  */
 export function providerReferenceMatches(stored: unknown, received: unknown): boolean {
-  return typeof stored === "string"
-    && stored.length > 0
-    && typeof received === "string"
-    && received.length > 0
-    && stored === received;
+  if (typeof stored !== "string" || typeof received !== "string") return false;
+  const expected = stored.trim();
+  const actual = received.trim();
+  return expected.length > 0 && actual.length > 0 && expected === actual;
 }
 
 /** P24 requires a successful server-side /transaction/verify before ACK. */
