@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { invoke } = vi.hoisted(() => ({ invoke: vi.fn() }));
@@ -71,9 +71,8 @@ describe("meetings SPA contract", () => {
     await expect(adminListMeetings()).rejects.toThrow("Brak uprawnień administratora.");
   });
 
-  it("keeps action parity, role sets, consent and upload boundaries explicit", () => {
+  it("keeps Edge action parity, role sets, consent and upload boundaries after removing Start", () => {
     const edge = readFileSync(new URL("../../supabase/functions/tnb-meetings/index.ts", import.meta.url), "utf8");
-    const legacy = readFileSync(new URL("./meetings.functions.ts", import.meta.url), "utf8");
     const names = [
       "listMeetings", "getMeeting", "getMyRegistration", "listMyRegistrations",
       "cancelMyRegistration", "registerForMeeting", "getRegistrationByToken", "adminListMeetings",
@@ -83,7 +82,6 @@ describe("meetings SPA contract", () => {
     for (const action of names) {
       expect(edge).toContain('z.literal("' + action + '")');
       expect(edge).toContain('case "' + action + '"');
-      expect(legacy).toContain("export const " + action + " =");
     }
     expect(edge).toContain("const ADMIN_ACTIONS=new Set");
     expect(edge).toContain("const AUTH_ACTIONS=new Set");
@@ -93,5 +91,6 @@ describe("meetings SPA contract", () => {
     expect(edge).toContain("website");
     expect(edge).toContain("elapsedMs");
     expect(edge).toContain("base64:z.string().max(7000000)");
+    expect(existsSync(new URL("./meetings.functions.ts", import.meta.url))).toBe(false);
   });
 });

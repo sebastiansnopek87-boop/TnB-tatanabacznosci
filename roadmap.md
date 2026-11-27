@@ -229,3 +229,12 @@
 - [x] Usunięto `src/lib/editor-ai.functions.ts`; test nie zależy już od handlera Start.
 - [x] Po scaleniu etapu pozostaną 23 pliki `*.functions.ts` / `*.server.ts` oraz 2 middleware Start.
 - [ ] Regresja asystenta: dodawanie źródeł, ustawienia, test połączenia AI, analiza, propozycje i rozwijanie propozycji na środowisku testowym.
+
+
+## React SPA migration — continuation 2026-11-27 (meetings)
+- [x] Potwierdzono produkcyjną Edge Function `tnb-meetings` v2 ACTIVE; `index.ts` jest identyczny z `main`.
+- [x] Adapter `src/lib/api/meetings.ts` obejmuje 16 akcji publicznych, użytkownika i administratora; Edge rozdziela ADMIN_ACTIONS/AUTH_ACTIONS, wymusza zgody, honeypot, elapsedMs i limity uploadu.
+- [x] Test kontraktu zachowuje parytet 16 akcji, role, walidację i granice uploadu, bez importu Start.
+- [x] Usunięto `src/lib/meetings.functions.ts`; `meetings-notify.server.ts` pozostaje do sprawdzenia zależności pozostałych modułów.
+- [x] Po scaleniu etapu pozostaną 22 pliki `*.functions.ts` / `*.server.ts` i 2 middleware Start.
+- [ ] Regresja spotkań: publiczna lista i szczegóły, rejestracja, zgody, odwołanie, lista uczestników, statusy, obraz i powiadomienia.
