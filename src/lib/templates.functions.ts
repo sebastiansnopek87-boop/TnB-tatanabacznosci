@@ -2,7 +2,7 @@ import { assertAdmin, logEvent } from "./admin-auth.server";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { DraftSection as DraftSectionSchema } from "./pages.functions";
+import { DraftSectionSchema } from "./page-section-schema";
 import { newSection, type PageSection } from "./pages";
 
 // "Moje szablony": saved copies of existing builder sections. Images are copied into
