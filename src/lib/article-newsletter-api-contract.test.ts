@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { invoke } = vi.hoisted(() => ({ invoke: vi.fn() }));
@@ -55,14 +55,14 @@ describe("article newsletter SPA contract", () => {
 
   it("keeps all Edge actions, role split, recipient confirmation and send safeguards explicit", () => {
     const edge = readFileSync(new URL("../../supabase/functions/tnb-article-newsletter/index.ts", import.meta.url), "utf8");
-    const legacy = readFileSync(new URL("./article-newsletter.functions.ts", import.meta.url), "utf8");
+    expect(existsSync(new URL("./article-newsletter.functions.ts", import.meta.url))).toBe(false);
     const actions = [
       "getArticleNewsletter", "prepareArticleNewsletter", "saveArticleNewsletter",
       "unmarkArticleNewsletter", "sendArticleNewsletterTest", "sendArticleNewsletter",
     ];
     for (const action of actions) {
       expect(edge).toContain('z.literal("' + action + '")');
-      expect(legacy).toContain("export const " + action + " =");
+      expect(edge).not.toContain("@tanstack/react-start");
     }
     expect(edge).toContain("requireAdmin(s, req, true)");
     expect(edge).toContain("Wysyłkę newslettera może zatwierdzić wyłącznie superadministrator.");
