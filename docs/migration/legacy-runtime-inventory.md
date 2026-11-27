@@ -12,6 +12,11 @@ Po scaleniu PR #39–44 i #47 usunięto 8 plików legacy: `guest-comments.functi
 
 | Usunięty plik | Docelowy transport | Weryfikacja |
 |---|---|---|
+| `src/lib/pages.functions.ts` | `src/lib/api/pages.ts` → `tnb-pages`; public read anonymous, admin actions Bearer | 13 akcji, public read, 12 akcji admin, wersjonowanie draftów, legalConfirmed + expectedDigest, upload i image URLs; produkcyjna Edge Function v4 ACTIVE, `index.ts` identyczny z `main`; test kontraktu bez Start |
+
+
+| Usunięty plik | Docelowy transport | Weryfikacja |
+|---|---|---|
 | `src/lib/admin.functions.ts` | `src/lib/api/admin.ts` → `tnb-admin` | 12 akcji panelu, `getAdminStatus` przez zweryfikowaną sesję i RPC `has_role`, Bearer, role admin/superadmin, walidacja i komunikaty błędów; produkcyjna Edge Function v3 ACTIVE, `index.ts` identyczny z `main` |
 | `src/lib/control-center.functions.ts` | `src/lib/api/control-center.ts` → `src/lib/api/admin.ts` → `tnb-admin` | Edge actions covered by admin contract; Start file retained until `control-center-360.test.ts` is migrated to exercise Edge logic |
 
