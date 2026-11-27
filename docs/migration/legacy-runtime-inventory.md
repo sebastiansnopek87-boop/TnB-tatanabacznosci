@@ -12,6 +12,11 @@ Po scaleniu PR #39–44 i #47 usunięto 8 plików legacy: `guest-comments.functi
 
 | Usunięty plik | Docelowy transport | Weryfikacja |
 |---|---|---|
+| `src/lib/editor-materials.functions.ts` | `src/lib/api/editor-materials.ts` → `tnb-editor-materials` | 15 akcji, aktywna produkcyjna Edge Function v2 identyczna z `main`, autoryzacja po stronie Edge, requireSuperadmin dla wszystkich operacji, test kontraktu i logic module |
+
+
+| Usunięty plik | Docelowy transport | Weryfikacja |
+|---|---|---|
 | `src/lib/admin.functions.ts` | `src/lib/api/admin.ts` → `tnb-admin` | 12 akcji panelu, `getAdminStatus` przez zweryfikowaną sesję i RPC `has_role`, Bearer, role admin/superadmin, walidacja i komunikaty błędów; produkcyjna Edge Function v3 ACTIVE, `index.ts` identyczny z `main` |
 | `src/lib/control-center.functions.ts` | `src/lib/api/control-center.ts` → `src/lib/api/admin.ts` → `tnb-admin` | Edge actions covered by admin contract; Start file retained until `control-center-360.test.ts` is migrated to exercise Edge logic |
 

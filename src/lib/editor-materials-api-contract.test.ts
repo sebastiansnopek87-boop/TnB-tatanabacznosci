@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { invoke } = vi.hoisted(() => ({ invoke: vi.fn() }));
@@ -58,11 +58,10 @@ describe("AI editorial materials SPA contract", () => {
     await expect(approveAndHandoff({ data })).rejects.toThrow("Tę operację może wykonać tylko superadministrator.");
   });
 
-  it("keeps the allowlist, server authentication and all-operation superadmin guard aligned with legacy", () => {
+  it("keeps the allowlist, server authentication and all-operation superadmin guard after removing Start", () => {
     const edge = readFileSync(new URL("../../supabase/functions/tnb-editor-materials/index.ts", import.meta.url), "utf8");
     const auth = readFileSync(new URL("../../supabase/functions/tnb-editor-materials/index-auth.ts", import.meta.url), "utf8");
     const logic = readFileSync(new URL("../../supabase/functions/tnb-editor-materials/logic.ts", import.meta.url), "utf8");
-    const legacy = readFileSync(new URL("./editor-materials.functions.ts", import.meta.url), "utf8");
     const actions = [
       "previewCreateMaterial", "startMaterial", "writeMaterial", "generateMaterialImage",
       "updateMaterialImage", "materialImageUrls", "finishMaterial", "listMaterials",
@@ -72,14 +71,13 @@ describe("AI editorial materials SPA contract", () => {
     for (const action of actions) {
       expect(edge).toContain('"' + action + '"');
       expect(logic).toContain("export const " + action + " =");
-      expect(legacy).toContain("export const " + action + " =");
     }
     expect(edge).toContain("await requireSuperadminEdge(req)");
     expect(edge).toContain("const fn = (logic as unknown as Record<string, unknown>)[raw.action]");
     expect(auth).toContain("getUser(token)");
     expect(auth).toContain('_role: "admin"');
     expect(auth).toContain('_role: "superadmin"');
-    expect(legacy).toContain("await assertSuperadmin(c, `ai_material:${op}`)");
     expect(logic).toContain("await assertSuperadmin(c, `ai_material:${op}`)");
+    expect(existsSync(new URL("./editor-materials.functions.ts", import.meta.url))).toBe(false);
   });
 });
