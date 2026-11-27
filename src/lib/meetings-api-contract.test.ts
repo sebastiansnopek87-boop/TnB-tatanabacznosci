@@ -92,5 +92,6 @@ describe("meetings SPA contract", () => {
     expect(edge).toContain("elapsedMs");
     expect(edge).toContain("base64:z.string().max(7000000)");
     expect(existsSync(new URL("./meetings.functions.ts", import.meta.url))).toBe(false);
+    expect(existsSync(new URL("./meetings-notify.server.ts", import.meta.url))).toBe(false);
   });
 });

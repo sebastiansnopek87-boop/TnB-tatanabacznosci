@@ -238,3 +238,11 @@
 - [x] Usunięto `src/lib/meetings.functions.ts`; `meetings-notify.server.ts` pozostaje do sprawdzenia zależności pozostałych modułów.
 - [x] Po scaleniu etapu pozostaną 22 pliki `*.functions.ts` / `*.server.ts` i 2 middleware Start.
 - [ ] Regresja spotkań: publiczna lista i szczegóły, rejestracja, zgody, odwołanie, lista uczestników, statusy, obraz i powiadomienia.
+
+
+## React SPA migration — cleanup 2026-11-27 (orphaned Start helpers)
+- [x] Przeszukano pozostałe moduły legacy pod kątem zależności od czterech helperów; nie znaleziono importerów.
+- [x] Usunięto `instagram.server.ts`, `ai/editor.server.ts`, `ai/run-id.server.ts` i `meetings-notify.server.ts`, które pozostały osierocone po migracji Voice/YouTube, AI i Spotkań.
+- [x] Rozszerzono testy kontraktowe Voice, Editor AI i Meetings o asercje braku tych helperów.
+- [x] Po scaleniu pozostanie 18 plików `*.functions.ts` / `*.server.ts` oraz 2 middleware Start.
+- [ ] Potwierdzić pełny CI i kontynuować migrację pozostałych modułów; middleware pozostają do czasu usunięcia wszystkich zależności.

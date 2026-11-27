@@ -76,5 +76,7 @@ describe("editor AI SPA contract", () => {
     expect(edge).toContain("EMAIL_RE");
     expect(edge).toContain("PHONE_RE");
     expect(existsSync(new URL("./editor-ai.functions.ts", import.meta.url))).toBe(false);
+    expect(existsSync(new URL("./ai/editor.server.ts", import.meta.url))).toBe(false);
+    expect(existsSync(new URL("./ai/run-id.server.ts", import.meta.url))).toBe(false);
   });
 });
