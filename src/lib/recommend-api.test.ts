@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const invoke = vi.hoisted(() => vi.fn());
@@ -16,13 +16,12 @@ beforeEach(() => {
 });
 
 describe("library recommendation SPA contract", () => {
-  it("keeps the public action and input validation aligned across legacy and Edge", () => {
-    const legacy = readFileSync(new URL("./recommend.functions.ts", import.meta.url), "utf8");
+  it("keeps validation in Edge and prevents legacy runtime handlers from returning", () => {
     const edge = readFileSync(new URL("../../supabase/functions/tnb-recommend/index.ts", import.meta.url), "utf8");
 
-    expect(legacy).toContain("export const recommendLibrary =");
-    expect(legacy).toContain("min(10");
-    expect(legacy).toContain("max(600)");
+    expect(existsSync(new URL("./recommend.functions.ts", import.meta.url))).toBe(false);
+    expect(existsSync(new URL("./ai/recommend.server.ts", import.meta.url))).toBe(false);
+    expect(edge).not.toContain("@tanstack/react-start");
     expect(edge).toContain('action: z.literal("recommendLibrary")');
     expect(edge).toContain("min(10");
     expect(edge).toContain("max(600)");
