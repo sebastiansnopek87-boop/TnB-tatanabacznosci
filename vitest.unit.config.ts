@@ -37,6 +37,8 @@ export default defineConfig({
       "src/lib/templates-api-contract.test.ts",
       "src/lib/rich-text.test.ts",
       "src/lib/instagram-callback.test.ts",
+      "src/lib/voice-api-contract.test.ts",
+      "src/lib/youtube-api-contract.test.ts",
     ],
   },
 });
