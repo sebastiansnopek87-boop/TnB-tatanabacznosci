@@ -1,17 +1,19 @@
 import { assertAdmin, logEvent } from "./admin-auth.server";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { HOME_KINDS, isSafeHref, type PageDraft, type PageVersion, type PublicPage } from "./pages";
 import { assertLegalPublication, isLegalKey, LEGAL_KEYS } from "./legal-pages";
 import { approvalDetail, legalDigest, legalSnapshot } from "./legal-approval";
 import { TextFormatsSchema } from "./rich-text";
+import { DraftSectionSchema } from "./page-section-schema";
 
 // Generic CMS for content pages. Public reads: service role, published rows only, safe columns.
 // Admin writes: requireSupabaseAuth + assertAdmin + admin-only RLS on site_pages.
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin;
 const BUCKET = "page-images";
-type Ctx = { supabase: any; userId: string };
+type Ctx = { supabase: SupabaseClient; userId: string };
 const COLS = "id, slug, system_key, title, intro, sections, seo_title, seo_description, published_at, updated_at, status";
 const SLUG = z.string().regex(/^[a-z0-9-]{1,120}$/, "Adres może zawierać tylko małe litery, cyfry i myślniki.");
 
@@ -44,7 +46,7 @@ export const adminListPages = createServerFn({ method: "GET" }).middleware([requ
   await assertAdmin(context);
   const { data, error } = await context.supabase.from("site_pages").select("id, slug, system_key, title, status, published_at, updated_at, draft_updated_at").order("system_key", { nullsFirst: false }).order("title");
   if (error) throw new Error("Nie udało się pobrać stron.");
-  return data as any[];
+  return data ?? [];
 });
 
 export const adminGetPage = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
@@ -53,7 +55,7 @@ export const adminGetPage = createServerFn({ method: "GET" }).middleware([requir
     await assertAdmin(context);
     const { data: p, error } = await context.supabase.from("site_pages").select("*").eq("id", data.id).maybeSingle();
     if (error || !p) throw new Error("Nie znaleziono strony.");
-    return p as any;
+    return p;
   });
 
 export const adminCheckSlug = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
@@ -65,7 +67,6 @@ export const adminCheckSlug = createServerFn({ method: "GET" }).middleware([requ
     return r && r.id !== data.id ? { ok: false, reason: "Ten adres jest już zajęty." } : { ok: true, reason: "" };
   });
 
-const BtnDraft = z.object({ label: z.string().max(60), href: z.string().max(500) });
 const Btn = z.object({ label: z.string().trim().min(1, "Przycisk musi mieć etykietę.").max(60), href: z.string().trim().max(500).refine(isSafeHref, "Adres przycisku musi zaczynać się od / lub https://") });
 const sectionShape = (btn: z.ZodTypeAny) => z.object({
   textFormats: TextFormatsSchema,
@@ -78,7 +79,7 @@ const sectionShape = (btn: z.ZodTypeAny) => z.object({
   imageAlt: z.string().max(200), caption: z.string().max(300), quoteAuthor: z.string().max(120), buttons: z.array(btn).max(4),
 });
 const Section = sectionShape(Btn);
-export const DraftSection = sectionShape(BtnDraft);
+export const DraftSection = DraftSectionSchema;
 const PageInput = z.object({
   id: z.string().uuid().nullable(), slug: SLUG,
   title: z.string().trim().min(2, "Tytuł musi mieć co najmniej 2 znaki.").max(200), intro: z.string().max(2000),
