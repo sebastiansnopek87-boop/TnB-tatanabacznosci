@@ -6,9 +6,14 @@ Stan na 2026-11-27, branch `main`.
 
 Ta lista jest mapą migracyjną, a nie potwierdzeniem równoważności funkcjonalnej. Obecność adaptera SPA i Edge Function o pasującej nazwie nie dowodzi zgodności payloadów, uprawnień, RLS, walidacji, obsługi błędów ani skutków ubocznych. Żaden plik legacy nie może zostać usunięty przed porównaniem tych elementów i testem regresji.
 
-Po scaleniu PR #39–44 i #47 usunięto 8 plików legacy: `guest-comments.functions.ts`, `newsletter.functions.ts`, `article-newsletter.functions.ts`, `recommend.functions.ts`, `ai/recommend.server.ts`, `contact.functions.ts`, `podcast.functions.ts` i `templates.functions.ts`. Po migracji Głosu TNB i YouTube usunięto `voice.functions.ts` oraz `youtube.server.ts` (PR w przygotowaniu). Po migracji ustawień platformy usunięto również `platform.functions.ts`. Po migracji modułu marki usunięto również `brand.functions.ts`. Po migracji panelu użytkowników usunięto również `users.functions.ts`. Pozostaje 28 plików `*.functions.ts` / `*.server.ts` oraz 2 pliki middleware (`auth-middleware.ts`, `auth-attacher.ts`) — łącznie 30 plików legacy. Repo zawiera 32 adaptery w `src/lib/api/` oraz 29 katalogów Supabase Edge Functions. Szczegółowy stan entrypointu i zależności opisano również w `docs/migration/supabase-migration-reconciliation.md`.
+Po scaleniu PR #39–44 i #47 usunięto 8 plików legacy: `guest-comments.functions.ts`, `newsletter.functions.ts`, `article-newsletter.functions.ts`, `recommend.functions.ts`, `ai/recommend.server.ts`, `contact.functions.ts`, `podcast.functions.ts` i `templates.functions.ts`. Po migracji Głosu TNB i YouTube usunięto `voice.functions.ts` oraz `youtube.server.ts` (PR w przygotowaniu). Po migracji ustawień platformy usunięto również `platform.functions.ts`. Po migracji modułu marki usunięto również `brand.functions.ts`. Po migracji panelu użytkowników usunięto również `users.functions.ts`. Po migracji panelu artykułów usunięto również `articles.functions.ts`. Pozostaje 27 plików `*.functions.ts` / `*.server.ts` oraz 2 pliki middleware (`auth-middleware.ts`, `auth-attacher.ts`) — łącznie 29 plików legacy. Repo zawiera 32 adaptery w `src/lib/api/` oraz 29 katalogów Supabase Edge Functions. Szczegółowy stan entrypointu i zależności opisano również w `docs/migration/supabase-migration-reconciliation.md`.
 
 ## Mapa plików
+
+| Usunięty plik | Docelowy transport | Weryfikacja |
+|---|---|---|
+| `src/lib/articles.functions.ts` | `src/lib/api/articles.ts` → `tnb-articles`; bezpośrednie odczyty admina przez RLS po sprawdzeniu roli | 17 akcji Edge, 15 wywołań Edge + 2 odczyty RLS, walidacja slugów, trash/restore/purge, upload, ankiety i moderacja komentarzy; produkcyjna Edge Function v1 ACTIVE, `index.ts` identyczny z `main`; test kontraktu bez zależności od Start |
+
 
 | Usunięty plik | Docelowy transport | Weryfikacja |
 |---|---|---|
