@@ -163,3 +163,11 @@
 - [x] Rozszerzono test kontraktu o brakującą akcję `setPrelaunchSettings`, wszystkie 7 akcji Edge, role admin/superadmin oraz brak publicznego dostępu do pól billing.
 - [x] Usunięto `src/lib/platform.functions.ts` z gałęzi migracyjnej. Pozostaje 30 plików `*.functions.ts` / `*.server.ts` oraz 2 middleware Start.
 - [ ] CI i regresja panelu ustawień: zapis platformy, prelaunch, efekty wizualne, widoczność modułów, layout podcastu i odczyt bezpieczeństwa.
+
+
+## React SPA migration — continuation 2026-11-27 (brand settings)
+- [x] Potwierdzono produkcyjną Edge Function `tnb-brand` v4 ACTIVE; `index.ts` jest identyczny z `main`.
+- [x] Potwierdzono, że panel marki korzysta z `src/lib/api/brand.ts` i Edge Function, w tym uploadu podpisanego, finalnej weryfikacji pliku oraz ograniczeń superadmin.
+- [x] Test kontraktu obejmuje wszystkie 4 akcje, dokładne payloady, Bearer, błędy uprawnień, limity uploadu i granicę storage.
+- [x] Usunięto `src/lib/brand.functions.ts` z gałęzi migracyjnej. Pozostaje 29 plików `*.functions.ts` / `*.server.ts` oraz 2 middleware Start.
+- [ ] CI i regresja uploadu logo, favicon, obrazu OG oraz nagłówka strony na środowisku testowym.

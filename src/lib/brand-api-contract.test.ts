@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { invoke, getSession } = vi.hoisted(() => ({ invoke: vi.fn(), getSession: vi.fn() }));
@@ -56,7 +56,6 @@ describe("brand SPA contract", () => {
 
   it("keeps admin read, superadmin writes, upload limits and storage verification explicit", () => {
     const edge = readFileSync(new URL("../../supabase/functions/tnb-brand/index.ts", import.meta.url), "utf8");
-    const legacy = readFileSync(new URL("./brand.functions.ts", import.meta.url), "utf8");
     for (const action of ["getBrandSettings", "createBrandUpload", "finalizeBrandUpload", "saveBrandSettings"]) {
       expect(edge).toContain('z.literal("' + action + '")');
       expect(edge).toContain('case "' + action + '":');
@@ -68,8 +67,6 @@ describe("brand SPA contract", () => {
     expect(edge).toContain("MIME_EXT[mime]");
     expect(edge).toContain("createSignedUploadUrl");
     expect(edge).toContain(".storage.from(BUCKET).remove([path])");
-    for (const action of ["getBrandSettings", "createBrandUpload", "finalizeBrandUpload", "saveBrandSettings"]) {
-      expect(legacy).toContain("export const " + action + " =");
-    }
+    expect(existsSync(new URL("./brand.functions.ts", import.meta.url))).toBe(false);
   });
 });
