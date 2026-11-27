@@ -147,3 +147,11 @@
 - [x] Marka — dodano test kontraktu 4 akcji `tnb-brand`; obejmuje płaskie payloady, Bearer, odmowę bez sesji, admin read/superadmin writes, MIME i limity 2 MB oraz weryfikację metadanych przesłanego pliku.
 
 - [x] Strony CMS — dodano test kontraktu 13 akcji `tnb-pages`; obejmuje public anonymous read, 12 akcji admina, sesję Bearer, walidację, draft/version, kontrolę legalConfirmed i digest przed publikacją.
+
+
+## React SPA migration — continuation 2026-11-27 (Voice TNB / YouTube)
+- [x] Zweryfikowano produkcyjne Edge Functions: `tnb-voice` v4 i `tnb-youtube` v2 są aktywne; pliki produkcyjne `index.ts` są identyczne z `main`.
+- [x] Potwierdzono, że publiczne i administracyjne komponenty Głosu TNB używają adapterów `src/lib/api/voice.ts` oraz `src/lib/api/youtube.ts`, a nie TanStack Start.
+- [x] Dodano testy kontraktowe 11 akcji przeglądarkowych Głosu TNB oraz 12 akcji YouTube; sprawdzają dispatch, payloady, sesję, walidację zgłoszenia, bramki admin/cron i zgodność z Edge.
+- [x] Usunięto `src/lib/voice.functions.ts` i `src/lib/youtube.server.ts` z gałęzi migracyjnej. Po tym etapie pozostają 31 plików `*.functions.ts` / `*.server.ts` i 2 middleware Start; usunięcie zależności Start nastąpi dopiero po migracji wszystkich pozostałych modułów.
+- [ ] Potwierdzić CI dla PR i przeprowadzić regresję Głos TNB: zgłoszenie historii, status/notatka administratora, lista filmów publicznych, synchronizacja YouTube, edycja i publikacja filmu oraz OAuth Instagram.
