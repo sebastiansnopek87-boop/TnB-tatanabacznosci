@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { invoke, getSession, getUser, rpc } = vi.hoisted(() => ({
@@ -111,10 +111,8 @@ describe("admin and control-center SPA contract", () => {
     });
   });
 
-  it("matches the SPA, Edge allowlist, legacy action set, validation and server-side role boundary", () => {
+  it("matches the SPA, Edge allowlist, Edge action set, validation and server-side role boundary", () => {
     const edge = readFileSync(new URL("../../supabase/functions/tnb-admin/index.ts", import.meta.url), "utf8");
-    const legacy = readFileSync(new URL("./admin.functions.ts", import.meta.url), "utf8");
-    const controlLegacy = readFileSync(new URL("./control-center.functions.ts", import.meta.url), "utf8");
     const actions = [
       "getDashboard", "listMessages", "setMessageStatus", "listSubscribers",
       "getEmailSettings", "updateEmailSettings", "listNotificationLog", "listCommunity",
@@ -126,9 +124,8 @@ describe("admin and control-center SPA contract", () => {
       expect(edge).toContain('z.literal("' + action + '")');
       expect(edge).toContain('case "' + action + '"');
     }
-    for (const action of actions.slice(0, 12)) expect(legacy).toContain("export const " + action + " =");
-    expect(controlLegacy).toContain("export const controlCenterSearch =");
-    expect(controlLegacy).toContain("export const controlCenterHistory =");
+    expect(existsSync(new URL("./admin.functions.ts", import.meta.url))).toBe(false);
+    expect(existsSync(new URL("./control-center.functions.ts", import.meta.url))).toBe(false);
     expect(edge).toContain("const needsSuperadmin = input.action === \"updateEmailSettings\"");
     expect(edge).toContain("const user = await requireAdmin(db, req, needsSuperadmin)");
     expect(edge).toContain("if (status >= 500) console.error(\"tnb-admin error:\"");
