@@ -1,14 +1,16 @@
 # Inwentaryzacja pozostałości TanStack Start
 
-Stan na 2026-11-16, branch `chore/legacy-runtime-audit`.
+Stan na 2026-11-27, branch `main`.
 
 ## Zasady oceny
 
 Ta lista jest mapą migracyjną, a nie potwierdzeniem równoważności funkcjonalnej. Obecność adaptera SPA i Edge Function o pasującej nazwie nie dowodzi zgodności payloadów, uprawnień, RLS, walidacji, obsługi błędów ani skutków ubocznych. Żaden plik legacy nie może zostać usunięty przed porównaniem tych elementów i testem regresji.
 
-W repozytorium znajduje się 41 plików `*.functions.ts` / `*.server.ts` w `src/` oraz 2 pliki middleware (`auth-middleware.ts`, `auth-attacher.ts`) importujące TanStack Start — łącznie 43 pozostałe pliki legacy. Repo zawiera 32 adaptery w `src/lib/api/` oraz 29 katalogów Supabase Edge Functions. Szczegółowy stan entrypointu i zależności opisano również w `docs/migration/supabase-migration-reconciliation.md`.
+Po scaleniu PR #39–44 i #47 usunięto 8 plików legacy: `guest-comments.functions.ts`, `newsletter.functions.ts`, `article-newsletter.functions.ts`, `recommend.functions.ts`, `ai/recommend.server.ts`, `contact.functions.ts`, `podcast.functions.ts` i `templates.functions.ts`. Pozostają 33 pliki `*.functions.ts` / `*.server.ts` oraz 2 pliki middleware (`auth-middleware.ts`, `auth-attacher.ts`) — łącznie 35 plików legacy. Repo zawiera 32 adaptery w `src/lib/api/` oraz 29 katalogów Supabase Edge Functions. Szczegółowy stan entrypointu i zależności opisano również w `docs/migration/supabase-migration-reconciliation.md`.
 
 ## Mapa plików
+
+Usunięte moduły opisane powyżej nie są już częścią bieżącego inwentarza. Ich odpowiedniki działają przez adaptery SPA i Edge Functions; usunięcie zatwierdzono po testach kontraktowych oraz zielonym CI.
 
 | Pozostały plik | Docelowy adapter SPA | Kandydat Edge Function | Status |
 |---|---|---|---|
@@ -16,18 +18,14 @@ W repozytorium znajduje się 41 plików `*.functions.ts` / `*.server.ts` w `src/
 | `src/lib/admin-auth.server.ts` | brak bezpośredniego adaptera | `tnb-admin` oraz autoryzacja w poszczególnych funkcjach | wspólna warstwa auth; wymaga audytu roli i RLS |
 | `src/lib/admin.functions.ts` | `src/lib/api/admin.ts` | `tnb-admin` | test kontraktu SPA ↔ Edge dodany: 14 akcji, bearer token, odmowa bez sesji, obsługa 403/pustej odpowiedzi, nawigacyjna kontrola roli, walidacja i rozdział admin/superadmin; moduł legacy zachowany do pełnej weryfikacji semantyki |
 | `src/lib/ai/editor.server.ts` | `src/lib/api/editor-ai.ts` | `tnb-editor-ai` | porównać limity, model i zapis |
-| `src/lib/ai/recommend.server.ts` | `src/lib/api/recommend.ts` | `tnb-recommend` | porównać wejście/wyjście i uprawnienia |
 | `src/lib/ai/run-id.server.ts` | do ustalenia | do ustalenia | pomocniczy moduł; ustalić wszystkich konsumentów |
-| `src/lib/article-newsletter.functions.ts` | `src/lib/api/article-newsletter.ts` | `tnb-article-newsletter` | dodano test kontraktu 6 akcji, parity legacy/Edge, admin/superadmin, potwierdzenia liczby odbiorców, blokady wysyłki i idempotency key na subskrybenta |
 | `src/lib/articles.functions.ts` | `src/lib/api/articles.ts` | `tnb-articles` | dodano test kontraktu 15 akcji Edge z bearer tokenem, direct reads przez RLS po kontroli admina, walidacji, purge/trash, uploadu, ankiet i moderacji komentarzy |
 | `src/lib/brand.functions.ts` | `src/lib/api/brand.ts` | `tnb-brand` | dodano test kontraktu 4 akcji, flat payload parity, Bearer, odmowę bez sesji, admin read/superadmin writes, MIME/rozmiar uploadu i weryfikację metadanych po przesłaniu |
 | `src/lib/consult.functions.ts` | `src/lib/api/consult.ts` | `tnb-consult` | częściowe testy kalendarza; pełna zgodność nadal do sprawdzenia |
 | `src/lib/consult.server.ts` | `src/lib/api/consult.ts` | `tnb-consult` | sprawdzić wspólne reguły terminów i powiadomień |
-| `src/lib/contact.functions.ts` | `src/lib/api/contact.ts` | `tnb-contact` | dodano test kontraktu formularza, błędów Edge, strict schema, allowlisty originów, antyspamu i bezpiecznego renderowania HTML; legacy zachowany do sprawdzenia semantyki powiadomień |
 | `src/lib/control-center.functions.ts` | `src/lib/api/control-center.ts` | `tnb-admin` | test kontraktu SPA ↔ Edge obejmuje wyszukiwanie i historię, walidację zapytań/UUID/paginacji oraz bramkę admin; nadal wymagany audyt kompletności wyników i zgodności semantyki |
 | `src/lib/editor-ai.functions.ts` | `src/lib/api/editor-ai.ts` | `tnb-editor-ai` | dodano test kontraktu 15 akcji, parity SPA/legacy/Edge, wymogu superadmin, walidacji i PII scrubbing; zewnętrzny provider AI wymaga osobnego testu integracyjnego |
 | `src/lib/editor-materials.functions.ts` | `src/lib/api/editor-materials.ts` | `tnb-editor-materials` | dodano test kontraktu 15 akcji, dynamicznej allowlisty Edge, walidacji w warstwie logic i wymogu superadmin w Edge oraz legacy; sprawdzić provider AI i handoff E2E |
-| `src/lib/guest-comments.functions.ts` | `src/lib/api/guest-comments.ts` | `tnb-guest-comments` | dodano test kontraktu 3 akcji, zgodności payloadów, błędów, zgody, filtrów antyspamowych, limitów IP/e-mail oraz tokenów SHA-256 z TTL i jednokrotnym użyciem |
 | `src/lib/instagram.server.ts` | brak potwierdzonego adaptera | do ustalenia (możliwy `tnb-media`) | OAuth/sekrety; blokada do audytu przepływu |
 | `src/lib/library-delivery.functions.ts` | `src/lib/api/library-delivery.ts` | `tnb-library-delivery` | test kontraktu SPA ↔ Edge dla 4 akcji; auth admin, token hash i związanie tokenu z materiałem objęte kontrolą statyczną; testy CI/E2E oczekują na wynik |
 | `src/lib/library.functions.ts` | `src/lib/api/library.ts` | `tnb-library-admin` | istniejący test kontraktu obejmuje 11 akcji, upload/finalize, bramkę admin, direct-download entitlement i zgodność watermark; dodano odrzucanie pustej odpowiedzi w adapterze SPA; CI PASS (pełny pipeline) |
@@ -37,7 +35,6 @@ W repozytorium znajduje się 41 plików `*.functions.ts` / `*.server.ts` w `src/
 | `src/lib/media.functions.ts` | `src/lib/api/media.ts` | `tnb-media-admin` + publiczne `tnb-media` | dodano test kontraktu 5 akcji admin, token Bearer, brak sesji, 403, walidację uploadu i fail-closed usuwanie plików w użyciu; publiczne serwowanie obrazów pozostaje osobnym przepływem |
 | `src/lib/meetings-notify.server.ts` | `src/lib/api/meetings.ts` | `tnb-meetings` / `tnb-notifications` | sprawdzić harmonogram i status wysyłki |
 | `src/lib/meetings.functions.ts` | `src/lib/api/meetings.ts` | `tnb-meetings` | dodano test kontraktu 16 akcji public/user/admin, parity legacy/Edge, rozdział requireUser/requireAdmin, zgody, antyspam i limity uploadu; powiadomienia wymagają odrębnego testu skutków ubocznych |
-| `src/lib/newsletter.functions.ts` | `src/lib/api/newsletter.ts` | `tnb-newsletter` | dodano test kontraktu 3 akcji, walidacji zgody, payloadów, błędów, rate limitu, double opt-in, potwierdzania i wypisu; legacy zachowany do porównania pełnych skutków ubocznych |
 | `src/lib/notifications-test.server.ts` | `src/lib/api/notifications.ts` | `tnb-notifications` | testowe wysyłki; sprawdzić dostęp wyłącznie admin |
 | `src/lib/notifications.functions.ts` | `src/lib/api/notifications.ts` | `tnb-notifications` | dodano test kontraktu dla 11 akcji, tokenu Bearer, braku sesji, 403, pustej odpowiedzi oraz granic admin/superadmin; legacy zachowany do porównania semantyki odbiorców i providerów |
 | `src/lib/notifications.server.ts` | `src/lib/api/notifications.ts` | `tnb-notifications` | provider/sekrety; obecnie tryb testowy |
@@ -47,9 +44,6 @@ W repozytorium znajduje się 41 plików `*.functions.ts` / `*.server.ts` w `src/
 | `src/lib/payments.functions.ts` | `src/lib/api/payments.ts` | `tnb-payments` | testy podpisów Edge; pełne testy webhooków i refundów wymagane |
 | `src/lib/payments/providers.server.ts` | `src/lib/api/payments.ts` | `tnb-payments` | przeniesiono współdzielone podpisy do Edge; porównać pełną konfigurację |
 | `src/lib/platform.functions.ts` | `src/lib/api/platform.ts` | `tnb-platform` | test kontraktu SPA ↔ Edge dodany: wszystkie 6 akcji, bearer token, odmowa bez sesji, obsługa błędów, oddzielenie publicznych od chronionych odczytów i kontrola allowlisty kolumn/role gates; test dołączony do CI; moduł legacy zachowany do czasu pełnego porównania semantyki |
-| `src/lib/podcast.functions.ts` | `src/lib/api/podcast.ts` | `tnb-podcast` | dodano test kontraktu 11 akcji public/admin, Bearer, anonimowych odczytów, nullable detail, entitlement premium/admin i signed audio URL |
-| `src/lib/recommend.functions.ts` | `src/lib/api/recommend.ts` | `tnb-recommend` | test kontraktu SPA ↔ Edge dodany: akcja, walidacja 10–600 znaków, brak fragmentów premium, payload i obsługa błędów; test uruchamiany w CI; logika legacy nadal zachowana do czasu pełnej weryfikacji równoważności |
-| `src/lib/templates.functions.ts` | `src/lib/api/templates.ts` | `tnb-templates` | porównać operacje szablonów |
 | `src/lib/users.functions.ts` | `src/lib/api/users.ts` | `tnb-users` | test kontraktu SPA ↔ Edge obejmuje 3 akcje, bearer token, brak sesji, 403 i bramki admin/superadmin; Edge zmienia role przez atomową procedurę DB `admin_set_user_role`; legacy zachowany do pełnej weryfikacji semantyki |
 | `src/lib/voice.functions.ts` | `src/lib/api/voice.ts` | `tnb-voice` | porównać upload, limity i prywatność |
 | `src/lib/youtube.server.ts` | `src/lib/api/youtube.ts` | `tnb-youtube` | OAuth/sekrety; sprawdzić callback i odświeżanie tokenów |
