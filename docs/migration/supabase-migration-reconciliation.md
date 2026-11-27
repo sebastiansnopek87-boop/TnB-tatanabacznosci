@@ -5,6 +5,29 @@ Projekt: `pmdfiipontreuclfumdh`
 Branch: `chore/legacy-runtime-audit`  
 Tryb: read-only. Nie zastosowano migracji i nie zmieniano bazy.
 
+## Aktualizacja produkcyjna — 2026-11-27
+
+Odczyt wykonany bez zmian w bazie i bez deployu:
+
+- Aktywny projekt Supabase: `pmdfiipontreuclfumdh`, status `ACTIVE_HEALTHY`.
+- Historia Supabase: 69 migracji; repozytorium `main`: 70 plików SQL.
+- Jedynym plikiem repo, którego wersji nie ma w historii Supabase, jest `20261125190000_checkout_idempotency.sql`. Nie znaleziono migracji zapisanej w bazie bez odpowiadającego pliku w repo.
+- Migracja przeszła odtworzenie na pustym, izolowanym Supabase w CI dla PR #38 (25.11.2026). Nie oznacza to, że została zastosowana w produkcji.
+- Produkcyjne `public.library_orders` nie ma kolumn `checkout_idempotency_key`, `checkout_request_fingerprint`, `checkout_state`; nie ma też tabeli `public.library_checkout_sessions`.
+- Produkcyjna Edge Function `tnb-orders` jest aktywna w wersji 1, zaktualizowana 2026-11-15 20:42:29 UTC. Jej `index.ts` różni się od `main` i nie zawiera obsługi klucza idempotencji. Pozostałe cztery pliki funkcji (`providers.ts`, `registry.ts`, `render.ts`, `deno.json`) są identyczne z repo.
+- Kod `main` i formularz SPA przekazują już `idempotencyKey`; wdrożona funkcja z 15.11 go nie obsługuje. Nie wolno więc zakładać, że ochrona przed powtórzonym checkoutem działa na produkcji.
+
+### Kolejność wdrożenia idempotencji checkoutu
+
+1. Wykonać i zweryfikować kopię bezpieczeństwa produkcyjnej bazy.
+2. Uzgodnić sposób zastosowania dokładnie tej migracji z historią Supabase; nie oznaczać jej jako wykonanej ręcznie i nie tworzyć pustych migracji zastępczych.
+3. Zastosować `20261125190000_checkout_idempotency.sql` jeden raz i odczytowo potwierdzić kolumny, indeks unikalny, tabelę sesji oraz brak dostępu `anon`/`authenticated` do tabeli sesji.
+4. Wdrożyć `tnb-orders` z bieżącego `main`, zachowując dotychczasowe `verify_jwt=false` i wewnętrzne kontrole uprawnień. Porównać wdrożone pliki z repo po deployu.
+5. Dopiero potem opublikować statyczny `dist` na CyberFolks. Przed płatnościami live wykonać testy operatorów w sandbox: pojedyncze żądanie, podwójne kliknięcie, odświeżenie karty i powrót z operatora. Każdy wariant ma zachować jeden rekord zamówienia i jedną transakcję operatora.
+6. Włączyć płatności live dopiero po potwierdzeniu wyników testów i konfiguracji operatorów.
+
+Do czasu wykonania tych kroków nie wdrażać nowego `tnb-orders` ani nowego frontendu na produkcję. Nie wykonywano tu migracji, deployu Edge Function ani publikacji CyberFolks. Dostęp sieciowy do domeny hostingu nie był możliwy w tej sesji, więc stan publicznej witryny nie został potwierdzony.
+
 ## Wynik
 
 Supabase zwraca **66 zapisanych migracji**. W drzewie repozytorium na tym branchu znajduje się tylko jeden plik migracji:
