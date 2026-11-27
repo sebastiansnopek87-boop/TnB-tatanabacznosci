@@ -1,6 +1,7 @@
 import { assertAdmin, logEvent } from "./admin-auth.server";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { HOME_KINDS, isSafeHref, type PageDraft, type PageVersion, type PublicPage } from "./pages";
 import { assertLegalPublication, isLegalKey, LEGAL_KEYS } from "./legal-pages";
@@ -12,7 +13,7 @@ import { DraftSectionSchema } from "./page-section-schema";
 // Admin writes: requireSupabaseAuth + assertAdmin + admin-only RLS on site_pages.
 const admin = async () => (await import("@/integrations/supabase/client.server")).supabaseAdmin;
 const BUCKET = "page-images";
-type Ctx = { supabase: any; userId: string };
+type Ctx = { supabase: SupabaseClient; userId: string };
 const COLS = "id, slug, system_key, title, intro, sections, seo_title, seo_description, published_at, updated_at, status";
 const SLUG = z.string().regex(/^[a-z0-9-]{1,120}$/, "Adres może zawierać tylko małe litery, cyfry i myślniki.");
 
@@ -45,7 +46,7 @@ export const adminListPages = createServerFn({ method: "GET" }).middleware([requ
   await assertAdmin(context);
   const { data, error } = await context.supabase.from("site_pages").select("id, slug, system_key, title, status, published_at, updated_at, draft_updated_at").order("system_key", { nullsFirst: false }).order("title");
   if (error) throw new Error("Nie udało się pobrać stron.");
-  return data as any[];
+  return data ?? [];
 });
 
 export const adminGetPage = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
@@ -54,7 +55,7 @@ export const adminGetPage = createServerFn({ method: "GET" }).middleware([requir
     await assertAdmin(context);
     const { data: p, error } = await context.supabase.from("site_pages").select("*").eq("id", data.id).maybeSingle();
     if (error || !p) throw new Error("Nie znaleziono strony.");
-    return p as any;
+    return p;
   });
 
 export const adminCheckSlug = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
