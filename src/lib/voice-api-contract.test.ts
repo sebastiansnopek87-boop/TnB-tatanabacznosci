@@ -65,12 +65,14 @@ describe("Voice TNB SPA contract", () => {
     const actions = [
       "submitVoiceStory", "adminListSubmissions", "adminUpdateSubmission", "listInstagram", "adminGetInstagram",
       "adminCheckInstagramConfig", "adminStartInstagramConnect", "adminSyncInstagram", "adminDisconnectInstagram",
-      "adminSaveInstagramOptions", "finishInstagramOAuth", "cronInstagramSync",
+      "adminSaveInstagramOptions", "finishInstagramOAuth",
     ];
     for (const action of actions) {
       expect(edge).toContain('z.literal("' + action + '")');
       expect(edge).toContain('case "' + action + '":');
     }
+    expect(edge).toContain('z.literal("cronInstagramSync")');
+    expect(edge).toContain('input.action === "cronInstagramSync"');
     expect(edge).toContain("requireAdmin(s, req)");
     expect(edge).toContain("requireCron(s, req)");
     expect(edge).toContain("voice_submission_admin");
