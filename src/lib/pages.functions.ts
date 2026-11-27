@@ -66,7 +66,6 @@ export const adminCheckSlug = createServerFn({ method: "GET" }).middleware([requ
     return r && r.id !== data.id ? { ok: false, reason: "Ten adres jest już zajęty." } : { ok: true, reason: "" };
   });
 
-const BtnDraft = z.object({ label: z.string().max(60), href: z.string().max(500) });
 const Btn = z.object({ label: z.string().trim().min(1, "Przycisk musi mieć etykietę.").max(60), href: z.string().trim().max(500).refine(isSafeHref, "Adres przycisku musi zaczynać się od / lub https://") });
 const sectionShape = (btn: z.ZodTypeAny) => z.object({
   textFormats: TextFormatsSchema,
