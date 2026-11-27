@@ -61,7 +61,7 @@ describe("templates SPA contract", () => {
     await expect(adminListTemplates()).rejects.toThrow("pustą odpowiedź");
   });
 
-  it("keeps Edge action schemas, dispatch, admin checks and legacy exports aligned", () => {
+  it("keeps Edge action schemas, dispatch and admin checks while removing the Start handler", () => {
     const edge = readFileSync(new URL("../../supabase/functions/tnb-templates/index.ts", import.meta.url), "utf8");
     const sharedSchema = readFileSync(new URL("./page-section-schema.ts", import.meta.url), "utf8");
     const actions = [
@@ -75,7 +75,7 @@ describe("templates SPA contract", () => {
     expect(edge).toContain("requireAdmin(ctx)");
     expect(edge).toContain('header.slice(7).trim()');
     expect(edge).toContain("RequestSchema.safeParse(raw)");
-    expect(existsSync(new URL("./templates.functions.ts", import.meta.url))).toBe(true);
+    expect(existsSync(new URL("./templates.functions.ts", import.meta.url))).toBe(false);
     expect(sharedSchema).toContain("DraftSectionSchema");
   });
 });
