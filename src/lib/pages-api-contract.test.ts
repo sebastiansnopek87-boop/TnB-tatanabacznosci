@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { invoke, getSession } = vi.hoisted(() => ({ invoke: vi.fn(), getSession: vi.fn() }));
@@ -81,9 +81,8 @@ describe("pages SPA contract", () => {
     expect(edge).toContain("adminListVersions");
   });
 
-  it("keeps all Edge action schemas and legacy exports aligned", () => {
+  it("keeps all Edge action schemas and removes the Start handler", () => {
     const edge = readFileSync(new URL("../../supabase/functions/tnb-pages/index.ts", import.meta.url), "utf8");
-    const legacy = readFileSync(new URL("./pages.functions.ts", import.meta.url), "utf8");
     const actions = [
       "getPublicPage", "adminListPages", "adminGetPage", "adminCheckSlug", "adminSavePage",
       "adminSetPageStatus", "adminCreatePageUpload", "adminPageImageUrls", "adminSaveDraft",
@@ -96,7 +95,7 @@ describe("pages SPA contract", () => {
       } else {
         expect(edge).toContain('case "' + action + '":');
       }
-      expect(legacy).toContain("export const " + action + " =");
     }
+    expect(existsSync(new URL("./pages.functions.ts", import.meta.url))).toBe(false);
   });
 });
