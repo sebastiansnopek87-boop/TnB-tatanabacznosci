@@ -179,3 +179,11 @@
 - [x] Test kontraktu zachowuje kontrolę Bearer, admin/superadmin, RPC `admin_set_user_role` i ochronę ostatniego superadministratora; usunięto zależność testu od pliku legacy.
 - [x] Usunięto `src/lib/users.functions.ts` z gałęzi migracyjnej. Pozostaje 28 plików `*.functions.ts` / `*.server.ts` oraz 2 middleware Start.
 - [ ] Regresja panelu użytkowników na środowisku testowym: wyszukiwanie, szczegóły konta, nadawanie i odbieranie ról z próbą ochrony ostatniego superadministratora.
+
+
+## React SPA migration — continuation 2026-11-27 (articles CMS)
+- [x] Potwierdzono produkcyjną Edge Function `tnb-articles` v1 ACTIVE; `index.ts` jest identyczny z `main`.
+- [x] Test kontraktu obejmuje 15 wywołań Edge i 2 odczyty bezpośrednie admina z kontrolą roli/RLS; zachowuje walidację slugów, operacje trash/restore/purge, upload, ankiety i moderację komentarzy.
+- [x] Usunięto `src/lib/articles.functions.ts` z gałęzi migracyjnej; test nie zależy już od pliku Start.
+- [x] Po scaleniu bieżącego etapu pozostanie 27 plików `*.functions.ts` / `*.server.ts` i 2 middleware Start.
+- [ ] Regresja CMS artykułów na środowisku testowym: tworzenie/edycja, publikacja, upload obrazu, ankieta, komentarze, kosz i trwałe usuwanie.
