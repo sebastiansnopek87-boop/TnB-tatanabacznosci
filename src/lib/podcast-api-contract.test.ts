@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { invoke, getSession } = vi.hoisted(() => ({ invoke: vi.fn(), getSession: vi.fn() }));
@@ -75,7 +75,6 @@ describe("podcast SPA contract", () => {
 
   it("keeps public/admin action boundaries and access-controlled audio behavior explicit", () => {
     const edge = readFileSync(new URL("../../supabase/functions/tnb-podcast/index.ts", import.meta.url), "utf8");
-    const legacy = readFileSync(new URL("./podcast.functions.ts", import.meta.url), "utf8");
     const actions = [
       "listEpisodes", "getEpisode", "getEpisodeMedia", "adminListEpisodes", "adminGetEpisode",
       "adminSaveEpisode", "adminSetEpisodeStatus", "adminCreateUpload", "adminAttachFile",
@@ -84,7 +83,6 @@ describe("podcast SPA contract", () => {
     for (const action of actions) {
       expect(edge).toContain('z.literal("' + action + '")');
       expect(edge).toContain('case "' + action + '"');
-      expect(legacy).toContain("export const " + action + " =");
     }
     expect(edge).toContain("const protectedActions = new Set");
     expect(edge).toContain("if (protectedActions.has(input.action)) user = await requireAdmin(db, req)");
@@ -92,5 +90,6 @@ describe("podcast SPA contract", () => {
     expect(edge).toContain('_role: "premium"');
     expect(edge).toContain('_role: "admin"');
     expect(edge).toContain("createSignedUrl");
+    expect(existsSync(new URL("./podcast.functions.ts", import.meta.url))).toBe(false);
   });
 });
