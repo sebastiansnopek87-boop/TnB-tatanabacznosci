@@ -246,3 +246,12 @@
 - [x] Rozszerzono testy kontraktowe Voice, Editor AI i Meetings o asercje braku tych helperów.
 - [x] Po scaleniu pozostanie 18 plików `*.functions.ts` / `*.server.ts` oraz 2 middleware Start.
 - [ ] Potwierdzić pełny CI i kontynuować migrację pozostałych modułów; middleware pozostają do czasu usunięcia wszystkich zależności.
+
+
+## React SPA migration — continuation 2026-11-27 (consultations)
+- [x] Potwierdzono produkcyjną Edge Function `tnb-consult` v5 ACTIVE; obsługuje wszystkie 11 akcji adaptera oraz cron `processReminders` z kontrolą `requireCron`.
+- [x] Potwierdzono, że SPA używa `src/lib/api/consult.ts`; test pokrywa 11 akcji, zgody, błędy i osobne role ADMIN/AUTH.
+- [x] Przeszukano pozostałe moduły; `consult.server.ts` nie miał importerów poza `consult.functions.ts`.
+- [x] Usunięto `consult.functions.ts` i `consult.server.ts`; test sprawdza brak obu handlerów i obecność cron guard w Edge.
+- [x] Po scaleniu etapu pozostaną 16 plików `*.functions.ts` / `*.server.ts` oraz 2 middleware Start.
+- [ ] Regresja konsultacji: dostępne terminy, rezerwacja, token, konto użytkownika, anulowanie, panel admina, availability i blokowanie dat.

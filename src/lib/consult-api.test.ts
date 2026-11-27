@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const invoke = vi.hoisted(() => vi.fn());
@@ -40,14 +40,15 @@ beforeEach(() => {
 });
 
 describe("consult SPA adapter contract", () => {
-  it("keeps all adapter actions represented by both the legacy contract and Edge Function", () => {
-    const legacy = readFileSync(new URL("./consult.functions.ts", import.meta.url), "utf8");
+  it("keeps all adapter actions and cron guard in the Edge Function after removing Start", () => {
     const edge = readFileSync(new URL("../../supabase/functions/tnb-consult/index.ts", import.meta.url), "utf8");
-
-    for (const action of actions) {
-      expect(legacy).toContain("export const " + action + " =");
-      expect(edge).toContain("case \"" + action + "\":");
-    }
+    for (const action of actions) expect(edge).toContain('case "' + action + '":');
+    expect(edge).toContain('if (input.action === "processReminders")');
+    expect(edge).toContain("await requireCron(s, req)");
+    expect(edge).toContain("const ADMIN_ACTIONS = new Set");
+    expect(edge).toContain("const AUTH_ACTIONS = new Set");
+    expect(existsSync(new URL("./consult.functions.ts", import.meta.url))).toBe(false);
+    expect(existsSync(new URL("./consult.server.ts", import.meta.url))).toBe(false);
   });
 
   it("targets the single tnb-consult Edge Function for every operation", async () => {

@@ -10,6 +10,12 @@ Po scaleniu PR #39–44 i #47 usunięto 8 plików legacy: `guest-comments.functi
 
 ## Mapa plików
 
+| Usunięty plik | Docelowy transport | Weryfikacja |
+|---|---|---|
+| `src/lib/consult.functions.ts` | `src/lib/api/consult.ts` → `tnb-consult` | 11 akcji SPA, produkcyjna Edge Function v5 ACTIVE obsługuje wszystkie akcje i cron `processReminders`, role ADMIN/AUTH, consent i reguły rezerwacji |
+| `src/lib/consult.server.ts` | `tnb-consult` Edge Function | Brak importerów poza usuniętym `consult.functions.ts`; cron reminders i wysyłka maili obsługiwane przez Edge |
+
+
 | Usunięty plik | Powód usunięcia |
 |---|---|
 | `src/lib/instagram.server.ts` | Brak importów po usunięciu `voice.functions.ts`; Instagram OAuth/sync obsługuje `tnb-voice` |
