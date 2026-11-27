@@ -195,3 +195,13 @@
 - [x] Usunięto `src/lib/media.functions.ts` z gałęzi migracyjnej; test nie zależy już od Start.
 - [x] Po scaleniu etapu pozostanie 26 plików `*.functions.ts` / `*.server.ts` i 2 middleware Start.
 - [ ] Regresja biblioteki mediów: filtrowanie, podgląd szczegółów, upload, finalizacja i próba usunięcia pliku wykorzystywanego przez inne moduły.
+
+
+## React SPA migration — continuation 2026-11-27 (admin and control center)
+- [x] Potwierdzono produkcyjną Edge Function `tnb-admin` v3 ACTIVE; pełny plik `source/index.ts` jest identyczny z `main`.
+- [x] Potwierdzono, że panel administracyjny i Centrum Kontroli korzystają z `src/lib/api/admin.ts`; adapter `src/lib/api/control-center.ts` re-eksportuje dwie akcje z tego samego transportu.
+- [x] Istniejący test kontraktu obejmuje wszystkie 14 akcji Edge, sesję Bearer, kontrolę admin/superadmin, walidację oraz guard nawigacyjny `getAdminStatus`.
+- [x] Usunięto `src/lib/admin.functions.ts`; panel korzysta z `src/lib/api/admin.ts` i Edge.
+- [ ] Przenieść test `control-center-360.test.ts` z handlerów Start na Edge `tnb-admin`, a następnie usunąć `control-center.functions.ts`.
+- [x] Po scaleniu bieżącej części etapu pozostaną 23 pliki `*.functions.ts` / `*.server.ts` i 2 middleware Start.
+- [ ] Regresja panelu i Centrum Kontroli: dashboard, wiadomości, subskrybenci, społeczność, raporty, dziennik zdarzeń, wyszukiwanie i historia.
