@@ -205,3 +205,12 @@
 - [ ] Przenieść test `control-center-360.test.ts` z handlerów Start na Edge `tnb-admin`, a następnie usunąć `control-center.functions.ts`.
 - [x] Po scaleniu bieżącej części etapu pozostaną 23 pliki `*.functions.ts` / `*.server.ts` i 2 middleware Start.
 - [ ] Regresja panelu i Centrum Kontroli: dashboard, wiadomości, subskrybenci, społeczność, raporty, dziennik zdarzeń, wyszukiwanie i historia.
+
+
+## React SPA migration — continuation 2026-11-27 (pages CMS)
+- [x] Potwierdzono produkcyjną Edge Function `tnb-pages` v4 ACTIVE; `index.ts` jest identyczny z `main`.
+- [x] Potwierdzono, że publiczny odczyt i panel CMS używają `src/lib/api/pages.ts` → `tnb-pages`; publiczny odczyt pozostaje anonimowy, operacje admina wymagają Bearer.
+- [x] Test kontraktu obejmuje 13 akcji, walidację, wersjonowanie draftów, publikację z `legalConfirmed` i `expectedDigest`, upload i odtwarzanie wersji.
+- [x] Usunięto `src/lib/pages.functions.ts` z gałęzi migracyjnej; test nie zależy już od handlera Start.
+- [x] Po scaleniu etapu pozostaną 22 pliki `*.functions.ts` / `*.server.ts` i 2 middleware Start.
+- [ ] Regresja CMS stron: publiczny home, strony prawne, draft, publikacja z digestem, przywrócenie wersji i upload obrazów.
