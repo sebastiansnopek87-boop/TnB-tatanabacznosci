@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { invoke } = vi.hoisted(() => ({ invoke: vi.fn() }));
@@ -57,9 +57,8 @@ describe("editor AI SPA contract", () => {
     await expect(getEditorDashboard()).rejects.toThrow("wyłącznie dla superadministratora");
   });
 
-  it("keeps action schema, superadmin gate, PII scrubbing and legacy guard aligned", () => {
+  it("keeps action schema, superadmin gate and PII scrubbing after removing Start", () => {
     const edge = readFileSync(new URL("../../supabase/functions/tnb-editor-ai/index.ts", import.meta.url), "utf8");
-    const legacy = readFileSync(new URL("./editor-ai.functions.ts", import.meta.url), "utf8");
     const actions = [
       "getEditorDashboard", "listSources", "addWebSource", "addNoteSource", "updateSource",
       "deleteSource", "getEditorSettings", "saveEditorSettings", "testAiConnection",
@@ -69,7 +68,6 @@ describe("editor AI SPA contract", () => {
     for (const action of actions) {
       expect(edge).toContain('z.literal("' + action + '")');
       expect(edge).toContain('case "' + action + '"');
-      expect(legacy).toContain("export const " + action + " =");
     }
     expect(edge).toContain("const s = db(), actor = await requireSuperadmin(s, req)");
     expect(edge).toContain('_role: "admin"');
@@ -77,6 +75,6 @@ describe("editor AI SPA contract", () => {
     expect(edge).toContain("scrubPii");
     expect(edge).toContain("EMAIL_RE");
     expect(edge).toContain("PHONE_RE");
-    expect(legacy).toContain("await assertSuperadmin(c, `ai_editor:${op}`)");
+    expect(existsSync(new URL("./editor-ai.functions.ts", import.meta.url))).toBe(false);
   });
 });
