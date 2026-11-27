@@ -6,9 +6,15 @@ Stan na 2026-11-27, branch `main`.
 
 Ta lista jest mapą migracyjną, a nie potwierdzeniem równoważności funkcjonalnej. Obecność adaptera SPA i Edge Function o pasującej nazwie nie dowodzi zgodności payloadów, uprawnień, RLS, walidacji, obsługi błędów ani skutków ubocznych. Żaden plik legacy nie może zostać usunięty przed porównaniem tych elementów i testem regresji.
 
-Po scaleniu PR #39–44 i #47 usunięto 8 plików legacy: `guest-comments.functions.ts`, `newsletter.functions.ts`, `article-newsletter.functions.ts`, `recommend.functions.ts`, `ai/recommend.server.ts`, `contact.functions.ts`, `podcast.functions.ts` i `templates.functions.ts`. Pozostają 33 pliki `*.functions.ts` / `*.server.ts` oraz 2 pliki middleware (`auth-middleware.ts`, `auth-attacher.ts`) — łącznie 35 plików legacy. Repo zawiera 32 adaptery w `src/lib/api/` oraz 29 katalogów Supabase Edge Functions. Szczegółowy stan entrypointu i zależności opisano również w `docs/migration/supabase-migration-reconciliation.md`.
+Po scaleniu PR #39–44 i #47 usunięto 8 plików legacy: `guest-comments.functions.ts`, `newsletter.functions.ts`, `article-newsletter.functions.ts`, `recommend.functions.ts`, `ai/recommend.server.ts`, `contact.functions.ts`, `podcast.functions.ts` i `templates.functions.ts`. Po migracji Głosu TNB i YouTube usunięto `voice.functions.ts` oraz `youtube.server.ts` (PR w przygotowaniu). Pozostaje 31 plików `*.functions.ts` / `*.server.ts` oraz 2 pliki middleware (`auth-middleware.ts`, `auth-attacher.ts`) — łącznie 33 pliki legacy. Repo zawiera 32 adaptery w `src/lib/api/` oraz 29 katalogów Supabase Edge Functions. Szczegółowy stan entrypointu i zależności opisano również w `docs/migration/supabase-migration-reconciliation.md`.
 
 ## Mapa plików
+
+| Usunięty plik | Docelowy transport | Weryfikacja |
+|---|---|---|
+| `src/lib/voice.functions.ts` | `src/lib/api/voice.ts` → `tnb-voice` oraz `src/lib/api/youtube.ts` → `tnb-youtube` | 11 akcji Voice + cron i 12 akcji YouTube; produkcyjne Edge Function `tnb-voice` v4 i `tnb-youtube` v2 są aktywne i identyczne z `main`; testy kontraktowe SPA/Edge dodane do CI |
+| `src/lib/youtube.server.ts` | `src/lib/api/youtube.ts` → `tnb-youtube` | YouTube API key, synchronizacja kanału i materiałów pozostają po stronie Edge; klucz nie trafia do przeglądarki |
+
 
 Usunięte moduły opisane powyżej nie są już częścią bieżącego inwentarza. Ich odpowiedniki działają przez adaptery SPA i Edge Functions; usunięcie zatwierdzono po testach kontraktowych oraz zielonym CI.
 
