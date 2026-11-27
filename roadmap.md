@@ -221,3 +221,11 @@
 - [x] PR #51, #52, #53, #54, #55, #56, #57 i #59 są scalone; PR #58 celowo zamknięto bez scalania, ponieważ `legal-pages.test.ts` nadal zależy od `pages.functions.ts`.
 - [ ] Przenieść testy logiki Centrum Kontroli i publikacji dokumentów prawnych z handlerów Start do warstwy współdzielonej/Edge przed usunięciem odpowiednio `control-center.functions.ts` i `pages.functions.ts`.
 - [ ] Kontynuować modułową migrację pozostałych 24 modułów/pliki legacy; nie usuwać `auth-middleware.ts` i `auth-attacher.ts` przed migracją wszystkich zależności.
+
+
+## React SPA migration — continuation 2026-11-27 (editor AI)
+- [x] Potwierdzono produkcyjną Edge Function `tnb-editor-ai` v1 ACTIVE; `index.ts` jest identyczny z `main`.
+- [x] Panel asystenta redakcyjnego korzysta z `src/lib/api/editor-ai.ts` dla 15 akcji; test obejmuje dashboard, źródła, ustawienia, analizę, propozycje, role superadmin i scrubPii.
+- [x] Usunięto `src/lib/editor-ai.functions.ts`; test nie zależy już od handlera Start.
+- [x] Po scaleniu etapu pozostaną 23 pliki `*.functions.ts` / `*.server.ts` oraz 2 middleware Start.
+- [ ] Regresja asystenta: dodawanie źródeł, ustawienia, test połączenia AI, analiza, propozycje i rozwijanie propozycji na środowisku testowym.
