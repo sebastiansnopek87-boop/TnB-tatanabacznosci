@@ -6,6 +6,7 @@ import { HOME_KINDS, isSafeHref, type PageDraft, type PageVersion, type PublicPa
 import { assertLegalPublication, isLegalKey, LEGAL_KEYS } from "./legal-pages";
 import { approvalDetail, legalDigest, legalSnapshot } from "./legal-approval";
 import { TextFormatsSchema } from "./rich-text";
+import { DraftSectionSchema } from "./page-section-schema";
 
 // Generic CMS for content pages. Public reads: service role, published rows only, safe columns.
 // Admin writes: requireSupabaseAuth + assertAdmin + admin-only RLS on site_pages.
@@ -78,7 +79,7 @@ const sectionShape = (btn: z.ZodTypeAny) => z.object({
   imageAlt: z.string().max(200), caption: z.string().max(300), quoteAuthor: z.string().max(120), buttons: z.array(btn).max(4),
 });
 const Section = sectionShape(Btn);
-export const DraftSection = sectionShape(BtnDraft);
+export const DraftSection = DraftSectionSchema;
 const PageInput = z.object({
   id: z.string().uuid().nullable(), slug: SLUG,
   title: z.string().trim().min(2, "Tytuł musi mieć co najmniej 2 znaki.").max(200), intro: z.string().max(2000),
