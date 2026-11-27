@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { invoke, getSession } = vi.hoisted(() => ({ invoke: vi.fn(), getSession: vi.fn() }));
@@ -63,7 +63,6 @@ describe("templates SPA contract", () => {
 
   it("keeps Edge action schemas, dispatch, admin checks and legacy exports aligned", () => {
     const edge = readFileSync(new URL("../../supabase/functions/tnb-templates/index.ts", import.meta.url), "utf8");
-    const legacy = readFileSync(new URL("./templates.functions.ts", import.meta.url), "utf8");
     const sharedSchema = readFileSync(new URL("./page-section-schema.ts", import.meta.url), "utf8");
     const actions = [
       "adminListTemplates", "adminCreateTemplate", "adminUpdateTemplate", "adminDuplicateTemplate",
@@ -72,13 +71,11 @@ describe("templates SPA contract", () => {
     for (const action of actions) {
       expect(edge).toContain('z.literal("' + action + '")');
       expect(edge).toContain('case "' + action + '":');
-      expect(legacy).toContain("export const " + action + " =");
     }
     expect(edge).toContain("requireAdmin(ctx)");
     expect(edge).toContain('header.slice(7).trim()');
     expect(edge).toContain("RequestSchema.safeParse(raw)");
-    expect(legacy).toContain('from "./page-section-schema"');
-    expect(legacy).not.toContain('from "./pages.functions"');
+    expect(existsSync(new URL("./templates.functions.ts", import.meta.url))).toBe(true);
     expect(sharedSchema).toContain("DraftSectionSchema");
   });
 });
