@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { invoke, getSession, getUser, rpc, from, maybeSingle } = vi.hoisted(() => ({
@@ -121,7 +121,6 @@ describe("articles SPA contract", () => {
 
   it("keeps Edge actions, admin gate, validation and destructive-operation controls explicit", () => {
     const edge = readFileSync(new URL("../../supabase/functions/tnb-articles/index.ts", import.meta.url), "utf8");
-    const legacy = readFileSync(new URL("./articles.functions.ts", import.meta.url), "utf8");
     const actions = [
       "adminListArticles", "adminTrashArticle", "adminGetArticle", "adminCheckArticleSlug",
       "adminSaveArticle", "adminSetArticleStatus", "adminSetFeatured", "adminSetHomeMode",
@@ -133,12 +132,10 @@ describe("articles SPA contract", () => {
       expect(edge).toContain('z.literal("' + action + '")');
       expect(edge).toContain('case "' + action + '":');
     }
-    for (const action of actions.filter((name) => name !== "adminGetArticle" && name !== "adminCheckArticleSlug")) {
-      expect(legacy).toContain("export const " + action + " =");
-    }
     expect(edge).toContain("await requireAdmin(ctx)");
     expect(edge).toContain('z.enum(["trash", "restore", "purge"])');
     expect(edge).toContain("purgeArticle");
     expect(edge).toContain("adminModerateArticleComment");
+    expect(existsSync(new URL("./articles.functions.ts", import.meta.url))).toBe(false);
   });
 });
