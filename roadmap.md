@@ -205,3 +205,12 @@
 - [ ] Przenieść test `control-center-360.test.ts` z handlerów Start na Edge `tnb-admin`, a następnie usunąć `control-center.functions.ts`.
 - [x] Po scaleniu bieżącej części etapu pozostaną 23 pliki `*.functions.ts` / `*.server.ts` i 2 middleware Start.
 - [ ] Regresja panelu i Centrum Kontroli: dashboard, wiadomości, subskrybenci, społeczność, raporty, dziennik zdarzeń, wyszukiwanie i historia.
+
+
+## React SPA migration — continuation 2026-11-27 (AI editorial materials)
+- [x] Potwierdzono produkcyjną Edge Function `tnb-editor-materials` v2 ACTIVE; `index.ts` jest identyczny z `main`, a moduły logic/auth są wdrożone.
+- [x] Panel AI korzysta z `src/lib/api/editor-materials.ts` dla wszystkich 15 akcji; typy i reguły UI pochodzą z `src/lib/editor-materials.ts`, nie z handlera Start.
+- [x] Test kontraktu sprawdza 15 akcji, Edge allowlist, server-side auth, superadmin guard i odmowę uprawnień.
+- [x] Usunięto `src/lib/editor-materials.functions.ts`; test nie zależy już od Start.
+- [x] Po scaleniu etapu pozostaną 21 plików `*.functions.ts` / `*.server.ts` oraz 2 middleware Start.
+- [ ] Regresja AI materials: tworzenie, generowanie tekstu i obrazu, aktualizacja, wersjonowanie, status, przekazanie do publikacji.
