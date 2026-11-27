@@ -187,3 +187,11 @@
 - [x] Usunięto `src/lib/articles.functions.ts` z gałęzi migracyjnej; test nie zależy już od pliku Start.
 - [x] Po scaleniu bieżącego etapu pozostanie 27 plików `*.functions.ts` / `*.server.ts` i 2 middleware Start.
 - [ ] Regresja CMS artykułów na środowisku testowym: tworzenie/edycja, publikacja, upload obrazu, ankieta, komentarze, kosz i trwałe usuwanie.
+
+
+## React SPA migration — continuation 2026-11-27 (media library)
+- [x] Potwierdzono produkcyjną Edge Function `tnb-media-admin` v1 ACTIVE; `index.ts` jest identyczny z `main`.
+- [x] Test kontraktu obejmuje 5 akcji, Bearer, allowlistę originów, limit i MIME uploadu, weryfikację metadanych oraz fail-closed przy usuwaniu używanego pliku.
+- [x] Usunięto `src/lib/media.functions.ts` z gałęzi migracyjnej; test nie zależy już od Start.
+- [x] Po scaleniu etapu pozostanie 26 plików `*.functions.ts` / `*.server.ts` i 2 middleware Start.
+- [ ] Regresja biblioteki mediów: filtrowanie, podgląd szczegółów, upload, finalizacja i próba usunięcia pliku wykorzystywanego przez inne moduły.

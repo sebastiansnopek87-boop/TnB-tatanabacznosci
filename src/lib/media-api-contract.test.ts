@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { invoke, getSession } = vi.hoisted(() => ({ invoke: vi.fn(), getSession: vi.fn() }));
@@ -53,11 +53,9 @@ describe("media SPA contract", () => {
 
   it("keeps the Edge action schema, admin gate, upload verification and fail-closed deletion", () => {
     const edge = readFileSync(new URL("../../supabase/functions/tnb-media-admin/index.ts", import.meta.url), "utf8");
-    const legacy = readFileSync(new URL("./media.functions.ts", import.meta.url), "utf8");
     const actions = ["listMedia", "getMediaDetail", "createMediaUpload", "finalizeMediaUpload", "deleteMedia"];
     for (const action of actions) {
       expect(edge).toContain('z.literal("' + action + '")');
-      expect(legacy).toContain("export const " + action + " =");
     }
     expect(edge).toContain("await requireAdmin(ctx)");
     expect(edge).toContain("!ALLOWED_ORIGINS.has(origin)");
@@ -69,5 +67,6 @@ describe("media SPA contract", () => {
     expect(edge).toContain("if (used.length)");
     expect(edge).toContain("media_usage_unavailable");
     expect(edge).toContain("Plik jest używany");
+    expect(existsSync(new URL("./media.functions.ts", import.meta.url))).toBe(false);
   });
 });
