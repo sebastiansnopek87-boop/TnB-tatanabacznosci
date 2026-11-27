@@ -64,6 +64,7 @@ describe("templates SPA contract", () => {
   it("keeps Edge action schemas, dispatch, admin checks and legacy exports aligned", () => {
     const edge = readFileSync(new URL("../../supabase/functions/tnb-templates/index.ts", import.meta.url), "utf8");
     const legacy = readFileSync(new URL("./templates.functions.ts", import.meta.url), "utf8");
+    const sharedSchema = readFileSync(new URL("./page-section-schema.ts", import.meta.url), "utf8");
     const actions = [
       "adminListTemplates", "adminCreateTemplate", "adminUpdateTemplate", "adminDuplicateTemplate",
       "adminDeleteTemplate", "adminInstantiateTemplate", "adminTemplateImageUrls",
@@ -76,5 +77,8 @@ describe("templates SPA contract", () => {
     expect(edge).toContain("requireAdmin(ctx)");
     expect(edge).toContain('header.slice(7).trim()');
     expect(edge).toContain("RequestSchema.safeParse(raw)");
+    expect(legacy).toContain('from "./page-section-schema"');
+    expect(legacy).not.toContain('from "./pages.functions"');
+    expect(sharedSchema).toContain("DraftSectionSchema");
   });
 });
