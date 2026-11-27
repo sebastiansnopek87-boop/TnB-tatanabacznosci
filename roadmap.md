@@ -203,7 +203,7 @@
 - [x] Istniejący test kontraktu obejmuje wszystkie 14 akcji Edge, sesję Bearer, kontrolę admin/superadmin, walidację oraz guard nawigacyjny `getAdminStatus`.
 - [x] Usunięto `src/lib/admin.functions.ts`; panel korzysta z `src/lib/api/admin.ts` i Edge.
 - [ ] Przenieść test `control-center-360.test.ts` z handlerów Start na Edge `tnb-admin`, a następnie usunąć `control-center.functions.ts`.
-- [x] Po scaleniu bieżącej części etapu pozostaną 23 pliki `*.functions.ts` / `*.server.ts` i 2 middleware Start.
+- [x] Po scaleniu bieżącej części etapu pozostało 25 plików `*.functions.ts` / `*.server.ts` i 2 middleware Start.
 - [ ] Regresja panelu i Centrum Kontroli: dashboard, wiadomości, subskrybenci, społeczność, raporty, dziennik zdarzeń, wyszukiwanie i historia.
 
 
@@ -212,5 +212,12 @@
 - [x] Panel AI korzysta z `src/lib/api/editor-materials.ts` dla wszystkich 15 akcji; typy i reguły UI pochodzą z `src/lib/editor-materials.ts`, nie z handlera Start.
 - [x] Test kontraktu sprawdza 15 akcji, Edge allowlist, server-side auth, superadmin guard i odmowę uprawnień.
 - [x] Usunięto `src/lib/editor-materials.functions.ts`; test nie zależy już od Start.
-- [x] Po scaleniu etapu pozostaną 21 plików `*.functions.ts` / `*.server.ts` oraz 2 middleware Start.
+- [x] Po scaleniu etapu pozostały 24 pliki `*.functions.ts` / `*.server.ts` oraz 2 middleware Start.
 - [ ] Regresja AI materials: tworzenie, generowanie tekstu i obrazu, aktualizacja, wersjonowanie, status, przekazanie do publikacji.
+
+
+## React SPA migration — reconciliation 2026-11-27
+- [x] Uzgodniono licznik na podstawie aktualnego drzewa `main`: 24 pliki `*.functions.ts` / `*.server.ts` oraz 2 middleware Start, łącznie 26 pozostałych plików legacy.
+- [x] PR #51, #52, #53, #54, #55, #56, #57 i #59 są scalone; PR #58 celowo zamknięto bez scalania, ponieważ `legal-pages.test.ts` nadal zależy od `pages.functions.ts`.
+- [ ] Przenieść testy logiki Centrum Kontroli i publikacji dokumentów prawnych z handlerów Start do warstwy współdzielonej/Edge przed usunięciem odpowiednio `control-center.functions.ts` i `pages.functions.ts`.
+- [ ] Kontynuować modułową migrację pozostałych 24 modułów/pliki legacy; nie usuwać `auth-middleware.ts` i `auth-attacher.ts` przed migracją wszystkich zależności.
