@@ -16,7 +16,11 @@ function Payments() {
     <div className="space-y-6">
       <div>
         <h1 className="font-display text-3xl font-semibold uppercase">Operatorzy płatności</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Przelewy24, Tpay i PayU korzystają z jednego mechanizmu zamówień. Klucze tajne są przechowywane w bezpiecznym magazynie sekretów serwera i nigdy nie trafiają do przeglądarki — tutaj widać tylko, czy zostały ustawione. Zmiany może wprowadzać superadministrator.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Moduł jest przygotowany do podłączenia Przelewy24, Tpay i PayU. Na etapie migracji React SPA można zapisać identyfikatory sprzedawcy i sprawdzić stan wymaganych sekretów. Aktywacja operatorów, testy połączeń i transakcje zostaną odblokowane po wdrożeniu aplikacji na produkcję.</p>
+        <div role="status" className="border border-border bg-muted/30 p-4 text-sm">
+          <strong>Tryb przygotowania — operatorzy nieaktywni.</strong>
+          <p className="mt-1 text-muted-foreground">Nie wykonujemy teraz testów operatorów ani nie uruchamiamy środowiska produkcyjnego. Klucze tajne pozostają wyłącznie w sekretach Supabase Edge Functions.</p>
+        </div>
       </div>
       {isLoading ? <p className="text-sm text-muted-foreground">Ładowanie…</p> : error ? <p className="text-sm text-destructive">{errMsg(error)}</p> :
         data!.providers.map((p: any) => <ProviderCard key={p.id} p={p} canEdit={data!.canEdit} />)}
