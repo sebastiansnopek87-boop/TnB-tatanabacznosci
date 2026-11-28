@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { corsHeaders as sdkCorsHeaders } from "npm:@supabase/supabase-js@2.117.2/cors";
 import { z } from "zod";
 import { ADAPTERS, configStatus, type ProviderId, type ProviderRow } from "./providers.ts";
+import { isPaymentOperationsEnabled } from "../_shared/payment-activation.ts";
 import { DEFAULT_TEMPLATES, EVENT_MAP } from "./registry.ts";
 import { render, maskSensitive, stripSensitive, type Vars } from "./render.ts";
 import { checkoutFingerprint } from "../_shared/checkout-idempotency.ts";
@@ -314,7 +315,7 @@ const actionSchema = z.discriminatedUnion("action", [
   }) }),
 ]);
 
-const PAYMENT_OPERATIONS_ENABLED = Deno.env.get("TNB_PAYMENTS_OPERATIONS_ENABLED") === "true";
+const PAYMENT_OPERATIONS_ENABLED = isPaymentOperationsEnabled(Deno.env.get("TNB_PAYMENTS_OPERATIONS_ENABLED"));
 
 async function getCheckoutOptions(db: Db) {
   if (!PAYMENT_OPERATIONS_ENABLED) return { providers: [] as Array<{ id: ProviderId; label: string; isDefault: boolean; test: boolean }> };
