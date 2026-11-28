@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { corsHeaders as sdkCorsHeaders } from "npm:@supabase/supabase-js@2.117.2/cors";
 import { z } from "zod";
 import { ADAPTERS, configStatus, type ProviderId, type ProviderRow } from "./providers.ts";
+import { isPaymentOperationsEnabled } from "../_shared/payment-activation.ts";
 import { DEFAULT_TEMPLATES, EVENT_MAP } from "./registry.ts";
 import { render, maskSensitive, stripSensitive, type Vars } from "./render.ts";
 import { checkoutFingerprint } from "../_shared/checkout-idempotency.ts";
@@ -314,7 +315,10 @@ const actionSchema = z.discriminatedUnion("action", [
   }) }),
 ]);
 
+const PAYMENT_OPERATIONS_ENABLED = isPaymentOperationsEnabled(Deno.env.get("TNB_PAYMENTS_OPERATIONS_ENABLED"));
+
 async function getCheckoutOptions(db: Db) {
+  if (!PAYMENT_OPERATIONS_ENABLED) return { providers: [] as Array<{ id: ProviderId; label: string; isDefault: boolean; test: boolean }> };
   const { data, error } = await db.from("payment_providers").select("id, enabled, is_default, environment, merchant_id, pos_id, client_id");
   if (error) throw new HttpError(500, "Nie udało się pobrać metod płatności.");
   const providers = (data ?? []).filter((p) => (p as CheckoutProviderRow).enabled && configStatus(p as ProviderRow).configured)
@@ -334,6 +338,7 @@ async function createLibraryOrder(db: Db, req: Request, data: z.infer<typeof act
   const user = await getUser(db, req);
   const online = input.method !== "bank_transfer";
   if (!online) return { error: "Płatność przelewem bankowym jest obecnie niedostępna." };
+  if (!PAYMENT_OPERATIONS_ENABLED) return { error: "Płatności online zostaną uruchomione po wdrożeniu aplikacji na produkcję i skonfigurowaniu operatora." };
   const provider = await providerRow(db, input.method as ProviderId);
   if (!provider?.enabled || !configStatus(provider).configured) return { error: "Ta metoda płatności jest obecnie niedostępna." };
   const fingerprint = await checkoutFingerprint({

@@ -3,6 +3,7 @@ import { corsHeaders as sdkCorsHeaders } from "npm:@supabase/supabase-js@2.117.2
 import { z } from "zod";
 import { ADAPTERS, REQUIREMENTS, configStatus, type ProviderId, type ProviderRow, type Notice } from "./providers.ts";
 import { providerReferenceMatches } from "../_shared/payment-webhook.ts";
+import { isPaymentOperationsEnabled } from "../_shared/payment-activation.ts";
 import { DEFAULT_TEMPLATES, EVENT_MAP } from "./registry.ts";
 import { render, maskSensitive, stripSensitive, type Vars } from "./render.ts";
 
@@ -16,6 +17,8 @@ const CORS = new Headers({
 });
 const PROVIDER_LABEL: Record<ProviderId, string> = { p24: "Przelewy24", tpay: "Tpay", payu: "PayU" };
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// Fail closed: operator tests and activation stay unavailable until the production SPA rollout.
+const PAYMENT_OPERATIONS_ENABLED = isPaymentOperationsEnabled(Deno.env.get("TNB_PAYMENTS_OPERATIONS_ENABLED"));
 
 function envKey(...names: string[]): string | null {
   for (const name of names) {
@@ -254,6 +257,9 @@ async function updateProvider(db: Db, userId: string, data: UpdateProviderInput)
   const { data: current } = await db.from("payment_providers").select("*").eq("id", data.id).maybeSingle();
   if (!current) throw new HttpError(404, "Nie znaleziono operatora płatności.");
   const next = { ...current, merchant_id: data.merchant_id || null, pos_id: data.pos_id || null, client_id: data.client_id || null } as ProviderRow;
+  if (!PAYMENT_OPERATIONS_ENABLED && (data.enabled || data.isDefault)) {
+    throw new HttpError(409, "Aktywacja operatorów zostanie odblokowana po wdrożeniu React SPA na produkcję.");
+  }
   if (data.enabled && !configStatus(next).configured) throw new HttpError(400, "Nie można włączyć operatora bez kompletnej konfiguracji.");
   if (data.isDefault && !data.enabled) throw new HttpError(400, "Operator domyślny musi być włączony.");
   let liveTest: { ok: boolean; detail: string } | null = null;
@@ -274,6 +280,9 @@ async function updateProvider(db: Db, userId: string, data: UpdateProviderInput)
   return { ok: true };
 }
 async function setEnvironment(db: Db, userId: string, data: SetEnvironmentInput) {
+  if (data.environment === "live" && !PAYMENT_OPERATIONS_ENABLED) {
+    throw new HttpError(409, "Środowisko produkcyjne operatora będzie dostępne po wdrożeniu React SPA.");
+  }
   if (data.environment === "live" && data.confirm !== "URUCHAMIAM PRODUKCJĘ") throw new HttpError(400, "Aby włączyć środowisko produkcyjne, wpisz: URUCHAMIAM PRODUKCJĘ");
   if (data.environment === "live") {
     const { data: current } = await db.from("payment_providers").select("*").eq("id", data.id).maybeSingle();
@@ -290,6 +299,9 @@ async function setEnvironment(db: Db, userId: string, data: SetEnvironmentInput)
   return { ok: true };
 }
 async function testProvider(db: Db, userId: string, id: ProviderId) {
+  if (!PAYMENT_OPERATIONS_ENABLED) {
+    return { ok: false, detail: "Testy połączeń z operatorami zostaną uruchomione po wdrożeniu React SPA na produkcję." };
+  }
   const { data: provider } = await db.from("payment_providers").select("*").eq("id", id).maybeSingle();
   if (!provider) throw new HttpError(404, "Nie znaleziono operatora płatności.");
   const status = configStatus(provider);

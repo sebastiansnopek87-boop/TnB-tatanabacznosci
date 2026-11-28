@@ -1,3 +1,4 @@
+import { isPaymentOperationsEnabled } from "./payment-activation.ts";
 import {
   p24VerificationSucceeded,
   providerReferenceMatches,
@@ -28,4 +29,13 @@ Deno.test("Tpay reference uses only a non-empty transaction title", () => {
   if (tpayTransactionReference("   ") !== null) throw new Error("Whitespace Tpay title must be rejected.");
   if (tpayTransactionReference(null) !== null) throw new Error("Missing Tpay title must be rejected.");
   if (tpayTransactionReference(123) !== null) throw new Error("Non-string Tpay title must be rejected.");
+});
+
+
+Deno.test("payment operations activation is explicit and fails closed by default", () => {
+  if (isPaymentOperationsEnabled(undefined)) throw new Error("Missing flag must keep payment operations disabled.");
+  if (isPaymentOperationsEnabled("")) throw new Error("Empty flag must keep payment operations disabled.");
+  if (isPaymentOperationsEnabled("TRUE")) throw new Error("Unexpected casing must keep payment operations disabled.");
+  if (isPaymentOperationsEnabled("1")) throw new Error("Non-boolean values must keep payment operations disabled.");
+  if (!isPaymentOperationsEnabled("true")) throw new Error("Exact true value should enable payment operations.");
 });
