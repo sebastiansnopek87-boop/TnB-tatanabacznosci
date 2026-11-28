@@ -34,7 +34,7 @@ function ProviderCard({ p, canEdit }: { p: any; canEdit: boolean }) {
   const [f, setF] = useState({ enabled: p.enabled, isDefault: p.is_default, merchant_id: p.merchant_id ?? "", pos_id: p.pos_id ?? "", client_id: p.client_id ?? "" });
   useEffect(() => { setF({ enabled: p.enabled, isDefault: p.is_default, merchant_id: p.merchant_id ?? "", pos_id: p.pos_id ?? "", client_id: p.client_id ?? "" }); }, [p]);
   const done = () => qc.invalidateQueries({ queryKey: ["admin-payments"] });
-  const s = useMutation({ mutationFn: () => save({ data: { id: p.id, ...f } }), onSuccess: () => { toast.success("Zapisano konfigurację."); done(); }, onError: (e) => toast.error(errMsg(e)) });
+  const s = useMutation({ mutationFn: () => save({ data: { id: p.id, enabled: false, isDefault: false, merchant_id: f.merchant_id, pos_id: f.pos_id, client_id: f.client_id } }), onSuccess: () => { toast.success("Zapisano konfigurację."); done(); }, onError: (e) => toast.error(errMsg(e)) });
   const e = useMutation({ mutationFn: (v: { environment: "sandbox" | "live"; confirm: string }) => setEnv({ data: { id: p.id, ...v } }), onSuccess: () => { toast.success("Zmieniono środowisko."); done(); }, onError: (x) => toast.error(errMsg(x)) });
   const t = useMutation({ mutationFn: () => test({ data: { id: p.id } }), onSuccess: (r) => { r.ok ? toast.success(r.detail) : toast.error(r.detail); done(); }, onError: (x) => toast.error(errMsg(x)) });
   const live = p.environment === "live";
@@ -57,9 +57,7 @@ function ProviderCard({ p, canEdit }: { p: any; canEdit: boolean }) {
               <Input className="mt-1" value={(f as any)[fl.key]} disabled={!canEdit} onChange={(ev) => setF({ ...f, [fl.key]: ev.target.value })} maxLength={120} />
             </label>
           ))}
-          <label className="flex items-center gap-2"><input type="checkbox" checked={f.enabled} disabled={!canEdit} onChange={(ev) => setF({ ...f, enabled: ev.target.checked, isDefault: ev.target.checked && f.isDefault })} /> Włącz operatora w formularzu zakupu</label>
-          <label className="flex items-center gap-2"><input type="checkbox" checked={f.isDefault} disabled={!canEdit || !f.enabled} onChange={(ev) => setF({ ...f, isDefault: ev.target.checked })} /> Operator domyślny</label>
-          {canEdit && <Button onClick={() => s.mutate()} disabled={s.isPending}>{s.isPending ? "Zapisywanie…" : "Zapisz"}</Button>}
+          {canEdit && <Button onClick={() => s.mutate()} disabled={s.isPending}>{s.isPending ? "Zapisywanie…" : "Zapisz dane identyfikacyjne"}</Button>}
         </div>
         <div className="space-y-3">
           <p className="eyebrow text-gold">Klucze tajne (magazyn sekretów)</p>
@@ -68,13 +66,7 @@ function ProviderCard({ p, canEdit }: { p: any; canEdit: boolean }) {
           {!p.status.configured && <p className="text-xs text-destructive">Brakuje: {p.status.missing.join(", ")}.</p>}
           <p className="text-xs">Adres powiadomień (webhook) do wpisania w panelu operatora:<br /><span className="break-all font-mono">{p.webhookUrl}</span></p>
           <p className="text-xs text-muted-foreground">Zwroty: {p.refunds}</p>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={() => t.mutate()} disabled={t.isPending || !p.status.configured} title={p.status.configured ? undefined : "Najpierw uzupełnij brakujące dane"}>{t.isPending ? "Sprawdzanie…" : "Test połączenia"}</Button>
-            {canEdit && (live
-              ? <Button variant="outline" onClick={() => e.mutate({ environment: "sandbox", confirm: "" })} disabled={e.isPending}>Przełącz na testowe</Button>
-              : <Button variant="outline" onClick={() => { const c = window.prompt("Środowisko produkcyjne pobiera PRAWDZIWE pieniądze. Upewnij się, że klucze produkcyjne są ustawione.\n\nAby potwierdzić, wpisz: URUCHAMIAM PRODUKCJĘ"); if (c) e.mutate({ environment: "live", confirm: c }); }} disabled={e.isPending || !p.status.configured || !p.last_test_ok} title={!p.status.configured ? "Najpierw uzupełnij brakujące dane" : !p.last_test_ok ? "Najpierw wykonaj udany test połączenia" : undefined}>Uruchom produkcję…</Button>)}
-          </div>
-          {(!p.status.configured || (!live && canEdit && !p.last_test_ok)) && <p className="text-xs text-muted-foreground">{!p.status.configured ? "Test połączenia i produkcja będą dostępne po uzupełnieniu danych." : "Produkcję można uruchomić po udanym teście połączenia."}</p>}
+          <p className="text-xs text-muted-foreground">Test połączenia i aktywacja operatora są celowo wyłączone do czasu wdrożenia React SPA na produkcję. Po wdrożeniu będzie można uzupełnić sekrety, wykonać test sandbox i osobno skonfigurować środowisko live.</p>
           {p.last_test_at && <p className={`text-xs ${p.last_test_ok ? "text-gold" : "text-destructive"}`}>Ostatni test {fmtDate(p.last_test_at)}: {p.last_test_detail}</p>}
         </div>
       </div>
