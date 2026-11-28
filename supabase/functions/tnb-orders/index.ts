@@ -314,7 +314,10 @@ const actionSchema = z.discriminatedUnion("action", [
   }) }),
 ]);
 
+const PAYMENT_OPERATIONS_ENABLED = Deno.env.get("TNB_PAYMENTS_OPERATIONS_ENABLED") === "true";
+
 async function getCheckoutOptions(db: Db) {
+  if (!PAYMENT_OPERATIONS_ENABLED) return { providers: [] as Array<{ id: ProviderId; label: string; isDefault: boolean; test: boolean }> };
   const { data, error } = await db.from("payment_providers").select("id, enabled, is_default, environment, merchant_id, pos_id, client_id");
   if (error) throw new HttpError(500, "Nie udało się pobrać metod płatności.");
   const providers = (data ?? []).filter((p) => (p as CheckoutProviderRow).enabled && configStatus(p as ProviderRow).configured)
@@ -334,6 +337,7 @@ async function createLibraryOrder(db: Db, req: Request, data: z.infer<typeof act
   const user = await getUser(db, req);
   const online = input.method !== "bank_transfer";
   if (!online) return { error: "Płatność przelewem bankowym jest obecnie niedostępna." };
+  if (!PAYMENT_OPERATIONS_ENABLED) return { error: "Płatności online zostaną uruchomione po wdrożeniu aplikacji na produkcję i skonfigurowaniu operatora." };
   const provider = await providerRow(db, input.method as ProviderId);
   if (!provider?.enabled || !configStatus(provider).configured) return { error: "Ta metoda płatności jest obecnie niedostępna." };
   const fingerprint = await checkoutFingerprint({
