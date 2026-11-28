@@ -2,8 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { listPaymentProviders, setPaymentEnvironment, testPaymentProvider, updatePaymentProvider } from "@/lib/api/payments";
-import { errMsg, fmtDate } from "@/components/admin/format";
+import { listPaymentProviders, updatePaymentProvider } from "@/lib/api/payments";
+import { errMsg } from "@/components/admin/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -30,13 +30,11 @@ function Payments() {
 
 function ProviderCard({ p, canEdit }: { p: any; canEdit: boolean }) {
   const qc = useQueryClient();
-  const save = updatePaymentProvider; const setEnv = setPaymentEnvironment; const test = testPaymentProvider;
-  const [f, setF] = useState({ enabled: p.enabled, isDefault: p.is_default, merchant_id: p.merchant_id ?? "", pos_id: p.pos_id ?? "", client_id: p.client_id ?? "" });
-  useEffect(() => { setF({ enabled: p.enabled, isDefault: p.is_default, merchant_id: p.merchant_id ?? "", pos_id: p.pos_id ?? "", client_id: p.client_id ?? "" }); }, [p]);
+  const save = updatePaymentProvider;
+  const [f, setF] = useState({ merchant_id: p.merchant_id ?? "", pos_id: p.pos_id ?? "", client_id: p.client_id ?? "" });
+  useEffect(() => { setF({ merchant_id: p.merchant_id ?? "", pos_id: p.pos_id ?? "", client_id: p.client_id ?? "" }); }, [p]);
   const done = () => qc.invalidateQueries({ queryKey: ["admin-payments"] });
   const s = useMutation({ mutationFn: () => save({ data: { id: p.id, enabled: false, isDefault: false, merchant_id: f.merchant_id, pos_id: f.pos_id, client_id: f.client_id } }), onSuccess: () => { toast.success("Zapisano konfigurację."); done(); }, onError: (e) => toast.error(errMsg(e)) });
-  const e = useMutation({ mutationFn: (v: { environment: "sandbox" | "live"; confirm: string }) => setEnv({ data: { id: p.id, ...v } }), onSuccess: () => { toast.success("Zmieniono środowisko."); done(); }, onError: (x) => toast.error(errMsg(x)) });
-  const t = useMutation({ mutationFn: () => test({ data: { id: p.id } }), onSuccess: (r) => { r.ok ? toast.success(r.detail) : toast.error(r.detail); done(); }, onError: (x) => toast.error(errMsg(x)) });
   const live = p.environment === "live";
   return (
     <section className="border border-border/60 bg-card p-5 text-sm">
@@ -67,7 +65,6 @@ function ProviderCard({ p, canEdit }: { p: any; canEdit: boolean }) {
           <p className="text-xs">Adres powiadomień (webhook) do wpisania w panelu operatora:<br /><span className="break-all font-mono">{p.webhookUrl}</span></p>
           <p className="text-xs text-muted-foreground">Zwroty: {p.refunds}</p>
           <p className="text-xs text-muted-foreground">Test połączenia i aktywacja operatora są celowo wyłączone do czasu wdrożenia React SPA na produkcję. Po wdrożeniu będzie można uzupełnić sekrety, wykonać test sandbox i osobno skonfigurować środowisko live.</p>
-          {p.last_test_at && <p className={`text-xs ${p.last_test_ok ? "text-gold" : "text-destructive"}`}>Ostatni test {fmtDate(p.last_test_at)}: {p.last_test_detail}</p>}
         </div>
       </div>
     </section>
