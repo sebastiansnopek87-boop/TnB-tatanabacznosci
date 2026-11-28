@@ -3,6 +3,7 @@ import { corsHeaders as sdkCorsHeaders } from "npm:@supabase/supabase-js@2.117.2
 import { z } from "zod";
 import { ADAPTERS, REQUIREMENTS, configStatus, type ProviderId, type ProviderRow, type Notice } from "./providers.ts";
 import { providerReferenceMatches } from "../_shared/payment-webhook.ts";
+import { isPaymentOperationsEnabled } from "../_shared/payment-activation.ts";
 import { DEFAULT_TEMPLATES, EVENT_MAP } from "./registry.ts";
 import { render, maskSensitive, stripSensitive, type Vars } from "./render.ts";
 
@@ -17,7 +18,7 @@ const CORS = new Headers({
 const PROVIDER_LABEL: Record<ProviderId, string> = { p24: "Przelewy24", tpay: "Tpay", payu: "PayU" };
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 // Fail closed: operator tests and activation stay unavailable until the production SPA rollout.
-const PAYMENT_OPERATIONS_ENABLED = Deno.env.get("TNB_PAYMENTS_OPERATIONS_ENABLED") === "true";
+const PAYMENT_OPERATIONS_ENABLED = isPaymentOperationsEnabled(Deno.env.get("TNB_PAYMENTS_OPERATIONS_ENABLED"));
 
 function envKey(...names: string[]): string | null {
   for (const name of names) {
